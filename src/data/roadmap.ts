@@ -41,7 +41,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'principles',
-    title: 'Principles and trade-offs',
+    title: 'Principles and Trade-offs',
     topics: topics([
       ['scalability', 'Scalability: vertical vs horizontal', 'Scale and speed'],
       ['bottlenecks', 'Performance vs scalability, and finding bottlenecks', 'Scale and speed'],
@@ -85,7 +85,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'data-and-caching',
-    title: 'Data storage and caching',
+    title: 'Data Storage and Caching',
     topics: topics([
       ['data-modeling', 'Data modeling', 'Databases'],
       ['relational-databases', 'Relational databases and normalization', 'Databases'],
@@ -120,7 +120,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'async-and-messaging',
-    title: 'Async, messaging and streaming',
+    title: 'Async, Messaging and Streaming',
     topics: topics([
       ['queue-types', 'Message queues, task queues and pub/sub'],
       ['kafka-vs-rabbitmq', 'Kafka vs RabbitMQ'],
@@ -136,7 +136,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'distributed-systems-and-operations',
-    title: 'Distributed systems and operations',
+    title: 'Distributed Systems and Operations',
     topics: topics([
       ['why-distributed-is-hard', 'Why distributed systems are hard', 'Distributed systems'],
       ['clocks-ordering', 'Clocks and ordering', 'Distributed systems'],
@@ -168,7 +168,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'patterns-and-case-studies',
-    title: 'Patterns and case studies',
+    title: 'Patterns and Case Studies',
     topics: topics([
       ['pattern-push-updates', 'Pushing updates to clients', 'Patterns'],
       ['pattern-contention', 'Handling contention', 'Patterns'],
@@ -215,7 +215,7 @@ export const phases: Phase[] = [
   },
   {
     slug: 'ai-and-real-world',
-    title: 'AI systems and real-world architectures',
+    title: 'AI Systems and Real-World Architectures',
     topics: topics([
       ['ai-model-serving', 'Model serving', 'AI building blocks'],
       ['ai-agents', 'Agents and tool use', 'AI building blocks'],
