@@ -51,7 +51,10 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     background: color-mix(in srgb, var(--bg) 80%, transparent);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    transition: background-color 0.3s var(--ease);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease);
+    /* Keep the header still during page transitions. */
+    view-transition-name: site-header;
   }
   .bar,
   main {

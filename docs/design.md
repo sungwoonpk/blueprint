@@ -9,7 +9,7 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Tokens
 
-All colors and fonts are CSS custom properties at the top of `src/styles/global.css`. Components only use tokens.
+All colors and fonts are CSS custom properties at the top of `src/styles/global.css`. Components only use tokens. The header has a hairline under it so content scrolling beneath stays clearly separate, and it stays still during page transitions.
 
 | Token | Use |
 | --- | --- |
@@ -20,10 +20,10 @@ All colors and fonts are CSS custom properties at the top of `src/styles/global.
 
 ## Light and dark
 
-- The theme follows the operating system (`prefers-color-scheme`) by default. Dark uses a true black page with `#1c1c1e` lists.
-- The header button overrides it and the choice is saved in `localStorage` under `theme`.
+- Light is the default, whatever the operating system prefers. Dark uses a true black page with `#1c1c1e` lists.
+- The header button switches it and the choice is saved in `localStorage` under `theme`.
 - A tiny inline script in `<head>` applies the saved choice before first paint, so there is no flash.
-- The explicit choice is a `data-theme="light|dark"` attribute on `<html>`. Without it, the media query decides.
+- The explicit choice is a `data-theme="light|dark"` attribute on `<html>`. Without it the page is light.
 
 ## Motion
 

@@ -11,9 +11,7 @@
 <script is:inline>
   document.getElementById('theme-toggle').addEventListener('click', function () {
     var root = document.documentElement;
-    var current =
-      root.dataset.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    var next = current === 'dark' ? 'light' : 'dark';
+    var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
     root.dataset.theme = next;
     try {
       localStorage.setItem('theme', next);
@@ -47,13 +45,5 @@
   }
   :root[data-theme='dark'] #theme-toggle .moon {
     display: none;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) #theme-toggle .sun {
-      display: block;
-    }
-    :root:not([data-theme]) #theme-toggle .moon {
-      display: none;
-    }
   }
 </style>
