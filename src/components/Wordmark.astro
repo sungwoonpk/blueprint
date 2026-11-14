@@ -3,15 +3,6 @@ import { SITE } from '../config';
 ---
 
 <span class="wordmark">
-  <svg class="logo" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
-    <rect width="32" height="32" rx="8"></rect>
-    <g fill="none" stroke-width="2" stroke-linecap="round">
-      <rect x="6" y="6" width="7" height="7" rx="1.5"></rect>
-      <rect x="19" y="6" width="7" height="7" rx="1.5"></rect>
-      <rect x="12.5" y="19" width="7" height="7" rx="1.5"></rect>
-      <path d="M9.5 13v3h13v-3M16 16v3"></path>
-    </g>
-  </svg>
   <b>{SITE.name}</b>
   <span class="subject">{SITE.subject}</span>
 </span>
@@ -24,15 +15,6 @@ import { SITE } from '../config';
     font-size: 18px;
     letter-spacing: -0.025em;
     color: var(--text);
-  }
-  .logo rect:first-child {
-    fill: var(--accent);
-  }
-  .logo g {
-    stroke: #fff;
-  }
-  :global(:root[data-theme='dark']) .logo g {
-    stroke: #000;
   }
   b {
     font-weight: 650;
