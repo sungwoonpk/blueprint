@@ -95,6 +95,7 @@ const principles = [
 <style>
   .hero {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
     padding-top: 64px;
     padding-bottom: 24px;
@@ -102,7 +103,7 @@ const principles = [
   }
   @media (min-width: 880px) {
     .hero {
-      grid-template-columns: 1.05fr 1fr;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
       gap: 56px;
       padding-top: 96px;
     }

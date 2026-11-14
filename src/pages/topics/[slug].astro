@@ -91,6 +91,7 @@ const siblings = groupedTopics(topic.phase);
 <style>
   .layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
     padding-top: 48px;
   }
@@ -152,7 +153,7 @@ const siblings = groupedTopics(topic.phase);
   }
   .group li a .num {
     flex: none;
-    min-width: 3.2ch;
+    min-width: 4.4ch;
     font-size: 12.5px;
   }
   .group li a:hover {
