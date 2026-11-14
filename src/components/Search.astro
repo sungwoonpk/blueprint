@@ -40,6 +40,7 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
 
 <script>
   import type { SearchEntry } from '../data/search';
+  import { normalize, toTerms, escapeHtml, highlight } from '../lib/match';
 
   const entries: SearchEntry[] = JSON.parse(document.getElementById('search-data')!.textContent!);
   const dialog = document.getElementById('search') as HTMLDialogElement;
@@ -48,39 +49,10 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
   const empty = document.getElementById('search-empty') as HTMLParagraphElement;
   const MAX_RESULTS = 50;
 
-  // Lowercase and treat "-" and "/" as spaces. Length is preserved, so match
-  // positions in the normalized text are also positions in the original title.
-  const normalize = (s: string) => s.toLowerCase().replace(/[-/]/g, ' ');
   const index = entries.map((e) => normalize(e.title));
 
   let results: SearchEntry[] = [];
   let active = 0;
-
-  const escapeHtml = (s: string) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
-
-  function highlight(title: string, terms: string[]): string {
-    const norm = normalize(title);
-    const marked = new Array<boolean>(title.length).fill(false);
-    for (const term of terms) {
-      let from = 0;
-      let at: number;
-      while ((at = norm.indexOf(term, from)) !== -1) {
-        for (let i = at; i < at + term.length; i++) marked[i] = true;
-        from = at + term.length;
-      }
-    }
-    let html = '';
-    let open = false;
-    for (let i = 0; i < title.length; i++) {
-      if (marked[i] !== open) {
-        html += marked[i] ? '<mark>' : '</mark>';
-        open = marked[i];
-      }
-      html += escapeHtml(title[i]);
-    }
-    return open ? html + '</mark>' : html;
-  }
 
   /** 0: title starts with the query, 1: a word starts with it, 2: found anywhere. */
   function rank(text: string, query: string): number {
@@ -90,8 +62,8 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
   }
 
   function search(raw: string) {
-    const query = normalize(raw).trim().replace(/\s+/g, ' ');
-    const terms = query.split(' ').filter(Boolean);
+    const terms = toTerms(raw);
+    const query = terms.join(' ');
 
     if (terms.length === 0) {
       // Before typing, offer the phases as quick jumps.
@@ -143,17 +115,25 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     input.focus();
   }
 
-  // Any element marked data-search-open opens the dialog (header icon, roadmap field).
-  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', open));
+  // On the roadmap page the inline filter is the search, so the header icon and
+  // shortcuts focus it instead of opening the dialog.
+  const inline = document.getElementById('roadmap-search') as HTMLInputElement | null;
+  function start() {
+    if (!inline) return open();
+    inline.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    inline.focus({ preventScroll: true });
+    inline.select();
+  }
+  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', start));
 
   document.addEventListener('keydown', (e) => {
     const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, [contenteditable]');
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      dialog.open ? dialog.close() : open();
+      dialog.open ? dialog.close() : start();
     } else if (e.key === '/' && !typing && !dialog.open) {
       e.preventDefault();
-      open();
+      start();
     }
   });
 
@@ -292,8 +272,6 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     min-width: 0;
   }
   #search-results mark {
-    background: none;
-    color: var(--accent);
     font-weight: 600;
   }
   #search-results .context {

@@ -23,18 +23,27 @@ import { phases, groupedTopics } from '../data/roadmap';
     <div class="content">
       <h1>Roadmap</h1>
 
-      <button type="button" class="search-field" data-search-open>
+      <label class="search-field">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"></circle>
           <path d="M20 20l-3.5-3.5"></path>
         </svg>
-        <span class="placeholder">Search topics</span>
+        <input
+          id="roadmap-search"
+          type="search"
+          placeholder="Search topics"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search phases and topics"
+          aria-describedby="roadmap-empty"
+        />
         <kbd class="shortcut">⌘K</kbd>
-      </button>
+      </label>
+      <p id="roadmap-empty" class="empty" role="status" hidden></p>
 
       {
         phases.map((phase, i) => (
-          <section id={phase.slug}>
+          <section id={phase.slug} data-title={phase.title}>
             <p class="eyebrow">Phase {i + 1}</p>
             <h2>{phase.title}</h2>
             <div class="groups">
@@ -53,7 +62,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                         <li>
                           <a href={`/topics/${t.slug}`} class="row">
                             <span class="n num">{t.number}</span>
-                            <span class="t">{t.title}</span>
+                            <span class="t" data-title={t.title}>{t.title}</span>
                           </a>
                         </li>
                       ))}
@@ -65,7 +74,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                       <li>
                         <a href={`/topics/${t.slug}`} class="row">
                           <span class="n num">{t.number}</span>
-                          <span class="t">{t.title}</span>
+                          <span class="t" data-title={t.title}>{t.title}</span>
                         </a>
                       </li>
                     ))}
@@ -96,6 +105,88 @@ import { phases, groupedTopics } from '../data/roadmap';
     { rootMargin: '-20% 0px -70% 0px' },
   );
   document.querySelectorAll('section[id]').forEach((s) => observer.observe(s));
+</script>
+
+<script>
+  // Filter the roadmap in place as you type: phases and topics that match stay,
+  // groups with a matching topic open, everything else hides. The side list of
+  // phases always stays. Clearing the field restores the page exactly as it was.
+  import { toTerms, matchesAll, highlight } from '../lib/match';
+
+  const input = document.getElementById('roadmap-search') as HTMLInputElement;
+  const empty = document.getElementById('roadmap-empty') as HTMLParagraphElement;
+  const sections = [...document.querySelectorAll<HTMLElement>('.content section[data-title]')];
+  const groups = [...document.querySelectorAll<HTMLDetailsElement>('details.group')];
+  let savedOpen: boolean[] | null = null;
+
+  function setText(el: HTMLElement, title: string, terms: string[], hit: boolean) {
+    if (hit) el.innerHTML = highlight(title, terms);
+    else el.textContent = title;
+  }
+
+  function reset() {
+    for (const section of sections) {
+      section.hidden = false;
+      section.querySelector('h2')!.textContent = section.dataset.title!;
+      section.querySelectorAll<HTMLElement>('.groups > *, li').forEach((el) => (el.hidden = false));
+      section.querySelectorAll<HTMLElement>('.t').forEach((t) => (t.textContent = t.dataset.title!));
+    }
+    if (savedOpen) groups.forEach((g, i) => (g.open = savedOpen![i]));
+    savedOpen = null;
+    empty.hidden = true;
+  }
+
+  function filter(raw: string) {
+    const terms = toTerms(raw);
+    if (terms.length === 0) return reset();
+    savedOpen ??= groups.map((g) => g.open);
+
+    let shown = 0;
+    for (const section of sections) {
+      const phaseHit = matchesAll(section.dataset.title!, terms);
+      let topicHit = false;
+
+      for (const block of section.querySelectorAll<HTMLElement>('.groups > *')) {
+        let blockHit = false;
+        for (const li of block.querySelectorAll<HTMLLIElement>('li')) {
+          const t = li.querySelector<HTMLElement>('.t')!;
+          const hit = matchesAll(t.dataset.title!, terms);
+          setText(t, t.dataset.title!, terms, hit);
+          li.hidden = !hit && !phaseHit;
+          blockHit ||= hit;
+        }
+        block.hidden = !blockHit && !phaseHit;
+        // A phase-only match shows its groups closed; a topic match opens its group.
+        if (block instanceof HTMLDetailsElement) block.open = blockHit;
+        topicHit ||= blockHit;
+      }
+
+      setText(section.querySelector('h2')!, section.dataset.title!, terms, phaseHit);
+      section.hidden = !phaseHit && !topicHit;
+      if (!section.hidden) shown++;
+    }
+
+    empty.hidden = shown > 0;
+    empty.textContent = shown ? '' : `No topics match “${raw.trim()}”.`;
+  }
+
+  input.addEventListener('input', () => filter(input.value));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (input.value) {
+        input.value = '';
+        filter('');
+      } else {
+        input.blur();
+      }
+    } else if (e.key === 'Enter') {
+      // Open the first matching topic.
+      const first = document.querySelector<HTMLAnchorElement>('.content li:not([hidden]) .row:has(mark)');
+      if (first) window.location.href = first.href;
+    }
+  });
 </script>
 
 <style>
@@ -175,16 +266,37 @@ import { phases, groupedTopics } from '../data/roadmap';
     background: var(--surface);
     box-shadow: inset 0 0 0 1px var(--border);
     color: var(--muted);
-    font: inherit;
-    text-align: left;
     cursor: text;
     transition: box-shadow 0.2s var(--ease), background-color 0.3s var(--ease);
   }
   .search-field:hover {
     box-shadow: inset 0 0 0 1px var(--muted);
   }
-  .placeholder {
+  .search-field:focus-within {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  #roadmap-search {
     flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+  }
+  #roadmap-search::placeholder {
+    color: var(--muted);
+  }
+  #roadmap-search::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-field:has(input:not(:placeholder-shown)) .shortcut {
+    display: none;
+  }
+  .empty {
+    margin-top: 40px;
+    color: var(--muted);
   }
   .shortcut {
     padding: 2px 6px;
@@ -199,7 +311,8 @@ import { phases, groupedTopics } from '../data/roadmap';
     }
   }
 
-  .search-field + section {
+  /* The first phase still shown (search can hide earlier ones) has no divider. */
+  .content > :nth-child(1 of section:not([hidden])) {
     margin-top: 48px;
     padding-top: 0;
     border-top: 0;
@@ -225,7 +338,7 @@ import { phases, groupedTopics } from '../data/roadmap';
     box-shadow: inset 0 0 0 1px var(--border);
     transition: background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
   }
-  .groups > * + * {
+  .groups > :not([hidden]) ~ :not([hidden]) {
     border-top: 1px solid var(--border);
   }
 

@@ -74,6 +74,12 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
+/* Search matches, in the dialog and on the roadmap. Injected at runtime, so global. */
+mark {
+  background: none;
+  color: var(--accent);
+}
+
 .icon-btn {
   display: inline-grid;
   place-items: center;
