@@ -47,7 +47,8 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     </main>
     <footer>
       <div class:list={['foot', width]}>
-        Updated <time datetime={updatedIso}>{updatedLabel}</time>
+        <span>Created by {SITE.author}</span>
+        <span>Updated <time datetime={updatedIso}>{updatedLabel}</time></span>
       </div>
     </footer>
   </body>
@@ -99,6 +100,10 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     transition: border-color 0.3s var(--ease);
   }
   .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 24px;
     padding-top: 20px;
     padding-bottom: 32px;
     font-size: 13px;
