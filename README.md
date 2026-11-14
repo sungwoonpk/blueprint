@@ -4,7 +4,7 @@ A text-first study guide for system design: fundamentals, trade-offs, building b
 
 ## Status
 
-Skeleton only. The roadmap (8 phases, 172 numbered topics) is the front page, with light and dark themes. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. The roadmap (9 phases, 163 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
@@ -26,7 +26,7 @@ npm run dev      # http://localhost:4321
 
 | To do this | Do this |
 | --- | --- |
-| Rename the site | Edit `SITE` in `src/config.ts`. |
+| Rename the site or change the author credit | Edit `SITE` in `src/config.ts`. |
 | Add, rename or move a topic | Edit `src/data/roadmap.ts`. Numbers follow the order. |
 | Change colors or fonts | Edit the tokens at the top of `src/styles/global.css`. |
 | Check everything | `npm run check` (type check plus a full build). |
@@ -37,4 +37,4 @@ npm run dev      # http://localhost:4321
 | --- | --- |
 | [docs/design.md](docs/design.md) | Visual design, tokens, theming. |
 | [docs/roadmap.md](docs/roadmap.md) | How the roadmap data works and how topics become articles. |
-| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project. |
+| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases. |
