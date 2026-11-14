@@ -4,6 +4,7 @@ import { SITE } from '../config';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Wordmark from '../components/Wordmark.astro';
 import Search from '../components/Search.astro';
+import { updatedIso, updatedLabel } from '../data/updated';
 
 interface Props {
   title?: string;
@@ -44,6 +45,11 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     <main class:list={[width]}>
       <slot />
     </main>
+    <footer>
+      <div class:list={['foot', width]}>
+        Updated <time datetime={updatedIso}>{updatedLabel}</time>
+      </div>
+    </footer>
   </body>
 </html>
 
@@ -61,7 +67,8 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     view-transition-name: site-header;
   }
   .bar,
-  main {
+  main,
+  .foot {
     width: 100%;
     margin: 0 auto;
     padding-left: 20px;
@@ -85,6 +92,16 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
   }
   main {
     padding-top: 48px;
-    padding-bottom: 120px;
+    padding-bottom: 96px;
+  }
+  footer {
+    border-top: 1px solid var(--border);
+    transition: border-color 0.3s var(--ease);
+  }
+  .foot {
+    padding-top: 20px;
+    padding-bottom: 32px;
+    font-size: 13px;
+    color: var(--muted);
   }
 </style>
