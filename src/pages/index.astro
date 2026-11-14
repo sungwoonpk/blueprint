@@ -23,6 +23,15 @@ import { phases, groupedTopics } from '../data/roadmap';
     <div class="content">
       <h1>Roadmap</h1>
 
+      <button type="button" class="search-field" data-search-open>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <span class="placeholder">Search topics</span>
+        <kbd class="shortcut">⌘K</kbd>
+      </button>
+
       {
         phases.map((phase, i) => (
           <section id={phase.slug}>
@@ -153,7 +162,44 @@ import { phases, groupedTopics } from '../data/roadmap';
     padding-top: 40px;
     border-top: 1px solid var(--border);
   }
-  h1 + section {
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 48px;
+    margin-top: 28px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--muted);
+    font: inherit;
+    text-align: left;
+    cursor: text;
+    transition: box-shadow 0.2s var(--ease), background-color 0.3s var(--ease);
+  }
+  .search-field:hover {
+    box-shadow: inset 0 0 0 1px var(--muted);
+  }
+  .placeholder {
+    flex: 1;
+  }
+  .shortcut {
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+  }
+  @media (hover: none) {
+    .shortcut {
+      display: none;
+    }
+  }
+
+  .search-field + section {
     margin-top: 48px;
     padding-top: 0;
     border-top: 0;
