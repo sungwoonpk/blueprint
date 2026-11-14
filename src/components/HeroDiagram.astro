@@ -1,0 +1,80 @@
+---
+// A small architecture sketch for the home page. Purely decorative.
+---
+
+<svg viewBox="0 0 600 290" role="img" aria-label="Diagram: a client sends requests through a load balancer to three app servers, which use a cache and a database" class="diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" class="arrowhead"></path>
+    </marker>
+  </defs>
+
+  <g class="edges" marker-end="url(#arrow)">
+    <path d="M100 142H150"></path>
+    <path d="M240 142C270 142 270 62 300 62"></path>
+    <path d="M240 142H300"></path>
+    <path d="M240 142C270 142 270 222 300 222"></path>
+    <path d="M390 62C430 62 430 82 470 82"></path>
+    <path d="M390 142C430 142 430 86 470 86"></path>
+    <path d="M390 142C430 142 430 198 470 198"></path>
+    <path d="M390 222C430 222 430 202 470 202"></path>
+  </g>
+
+  <g class="node">
+    <rect x="10" y="120" width="90" height="44" rx="10"></rect>
+    <text x="55" y="147">Client</text>
+  </g>
+  <g class="node accent">
+    <rect x="150" y="120" width="90" height="44" rx="10"></rect>
+    <text x="195" y="147">Load balancer</text>
+  </g>
+  <g class="node">
+    <rect x="300" y="40" width="90" height="44" rx="10"></rect>
+    <text x="345" y="67">App server</text>
+    <rect x="300" y="120" width="90" height="44" rx="10"></rect>
+    <text x="345" y="147">App server</text>
+    <rect x="300" y="200" width="90" height="44" rx="10"></rect>
+    <text x="345" y="227">App server</text>
+  </g>
+  <g class="node accent">
+    <rect x="470" y="60" width="110" height="44" rx="10"></rect>
+    <text x="525" y="87">Cache</text>
+  </g>
+  <g class="node">
+    <rect x="470" y="176" width="110" height="44" rx="10"></rect>
+    <text x="525" y="203">Database</text>
+  </g>
+</svg>
+
+<style>
+  .diagram {
+    width: 100%;
+    height: auto;
+  }
+  .edges path {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    opacity: 0.7;
+  }
+  .arrowhead {
+    fill: var(--muted);
+  }
+  .node rect {
+    fill: var(--surface);
+    stroke: var(--border);
+    stroke-width: 1.5;
+  }
+  .node.accent rect {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+  }
+  .node text {
+    fill: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+</style>
