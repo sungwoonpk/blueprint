@@ -1,0 +1,234 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroDiagram from '../components/HeroDiagram.astro';
+import { phases, numberedTopics } from '../data/roadmap';
+
+const caseStudies = numberedTopics.filter((t) => t.slug.startsWith('case-')).length;
+const stats = [
+  { value: phases.length, label: 'phases' },
+  { value: numberedTopics.length, label: 'topics' },
+  { value: caseStudies, label: 'case studies' },
+];
+const first = numberedTopics[0];
+
+const principles = [
+  {
+    title: 'One ordered path',
+    body: 'Phases build on each other: foundations, then principles, then building blocks, then whole systems.',
+  },
+  {
+    title: 'One topic, one article',
+    body: 'Every numbered topic is a single focused read, so progress is easy to see and easy to resume.',
+  },
+  {
+    title: 'Trade-offs over answers',
+    body: 'Each design choice comes with what it costs and when the alternative wins.',
+  },
+];
+---
+
+<Base>
+  <section class="hero container">
+    <div class="copy">
+      <p class="eyebrow">System design study guide</p>
+      <h1>Learn how large systems are built.</h1>
+      <p class="lead">
+        A structured, text-first path from the basics to full designs of real systems. Read it in order, or jump to the
+        topic you need.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/roadmap">View the roadmap</a>
+        <a class="btn" href={`/topics/${first.slug}`}>Start at {first.number}</a>
+      </div>
+      <dl class="stats">
+        {
+          stats.map((s) => (
+            <div>
+              <dt class="num">{s.value}</dt>
+              <dd>{s.label}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    <div class="art" aria-hidden="false">
+      <HeroDiagram />
+    </div>
+  </section>
+
+  <section class="container block">
+    <div class="head">
+      <h2>The roadmap</h2>
+      <a href="/roadmap" class="muted more">See every topic</a>
+    </div>
+    <ol class="cards">
+      {
+        phases.map((phase, i) => (
+          <li>
+            <a href={`/roadmap#${phase.slug}`} class="card">
+              <span class="num card-num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{phase.title}</h3>
+              <p class="muted">{phase.summary}</p>
+              <span class="count num">{phase.topics.length} topics</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="container block">
+    <h2>How it works</h2>
+    <div class="principles">
+      {
+        principles.map((p) => (
+          <div>
+            <h3>{p.title}</h3>
+            <p class="muted">{p.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 40px;
+    padding-top: 64px;
+    padding-bottom: 24px;
+    align-items: center;
+  }
+  @media (min-width: 880px) {
+    .hero {
+      grid-template-columns: 1.05fr 1fr;
+      gap: 56px;
+      padding-top: 96px;
+    }
+  }
+  h1 {
+    margin-top: 12px;
+    font-size: clamp(34px, 5.5vw, 54px);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    font-weight: 750;
+  }
+  .lead {
+    margin-top: 18px;
+    max-width: 52ch;
+    font-size: 18px;
+    color: var(--muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .stats {
+    display: flex;
+    gap: 36px;
+    margin: 40px 0 0;
+  }
+  .stats dt {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stats dd {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .art {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0 / 20px 20px,
+      var(--bg);
+    box-shadow: var(--shadow);
+  }
+
+  .block {
+    margin-top: 88px;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  h2 {
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+  .more {
+    font-size: 15px;
+  }
+  .more:hover {
+    color: var(--text);
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .card-num {
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .card h3 {
+    font-size: 17px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .card p {
+    font-size: 14.5px;
+    flex: 1;
+  }
+  .count {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .principles {
+    display: grid;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (min-width: 760px) {
+    .principles {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+  }
+  .principles > div {
+    padding-top: 16px;
+    border-top: 2px solid var(--border);
+  }
+  .principles h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .principles p {
+    font-size: 15px;
+  }
+</style>
