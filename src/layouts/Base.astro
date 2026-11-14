@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { SITE } from '../config';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Wordmark from '../components/Wordmark.astro';
+import Search from '../components/Search.astro';
 
 interface Props {
   title?: string;
@@ -34,7 +35,10 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
     <header>
       <div class:list={['bar', width]}>
         <a href="/" aria-label={`${SITE.name} roadmap`}><Wordmark /></a>
-        <ThemeToggle />
+        <div class="tools">
+          <Search />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
     <main class:list={[width]}>
@@ -68,6 +72,10 @@ const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
   }
   .narrow {
     max-width: 720px;
+  }
+  .tools {
+    display: flex;
+    gap: 4px;
   }
   .bar {
     display: flex;
