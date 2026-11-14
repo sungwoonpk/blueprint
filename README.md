@@ -4,7 +4,7 @@ A text-first study guide for system design: fundamentals, trade-offs, building b
 
 ## Status
 
-Skeleton only. The roadmap (8 phases, 172 numbered topics) is the front page, with light and dark themes. No articles are written yet, so every topic page shows a "Planned" placeholder.
+Skeleton only. The roadmap (8 phases, 172 numbered topics) is the front page, with light and dark themes. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
