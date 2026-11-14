@@ -1,29 +1,21 @@
 ---
 import { SITE } from '../config';
 
-interface Props {
-  small?: boolean;
-}
-const { small = false } = Astro.props;
 const [first, second] = SITE.nameParts;
 ---
 
-<span class:list={['wordmark', { small }]}><b>{first}</b><span>{second}</span></span>
+<span class="wordmark"><b>{first}</b><span>{second}</span></span>
 
 <style>
   .wordmark {
-    font-size: 19px;
-    letter-spacing: -0.02em;
+    font-size: 18px;
+    letter-spacing: -0.025em;
     color: var(--text);
   }
-  .wordmark.small {
-    font-size: 15px;
-  }
   b {
-    font-weight: 750;
+    font-weight: 650;
   }
   span {
     font-weight: 300;
-    color: var(--accent);
   }
 </style>

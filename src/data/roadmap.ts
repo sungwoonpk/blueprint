@@ -14,7 +14,6 @@ export interface Topic {
 export interface Phase {
   slug: string;
   title: string;
-  summary: string;
   topics: Topic[];
 }
 
@@ -27,7 +26,6 @@ export const phases: Phase[] = [
   {
     slug: 'foundations',
     title: 'Foundations',
-    summary: 'How to approach a design problem, do the math, and the web basics everything builds on.',
     topics: topics([
       ['what-is-system-design', 'What system design is', 'Approach'],
       ['problem-framework', 'A framework for approaching problems', 'Approach'],
@@ -44,7 +42,6 @@ export const phases: Phase[] = [
   {
     slug: 'principles',
     title: 'Principles and trade-offs',
-    summary: 'The vocabulary of design decisions: scale, availability, consistency and architecture styles.',
     topics: topics([
       ['scalability', 'Scalability: vertical vs horizontal', 'Scale and speed'],
       ['bottlenecks', 'Performance vs scalability, and finding bottlenecks', 'Scale and speed'],
@@ -65,7 +62,6 @@ export const phases: Phase[] = [
   {
     slug: 'traffic-and-apis',
     title: 'Traffic and APIs',
-    summary: 'How requests enter a system, get spread out and limited, and how services talk to each other.',
     topics: topics([
       ['dns-routing', 'DNS for traffic routing: caching and TTL', 'Traffic entry'],
       ['cdn', 'Content delivery networks', 'Traffic entry'],
@@ -90,7 +86,6 @@ export const phases: Phase[] = [
   {
     slug: 'data-and-caching',
     title: 'Data storage and caching',
-    summary: 'Choosing a database, how storage engines work, scaling data across machines, and caching in front of it.',
     topics: topics([
       ['data-modeling', 'Data modeling', 'Databases'],
       ['relational-databases', 'Relational databases and normalization', 'Databases'],
@@ -126,7 +121,6 @@ export const phases: Phase[] = [
   {
     slug: 'async-and-messaging',
     title: 'Async, messaging and streaming',
-    summary: 'Decoupling work with queues, delivery guarantees, event-driven designs and stream processing.',
     topics: topics([
       ['queue-types', 'Message queues, task queues and pub/sub'],
       ['kafka-vs-rabbitmq', 'Kafka vs RabbitMQ'],
@@ -143,7 +137,6 @@ export const phases: Phase[] = [
   {
     slug: 'distributed-systems-and-operations',
     title: 'Distributed systems and operations',
-    summary: 'What goes wrong across machines, how to build for failure, and how to run, secure and pay for a system.',
     topics: topics([
       ['why-distributed-is-hard', 'Why distributed systems are hard', 'Distributed systems'],
       ['clocks-ordering', 'Clocks and ordering', 'Distributed systems'],
@@ -176,7 +169,6 @@ export const phases: Phase[] = [
   {
     slug: 'patterns-and-case-studies',
     title: 'Patterns and case studies',
-    summary: 'Reusable design patterns, then full designs of well-known systems that combine them.',
     topics: topics([
       ['pattern-push-updates', 'Pushing updates to clients', 'Patterns'],
       ['pattern-contention', 'Handling contention', 'Patterns'],
@@ -224,7 +216,6 @@ export const phases: Phase[] = [
   {
     slug: 'ai-and-real-world',
     title: 'AI systems and real-world architectures',
-    summary: 'Building blocks for AI products, and how well-known systems and companies actually did it.',
     topics: topics([
       ['ai-model-serving', 'Model serving', 'AI building blocks'],
       ['ai-agents', 'Agents and tool use', 'AI building blocks'],

@@ -6,12 +6,12 @@ import Wordmark from '../components/Wordmark.astro';
 
 interface Props {
   title?: string;
-  description?: string;
+  /** Page width: the roadmap is wide, an article is a narrow reading column. */
+  width?: 'wide' | 'narrow';
 }
 
-const { title, description = SITE.description } = Astro.props;
-const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name}: ${SITE.tagline}`;
-const path = Astro.url.pathname;
+const { title, width = 'wide' } = Astro.props;
+const pageTitle = title ? `${title} | ${SITE.name}` : SITE.name;
 ---
 
 <!doctype html>
@@ -20,7 +20,7 @@ const path = Astro.url.pathname;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={SITE.description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline>
       // Apply the saved theme before first paint to avoid a flash.
@@ -31,76 +31,49 @@ const path = Astro.url.pathname;
     </script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="container bar">
-        <a href="/" class="brand" aria-label={`${SITE.name} home`}><Wordmark /></a>
-        <nav aria-label="Main">
-          <a href="/roadmap" class:list={['nav-link', { active: path.startsWith('/roadmap') }]}>Roadmap</a>
-          <a href={SITE.repo} class="nav-link" rel="noopener">GitHub</a>
-          <ThemeToggle />
-        </nav>
+    <header>
+      <div class:list={['bar', width]}>
+        <a href="/" aria-label={`${SITE.name} roadmap`}><Wordmark /></a>
+        <ThemeToggle />
       </div>
     </header>
-
-    <main>
+    <main class:list={[width]}>
       <slot />
     </main>
-
-    <footer class="site-footer">
-      <div class="container foot">
-        <span><Wordmark small /></span>
-        <span class="muted">{SITE.tagline}</span>
-      </div>
-    </footer>
   </body>
 </html>
 
 <style>
-  .site-header {
+  header {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: saturate(160%) blur(12px);
-    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    transition: background-color 0.3s var(--ease);
+  }
+  .bar,
+  main {
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .wide {
+    max-width: 1000px;
+  }
+  .narrow {
+    max-width: 720px;
   }
   .bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px;
-  }
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .nav-link {
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 15px;
-    color: var(--muted);
-  }
-  .nav-link:hover,
-  .nav-link.active {
-    color: var(--text);
-    background: var(--surface);
+    height: 52px;
   }
   main {
-    min-height: calc(100vh - 60px - 88px);
-  }
-  .site-footer {
-    margin-top: 96px;
-    border-top: 1px solid var(--border);
-  }
-  .foot {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 24px;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 28px;
-    padding-bottom: 28px;
-    font-size: 14px;
+    padding-top: 48px;
+    padding-bottom: 120px;
   }
 </style>

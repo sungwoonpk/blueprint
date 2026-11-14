@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { numberedTopics, groupedTopics } from '../../data/roadmap';
+import { numberedTopics } from '../../data/roadmap';
 
 export function getStaticPaths() {
   return numberedTopics.map((topic, i) => ({
@@ -10,203 +10,86 @@ export function getStaticPaths() {
 }
 
 const { topic, prev, next } = Astro.props;
-const siblings = groupedTopics(topic.phase);
 ---
 
-<Base title={`${topic.number} ${topic.title}`}>
-  <div class="container layout">
-    <aside class="side" aria-label="In this phase">
-      <a class="phase-link" href={`/roadmap#${topic.phase.slug}`}>
-        <span class="num">{topic.phaseNumber}</span>
-        {topic.phase.title}
-      </a>
-      {
-        siblings.map((group) => (
-          <div class="group">
-            {group.name && <p class="group-name">{group.name}</p>}
-            <ul>
-              {group.topics.map((t) => (
-                <li>
-                  <a href={`/topics/${t.slug}`} class:list={[{ current: t.slug === topic.slug }]}>
-                    <span class="num">{t.number}</span>
-                    {t.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
-      }
-    </aside>
+<Base title={`${topic.number} ${topic.title}`} width="narrow">
+  <a class="back" href={`/#${topic.phase.slug}`}>
+    <svg viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 1L1 7l6 6" />
+    </svg>
+    {topic.phase.title}
+  </a>
 
-    <article>
-      <nav class="crumbs muted" aria-label="Breadcrumb">
-        <a href="/roadmap">Roadmap</a>
-        <span aria-hidden="true">/</span>
-        <a href={`/roadmap#${topic.phase.slug}`}>{topic.phase.title}</a>
-        {topic.group && (
-          <>
-            <span aria-hidden="true">/</span>
-            <span>{topic.group}</span>
-          </>
-        )}
-      </nav>
+  <article>
+    <p class="number num">{topic.number}</p>
+    <h1>{topic.title}</h1>
+    <p class="soon">Coming soon.</p>
+  </article>
 
-      <p class="num number">{topic.number}</p>
-      <h1>{topic.title}</h1>
-
-      <div class="planned">
-        <span class="pill">Planned</span>
-        <p>This article has not been written yet. The topic is part of the roadmap, and it will appear here when it is.</p>
-      </div>
-
-      <nav class="pager" aria-label="Previous and next topic">
-        {
-          prev ? (
-            <a href={`/topics/${prev.slug}`} class="prev">
-              <span class="label muted">Previous</span>
-              <span class="title">
-                <span class="num">{prev.number}</span> {prev.title}
-              </span>
-            </a>
-          ) : (
-            <span />
-          )
-        }
-        {
-          next && (
-            <a href={`/topics/${next.slug}`} class="next">
-              <span class="label muted">Next</span>
-              <span class="title">
-                <span class="num">{next.number}</span> {next.title}
-              </span>
-            </a>
-          )
-        }
-      </nav>
-    </article>
-  </div>
+  <nav class="pager" aria-label="Previous and next topic">
+    {
+      prev ? (
+        <a href={`/topics/${prev.slug}`}>
+          <span class="label">Previous</span>
+          <span class="title">{prev.title}</span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      next && (
+        <a href={`/topics/${next.slug}`} class="next">
+          <span class="label">Next</span>
+          <span class="title">{next.title}</span>
+        </a>
+      )
+    }
+  </nav>
 </Base>
 
 <style>
-  .layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-    padding-top: 48px;
-  }
-  @media (min-width: 960px) {
-    .layout {
-      grid-template-columns: 260px minmax(0, 1fr);
-      gap: 64px;
-    }
-  }
-  .side {
-    order: 2;
-    font-size: 14px;
-  }
-  @media (min-width: 960px) {
-    .side {
-      order: 0;
-      position: sticky;
-      top: 92px;
-      align-self: start;
-      max-height: calc(100vh - 120px);
-      overflow: auto;
-      padding-right: 8px;
-    }
-  }
-  .phase-link {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 4px;
-    font-weight: 650;
-    line-height: 1.35;
-  }
-  .phase-link .num {
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
     color: var(--accent);
   }
-  .group {
-    margin-top: 16px;
+  .back svg {
+    transition: transform 0.2s var(--ease);
   }
-  .group-name {
-    margin: 0 0 4px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .group ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .group li a {
-    display: flex;
-    gap: 10px;
-    padding: 5px 10px;
-    margin-left: -10px;
-    border-radius: 8px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-  .group li a .num {
-    flex: none;
-    min-width: 4.4ch;
-    font-size: 12.5px;
-  }
-  .group li a:hover {
-    color: var(--text);
-    background: var(--surface);
-  }
-  .group li a.current {
-    color: var(--accent);
-    background: var(--accent-soft);
-    font-weight: 600;
+  .back:hover svg {
+    transform: translateX(-2px);
   }
 
-  .crumbs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    font-size: 14px;
-  }
-  .crumbs a:hover {
-    color: var(--text);
+  article {
+    margin-top: 56px;
   }
   .number {
-    margin-top: 28px;
-    font-size: 14px;
-    color: var(--accent);
+    font-size: 15px;
+    color: var(--muted);
   }
   h1 {
     margin-top: 4px;
-    max-width: 22ch;
-    font-size: clamp(30px, 4.5vw, 42px);
-    line-height: 1.12;
-    letter-spacing: -0.03em;
-    font-weight: 750;
+    font-size: clamp(34px, 6vw, 48px);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.035em;
   }
-  .planned {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 36px;
-    padding: 24px;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
+  .soon {
+    margin-top: 32px;
     color: var(--muted);
   }
 
   .pager {
     display: grid;
-    gap: 12px;
-    margin-top: 56px;
+    gap: 16px;
+    margin-top: 96px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
   }
-  @media (min-width: 640px) {
+  @media (min-width: 600px) {
     .pager {
       grid-template-columns: 1fr 1fr;
     }
@@ -215,25 +98,19 @@ const siblings = groupedTopics(topic.phase);
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 14px 18px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: border-color 0.15s;
-  }
-  .pager a:hover {
-    border-color: var(--accent);
   }
   .pager .next {
     text-align: right;
     grid-column: 2;
   }
-  .pager .label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .pager .title .num {
-    color: var(--accent);
+  .label {
     font-size: 13px;
+    color: var(--muted);
+  }
+  .title {
+    transition: color 0.2s var(--ease);
+  }
+  .pager a:hover .title {
+    color: var(--accent);
   }
 </style>
