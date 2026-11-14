@@ -9,7 +9,7 @@
 
 ## Turning a topic into an article
 
-Not built yet. The plan: an article is a Markdown file named after the slug. A topic is "published" when its file exists and is not marked draft; everything else shows the "Planned" state. Articles are written in English.
+Not built yet. The plan: an article is a Markdown file named after the slug. A topic is "published" when its file exists and is not marked draft; every other topic page says "Coming soon." Articles are written in English.
 
 ## Out of scope for now
 
