@@ -13,7 +13,7 @@ Not built yet. The plan: an article is a Markdown file named after the slug. A t
 
 ## Out of scope for now
 
-A low-level design track (OOP, patterns, small design problems), per-topic difficulty levels, interview practice material, and reading progress.
+A low-level design track (OOP, patterns, small design problems), per-topic difficulty levels, design exercises and interview practice, and reading progress.
 
 ## The phases
 
@@ -23,8 +23,10 @@ A low-level design track (OOP, patterns, small design problems), per-topic diffi
 4. **Messaging and Streaming**: queues, event-driven design, batch and stream processing.
 5. **Distributed Systems**: what goes wrong across machines and how nodes agree and converge.
 6. **Running in Production**: resilience, observability, delivery, security, recovery and cost.
-7. **Patterns and Case Studies**: a design method, reusable patterns, then full designs grouped by domain.
-8. **AI Systems**: building blocks and case studies for AI products.
+7. **Patterns**: recurring problems (scaling reads and writes, large files, contention, long-running work, pushing updates) and how the building blocks solve them.
+8. **AI Systems**: the building blocks of AI products (model serving, evaluation, RAG, agents).
 9. **Classic Systems**: the well-known papers and systems, grouped by area.
 
-The order follows a request through a system (traffic, then data, then async work), then the theory and operations behind it, then whole designs.
+The order follows a request through a system (traffic, then data, then async work), then the theory and operations behind it, then the patterns that combine them.
+
+The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.

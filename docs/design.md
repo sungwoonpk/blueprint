@@ -2,6 +2,10 @@
 
 Simple and quiet, in the spirit of Apple's own sites: system font, lots of white space, one blue accent, grouped lists with hairline dividers, and smooth but small motion. Nothing is on the page unless it helps you find or read a topic.
 
+## Identity
+
+The header shows the name, **blueprint** (always lowercase), and next to it, after a hairline, the subject: **System Design**. The front page heading is "System Design", and page titles read `blueprint · System Design` or `<topic> · blueprint`. No logo in the header; the favicon is the only mark.
+
 ## Pages
 
 - **Roadmap (`/`)** is the front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
