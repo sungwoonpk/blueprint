@@ -4,7 +4,9 @@ An [API gateway](/system-design/api-gateways) is a natural place to limit traffi
 
 ## Why Limit at All
 
-A limit protects the system from a client that sends too much, whether it is an attacker, a buggy script that retries in a tight loop, or a partner running a big import. It also keeps one heavy user from starving everyone else, and it keeps costs and response times predictable. Registration day, from [Estimating Capacity](/system-design/estimation), is the honest case: some load is legitimate and still has to be shaped.
+A limit protects the system from a client that sends too much, whether it is an attacker, a buggy script that retries in a tight loop, or a partner running a big import.
+
+It also keeps one heavy user from starving everyone else, and it keeps costs and response times predictable. Registration day, from [Estimating Capacity](/system-design/estimation), is the honest case: some load is legitimate and still has to be shaped.
 
 Stripe's engineering blog describes four limiters it runs, which are a useful map of what can be limited:
 
@@ -80,7 +82,11 @@ def allow(bucket, now, rate=0.5, capacity=5):
     return False
 ```
 
-The bucket refills lazily, only when a request arrives, so there is no timer per client. Two numbers set the behavior: the capacity is the largest burst, and the refill rate is the long run average. Amazon's API Gateway describes its throttling as a token bucket with exactly these two settings, a rate and a burst, and Envoy's local rate limiter takes `max_tokens`, `tokens_per_fill` and `fill_interval`. Stripe says it uses a token bucket kept in Redis for its request rate limiter. When many servers share a bucket, the read and update have to happen as one atomic step, usually a small Redis script, so two servers can't spend the same token.
+The bucket refills lazily, only when a request arrives, so there is no timer per client. Two numbers set the behavior: the capacity is the largest burst, and the refill rate is the long run average.
+
+Amazon's API Gateway describes its throttling as a token bucket with exactly these two settings, a rate and a burst, and Envoy's local rate limiter takes `max_tokens`, `tokens_per_fill` and `fill_interval`. Stripe says it uses a token bucket kept in Redis for its request rate limiter.
+
+When many servers share a bucket, the read and update have to happen as one atomic step, usually a small Redis script, so two servers can't spend the same token.
 
 ## Leaky Bucket
 
@@ -115,7 +121,9 @@ Here is the same traffic through each. The limit is 5 requests per 10 seconds, a
 <figcaption>Requests let through out of 10 sent, in a small simulation of our own: 5 at second 9 and 5 at second 11</figcaption>
 </figure>
 
-The fixed window lets everything through, since the two batches fall in different windows. The sliding log is strictest: at second 11 it still sees the first batch within the last 10 seconds, so it allows none. The token bucket lets the first batch use the full bucket, then allows one more after 2 seconds of refill at half a token a second. The leaky bucket accepts the same six, but it spreads their processing out over time at the drain rate.
+The fixed window lets everything through, since the two batches fall in different windows. The sliding log is strictest: at second 11 it still sees the first batch within the last 10 seconds, so it allows none.
+
+The token bucket lets the first batch use the full bucket, then allows one more after 2 seconds of refill at half a token a second. The leaky bucket accepts the same six, but it spreads their processing out over time at the drain rate.
 
 | Algorithm | State per Client | Bursts | Best For |
 | --- | --- | --- | --- |
@@ -127,7 +135,11 @@ The fixed window lets everything through, since the two batches fall in differen
 
 ## What to Count By
 
-The key decides who shares an allowance. Usual choices are the logged in user, an API key, an IP address, or a combination such as a user and an endpoint. Each has a catch. A campus network may put 2,000 students behind one IP address, so a limit per IP can lock out a whole building because of one person. And behind proxies, the address comes from `X-Forwarded-For`, so the rule from [Forward and Reverse Proxy Servers](/system-design/proxies) applies: trust only the entries your own proxies added. Google Cloud Armor shows how many keys a limiter can use, including the address, a header, a cookie, the URL path, the region and a fingerprint of the TLS connection, and it lets you combine up to three.
+The key decides who shares an allowance. Usual choices are the logged in user, an API key, an IP address, or a combination such as a user and an endpoint. Each has a catch. A campus network may put 2,000 students behind one IP address, so a limit per IP can lock out a whole building because of one person.
+
+And behind proxies, the address comes from `X-Forwarded-For`, so the rule from [Forward and Reverse Proxy Servers](/system-design/proxies) applies: trust only the entries your own proxies added.
+
+Google Cloud Armor shows how many keys a limiter can use, including the address, a header, a cookie, the URL path, the region and a fingerprint of the TLS connection, and it lets you combine up to three.
 
 ## Telling the Client
 
@@ -141,7 +153,9 @@ Content-Type: application/json
 {"code": "rate_limited", "message": "Too many requests. Retry in 12 seconds."}
 ```
 
-Many APIs also report the budget on each response, so well behaved clients slow down before they are refused. GitHub sends `x-ratelimit-limit`, `x-ratelimit-remaining` and `x-ratelimit-reset` with each reply. An IETF draft proposes standard names, a `RateLimit-Policy` header such as `"perminute";q=100;w=60` for 100 requests per 60 seconds, and a `RateLimit` header such as `"perminute";r=37;t=21` for 37 left and 21 seconds to go. It is still a draft, so check its status before depending on it.
+Many APIs also report the budget on each response, so well behaved clients slow down before they are refused. GitHub sends `x-ratelimit-limit`, `x-ratelimit-remaining` and `x-ratelimit-reset` with each reply.
+
+An IETF draft proposes standard names, a `RateLimit-Policy` header such as `"perminute";q=100;w=60` for 100 requests per 60 seconds, and a `RateLimit` header such as `"perminute";r=37;t=21` for 37 left and 21 seconds to go. It is still a draft, so check its status before depending on it.
 
 On the client side, the response is a wait, then a retry with growing delays, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries). A limiter that rejects and a client that retries immediately only adds load.
 
