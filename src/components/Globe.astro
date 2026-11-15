@@ -7,9 +7,8 @@
 //    never stalls. Cube maps have no seam and no pinched poles.
 // 2. Draw, every frame: find the point of the planet under each pixel, let the
 //    currents drift past each other so deep blue, sky, lilac and pink flow,
-//    send gentle swell out in rings from a few far-off storms, drift the
-//    clouds, and add an atmosphere that fades from blue to white with a trace
-//    of the logo's pink.
+//    drift the clouds, and add an atmosphere that fades from blue to white
+//    with a trace of the logo's pink.
 //
 // Drag to turn it in any direction, all the way round; it glides, then goes
 // back to its slow turn. Without WebGL2 the logo is shown instead; with reduced
@@ -113,10 +112,6 @@
     uniform float time;
     uniform float pixel;
     const float RADIUS = 0.84;   // sphere radius in canvas units; the rest is atmosphere
-    const int WAVES = 12;
-    uniform vec4 waveOrigin[WAVES]; // storm the wave spreads from, wavenumber per radian
-    uniform vec3 waveMotion[WAVES]; // angular speed, starting phase, height
-    uniform vec3 waveCrest[WAVES];  // varies the crest height along its length
     ${NOISE}
     vec3 rotY(vec3 v, float a) { float c = cos(a), s = sin(a); return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c); }
     vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }
@@ -150,72 +145,35 @@
       vec4 a = texture(detail, sA);
       float flowB = texture(detail, rotY(s, -time * 0.009)).g;
       float t = smoothstep(0.35, 0.67, a.r * 0.55 + flowB * 0.45);
-      vec3 albedo = lin(vec3(0.10, 0.22, 0.55));
-      albedo = mix(albedo, lin(vec3(0.17, 0.35, 0.74)), smoothstep(0.00, 0.30, t));
-      albedo = mix(albedo, lin(vec3(0.42, 0.63, 0.93)), smoothstep(0.32, 0.50, t));
-      albedo = mix(albedo, lin(vec3(0.72, 0.84, 0.98)), smoothstep(0.48, 0.58, t));
-      albedo = mix(albedo, lin(vec3(0.78, 0.75, 0.97)), smoothstep(0.55, 0.66, t));
-      albedo = mix(albedo, lin(vec3(0.95, 0.73, 0.87)), smoothstep(0.64, 0.80, t));
-      albedo = mix(albedo, lin(vec3(0.98, 0.88, 0.94)), smoothstep(0.92, 1.00, t));
+      vec3 albedo = lin(vec3(0.09, 0.20, 0.53));
+      albedo = mix(albedo, lin(vec3(0.15, 0.33, 0.74)), smoothstep(0.00, 0.30, t));
+      albedo = mix(albedo, lin(vec3(0.36, 0.58, 0.93)), smoothstep(0.32, 0.50, t));
+      albedo = mix(albedo, lin(vec3(0.64, 0.79, 0.98)), smoothstep(0.48, 0.58, t));
+      albedo = mix(albedo, lin(vec3(0.72, 0.68, 0.96)), smoothstep(0.55, 0.66, t));
+      albedo = mix(albedo, lin(vec3(0.93, 0.66, 0.83)), smoothstep(0.64, 0.80, t));
+      albedo = mix(albedo, lin(vec3(0.97, 0.84, 0.92)), smoothstep(0.92, 1.00, t));
       albedo *= 0.90 + 0.20 * a.b;   // fine streaks along the currents
-
-      // Waves: swell spreading in rings from a few far-off storms, measured
-      // along the surface (great-circle distance), so crests curve with the
-      // planet and crowd together toward its edge. Each wave travels at its
-      // deep-water speed (omega = sqrt(g k)): long swells outrun short ones and
-      // trains from different storms cross, build and part on their own. Crests
-      // swell and fade along their length; rough and calm patches come from a
-      // slow noise; a wave finer than a pixel fades out.
-      float rough = 0.5 + 0.5 * smoothstep(-0.35, 0.35, gnoise(s * 2.2 + vec3(time * 0.03, 0.0, 0.0)));
-      float sea = 0.0;
-      vec3 slope = vec3(0.0);
-      for (int i = 0; i < WAVES; i++) {
-        vec3 origin = waveOrigin[i].xyz;
-        float k = waveOrigin[i].w;
-        float u = clamp(dot(s, origin), -1.0, 1.0);
-        float away = sqrt(1.0 - u * u);   // sine of the distance from the storm
-        float phase = k * acos(u) - waveMotion[i].x * time + waveMotion[i].y;
-        // The direction the swell travels: along the surface, away from the storm.
-        vec3 outward = (u * s - origin) / max(away, 1e-4);
-        // Short crests: each one rises and falls away within a few wavelengths.
-        float group = 0.5 + 0.5 * sin(dot(s, waveCrest[i]) * k * 0.3 + waveMotion[i].y * 3.0);
-        float lod = clamp(1.6 - k * px / max(n.z, 0.15) * 2.0, 0.0, 1.0);
-        // Quiet near the storm and where the rings close again on the far side.
-        float spread = smoothstep(0.0, 0.45, away);
-        float a = rough * group * lod * spread * waveMotion[i].z / k;
-        sea += a * sin(phase);
-        slope += outward * (a * k * cos(phase));
-      }
-      vec3 grad = transpose(orient) * slope;
-      grad -= n * dot(grad, n);
-      vec3 wn = normalize(n - grad * 0.06);
-      float steep = length(grad);
 
       // Glossy water: soft wrapped light, sky reflected at grazing angles,
       // and a soft sheen where the sun is.
-      float wrapLight = clamp((dot(wn, sun) + 0.25) / 1.25, 0.0, 1.0);
-      float ndh = max(dot(wn, halfway), 0.0);
-      float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(wn, view), 0.0), 5.0);
+      float wrapLight = clamp((dot(n, sun) + 0.25) / 1.25, 0.0, 1.0);
+      float ndh = max(dot(n, halfway), 0.0);
+      float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(n, view), 0.0), 5.0);
       vec3 color = albedo * (0.38 + 0.82 * wrapLight);
-      // Wave relief: faces turned to the sun a little brighter, the rest a little darker.
-      color *= 1.0 + clamp((dot(wn, sun) - dot(n, sun)) * 2.5, -0.28, 0.28);
-      color = mix(color, lin(vec3(0.80, 0.89, 1.0)), fresnel * 0.5);
-      // One soft sun glint on the sunlit side, not a sparkle on every wave.
+      color = mix(color, lin(vec3(0.80, 0.89, 1.0)), fresnel * 0.4);
+      // One soft sun glint on the sunlit side.
       float glintArea = pow(max(dot(n, halfway), 0.0), 18.0);
       color += pow(ndh, 40.0) * 0.10 * glintArea;
-      // Whitecaps only where several crests pile up and the sea gets steep.
-      float caps = smoothstep(2.6, 3.8, steep) * smoothstep(0.0, 0.03, sea) * 0.22 * smoothstep(0.15, 0.45, n.z);
-      color = mix(color, lin(vec3(0.99, 0.98, 1.0)) * (0.75 + 0.35 * wrapLight), caps);
 
       // Thin clouds drift a little faster than the planet turns.
       float diffuse = max(dot(n, sun), 0.0);
-      float cloud = texture(detail, rotY(s, time * 0.006)).a * 0.20;
+      float cloud = texture(detail, rotY(s, time * 0.006)).a * 0.12;
       color = mix(color, vec3(1.0) * (0.55 + 0.45 * diffuse), cloud);
 
       color = pow(color, vec3(1.0 / 2.2));
       // Atmosphere seen edge on: blue, warming to the logo's pink at the very rim.
       float rim = pow(1.0 - n.z, 3.0);
-      color = mix(color, mix(vec3(0.64, 0.79, 1.0), vec3(0.96, 0.84, 0.92), smoothstep(0.55, 1.0, rim)), rim * 0.45);
+      color = mix(color, mix(vec3(0.64, 0.79, 1.0), vec3(0.96, 0.84, 0.92), smoothstep(0.55, 1.0, rim)), rim * 0.34);
 
       // A trace of noise keeps soft gradients free of banding.
       color += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
@@ -276,37 +234,6 @@
       context.activeTexture(context.TEXTURE0);
       context.bindTexture(context.TEXTURE_CUBE_MAP, detail);
       context.uniform1i(context.getUniformLocation(draw, 'detail'), 0);
-
-      // The wave spectrum: four storms around the planet, each sending out
-      // swells of several lengths from a point near its center. Wavelengths
-      // spread geometrically, longer swells are a little higher, and each
-      // travels at its deep-water speed omega = sqrt(g k).
-      let seed = 7;
-      const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-      const unit = (v: number[]) => {
-        const len = Math.hypot(v[0], v[1], v[2]);
-        return v.map((c) => c / len);
-      };
-      const randomDirection = () => {
-        const z = random() * 2 - 1;
-        const a = random() * Math.PI * 2;
-        const r = Math.sqrt(1 - z * z);
-        return [r * Math.cos(a), r * Math.sin(a), z];
-      };
-      const storms = [0, 1, 2, 3].map(randomDirection);
-      const origins: number[] = [];
-      const motion: number[] = [];
-      const crests: number[] = [];
-      for (let i = 0; i < 12; i++) {
-        const origin = unit(storms[i % storms.length].map((c) => c + (random() - 0.5) * 0.3));
-        const k = 18 * Math.pow(1.36, i) * (0.9 + random() * 0.2);
-        origins.push(...origin, k);
-        motion.push(Math.sqrt(9.8 * k) * 0.2, random() * Math.PI * 2, Math.pow(18 / k, 0.25));
-        crests.push(...randomDirection());
-      }
-      context.uniform4fv(context.getUniformLocation(draw, 'waveOrigin'), origins);
-      context.uniform3fv(context.getUniformLocation(draw, 'waveMotion'), motion);
-      context.uniform3fv(context.getUniformLocation(draw, 'waveCrest'), crests);
     };
 
     const uOrient = context.getUniformLocation(draw, 'orient');
