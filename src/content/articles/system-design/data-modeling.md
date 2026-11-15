@@ -14,7 +14,7 @@ The requirements from [Functional and Nonfunctional Requirements](/system-design
 | Mark a book as sold | A Listing has a status |
 | A listing is sold to one student at most | A Listing has at most one Order |
 
-Each entity then gets **attributes**, its properties, such as a user's name and campus or a listing's price. The result is a rough map of the data before any SQL is written. 
+Each entity then gets **attributes**, its properties, such as a user's name and campus or a listing's price. The result is a rough map of the data before any SQL is written.
 
 Keep it small at first. A model with five tables you understand is a better start than twenty you drew from imagination.
 
