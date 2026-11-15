@@ -110,8 +110,8 @@ export const phases: Phase[] = [
     ]),
   },
   {
-    slug: 'messaging-and-streaming',
-    title: 'Messaging and Streaming',
+    slug: 'async-processing',
+    title: 'Asynchronous Processing',
     topics: topics([
       ['queue-types', 'Message Queues, Task Queues and Pub/Sub', 'Messaging'],
       ['delivery-guarantees', 'Delivery Guarantees', 'Messaging'],
