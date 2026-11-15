@@ -43,7 +43,8 @@ Inside a phase the same rule holds: concepts before mechanisms, and mechanisms b
 The roadmap reads like a book's table of contents.
 
 - One idea per topic. A topic that needs "and" to join two unrelated ideas is two topics.
-- Titles are short noun phrases in Title Case: "TCP and UDP", not "TCP vs UDP". A real choice is named as one: "Choosing Between SQL and NoSQL".
+- Titles tell the reader what the chapter does, so the list reads like a story, not a glossary: "Finding Servers with DNS", not "DNS". The key term stays in the title, because search matches titles. A real choice is named as one: "Choosing Between REST, RPC and GraphQL". No "vs".
+- Group names read as parts of the story: "How Computers Talk", "What Makes a System Good", "Splitting into Services".
 - Patterns are named by what you do: "Scaling Reads", "Handling Contention".
 - A group often opens with the problem before the fixes ("Cascading Failures" before timeouts and circuit breakers) and ends with the tools that implement it ("Redis and Memcached" after the caching ideas).
 - Products appear only as a pair to compare ("Redis and Memcached") or in Classic Systems.
