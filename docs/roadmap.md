@@ -25,7 +25,7 @@ Design exercises and interview practice, and reading progress. There is one road
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
 7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, hot and cold tiers, copies in sync, counting and ranking, location, tenant isolation), correctness (contention, duplicate work, long multistep work), reaching users (feeds, pushing updates) and evolving a running system (breaking up a monolith, migrating between datastores).
 8. **AI Systems**: how models run and what they cost, retrieval (embeddings, vector databases, RAG, and when to fine-tune instead), building applications and agents within a context window, and keeping them good and safe in production.
-9. **Classic Systems**: the well-known papers and systems, grouped by area.
+9. **Classic Systems**: the well-known papers and systems, grouped by area and ordered by year, each one tied back to the chapters it illustrates (for example Dataflow to windowing and watermarks, Borg to container orchestration).
 
 ## Why this order
 
