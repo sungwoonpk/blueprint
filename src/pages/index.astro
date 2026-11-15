@@ -5,7 +5,7 @@ import Moons from '../components/Moons.astro';
 import { SITE } from '../config';
 ---
 
-<Base>
+<Base search={false}>
   <div class="home">
     <h1 class="visually-hidden">{SITE.name}</h1>
     <Globe><Moons /></Globe>

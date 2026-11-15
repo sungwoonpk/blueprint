@@ -14,6 +14,7 @@ import { subjects } from '../data/subjects';
     subjects.map((s) => (
       <a class="moon" href={s.path} draggable="false">
         <span class="body" aria-hidden="true" />
+        <span class="ghost" aria-hidden="true" />
         <span class="name">{s.name}</span>
       </a>
     ))
@@ -30,7 +31,12 @@ import { subjects } from '../data/subjects';
 
   const globe = document.querySelector<HTMLElement>('.globe')!;
   const moons = [...globe.querySelectorAll<HTMLAnchorElement>('.moon')];
-  const parts = moons.map((moon) => ({ body: moon.querySelector<HTMLElement>('.body')!, name: moon.querySelector<HTMLElement>('.name')! }));
+  const parts = moons.map((moon) => ({
+    body: moon.querySelector<HTMLElement>('.body')!,
+    ghost: moon.querySelector<HTMLElement>('.ghost')!,
+    name: moon.querySelector<HTMLElement>('.name')!,
+  }));
+  const GHOST = 0.4; // how much of a moon shows through the planet it is behind
   const [behindPath, frontPath] = [...globe.querySelectorAll<SVGPathElement>('.orbit path')];
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -58,12 +64,13 @@ import { subjects } from '../data/subjects';
   };
 
   // The moon goes behind the planet or in front of it. Its name always sits
-  // above the planet, so the planet's edge never cuts it, and fades out only
-  // while the moon itself is hidden behind the planet.
+  // above the planet, so the planet's edge never cuts it. Where the moon is
+  // hidden behind the planet, a faint copy of it and its name show through, in
+  // front of the planet, so it can still be seen and clicked.
   const place = () => {
     const planet = PLANET * half;
     moons.forEach((moon, i) => {
-      const { body, name } = parts[i];
+      const { body, ghost, name } = parts[i];
       const t = start[i] + angle;
       const [x, y] = point(t).map((v) => v * half);
       const toward = Math.sin(t); // 1 nearest the viewer, -1 farthest
@@ -71,12 +78,15 @@ import { subjects } from '../data/subjects';
       const below = y + radius + LABEL_GAP;
       const hidden = smooth(0, -0.2, toward) * (1 - smooth(planet - radius, planet + radius, Math.hypot(x, y)));
       const raised = moon === focused;
-      const shown = raised ? 1 : 1 - hidden;
-      body.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${(1 + 0.12 * toward).toFixed(3)})`;
+      const faint = raised ? 0 : hidden;
+      const lift = `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${(1 + 0.12 * toward).toFixed(3)})`;
+      body.style.transform = lift;
       body.style.zIndex = raised || toward > 0 ? '2' : '0';
+      ghost.style.transform = lift;
+      ghost.style.opacity = (faint * GHOST).toFixed(3);
+      ghost.style.pointerEvents = faint > 0.01 ? '' : 'none';
       name.style.transform = `translate(${x}px, ${below}px) translateX(-50%)`;
-      name.style.opacity = shown.toFixed(3);
-      name.style.pointerEvents = shown > 0.5 ? '' : 'none';
+      name.style.opacity = (1 - faint * 0.4).toFixed(3);
     });
   };
 
@@ -181,12 +191,17 @@ import { subjects } from '../data/subjects';
     -webkit-tap-highlight-color: transparent;
   }
   .body,
+  .ghost,
   .name {
     position: absolute;
     left: 50%;
     top: 50%;
     pointer-events: auto;
     will-change: transform;
+  }
+  .ghost {
+    z-index: 2;
+    opacity: 0;
   }
   .name {
     z-index: 3;
@@ -212,7 +227,8 @@ import { subjects } from '../data/subjects';
     --shade: #c987b3;
     --glow: rgb(245 170 210 / 0.5);
   }
-  .body {
+  .body,
+  .ghost {
     width: var(--moon);
     height: var(--moon);
     border-radius: 50%;
@@ -235,7 +251,9 @@ import { subjects } from '../data/subjects';
     transition: color 0.2s var(--ease);
   }
   .moon:hover .body,
-  .moon:focus-visible .body {
+  .moon:hover .ghost,
+  .moon:focus-visible .body,
+  .moon:focus-visible .ghost {
     box-shadow: 0 0 calc(var(--moon) * 1.1) var(--glow);
   }
   .moon:hover .name,

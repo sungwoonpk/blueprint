@@ -13,9 +13,11 @@ interface Props {
   plainTitle?: boolean;
   /** Page width: the roadmap is wide, an article is a narrow reading column. */
   width?: 'wide' | 'narrow';
+  /** Show search in the header; Home has nothing to search. */
+  search?: boolean;
 }
 
-const { title, plainTitle = false, width = 'wide' } = Astro.props;
+const { title, plainTitle = false, width = 'wide', search = true } = Astro.props;
 const pageTitle = title ? (plainTitle ? title : `${title} · ${SITE.name}`) : SITE.name;
 ---
 
@@ -57,7 +59,7 @@ const pageTitle = title ? (plainTitle ? title : `${title} · ${SITE.name}`) : SI
       <div class:list={['bar', width]}>
         <a href="/" id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
-          <Search />
+          {search && <Search />}
           <ThemeToggle />
           <Menu />
         </div>
