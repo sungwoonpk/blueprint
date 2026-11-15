@@ -33,6 +33,7 @@ Link to other topics by name where they go deeper, for example `[Thinking in Tra
 - Is every key point backed by the body?
 - Any overstated or vague line? Any word doing no work? Any dash?
 - Any table, chart or emphasis that is there just to be there?
+- Is every claim true? Check each fact, number and example against the sources once more, and fix anything that is wrong or misleading.
 
 ## Sources
 

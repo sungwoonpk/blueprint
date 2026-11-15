@@ -1,4 +1,4 @@
-> Almost every big system started on **one server**. It grew one step at a time, and each step fixed whatever was breaking at that moment.
+> Most big systems started on **one server**. It grew one step at a time, and each step fixed whatever was breaking at that moment.
 
 Remember the textbook app from [What Is System Design?](/system-design/what-is-system-design) Here's how it might grow from one campus to every campus in the country.
 
@@ -40,11 +40,11 @@ Hitting the ceiling doesn't feel gradual. Response time stays flat, then shoots 
 <figcaption>Response time as users grow on one server (example numbers)</figcaption>
 </figure>
 
-That jump is the signal to take the next step.
+That jump is the signal to take the next step. But which step?
 
 ## The Rule for Every Step
 
-Don't add parts because big companies have them. Add one when something is actually slow or failing.
+Whichever one fixes what is breaking right now. Don't add parts because big companies have them.
 
 1. **Measure**: response times, errors, and how busy each machine is. See [Logs, Metrics and Traces](/system-design/observability).
 2. **Find the bottleneck**: the one part that holds everything else back.
@@ -54,23 +54,23 @@ This goes a long way. Around 2016, Stack Overflow served millions of programmers
 
 ## The Usual Steps
 
-The exact order changes from system to system, but most go roughly like this.
+Here is how that rule usually plays out for the textbook app. The exact order changes from system to system.
 
 ### 1. Make the Server Bigger
 
-Registration week comes and pages slow down. The easiest fix is a bigger machine with more CPU and memory. No code changes. This is **scaling up**, also called vertical scaling.
+Registration week comes and our one server slows down. The easiest fix is a bigger machine with more CPU and memory. No code changes. This is **scaling up**, also called vertical scaling.
 
 It buys time, but the ceiling is still there, big machines get expensive fast, and it's still one machine. See [Scaling Up and Scaling Out](/system-design/scaling).
 
 ### 2. Give the Database Its Own Server
 
-Our code and the database fight over the same CPU, memory and disk. On separate machines, each gets the hardware it needs, and the database no longer has to be reachable from the internet.
+The bigger machine still runs everything at once, so our code and the database fight over its CPU, memory and disk. On separate machines, each gets the hardware it needs and can be tuned and upgraded on its own.
 
 The cost: one more machine, and every query now crosses the network.
 
 ### 3. Add Servers Behind a Load Balancer
 
-One web server can't keep up, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going.
+With the database moved out, the web server is next: one can't keep up at peak, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going. The load balancer itself usually runs as a pair, so it doesn't become the new single point of failure.
 
 <figure class="diagram">
 <div class="flow">
@@ -93,7 +93,7 @@ The catch: the next request can land on any server. If your login lived in serve
 
 ### 4. Copy the Database
 
-Now the database is the busiest part, and still a single point of failure. Most requests only read: students browse far more than they post. So we keep copies called **replicas**. The **primary** database takes every write, and the replicas take the reads. If the primary dies, a replica can take over.
+Web servers can now be added at will, so the load moves to the one thing they all share. The database is the busiest part, and still a single point of failure. Most requests only read: students browse far more than they post. So we keep copies called **replicas**. The **primary** database takes every write, and the replicas take the reads. If the primary dies, a replica can take over.
 
 <figure class="diagram">
 <p class="rowname">Write</p>
@@ -120,7 +120,7 @@ The cost: replicas run a little behind. A student posts a book and might not see
 
 ### 5. Add a Cache
 
-The same popular listings get read thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database.
+Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database.
 
 <figure class="diagram">
 <p class="rowname">Cache Has It</p>
@@ -144,13 +144,13 @@ The cost: cached data can go out of date, and knowing when to refresh it is hard
 
 ### 6. Serve Photos From a CDN
 
-Photos are the heaviest part of every page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close.
+Pages now come back fast, except the photos. They are the heaviest part of every page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close.
 
 The cost: another service to pay for, and a changed photo takes time to update everywhere. See [Content Delivery Networks (CDNs)](/system-design/cdn).
 
 ### 7. Move Slow Work to a Queue
 
-Resizing an uploaded photo or sending a "your book sold" email makes the student wait. Instead, the server drops a job on a **message queue** and answers right away. Separate **worker** servers pick up jobs and do them in the background.
+Reading is fast everywhere now. What's still slow are actions with heavy work behind them: resizing an uploaded photo or sending a "your book sold" email makes the student wait. Instead, the server drops a job on a **message queue** and answers right away. Separate **worker** servers pick up jobs and do them in the background.
 
 <figure class="diagram">
 <div class="flow">
@@ -166,11 +166,11 @@ Resizing an uploaded photo or sending a "your book sold" email makes the student
 <figcaption>Workers resize photos and send emails while the student moves on</figcaption>
 </figure>
 
-The cost: more moving parts, and a job can fail or run twice, so workers need retries and every job must be safe to run twice. Engineers call that **idempotent**. See [Message Queues and Pub/Sub](/system-design/message-queues).
+The cost: more moving parts, and a job can fail or run twice, so workers need retries and jobs must be safe to repeat. Engineers call that **idempotent**. See [Message Queues and Pub/Sub](/system-design/message-queues).
 
 ### 8. Split the Database
 
-Even with replicas, every write still goes to one primary. When writes or data outgrow it, we split the data across several databases, for example by campus. This is **sharding**. Each database holds only its part.
+Reads, photos and slow jobs are handled. The next bottleneck is writing: even with replicas, every write still goes to one primary. When writes or data outgrow it, we split the data across several databases, for example by campus. This is **sharding**. Each database holds only its part.
 
 <figure class="diagram">
 <div class="flow">
@@ -189,11 +189,13 @@ The cost: it's one of the hardest steps. Queries that need several parts get com
 
 ### 9. Go to More Regions
 
-If the app goes worldwide, students far away wait on every request, and one data center outage takes everyone down. So we run the system in several **regions**, each near its users, and send each user to the closest one.
+Everything so far still lives in one place. If the app goes worldwide, students far away wait on every request, and one data center outage takes everyone down. So we run the system in several **regions**, each near its users, and send each user to the closest one.
 
 The cost: keeping data in sync across regions is one of the hardest problems in the field. See [Serving Users Worldwide](/system-design/global-users).
 
 ## Where We End Up
+
+Put together, steps 1 to 7 turn the single server into this:
 
 <figure class="diagram">
 <div class="flow">
@@ -209,14 +211,16 @@ The cost: keeping data in sync across regions is one of the hardest problems in 
 <div class="node">Queue<small>slow jobs</small></div>
 </div>
 </div>
-<figcaption>The textbook app after steps 1 to 7. Photos load straight from the CDN.</figcaption>
+<figcaption>Photos load straight from the CDN</figcaption>
 </figure>
 
 ## What Every Step Has in Common
 
-- It fixes one bottleneck, and the next one shows up somewhere else.
-- It adds parts to run, watch and pay for.
-- It brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice.
+Look back over the nine steps and the same pattern repeats. Each one:
+
+- fixes one bottleneck, and the next one shows up somewhere else
+- adds parts to run, watch and pay for
+- brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice
 
 <u>So add a step only when the numbers say you need it.</u>
 
