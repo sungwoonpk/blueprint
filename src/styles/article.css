@@ -309,7 +309,8 @@
 }
 
 /* Packets in a row (class "packets" keeps them in a row on phones too). A packet
-   can be "lost" (red) or "wait" (faded, held up behind a lost one). */
+   can be "lost" (red) or "wait" (faded, held up behind a lost one). A node can
+   also be "hot" (red), such as the bottleneck of a chain. */
 .prose .flow + .flow {
   margin-top: 8px;
 }
@@ -320,12 +321,14 @@
   gap: 8px;
 }
 
-.prose .node.lost {
+.prose .node.lost,
+.prose .node.hot {
   color: var(--bad);
   box-shadow: inset 0 0 0 1.5px var(--bad);
 }
 
-.prose .node.lost small {
+.prose .node.lost small,
+.prose .node.hot small {
   color: var(--bad);
 }
 
