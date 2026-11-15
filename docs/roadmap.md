@@ -23,8 +23,8 @@ Design exercises and interview practice, and reading progress. There is one road
 4. **Asynchronous Processing**: work that happens outside the request: messaging, events, stream processing and background jobs.
 5. **Distributed Systems**: why spreading data over machines is hard, replication, consistency, partitioning, distributed transactions, time and order, coordination, and how replicas converge.
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
-7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, copies in sync, counting and ranking, location), correctness (contention, duplicate work, long multistep work) and reaching users (feeds, pushing updates).
-8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
+7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, copies in sync, counting and ranking, location), correctness (contention, duplicate work, long multistep work), reaching users (feeds, pushing updates) and evolving a running system (breaking up a monolith, migrating between datastores).
+8. **AI Systems**: the building blocks of AI products (inference, serving, embeddings, vector databases, retrieval, agents), and how to evaluate and guard them.
 9. **Classic Systems**: the well-known papers and systems, grouped by area.
 
 ## Why this order
@@ -46,7 +46,8 @@ The roadmap reads like a book's table of contents.
 - Titles are short noun phrases in Title Case: "TCP and UDP", not "TCP vs UDP". A real choice is named as one: "Choosing Between SQL and NoSQL".
 - Patterns are named by what you do: "Scaling Reads", "Handling Contention".
 - A group often opens with the problem before the fixes ("Cascading Failures" before timeouts and circuit breakers) and ends with the tools that implement it ("Redis and Memcached" after the caching ideas).
-- Products appear only as a pair to compare ("Kafka and RabbitMQ") or in Classic Systems.
+- Products appear only as a pair to compare ("Redis and Memcached") or in Classic Systems.
+- No two topics teach the same thing. Where a building block and a pattern touch (Idempotency and Avoiding Duplicate Work), the building block explains the mechanism and the pattern combines it with others.
 - Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context.
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.

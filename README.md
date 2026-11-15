@@ -4,7 +4,7 @@ A text-first study guide for system design: fundamentals, building blocks, distr
 
 ## Status
 
-Skeleton only. The roadmap (9 phases, 171 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. The roadmap (9 phases, 173 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
