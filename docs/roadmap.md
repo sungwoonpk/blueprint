@@ -13,15 +13,15 @@ Not built yet. The plan: an article is a Markdown file named after the slug. A t
 
 ## Out of scope for now
 
-A low-level design track (OOP, patterns, small design problems), per-topic difficulty levels, design exercises and interview practice, and reading progress.
+Design exercises and interview practice, and reading progress. There is one roadmap for everyone: no separate tracks and no levels.
 
 ## The phases
 
 1. **Foundations**: what system design is and how to think in tradeoffs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
 2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
-3. **Data Storage and Caching**: relational and NoSQL databases, storage internals, replication and consistency, partitioning, distributed transactions, caching, specialized storage.
+3. **Data Storage and Caching**: storage on one machine and caching: relational and NoSQL databases, caching, specialized storage, and storage internals.
 4. **Messaging and Streaming**: messaging, events, stream processing and background jobs.
-5. **Distributed Systems**: failure, time and order, coordination, and how replicas converge.
+5. **Distributed Systems**: why spreading data over machines is hard, replication, consistency, partitioning, distributed transactions, time and order, coordination, and how replicas converge.
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
 7. **Patterns**: recurring problems (scaling reads and writes, traffic spikes, counting, large files, contention, long jobs, fanout, pushing updates) and how the building blocks solve them.
 8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
@@ -33,7 +33,7 @@ Each topic should only need what came before it.
 
 - Foundations first: the vocabulary (trade-offs, latency, scalability, availability) and the network a request travels over.
 - Then the building blocks in the order a request meets them: the API, the traffic layer, the services, the data, and the asynchronous work behind them.
-- Distributed systems theory comes after data and messaging, because replication and delivery guarantees are what make clocks, consensus and convergence matter.
+- The roadmap has to make sense both ways it is read: in order, no topic needs something not yet covered; opened at any phase, that phase is one complete subject. That is why each phase is a single subject: the building blocks (phases 2 to 4), distributed data together with the theory behind it (phase 5), running a system (phase 6), the patterns that combine everything (phase 7), AI systems (phase 8) and the classic papers (phase 9).
 - Production concerns come once there is a system to run, patterns once every block they combine has been covered, and the classic papers last, as deep dives that use everything before them.
 
 Inside a phase the same rule holds: concepts before mechanisms, and mechanisms before named products (for example, caching strategies before Redis). Single-node ideas come before distributed ones: ACID transactions sit with databases, two-phase commit and sagas come after partitioning.
