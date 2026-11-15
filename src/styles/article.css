@@ -37,7 +37,7 @@
 }
 
 /* A term in bold inside a sentence is a word being introduced, so it takes
-   its own color: violet from the logo, never the link blue. Bold labels at
+   its own color: orange, never the link blue. Bold labels at
    the start of a list item keep the text color. */
 .prose p strong {
   color: var(--term);
