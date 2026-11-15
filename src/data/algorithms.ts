@@ -55,8 +55,8 @@ export const phases: Phase[] = [
     ]),
   },
   {
-    slug: 'array-string-techniques',
-    title: 'Array and String Techniques',
+    slug: 'array-techniques',
+    title: 'Array Techniques',
     topics: topics([
       ['two-pointers', 'Two Pointers', 'Pointers'],
       ['fast-slow-pointers', 'Fast and Slow Pointers', 'Pointers'],
