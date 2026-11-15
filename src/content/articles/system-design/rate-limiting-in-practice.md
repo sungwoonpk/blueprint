@@ -14,7 +14,7 @@ Say the limit is 100 requests a minute per user, and the user's requests are spr
 
 Separate counters with the full limit let three times too much through.
 
-Splitting the limit fixes the even case, and punishes a client unfairly when the load balancer sends all its requests to one gateway, which real balancers do. Only a shared counter gives the right answer in both. Kong, an API gateway, documents the same trade-off with its own words: counters kept locally on each node are cheap and drift as nodes are added, and counters in a shared store are accurate and cost a round trip.
+Splitting the limit fixes the even case, and punishes a client unfairly when the load balancer sends all its requests to one gateway, which real balancers do. Only a shared counter gives the right answer in both. Kong, an API gateway, documents the same tradeoff in its own words: counters kept locally on each node are cheap and drift as nodes are added, and counters in a shared store are accurate and cost a round trip.
 
 ## Where the Counter Lives
 
