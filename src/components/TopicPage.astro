@@ -1,8 +1,11 @@
 ---
-// One topic's page inside a subject. Until its article exists it says so.
+// One topic's page inside a subject: its article from
+// src/content/articles/<subject>/<slug>.md, or "Coming soon" until it exists.
+import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import type { NumberedTopic } from '../lib/roadmap';
 import type { Subject } from '../data/subjects';
+import '../styles/article.css';
 
 interface Props {
   subject: Subject;
@@ -12,6 +15,8 @@ interface Props {
 }
 
 const { subject, topic, prev, next } = Astro.props;
+const entry = await getEntry('articles', `${subject.path.slice(1)}/${topic.slug}`);
+const Content = entry ? (await render(entry)).Content : null;
 ---
 
 <Base title={`${topic.number} ${topic.title}`} width="narrow">
@@ -25,7 +30,15 @@ const { subject, topic, prev, next } = Astro.props;
   <article>
     <p class="number num">{topic.number}</p>
     <h1>{topic.title}</h1>
-    <p class="soon">Coming soon.</p>
+    {
+      Content ? (
+        <div class="prose">
+          <Content />
+        </div>
+      ) : (
+        <p class="soon">Coming soon.</p>
+      )
+    }
   </article>
 
   <nav class="pager" aria-label="Previous and next topic">

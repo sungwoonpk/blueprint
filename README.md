@@ -4,7 +4,7 @@ A text-first study guide with one ordered roadmap per subject: **System Design**
 
 ## Status
 
-Skeleton only. System Design has 9 phases and 187 topics, Algorithms has 9 phases and 121 topics. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. Home shows a slowly turning planet in the logo's colors, with one moon per subject circling it. The header has search across both subjects, a theme toggle and a menu for Home and the subjects. No articles are written yet, so every topic page says "Coming soon."
+Writing has started: System Design 1.1 is the first article. System Design has 9 phases and 187 topics, Algorithms has 9 phases and 121 topics. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. Home shows a slowly turning planet in the logo's colors, with one moon per subject circling it. The header has search across both subjects, a theme toggle and a menu for Home and the subjects. A topic without an article says "Coming soon."
 
 ## Why this shape
 
@@ -28,6 +28,7 @@ npm run dev      # http://localhost:4321
 | --- | --- |
 | Change the name or author credit | Edit `SITE` in `src/config.ts`. |
 | Add a subject | Add its data file in `src/data/`, list it in `src/data/subjects.ts`, and add `index.astro` and `[slug].astro` under `src/pages/<subject>/` (copy an existing subject's two files). |
+| Write a topic's article | Add `src/content/articles/<subject>/<slug>.md` and follow [docs/writing.md](docs/writing.md). |
 | Add, rename or move a topic | Edit `src/data/system-design.ts` or `src/data/algorithms.ts`. Numbers follow the order. |
 | Change colors or fonts | Edit the tokens at the top of `src/styles/global.css`. |
 | Check everything | `npm run check` (type check plus a full build). |
@@ -38,4 +39,5 @@ npm run dev      # http://localhost:4321
 | --- | --- |
 | [docs/design.md](docs/design.md) | Visual design, tokens, theming, search. |
 | [docs/roadmap.md](docs/roadmap.md) | How the roadmap data works and how topics become articles. |
+| [docs/writing.md](docs/writing.md) | How articles read: voice, shape, sources, diagrams. |
 | [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases, distributed data in one phase, our own patterns, subjects and the Algorithms roadmap. |
