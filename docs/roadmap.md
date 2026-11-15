@@ -30,7 +30,7 @@ Design exercises and interview practice, and reading progress. There is one road
 ## The Algorithms phases
 
 1. **Foundations**: what an algorithm is, Big O, recursion, and how to approach a problem (reading constraints, edge cases).
-2. **Core Data Structures**: arrays, strings, hashing, linked lists, stacks and queues, and designing your own structures.
+2. **Core Data Structures**: arrays and strings, linked lists, stacks and queues, then hashing (hash tables are built from arrays and linked lists), and designing your own structures.
 3. **Searching and Sorting**: binary search (including on the answer), comparison and linear time sorts, quickselect.
 4. **Array Techniques** (they work on strings too): two pointers, rearranging in place, sliding windows, prefix sums, monotonic structures, intervals, matrices.
 5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
