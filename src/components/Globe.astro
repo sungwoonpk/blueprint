@@ -14,11 +14,15 @@
 // Drag to turn it in any direction, all the way round; it glides, then goes
 // back to its slow turn. Without WebGL2 the logo is shown instead; with reduced
 // motion it holds still (it can still be turned by hand).
+//
+// Anything placed inside (the home page's moons) shares the planet's layer:
+// below z-index 1 it passes behind the planet, above it in front.
 ---
 
 <div class="globe">
   <canvas aria-hidden="true"></canvas>
   <img class="fallback" src="/logo.png" alt="" width="128" height="128" />
+  <slot />
 </div>
 
 <script>
@@ -149,10 +153,10 @@
       vec3 albedo = lin(vec3(0.10, 0.22, 0.55));
       albedo = mix(albedo, lin(vec3(0.17, 0.35, 0.74)), smoothstep(0.00, 0.30, t));
       albedo = mix(albedo, lin(vec3(0.42, 0.63, 0.93)), smoothstep(0.32, 0.50, t));
-      albedo = mix(albedo, lin(vec3(0.72, 0.84, 0.98)), smoothstep(0.48, 0.60, t));
-      albedo = mix(albedo, lin(vec3(0.78, 0.75, 0.97)), smoothstep(0.58, 0.72, t));
-      albedo = mix(albedo, lin(vec3(0.95, 0.80, 0.91)), smoothstep(0.76, 0.90, t));
-      albedo = mix(albedo, lin(vec3(0.98, 0.95, 0.98)), smoothstep(0.90, 1.00, t));
+      albedo = mix(albedo, lin(vec3(0.72, 0.84, 0.98)), smoothstep(0.48, 0.58, t));
+      albedo = mix(albedo, lin(vec3(0.78, 0.75, 0.97)), smoothstep(0.55, 0.66, t));
+      albedo = mix(albedo, lin(vec3(0.95, 0.73, 0.87)), smoothstep(0.64, 0.80, t));
+      albedo = mix(albedo, lin(vec3(0.98, 0.88, 0.94)), smoothstep(0.92, 1.00, t));
       albedo *= 0.90 + 0.20 * a.b;   // fine streaks along the currents
 
       // Waves: swell spreading in rings from a few far-off storms, measured
@@ -447,11 +451,15 @@
     position: relative;
     width: min(48vmin, 320px);
     aspect-ratio: 1;
+    isolation: isolate;
+    /* Lets what is placed inside size itself to the planet (cqw). */
+    container-type: inline-size;
   }
   canvas,
   .fallback {
     position: absolute;
     inset: 0;
+    z-index: 1;
     width: 100%;
     height: 100%;
   }

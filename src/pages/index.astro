@@ -1,76 +1,22 @@
 ---
 import Base from '../layouts/Base.astro';
 import Globe from '../components/Globe.astro';
+import Moons from '../components/Moons.astro';
 import { SITE } from '../config';
-import { subjects } from '../data/subjects';
 ---
 
 <Base>
   <div class="home">
     <h1 class="visually-hidden">{SITE.name}</h1>
-    <Globe />
-    <nav class="subjects" aria-label="Subjects">
-      {
-        subjects.map((s) => (
-          <a class="subject" href={s.path}>
-            <span class="name">{s.name}</span>
-            <svg class="chev" viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M1 1l6 6-6 6" />
-            </svg>
-          </a>
-        ))
-      }
-    </nav>
+    <Globe><Moons /></Globe>
   </div>
 </Base>
 
 <style>
   .home {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
     min-height: calc(100vh - 52px - 48px - 96px - 80px);
-  }
-  .subjects {
-    display: grid;
-    gap: 12px;
-    width: 100%;
-    max-width: 560px;
-    /* Side by side on every screen. */
-    grid-template-columns: 1fr 1fr;
-  }
-  .subject {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 18px;
-    border-radius: 16px;
-    background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--border);
-    transition:
-      background-color 0.2s var(--ease),
-      box-shadow 0.2s var(--ease);
-  }
-  .subject:hover {
-    background: var(--surface-hover);
-  }
-  .name {
-    flex: 1;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-  }
-  .chev {
-    flex: none;
-    color: var(--muted);
-    opacity: 0.6;
-    transition:
-      transform 0.2s var(--ease),
-      opacity 0.2s var(--ease);
-  }
-  .subject:hover .chev {
-    opacity: 1;
-    transform: translateX(2px);
   }
 </style>
