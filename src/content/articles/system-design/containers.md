@@ -73,7 +73,7 @@ One container is easy to run by hand. Running 6 copies of 4 services across 10 m
 
 Kubernetes is the most widely used one. Google open sourced it in 2014, and it grew out of Google's experience with Borg, the internal system its engineers describe in a 2015 paper as running hundreds of thousands of jobs across clusters of up to tens of thousands of machines. The vocabulary takes some getting used to:
 
-| Term | What It Is |
+| Term | What It is |
 | --- | --- |
 | Container | One packaged program, running |
 | Pod | The smallest unit Kubernetes runs: one or more containers sharing a network address |
