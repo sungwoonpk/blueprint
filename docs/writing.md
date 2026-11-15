@@ -4,7 +4,7 @@ How a topic article reads. The first one, [What Is System Design?](../src/conten
 
 ## Reader
 
-College students and people in their first engineering job. They know how to code, not how big systems work. Use examples from their life (course registration, a campus app) and explain each new word once, briefly.
+Computer science seniors. They have taken data structures, operating systems, networking and databases, so processes, memory, TCP/IP, SQL, indexes and hashing need no explanation. What they haven't seen is how many machines work together in a real system: load balancers, cache tiers, replicas, queues. Explain those, briefly, the first time they appear. Use examples from their life (course registration, a campus app, internships, interviews).
 
 ## Voice
 
