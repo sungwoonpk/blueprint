@@ -23,19 +23,11 @@ It has two limits:
 Hitting the ceiling doesn't feel gradual. Response time stays flat, then shoots up once the machine is full:
 
 <figure class="chart">
-<div class="bars" role="img" aria-label="Response time stays near 100 milliseconds as users grow, then jumps to over a second once the server is full">
-<div class="bar" style="--h: 8%"></div>
-<div class="bar" style="--h: 8%"></div>
-<div class="bar" style="--h: 9%"></div>
-<div class="bar" style="--h: 9%"></div>
-<div class="bar" style="--h: 10%"></div>
-<div class="bar" style="--h: 11%"></div>
-<div class="bar" style="--h: 13%"></div>
-<div class="bar" style="--h: 17%"></div>
-<div class="bar peak" style="--h: 28%"></div>
-<div class="bar peak" style="--h: 52%"></div>
-<div class="bar peak" style="--h: 100%"></div>
-</div>
+<svg class="line" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="Response time stays near 100 milliseconds as users grow, then jumps to over a second once the server is full">
+<line class="grid" x1="0" y1="40" x2="100" y2="40"></line>
+<path class="area" d="M0 37 C1.7 37 6.7 37.1 10 37 C13.3 37 16.7 36.7 20 36.7 C23.3 36.6 26.7 36.7 30 36.7 C33.3 36.6 36.7 36.4 40 36.3 C43.3 36.2 46.7 36.1 50 35.9 C53.3 35.7 56.7 35.6 60 35.2 C63.3 34.8 66.7 34.6 70 33.7 C73.3 32.8 76.7 31.8 80 29.6 C83.3 27.5 86.7 25.2 90 20.8 C93.3 16.3 98.3 6 100 3 L100 40 L0 40 Z"></path>
+<path class="stroke" d="M0 37 C1.7 37 6.7 37.1 10 37 C13.3 37 16.7 36.7 20 36.7 C23.3 36.6 26.7 36.7 30 36.7 C33.3 36.6 36.7 36.4 40 36.3 C43.3 36.2 46.7 36.1 50 35.9 C53.3 35.7 56.7 35.6 60 35.2 C63.3 34.8 66.7 34.6 70 33.7 C73.3 32.8 76.7 31.8 80 29.6 C83.3 27.5 86.7 25.2 90 20.8 C93.3 16.3 98.3 6 100 3"></path>
+</svg>
 <div class="axis"><span>Few users</span><span>Server full</span></div>
 <figcaption>Response time as users grow on one server (example numbers)</figcaption>
 </figure>

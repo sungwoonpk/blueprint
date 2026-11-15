@@ -25,6 +25,21 @@ Carry one running example through the page, and define each new word in the sent
 
 Link to other topics by name where they go deeper, for example `[Thinking in Tradeoffs](/system-design/trade-offs)`, instead of covering their material again. The build puts the topic's current number in front ("1.3 Thinking in Tradeoffs") and fails on a link to a topic that does not exist, so never type the number yourself.
 
+## Choosing a visual
+
+Ask what shape the content has, then pick the type that fits. Use one only where it truly helps.
+
+| Content | Visual |
+| --- | --- |
+| Sizes by category | bar; horizontal bar for long names; grouped or stacked bar for parts; radar for many metrics |
+| Change over time or any continuous trend | line; area for accumulated amounts; sparkline inside a table |
+| Share of a whole | donut for a few parts; treemap for a hierarchy; waterfall for step by step changes |
+| Relationship or spread | scatter, bubble, histogram, box plot, heatmap |
+| Options on the same criteria, key numbers | comparison table, data table, pivot, KPI tiles |
+| Process, calls, system parts, schedules, concepts | flowchart, sequence diagram, architecture diagram, timeline, mind map, ER diagram, tree |
+
+Bars, lines and box and arrow diagrams exist already (below). Build any other type the first time a topic needs it, and add it here.
+
 ## Review before calling it done
 
 - Does each section follow from the one before? Does the running example carry through?
@@ -58,6 +73,8 @@ Markdown covers paragraphs, lists, tables and code. For a diagram of boxes and a
 <figcaption>What the diagram shows</figcaption>
 </figure>
 ```
+
+A line chart for a trend: an inline SVG with `viewBox="0 0 100 40"` and `preserveAspectRatio="none"`, holding an optional `grid` line, an `area` path and a `stroke` path (y grows downward, so 40 is the bottom). See 1.2 for an example.
 
 A bar chart: set each bar's height inline, and mark the bars to notice with `peak`. Give the bars an `aria-label` that says what the chart shows.
 
