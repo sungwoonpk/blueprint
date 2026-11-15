@@ -110,7 +110,7 @@ Numbers matter only if they change a decision. Here is what the estimate says ab
 | About 10 TB of new photos a year | File storage and a CDN for photos, with only text in the database |
 | About 5 Gbit a second at peak | Let a CDN carry most of the image traffic |
 
-Now change one assumption and watch the design change. If the app were ten times busier, peak reads would be 30,000 a second and the server count would grow to about 50, so the database would need help from caches and copies long before that. If photos were not part of the app, storage would be a few GB a year and a single database would be fine for years.
+Now change one assumption and watch the design change. If the app were ten times busier, peak reads would be 30,000 a second and the server count would grow to about 45, so the database would need help from caches and copies long before that. If photos were not part of the app, storage would be a few GB a year and a single database would be fine for years.
 
 ## Making an Estimate Trustworthy
 
