@@ -115,6 +115,21 @@
     ${NOISE}
     vec3 rotY(vec3 v, float a) { float c = cos(a), s = sin(a); return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c); }
     vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }
+    // One continuous gradient from deep blue through periwinkle and lavender to
+    // pink and rose: every color meets only its neighbors, so nothing jumps.
+    vec3 ramp(float t) {
+      vec3 c0 = lin(vec3(0.13, 0.26, 0.64));
+      vec3 c1 = lin(vec3(0.27, 0.44, 0.86));
+      vec3 c2 = lin(vec3(0.48, 0.58, 0.94));
+      vec3 c3 = lin(vec3(0.69, 0.64, 0.96));
+      vec3 c4 = lin(vec3(0.94, 0.60, 0.84));
+      vec3 c5 = lin(vec3(0.99, 0.76, 0.82));
+      vec3 c = mix(c0, c1, clamp(t / 0.24, 0.0, 1.0));
+      c = mix(c, c2, clamp((t - 0.24) / 0.22, 0.0, 1.0));
+      c = mix(c, c3, clamp((t - 0.46) / 0.16, 0.0, 1.0));
+      c = mix(c, c4, clamp((t - 0.62) / 0.16, 0.0, 1.0));
+      return mix(c, c5, clamp((t - 0.78) / 0.22, 0.0, 1.0));
+    }
 
     void main() {
       vec2 c = p / RADIUS;
@@ -144,14 +159,9 @@
       vec3 sA = rotY(s, time * 0.012);
       vec4 a = texture(detail, sA);
       float flowB = texture(detail, rotY(s, -time * 0.009)).g;
-      float t = smoothstep(0.35, 0.67, a.r * 0.55 + flowB * 0.45);
-      vec3 albedo = lin(vec3(0.09, 0.20, 0.53));
-      albedo = mix(albedo, lin(vec3(0.15, 0.33, 0.74)), smoothstep(0.00, 0.30, t));
-      albedo = mix(albedo, lin(vec3(0.36, 0.58, 0.93)), smoothstep(0.32, 0.50, t));
-      albedo = mix(albedo, lin(vec3(0.64, 0.79, 0.98)), smoothstep(0.48, 0.58, t));
-      albedo = mix(albedo, lin(vec3(0.72, 0.68, 0.96)), smoothstep(0.55, 0.66, t));
-      albedo = mix(albedo, lin(vec3(0.93, 0.66, 0.83)), smoothstep(0.64, 0.80, t));
-      albedo = mix(albedo, lin(vec3(0.97, 0.84, 0.92)), smoothstep(0.92, 1.00, t));
+      // A wide, soft window, so colors melt into each other instead of meeting at an edge.
+      float t = smoothstep(0.31, 0.71, a.r * 0.55 + flowB * 0.45);
+      vec3 albedo = ramp(t);
       albedo *= 0.90 + 0.20 * a.b;   // fine streaks along the currents
 
       // Glossy water: soft wrapped light, sky reflected at grazing angles,
