@@ -1,18 +1,19 @@
 ---
-// A small planet in the logo's colors, turning slowly in the middle of the home
-// page, drawn with WebGL2 in two steps.
+// A small ocean planet in the logo's colors, turning slowly in the middle of
+// the home page, drawn with WebGL2 in two steps.
 //
-// 1. Bake, once: the planet's surface is generated from 3D gradient noise and
-//    written into two cube maps, one face per frame so loading never stalls.
-//    `surface` holds the color (sea by depth; coast, plains, hills, rock, snow)
-//    and the height; `detail` holds the terrain normal and the cloud cover.
-//    Cube maps have no seam and no pinched poles, and mipmaps keep the edge of
-//    the sphere from shimmering.
-// 2. Draw, every frame: find the planet point under each pixel, read the maps,
-//    light the terrain, let the sea ripple and glint, drift the clouds, and add
-//    the atmosphere. This is a few texture reads per pixel, so it stays smooth.
+// 1. Bake, once: two slow current patterns and the cloud cover are generated
+//    from 3D gradient noise into one cube map, one face per frame, so loading
+//    never stalls. Cube maps have no seam and no pinched poles.
+// 2. Draw, every frame: find the point of the planet under each pixel, let the
+//    currents drift past each other so deep blue, sky, lilac and pink flow,
+//    send gentle swell out in rings from a few far-off storms, drift the
+//    clouds, and add an atmosphere that fades from blue to white with a trace
+//    of the logo's pink.
 //
-// Without WebGL2 the logo is shown instead; with reduced motion it holds still.
+// Drag to turn it in any direction, all the way round; it glides, then goes
+// back to its slow turn. Without WebGL2 the logo is shown instead; with reduced
+// motion it holds still (it can still be turned by hand).
 ---
 
 <div class="globe">
@@ -22,9 +23,8 @@
 
 <script>
   const SECONDS_PER_TURN = 70;
-  const TILT = 0.32; // radians the axis leans toward the viewer
-  const SURFACE_SIZE = 1024; // cube face size for color and height
-  const DETAIL_SIZE = 512; // cube face size for normals and clouds
+  const TILT = 0.32; // radians the axis leans toward the viewer at rest
+  const FACE_SIZE = 512; // cube face size for currents and clouds
 
   const root = document.querySelector<HTMLDivElement>('.globe')!;
   const canvas = root.querySelector('canvas')!;
@@ -68,27 +68,13 @@
     precision highp float;
     precision highp int;
     uniform int face;
-    uniform int layer;     // 0: color and height, 1: normal and clouds
     uniform float size;
     out vec4 outColor;
-    const float SEA = 0.56;
     ${NOISE}
     float fbm(vec3 x, int octaves) {
       float v = 0.0, a = 0.5;
       for (int i = 0; i < 8; i++) { if (i >= octaves) break; v += a * gnoise(x); x = x * 2.02 + vec3(19.1, 7.3, 3.7); a *= 0.5; }
       return v;
-    }
-    float ridged(vec3 x, int octaves) {
-      float v = 0.0, a = 0.5;
-      for (int i = 0; i < 8; i++) { if (i >= octaves) break; float n = 1.0 - abs(gnoise(x)); v += a * n * n; x = x * 2.03 + vec3(5.2, 1.3, 8.9); a *= 0.5; }
-      return v;
-    }
-    // Continents from warped noise, mountain ranges from ridged noise on land.
-    float height(vec3 d) {
-      vec3 w = vec3(fbm(d * 1.1 + vec3(1.3), 3), fbm(d * 1.1 + vec3(7.7), 3), fbm(d * 1.1 + vec3(4.1), 3));
-      float c = fbm(d * 1.25 + w * 0.6, 6);
-      float land = smoothstep(0.02, 0.22, c);
-      return 0.5 + c * 0.5 + land * ridged(d * 3.0 + w, 6) * 0.24;
     }
     vec3 direction() {
       vec2 st = gl_FragCoord.xy / size * 2.0 - 1.0;
@@ -102,25 +88,15 @@
     }
     void main() {
       vec3 d = direction();
-      float h = height(d);
-      float e = h - SEA;
-      if (layer == 0) {
-        vec3 sea = mix(vec3(0.62, 0.81, 0.97), vec3(0.27, 0.45, 0.79), smoothstep(0.0, 0.2, -e));
-        vec3 land = mix(vec3(0.97, 0.92, 0.95), vec3(0.89, 0.83, 0.93), smoothstep(0.0, 0.025, e));
-        land = mix(land, vec3(0.95, 0.80, 0.88), smoothstep(0.05, 0.15, e));
-        land = mix(land, vec3(0.72, 0.68, 0.84), smoothstep(0.15, 0.28, e));
-        land = mix(land, vec3(0.99, 0.99, 1.0), smoothstep(0.28, 0.37, e));
-        outColor = vec4(e < 0.0 ? sea : land, clamp(h / 1.4, 0.0, 1.0));
-      } else {
-        vec3 t = normalize(cross(abs(d.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0), d));
-        vec3 b = cross(d, t);
-        float step = 0.0025;
-        float onLand = smoothstep(0.0, 0.02, e);
-        vec3 slope = (t * (height(normalize(d + t * step)) - h) + b * (height(normalize(d + b * step)) - h)) / step;
-        vec3 n = normalize(d - slope * 0.05 * onLand);
-        float cloud = smoothstep(0.18, 0.52, fbm(d * 2.3 + vec3(fbm(d * 1.4, 3), fbm(d * 1.4 + 3.3, 3), 0.0) * 0.8, 6));
-        outColor = vec4(n * 0.5 + 0.5, cloud);
-      }
+      // Two current patterns, warped so they swirl rather than blob.
+      vec3 w = vec3(fbm(d * 1.2 + vec3(1.3), 3), fbm(d * 1.2 + vec3(7.7), 3), fbm(d * 1.2 + vec3(4.1), 3));
+      float currentA = fbm(d * 1.6 + w * 0.9, 6) * 0.5 + 0.5;
+      float currentB = fbm(d * 2.4 - w * 0.7 + vec3(5.0), 6) * 0.5 + 0.5;
+      // Fine streaks that follow the currents, for a crisp surface.
+      float streak = 1.0 - abs(fbm(d * 6.5 + w * 1.6, 5));
+      streak = pow(streak, 4.0);
+      float cloud = smoothstep(0.24, 0.56, fbm(d * 2.3 + vec3(fbm(d * 1.4, 3), fbm(d * 1.4 + 3.3, 3), 0.0) * 0.8, 6));
+      outColor = vec4(currentA, currentB, streak, cloud);
     }`;
 
   const DRAW = `#version 300 es
@@ -128,80 +104,117 @@
     precision highp int;
     in vec2 p;
     out vec4 outColor;
-    uniform samplerCube surface;
     uniform samplerCube detail;
-    uniform float turn;
-    uniform float tilt;
+    uniform mat3 orient;   // view direction to planet direction
     uniform float time;
     uniform float pixel;
     const float RADIUS = 0.84;   // sphere radius in canvas units; the rest is atmosphere
-    const float SEA = 0.56;
+    const int WAVES = 12;
+    uniform vec4 waveOrigin[WAVES]; // storm the wave spreads from, wavenumber per radian
+    uniform vec3 waveMotion[WAVES]; // angular speed, starting phase, height
+    uniform vec3 waveCrest[WAVES];  // varies the crest height along its length
     ${NOISE}
-    vec3 toPlanet(vec3 v) {
-      v = vec3(v.x, v.y * cos(tilt) - v.z * sin(tilt), v.y * sin(tilt) + v.z * cos(tilt));
-      float c = cos(turn), s = sin(turn);
-      return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c);
-    }
+    vec3 rotY(vec3 v, float a) { float c = cos(a), s = sin(a); return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c); }
+    vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }
+
     void main() {
       vec2 c = p / RADIUS;
       float r = length(c);
       float px = pixel / RADIUS;
       vec3 sun = normalize(vec3(-0.55, 0.45, 0.70));
 
+      // Atmosphere beyond the edge: blue near the planet, fading through white,
+      // with a breath of the logo's pink; gone before the canvas edge.
       if (r > 1.0) {
         float lit = 0.55 + 0.45 * dot(normalize(c), normalize(sun.xy));
-        // Fade to nothing before the canvas edge so the glow is never cut off.
-        float a = exp(-(r - 1.0) * 15.0) * 0.30 * lit * smoothstep(1.18, 1.06, r);
-        outColor = vec4(vec3(0.58, 0.74, 1.0) * a, a);
+        float fall = exp(-(r - 1.0) * 15.0);
+        vec3 tint = mix(vec3(0.97, 0.86, 0.93), vec3(0.58, 0.74, 1.0), fall);
+        float a = fall * 0.30 * lit * smoothstep(1.18, 1.06, r);
+        outColor = vec4(tint * a, a);
         return;
       }
 
       float coverage = clamp((1.0 - r) / px, 0.0, 1.0);
       vec3 n = vec3(c, sqrt(max(0.0, 1.0 - r * r)));
-      vec3 s = toPlanet(n);
-      vec3 sunP = toPlanet(sun);
+      vec3 s = orient * n;
+      vec3 view = vec3(0.0, 0.0, 1.0);
+      vec3 halfway = normalize(sun + view);
+
+      // Currents: two patterns drift past each other, and their mix is colored
+      // with the logo's gradient, so deep blue, sky, lilac and pink slowly flow.
+      vec3 sA = rotY(s, time * 0.012);
+      vec4 a = texture(detail, sA);
+      float flowB = texture(detail, rotY(s, -time * 0.009)).g;
+      float t = smoothstep(0.35, 0.67, a.r * 0.55 + flowB * 0.45);
+      vec3 albedo = lin(vec3(0.10, 0.22, 0.55));
+      albedo = mix(albedo, lin(vec3(0.17, 0.35, 0.74)), smoothstep(0.00, 0.30, t));
+      albedo = mix(albedo, lin(vec3(0.42, 0.63, 0.93)), smoothstep(0.32, 0.50, t));
+      albedo = mix(albedo, lin(vec3(0.72, 0.84, 0.98)), smoothstep(0.48, 0.60, t));
+      albedo = mix(albedo, lin(vec3(0.78, 0.75, 0.97)), smoothstep(0.58, 0.72, t));
+      albedo = mix(albedo, lin(vec3(0.95, 0.80, 0.91)), smoothstep(0.76, 0.90, t));
+      albedo = mix(albedo, lin(vec3(0.98, 0.95, 0.98)), smoothstep(0.90, 1.00, t));
+      albedo *= 0.90 + 0.20 * a.b;   // fine streaks along the currents
+
+      // Waves: swell spreading in rings from a few far-off storms, measured
+      // along the surface (great-circle distance), so crests curve with the
+      // planet and crowd together toward its edge. Each wave travels at its
+      // deep-water speed (omega = sqrt(g k)): long swells outrun short ones and
+      // trains from different storms cross, build and part on their own. Crests
+      // swell and fade along their length; rough and calm patches come from a
+      // slow noise; a wave finer than a pixel fades out.
+      float rough = 0.5 + 0.5 * smoothstep(-0.35, 0.35, gnoise(s * 2.2 + vec3(time * 0.03, 0.0, 0.0)));
+      float sea = 0.0;
+      vec3 slope = vec3(0.0);
+      for (int i = 0; i < WAVES; i++) {
+        vec3 origin = waveOrigin[i].xyz;
+        float k = waveOrigin[i].w;
+        float u = clamp(dot(s, origin), -1.0, 1.0);
+        float away = sqrt(1.0 - u * u);   // sine of the distance from the storm
+        float phase = k * acos(u) - waveMotion[i].x * time + waveMotion[i].y;
+        // The direction the swell travels: along the surface, away from the storm.
+        vec3 outward = (u * s - origin) / max(away, 1e-4);
+        // Short crests: each one rises and falls away within a few wavelengths.
+        float group = 0.5 + 0.5 * sin(dot(s, waveCrest[i]) * k * 0.3 + waveMotion[i].y * 3.0);
+        float lod = clamp(1.6 - k * px / max(n.z, 0.15) * 2.0, 0.0, 1.0);
+        // Quiet near the storm and where the rings close again on the far side.
+        float spread = smoothstep(0.0, 0.45, away);
+        float a = rough * group * lod * spread * waveMotion[i].z / k;
+        sea += a * sin(phase);
+        slope += outward * (a * k * cos(phase));
+      }
+      vec3 grad = transpose(orient) * slope;
+      grad -= n * dot(grad, n);
+      vec3 wn = normalize(n - grad * 0.06);
+      float steep = length(grad);
+
+      // Glossy water: soft wrapped light, sky reflected at grazing angles,
+      // and a soft sheen where the sun is.
+      float wrapLight = clamp((dot(wn, sun) + 0.25) / 1.25, 0.0, 1.0);
+      float ndh = max(dot(wn, halfway), 0.0);
+      float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(wn, view), 0.0), 5.0);
+      vec3 color = albedo * (0.38 + 0.82 * wrapLight);
+      // Wave relief: faces turned to the sun a little brighter, the rest a little darker.
+      color *= 1.0 + clamp((dot(wn, sun) - dot(n, sun)) * 2.5, -0.28, 0.28);
+      color = mix(color, lin(vec3(0.80, 0.89, 1.0)), fresnel * 0.5);
+      // One soft sun glint on the sunlit side, not a sparkle on every wave.
+      float glintArea = pow(max(dot(n, halfway), 0.0), 18.0);
+      color += pow(ndh, 40.0) * 0.10 * glintArea;
+      // Whitecaps only where several crests pile up and the sea gets steep.
+      float caps = smoothstep(2.6, 3.8, steep) * smoothstep(0.0, 0.03, sea) * 0.22 * smoothstep(0.15, 0.45, n.z);
+      color = mix(color, lin(vec3(0.99, 0.98, 1.0)) * (0.75 + 0.35 * wrapLight), caps);
+
+      // Thin clouds drift a little faster than the planet turns.
       float diffuse = max(dot(n, sun), 0.0);
+      float cloud = texture(detail, rotY(s, time * 0.006)).a * 0.20;
+      color = mix(color, vec3(1.0) * (0.55 + 0.45 * diffuse), cloud);
 
-      vec4 A = texture(surface, s);
-      vec4 B = texture(detail, s);
-      float h = A.a * 1.4;
-      float edge = fwidth(h) * 0.8 + 0.002;
-      float land = smoothstep(SEA - edge, SEA + edge, h);
-
-      // Sea: swells flowing two ways tilt the surface, so light moves across it.
-      float r1 = gnoise(s * 11.0 + vec3(0.0, time * 0.24, time * 0.16));
-      float r2 = gnoise(s * 23.0 - vec3(time * 0.30, 0.0, time * 0.20));
-      float r3 = gnoise(s * 58.0 + vec3(time * 0.55, time * 0.35, 0.0));
-      vec3 wn = normalize(n + vec3(r1 + r3 * 0.35, r2 + r3 * 0.35, 0.0) * 0.16);
-      float sparkle = 0.55 + 0.9 * max(r3, 0.0);
-      float glint = pow(max(dot(wn, normalize(sun + vec3(0.0, 0.0, 1.0))), 0.0), 220.0) * sparkle;
-      float swell = dot(wn, sun) - dot(n, sun);
-      vec3 sea = A.rgb * (0.66 + 0.42 * diffuse) + swell * 0.10 + glint * 0.55;
-      // Waves rolling in: thin crests travel toward the shore and fade out there.
-      float offshore = clamp((SEA - h) / 0.05, 0.0, 1.0);
-      float crest = smoothstep(0.80, 1.0, sin(offshore * 30.0 + time * 1.5 + r1 * 2.5));
-      float surf = crest * (1.0 - offshore) * (0.5 + 0.5 * (r2 * 0.5 + 0.5));
-      float foam = max(smoothstep(0.012, 0.0, SEA - h), surf * 0.8);
-      sea = mix(sea, vec3(0.99, 0.98, 1.0) * (0.78 + 0.26 * diffuse), foam * 0.5 * (1.0 - land));
-
-      // Land: lit by the baked terrain normal.
-      vec3 terrain = B.rgb * 2.0 - 1.0;
-      vec3 ground = A.rgb * (0.62 + 0.46 * max(dot(terrain, sunP), 0.0));
-
-      vec3 color = mix(sea, ground, land);
-
-      // Clouds drift a little faster than the ground turns.
-      float drift = time * 0.006;
-      vec3 sc = vec3(s.x * cos(drift) + s.z * sin(drift), s.y, -s.x * sin(drift) + s.z * cos(drift));
-      float cloud = texture(detail, sc).a * 0.45;
-      color = mix(color, vec3(1.0) * (0.78 + 0.26 * diffuse), cloud);
-
-      // Atmosphere seen edge on.
-      color = mix(color, vec3(0.64, 0.79, 1.0), pow(1.0 - n.z, 3.0) * 0.45);
+      color = pow(color, vec3(1.0 / 2.2));
+      // Atmosphere seen edge on: blue, warming to the logo's pink at the very rim.
+      float rim = pow(1.0 - n.z, 3.0);
+      color = mix(color, mix(vec3(0.64, 0.79, 1.0), vec3(0.96, 0.84, 0.92), smoothstep(0.55, 1.0, rim)), rim * 0.45);
 
       // A trace of noise keeps soft gradients free of banding.
       color += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
-
       outColor = vec4(color * coverage, coverage);
     }`;
 
@@ -222,96 +235,202 @@
     return prog;
   }
 
-  function cubeMap(context: WebGL2RenderingContext, size: number) {
-    const texture = context.createTexture()!;
-    context.bindTexture(context.TEXTURE_CUBE_MAP, texture);
-    context.texStorage2D(context.TEXTURE_CUBE_MAP, Math.log2(size) + 1, context.RGBA8, size, size);
-    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MIN_FILTER, context.LINEAR_MIPMAP_LINEAR);
-    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MAG_FILTER, context.LINEAR);
-    const aniso = context.getExtension('EXT_texture_filter_anisotropic');
-    if (aniso) context.texParameterf(context.TEXTURE_CUBE_MAP, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, context.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
-    return texture;
-  }
-
   function start(context: WebGL2RenderingContext) {
-    const quad = context.createBuffer();
-    context.bindBuffer(context.ARRAY_BUFFER, quad);
+    context.bindBuffer(context.ARRAY_BUFFER, context.createBuffer());
     context.bufferData(context.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), context.STATIC_DRAW);
     context.enableVertexAttribArray(0);
     context.vertexAttribPointer(0, 2, context.FLOAT, false, 0, 0);
 
     const bake = program(context, BAKE);
     const draw = program(context, DRAW);
-    const surface = cubeMap(context, SURFACE_SIZE);
-    const detail = cubeMap(context, DETAIL_SIZE);
+
+    const detail = context.createTexture()!;
+    context.bindTexture(context.TEXTURE_CUBE_MAP, detail);
+    context.texStorage2D(context.TEXTURE_CUBE_MAP, Math.log2(FACE_SIZE) + 1, context.RGBA8, FACE_SIZE, FACE_SIZE);
+    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MIN_FILTER, context.LINEAR_MIPMAP_LINEAR);
+    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MAG_FILTER, context.LINEAR);
     const framebuffer = context.createFramebuffer();
 
-    // Twelve bake steps (six faces, two maps), one per frame.
-    const steps: Array<{ texture: WebGLTexture; size: number; layer: number; face: number }> = [];
-    for (let face = 0; face < 6; face++) {
-      steps.push({ texture: surface, size: SURFACE_SIZE, layer: 0, face });
-      steps.push({ texture: detail, size: DETAIL_SIZE, layer: 1, face });
-    }
-
+    // Six bake steps, one cube face per frame.
+    const steps = [0, 1, 2, 3, 4, 5];
     const bakeStep = () => {
-      const step = steps.shift()!;
+      const face = steps.shift()!;
       context.useProgram(bake);
       context.bindFramebuffer(context.FRAMEBUFFER, framebuffer);
-      context.framebufferTexture2D(context.FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_CUBE_MAP_POSITIVE_X + step.face, step.texture, 0);
+      context.framebufferTexture2D(context.FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_CUBE_MAP_POSITIVE_X + face, detail, 0);
       if (context.checkFramebufferStatus(context.FRAMEBUFFER) !== context.FRAMEBUFFER_COMPLETE) throw new Error('framebuffer');
-      context.viewport(0, 0, step.size, step.size);
-      context.uniform1i(context.getUniformLocation(bake, 'face'), step.face);
-      context.uniform1i(context.getUniformLocation(bake, 'layer'), step.layer);
-      context.uniform1f(context.getUniformLocation(bake, 'size'), step.size);
+      context.viewport(0, 0, FACE_SIZE, FACE_SIZE);
+      context.uniform1i(context.getUniformLocation(bake, 'face'), face);
+      context.uniform1f(context.getUniformLocation(bake, 'size'), FACE_SIZE);
       context.drawArrays(context.TRIANGLE_STRIP, 0, 4);
       context.bindFramebuffer(context.FRAMEBUFFER, null);
     };
-
     const finishBake = () => {
-      for (const texture of [surface, detail]) {
-        context.bindTexture(context.TEXTURE_CUBE_MAP, texture);
-        context.generateMipmap(context.TEXTURE_CUBE_MAP);
-      }
+      context.bindTexture(context.TEXTURE_CUBE_MAP, detail);
+      context.generateMipmap(context.TEXTURE_CUBE_MAP);
       context.useProgram(draw);
       context.activeTexture(context.TEXTURE0);
-      context.bindTexture(context.TEXTURE_CUBE_MAP, surface);
-      context.activeTexture(context.TEXTURE1);
       context.bindTexture(context.TEXTURE_CUBE_MAP, detail);
-      context.uniform1i(context.getUniformLocation(draw, 'surface'), 0);
-      context.uniform1i(context.getUniformLocation(draw, 'detail'), 1);
-      context.uniform1f(context.getUniformLocation(draw, 'tilt'), TILT);
+      context.uniform1i(context.getUniformLocation(draw, 'detail'), 0);
+
+      // The wave spectrum: four storms around the planet, each sending out
+      // swells of several lengths from a point near its center. Wavelengths
+      // spread geometrically, longer swells are a little higher, and each
+      // travels at its deep-water speed omega = sqrt(g k).
+      let seed = 7;
+      const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const unit = (v: number[]) => {
+        const len = Math.hypot(v[0], v[1], v[2]);
+        return v.map((c) => c / len);
+      };
+      const randomDirection = () => {
+        const z = random() * 2 - 1;
+        const a = random() * Math.PI * 2;
+        const r = Math.sqrt(1 - z * z);
+        return [r * Math.cos(a), r * Math.sin(a), z];
+      };
+      const storms = [0, 1, 2, 3].map(randomDirection);
+      const origins: number[] = [];
+      const motion: number[] = [];
+      const crests: number[] = [];
+      for (let i = 0; i < 12; i++) {
+        const origin = unit(storms[i % storms.length].map((c) => c + (random() - 0.5) * 0.3));
+        const k = 18 * Math.pow(1.36, i) * (0.9 + random() * 0.2);
+        origins.push(...origin, k);
+        motion.push(Math.sqrt(9.8 * k) * 0.2, random() * Math.PI * 2, Math.pow(18 / k, 0.25));
+        crests.push(...randomDirection());
+      }
+      context.uniform4fv(context.getUniformLocation(draw, 'waveOrigin'), origins);
+      context.uniform3fv(context.getUniformLocation(draw, 'waveMotion'), motion);
+      context.uniform3fv(context.getUniformLocation(draw, 'waveCrest'), crests);
     };
 
-    const uTurn = context.getUniformLocation(draw, 'turn');
+    const uOrient = context.getUniformLocation(draw, 'orient');
     const uTime = context.getUniformLocation(draw, 'time');
     const uPixel = context.getUniformLocation(draw, 'pixel');
     const still = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let begin = 0;
+    const autoSpeed = () => (still.matches ? 0 : (Math.PI * 2) / SECONDS_PER_TURN);
 
-    const frame = (now: number) => {
+    // Orientation as a rotation matrix (row-major) from view space to planet space.
+    type M3 = number[];
+    const mul = (a: M3, b: M3): M3 => {
+      const r = new Array(9).fill(0);
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) r[i * 3 + j] += a[i * 3 + k] * b[k * 3 + j];
+      return r;
+    };
+    const rotX = (a: number): M3 => [1, 0, 0, 0, Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a)];
+    const rotY = (a: number): M3 => [Math.cos(a), 0, Math.sin(a), 0, 1, 0, -Math.sin(a), 0, Math.cos(a)];
+    const transpose = (m: M3): M3 => [m[0], m[3], m[6], m[1], m[4], m[7], m[2], m[5], m[8]];
+    // Keep the matrix a clean rotation after many small steps.
+    const tidy = (m: M3): M3 => {
+      let x = [m[0], m[3], m[6]];
+      let y = [m[1], m[4], m[7]];
+      const len = (v: number[]) => Math.hypot(v[0], v[1], v[2]);
+      x = x.map((c) => c / len(x));
+      const d = x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+      y = y.map((c, i) => c - d * x[i]);
+      y = y.map((c) => c / len(y));
+      const z = [x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0]];
+      return [x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]];
+    };
+    // Turn the planet as an object, in view space: positive yaw moves the surface
+    // right, positive pitch moves it down, matching the drag.
+    const turnObject = (m: M3, yaw: number, pitch: number) => mul(m, transpose(mul(rotY(yaw), rotX(pitch))));
+
+    let orient = mul(rotY(0.8), [1, 0, 0, 0, Math.cos(TILT), -Math.sin(TILT), 0, Math.sin(TILT), Math.cos(TILT)]);
+    let spin = autoSpeed(); // the planet's own turn, radians per second
+    let yawRate = 0; // flick left over after a drag, radians per second
+    let pitchRate = 0;
+    let water = 0;
+    let last = 0;
+    let dragging = false;
+    let running = false;
+    let pointer = { x: 0, y: 0, t: 0 };
+
+    const render = (now: number) => {
       if (steps.length) {
         bakeStep();
         if (!steps.length) {
           finishBake();
-          begin = now;
           root.classList.add('ready');
         }
-        requestAnimationFrame(frame);
+        requestAnimationFrame(render);
         return;
       }
+      const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
+      last = now;
+      if (!dragging) {
+        // A flick glides and fades; the slow turn on the planet's own axis comes back.
+        orient = turnObject(orient, yawRate * dt, pitchRate * dt);
+        const fade = Math.exp(-dt * 1.8);
+        yawRate *= fade;
+        pitchRate *= fade;
+        spin += (autoSpeed() - spin) * (1 - Math.exp(-dt * 1.2));
+        orient = mul(rotY(spin * dt), orient);
+      }
+      orient = tidy(orient);
+      if (!still.matches) water += dt;
+
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       const size = Math.round(canvas.clientWidth * ratio);
       if (canvas.width !== size) canvas.width = canvas.height = size;
       context.viewport(0, 0, size, size);
       context.uniform1f(uPixel, 2 / size);
-      const seconds = still.matches ? 0 : (now - begin) / 1000;
-      context.uniform1f(uTurn, 0.8 + (seconds / SECONDS_PER_TURN) * Math.PI * 2);
-      context.uniform1f(uTime, seconds);
+      context.uniformMatrix3fv(uOrient, false, transpose(orient)); // GL wants column-major
+      context.uniform1f(uTime, water);
       context.drawArrays(context.TRIANGLE_STRIP, 0, 4);
-      if (!still.matches) requestAnimationFrame(frame);
+
+      const moving = dragging || !still.matches || Math.abs(yawRate) + Math.abs(pitchRate) > 0.002 || Math.abs(spin) > 0.002;
+      if (moving) requestAnimationFrame(render);
+      else running = false;
     };
-    requestAnimationFrame(frame);
-    still.addEventListener('change', () => requestAnimationFrame(frame));
+    const wake = () => {
+      if (running) return;
+      running = true;
+      last = 0;
+      requestAnimationFrame(render);
+    };
+
+    // Drag to turn: the surface follows the pointer in every direction, all the way round.
+    canvas.addEventListener('pointerdown', (e) => {
+      if (steps.length) return;
+      dragging = true;
+      canvas.setPointerCapture(e.pointerId);
+      pointer = { x: e.clientX, y: e.clientY, t: performance.now() };
+      yawRate = pitchRate = 0;
+      spin = 0;
+      root.classList.add('dragging');
+      wake();
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const now = performance.now();
+      const dt = Math.max((now - pointer.t) / 1000, 1 / 240);
+      const perPixel = (Math.PI * 1.4) / canvas.clientWidth;
+      const yaw = (e.clientX - pointer.x) * perPixel;
+      const pitch = (e.clientY - pointer.y) * perPixel;
+      orient = turnObject(orient, yaw, pitch);
+      yawRate = yawRate * 0.4 + (yaw / dt) * 0.6;
+      pitchRate = pitchRate * 0.4 + (pitch / dt) * 0.6;
+      pointer = { x: e.clientX, y: e.clientY, t: now };
+    });
+    const release = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      // Holding still before letting go means no flick.
+      if (performance.now() - pointer.t > 80) yawRate = pitchRate = 0;
+      yawRate = Math.max(-8, Math.min(8, yawRate));
+      pitchRate = Math.max(-8, Math.min(8, pitchRate));
+      root.classList.remove('dragging');
+      wake();
+    };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
+
+    running = true;
+    requestAnimationFrame(render);
+    still.addEventListener('change', wake);
   }
 
   if (gl) {
@@ -326,7 +445,7 @@
 <style>
   .globe {
     position: relative;
-    width: min(70vmin, 480px);
+    width: min(48vmin, 320px);
     aspect-ratio: 1;
   }
   canvas,
@@ -339,6 +458,12 @@
   canvas {
     opacity: 0;
     transition: opacity 0.9s var(--ease);
+    cursor: grab;
+    /* Dragging the planet turns it instead of scrolling the page. */
+    touch-action: none;
+  }
+  .dragging canvas {
+    cursor: grabbing;
   }
   .ready canvas {
     opacity: 1;
@@ -348,6 +473,7 @@
     transition: opacity 0.9s var(--ease);
   }
   .fallback {
+    pointer-events: none;
     inset: 8%;
     width: 84%;
     height: 84%;
