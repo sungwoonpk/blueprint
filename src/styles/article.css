@@ -321,6 +321,17 @@
 }
 
 @media (max-width: 560px) {
+  .prose table {
+    font-size: 14px;
+  }
+  .prose th,
+  .prose td {
+    padding: 9px 8px;
+    overflow-wrap: break-word;
+  }
+  .prose thead th {
+    font-size: 12.5px;
+  }
   .prose .flow {
     flex-direction: column;
   }
