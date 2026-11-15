@@ -115,8 +115,8 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     input.focus();
   }
 
-  // On the roadmap page the inline filter is the search, so the header icon and
-  // shortcuts focus it instead of opening the dialog.
+  // The header icon always opens the dialog. On the roadmap page the keyboard
+  // shortcuts focus the inline filter instead, which shows the shortcut hint.
   const inline = document.getElementById('roadmap-search') as HTMLInputElement | null;
   function start() {
     if (!inline) return open();
@@ -124,7 +124,7 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     inline.focus({ preventScroll: true });
     inline.select();
   }
-  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', start));
+  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', open));
 
   document.addEventListener('keydown', (e) => {
     const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, [contenteditable]');

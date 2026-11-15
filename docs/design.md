@@ -25,8 +25,8 @@ The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cro
 Search covers phase titles and topic titles only. Every term must appear; `-` and `/` count as spaces, so "trade off" finds "Trade-offs". Matches are shown in the accent color.
 
 - **On the roadmap**, the field under the title filters the page in place: phases and topics that match stay, groups with a match open, the rest hides. Enter opens the first matching topic, Esc clears and restores the page as it was.
-- **On other pages**, the header icon opens a search dialog with arrow-key navigation.
-- `Cmd/Ctrl+K` and `/` start a search: they focus the roadmap field on the roadmap and open the dialog elsewhere.
+- **The header icon** opens a search dialog with arrow-key navigation, on every page.
+- `Cmd/Ctrl+K` and `/` focus the roadmap field on the roadmap and open the dialog on other pages.
 
 Matching lives in `src/lib/match.ts` and is shared by both.
 
