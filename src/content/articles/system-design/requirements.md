@@ -1,6 +1,6 @@
 > **Functional requirements** say what a system does. **Nonfunctional requirements** say how well it does it. A design starts from both, and the second kind is the one people forget to ask for.
 
-[What Is System Design?](/system-design/what-is-system-design) put requirements at the top of the process and said that step often matters most. [Thinking in Tradeoffs](/system-design/trade-offs) explained why: the requirements decide which side of every dial wins. This topic is about getting them on paper, in a form you can design against.
+[What is System Design?](/system-design/what-is-system-design) put requirements at the top of the process and said that step often matters most. [Thinking in Tradeoffs](/system-design/trade-offs) explained why: the requirements decide which side of every dial wins. This topic is about getting them on paper, in a form you can design against.
 
 ## Two Kinds of Requirements
 
@@ -39,7 +39,7 @@ Asking before drawing saves a rebuild later. A few questions come up for almost 
 4. **How long can it be down, and how much data can it lose?** These set the nines and the failover plan in [Redundancy and Failover](/system-design/redundancy-failover)
 5. **What can we leave out?** Every feature has a cost, so scope is a design decision too
 
-## Decide What Is Out
+## Decide What is Out
 
 Requirements need an edge, or they grow without limit. A simple way to set it is to sort features into four groups, known as MoSCoW. For the textbook app it might look like this:
 
@@ -54,7 +54,7 @@ Writing the "won't" list down matters as much as the rest. It tells everyone wha
 
 Nonfunctional requirements pull against each other, as in [Thinking in Tradeoffs](/system-design/trade-offs): faster often costs more, and safer often costs speed. When two collide, put numbers on the tradeoff, then let the people who own the goals decide. Some of the best requirements work is finding out which of two good things matters more.
 
-Requirements also move. Users show what they really need once the app exists, and traffic grows past the first guess. That is why the process in [What Is System Design?](/system-design/what-is-system-design) ends with a step called revisit. Mistakes in requirements are cheap to fix on paper and costly after the system is built. The exact multiples that get quoted are shaky, but the direction is consistent.
+Requirements also move. Users show what they really need once the app exists, and traffic grows past the first guess. That is why the process in [What is System Design?](/system-design/what-is-system-design) ends with a step called revisit. Mistakes in requirements are cheap to fix on paper and costly after the system is built. The exact multiples that get quoted are shaky, but the direction is consistent.
 
 ## Key Points
 

@@ -1,6 +1,6 @@
 # Writing articles
 
-How a topic article reads. The first one, [What Is System Design?](../src/content/articles/system-design/what-is-system-design.md), is the model.
+How a topic article reads. The first one, [What is System Design?](../src/content/articles/system-design/what-is-system-design.md), is the model.
 
 ## Reader
 
@@ -22,7 +22,7 @@ Computer science seniors and engineers in their first year on the job. They have
 ## Shape
 
 1. Open with a callout that says what the thing is in one line, then a short hook the reader recognizes.
-2. Then the sections the topic needs, in an order where each answers the question the last one raised. Headings, table headers and diagram labels are in Title Case, with no "vs" ("Code Level and System Level").
+2. Then the sections the topic needs, in an order where each answers the question the last one raised. Headings, table headers and diagram labels are in Title Case, with no "vs" ("Code Level and System Level"). Short words such as "is", "and", "to" and "of" stay lowercase ("What is System Design?").
 3. End with **Key Points**: three to five lines. The heading and its list are shown together as a summary card automatically.
 
 Carry one running example through the page, and define each new word in the sentence where it first appears instead of in a separate glossary.
@@ -100,7 +100,7 @@ A bar chart: set each bar's height inline, and mark the bars to notice with `pea
 </figure>
 ```
 
-Arrows can carry a word (`<div class="arrow" data-label="reads" aria-hidden="true"></div>`), and one diagram can hold several flows, each under a small name (`<p class="rowname">Read</p>` before its `flow`), for example a write path and a read path.
+Arrows can carry a word (`<div class="arrow" data-label="reads" aria-hidden="true"></div>`). A label of about ten characters or more needs the `wide` class (`class="arrow wide"`) so it doesn't touch the boxes, and the node text may need shortening if the row then overflows. One diagram can hold several flows, each under a small name (`<p class="rowname">Read</p>` before its `flow`), for example a write path and a read path.
 
 Horizontal bars, for a few labeled values (see 1.6): a `chart` figure holding `hbars`, each row `<div class="hbar"><span>Label</span><span class="track"><span class="fill" style="--w: 50%"></span></span><span class="value">60 ms</span></div>`, with `peak` on the bar to notice.
 

@@ -8,7 +8,7 @@ export const phases: Phase[] = [
     slug: 'foundations',
     title: 'Foundations',
     topics: topics([
-      ['what-is-system-design', 'What Is System Design?', 'Basics'],
+      ['what-is-system-design', 'What is System Design?', 'Basics'],
       ['one-server-to-many', 'From One Server to Many', 'Basics'],
       ['trade-offs', 'Thinking in Tradeoffs', 'Basics'],
       ['client-server', 'How Clients and Servers Talk', 'Networking'],

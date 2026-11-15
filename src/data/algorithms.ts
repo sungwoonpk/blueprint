@@ -8,7 +8,7 @@ export const phases: Phase[] = [
     slug: 'foundations',
     title: 'Foundations',
     topics: topics([
-      ['what-is-an-algorithm', 'What Is an Algorithm?', 'Basics'],
+      ['what-is-an-algorithm', 'What is an Algorithm?', 'Basics'],
       ['big-o', 'Measuring Time and Space with Big O', 'Basics'],
       ['best-average-worst', 'Best, Average and Worst Cases', 'Basics'],
       ['amortized-analysis', 'Amortized Analysis', 'Basics'],

@@ -46,7 +46,7 @@ So systems avoid opening connections they don't have to. A browser keeps an HTTP
 
 Pool size is a tradeoff, like the ones in [Thinking in Tradeoffs](/system-design/trade-offs), where gaining one thing costs another. Too small, and requests queue up waiting for a free connection. Too large, and the database spends memory on connections that sit idle.
 
-## When Waiting Is the Wrong Choice
+## When Waiting is the Wrong Choice
 
 TCP's waiting is the right deal for web pages and databases. Sometimes it's the wrong one, because a late answer can be worse than none. That is where UDP fits:
 

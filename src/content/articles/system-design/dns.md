@@ -2,7 +2,7 @@
 
 In [How Clients and Servers Talk](/system-design/client-server), the phone needed an address before it could ask for anything. DNS is where that address comes from. It runs before the very first request, and it quietly decides a lot about how a system behaves.
 
-## A Name Is Not an Address
+## A Name is Not an Address
 
 People remember names. Computers connect to addresses like 203.0.113.80. DNS sits between the two.
 

@@ -1,8 +1,8 @@
 > In the **client-server model**, one side asks and the other answers. Most of the web, and most apps you use, are built on this one exchange.
 
-In [What Is System Design?](/system-design/what-is-system-design), a phone asked for "calculus books" and got a list back. This topic looks at that single exchange: who the two sides are, what they say to each other, and what can go wrong.
+In [What is System Design?](/system-design/what-is-system-design), a phone asked for "calculus books" and got a list back. This topic looks at that single exchange: who the two sides are, what they say to each other, and what can go wrong.
 
-## Who Is the Client
+## Who is the Client
 
 The client is whoever starts the conversation. The server is whoever waits and answers. A role belongs to one conversation, not to a machine.
 
@@ -91,7 +91,7 @@ This model has a limit: the server only answers. So how does it tell the phone "
 
 Start with the simplest one that meets the need. Each has its own topic: [Polling and Long Polling](/system-design/polling), [Server-Sent Events](/system-design/server-sent-events) and [WebSockets](/system-design/websockets).
 
-## The Client Is Outside Your Control
+## The Client is Outside Your Control
 
 The model has another consequence. The client runs on someone else's device, so a user can change it, or skip it and send requests directly. Treat what it sends as unchecked input, and verify anything that affects security or correctness on the server.
 
