@@ -36,6 +36,29 @@
   font-weight: 650;
 }
 
+/* Underline marks the one line to remember; links are blue, so the two never mix. */
+.prose u {
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  text-decoration-thickness: 0.14em;
+  text-underline-offset: 0.2em;
+}
+
+/* A quote block is a callout: the definition or rule a section hangs on. */
+.prose blockquote {
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-size: 19px;
+  line-height: 1.55;
+}
+
+.prose blockquote p + p {
+  margin-top: 8px;
+}
+
 .prose a {
   color: var(--accent);
 }
@@ -172,6 +195,48 @@
 
 .prose .diagram figcaption {
   margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* A bar chart: each bar's height is set inline (style="--h: 40%"); bars
+   marked "peak" take the accent color. */
+.prose .chart {
+  margin: 32px 0 0;
+  padding: 24px 20px 18px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.prose .bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 140px;
+}
+
+.prose .bar {
+  flex: 1;
+  height: var(--h);
+  border-radius: 4px 4px 2px 2px;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.prose .bar.peak {
+  background: var(--accent);
+}
+
+.prose .axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.prose .chart figcaption {
+  margin-top: 12px;
   color: var(--muted);
   font-size: 14px;
   text-align: center;

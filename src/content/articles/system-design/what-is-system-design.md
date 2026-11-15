@@ -1,94 +1,133 @@
-System design is deciding how a piece of software is put together. Which parts it has, what each part does, how the parts talk to each other, and where the data lives.
+> **System design** is deciding the <u>parts</u> of a system, <u>how they talk</u> and <u>where the data lives</u>.
 
-Writing code answers "how do I make this feature work?" System design asks a bigger question: "how does the whole thing keep working once real people use it?"
+Ever seen course registration freeze at 9:00 AM? The "add class" code probably worked. The system around it couldn't handle everyone clicking at once. **That's a system design problem.**
 
-## A small example
+## Coding vs system design
 
-Say we're building a site where people share recipes. You can sign up, post a recipe with a photo, and browse what others posted.
+|  | Coding | System design |
+| --- | --- | --- |
+| Asks | Does this feature work? | Does it keep working for everyone? |
+| Scope | a function, a file | servers, databases, the network |
+| Example | write "add to cart" | handle 10,000 carts at once |
 
-A first design could look like this:
+## Example: a used textbook app
+
+Students post old textbooks with a photo. Others browse and buy.
 
 <figure class="diagram">
 <div class="flow">
-<div class="node">Browser or app</div>
+<div class="node">Phone or browser</div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Web server</div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="stack">
-<div class="node">Database<small>users, recipes</small></div>
+<div class="node">Database<small>users, listings</small></div>
 <div class="node">File storage<small>photos</small></div>
 </div>
 </div>
-<figcaption>A first design for the recipe site</figcaption>
+<figcaption>A first design</figcaption>
 </figure>
 
-- **Browser or app** is what the user touches.
-- **Web server** runs our code. It checks who you are, saves new recipes and sends pages back.
-- **Database** keeps users and recipes, so nothing is lost when the server restarts.
-- **File storage** holds the photos. Images are big, so they live apart from the rest of the data.
+| Part | Job |
+| --- | --- |
+| **Phone or browser** | what the student taps |
+| **Web server** | runs our code: login, new listings, search |
+| **Database** | keeps users and listings, even after a restart |
+| **File storage** | keeps photos, too big for the database |
 
-That's already a system design. It's small, but each part is there for a reason.
+## Words you'll see a lot
 
-## Same features, different systems
+| Word | Meaning |
+| --- | --- |
+| **Client** | the app or browser that sends requests |
+| **Server** | the computer that answers them |
+| **Request** | one ask, like "show me this page" |
+| **Database** | where data is kept for good |
+| **Cache** | a fast copy of data people read often |
+| **Load balancer** | spreads requests across servers |
 
-Now ask one more question: how many people will use it?
+## Scale changes the design
 
-|  | Cooking club | Popular app |
+|  | One campus | Every campus in the country |
 | --- | --- | --- |
-| Users | 50 | 5 million |
-| Recipe views per second | less than 1 | thousands |
-| Site down for an hour | a few annoyed friends | lost users and lost money |
-| Design | one server is enough | many servers, copies of the data, a cache, photos served from near the user |
+| Users | 2,000 | 3 million |
+| Busiest moment | a few clicks per second | thousands per second |
+| Down for an hour | a few annoyed students | lost sales, angry users |
+| Design | **1 server** | **many servers, copies of the data, a cache** |
 
-The features are the same. The numbers, and what a failure costs, are what change the design. How one server grows into many is the next topic, [From One Server to Many](/system-design/one-server-to-many).
+Same features. **Different system.**
+
+Traffic isn't flat either:
+
+<figure class="chart">
+<div class="bars" role="img" aria-label="Visits per day by week: about 9,000 in week 1, around 1,000 mid semester, back up to about 5,000 in week 16">
+<div class="bar peak" style="--h: 100%"></div>
+<div class="bar" style="--h: 72%"></div>
+<div class="bar" style="--h: 33%"></div>
+<div class="bar" style="--h: 18%"></div>
+<div class="bar" style="--h: 13%"></div>
+<div class="bar" style="--h: 11%"></div>
+<div class="bar" style="--h: 12%"></div>
+<div class="bar" style="--h: 11%"></div>
+<div class="bar" style="--h: 10%"></div>
+<div class="bar" style="--h: 11%"></div>
+<div class="bar" style="--h: 11%"></div>
+<div class="bar" style="--h: 12%"></div>
+<div class="bar" style="--h: 14%"></div>
+<div class="bar" style="--h: 22%"></div>
+<div class="bar" style="--h: 42%"></div>
+<div class="bar" style="--h: 58%"></div>
+</div>
+<div class="axis"><span>Week 1</span><span>Week 8</span><span>Week 16</span></div>
+<figcaption>Visits per day over one semester (example numbers)</figcaption>
+</figure>
+
+Week 1 is about **8×** a quiet week. <u>Build for the busiest day, not the average.</u>
+
+How one server grows into many: [From One Server to Many](/system-design/one-server-to-many).
 
 ## What a good design aims for
 
-First, the system has to do its job. Past that, designs are judged on a few qualities:
+| Quality | The question |
+| --- | --- |
+| **Scalability** | Still fine with 10× the users? |
+| **Availability** | Up at 9:00 AM on registration day? |
+| **Reliability** | Still correct when a server dies? |
+| **Performance** | Fast enough? |
+| **Maintainability** | Can the team change it safely? |
+| **Cost** | Worth what it costs? |
+| **Security** | Only the right people see the data? |
 
-- **Scalability**: it keeps up as users and data grow.
-- **Availability**: it's up when people need it.
-- **Reliability**: it gives correct results, even when a disk or a server fails.
-- **Performance**: it answers fast.
-- **Maintainability**: engineers can understand it and change it safely.
-- **Cost**: it doesn't spend more than the problem is worth.
-- **Security**: only the right people can see or change the data.
+You can't max out all seven. Keep 3 copies of the data and the app is harder to take down, but you pay **3× the storage** and the copies must stay in sync. More in [Thinking in Tradeoffs](/system-design/trade-offs).
 
-You can't max out all of them at once. Keeping three copies of the data makes the site much harder to take down, but it costs three times the storage and the copies have to be kept in sync. Picking what to give up is a big part of the job. More on that in [Thinking in Tradeoffs](/system-design/trade-offs).
-
-## Big picture first, details later
-
-Design happens at two levels.
+## Big picture vs details
 
 |  | High level | Low level |
 | --- | --- | --- |
-| Looks at | the whole system | one part of it |
-| Decides | which parts exist and how they connect | classes, functions, data structures |
-| Example | photos go to file storage, not the database | how the upload code resizes a photo |
+| Decides | which parts, how they connect | classes, functions |
+| Example | photos go to file storage | the code that resizes a photo |
 
-This roadmap is about the high level: the parts, how they connect, and why.
+This roadmap is about the **high level**.
 
 ## How a design comes together
 
-Most engineers go through roughly the same steps:
+1. **Requirements**: what must it do? How big, how fast?
+2. **Estimate**: users, requests per second, storage.
+3. **Sketch**: boxes for parts, arrows for data.
+4. **Deep dive**: find what breaks first and fix it.
+5. **Revisit**: real traffic shows what you missed.
 
-1. **Ask what it must do.** The features, and how fast, how big and how dependable it has to be.
-2. **Estimate the size.** Rough numbers for users, requests per second and storage.
-3. **Sketch the main parts.** Boxes for servers, databases and storage. Arrows for how data moves.
-4. **Dig into the hard parts.** Find where it will break first and deal with that.
-5. **Revisit.** Real traffic shows what you got wrong, and the design changes as the product grows.
-
-Step 1 matters most. Two teams can both build "a chat app" and end up with very different systems, because one has 100 users and the other has 100 million.
+<u>Step 1 matters most.</u> A chat app for 100 people and one for 100 million are different systems.
 
 ## Why learn it
 
-- **Your own code gets better.** A slow query or a missing timeout is easier to spot when you know what your code talks to.
-- **It's how teams plan big changes.** Design docs and design reviews use these same ideas and words.
-- **Interviews ask for it.** Many companies have a system design round, and it often sets the level you're hired at.
+- **First job**: you'll read design docs from day one.
+- **Better code**: a slow query is easier to spot when you know what your code talks to.
+- **Interviews**: standard for experienced hires, and some companies ask new grads too.
 
 ## Key points
 
-- System design decides the parts of a system, how they talk and where the data lives.
-- The same features can need very different systems. Scale and the cost of failure decide.
-- Every choice gives up something. There is rarely one right answer, only one that fits the needs.
-- Start simple, and add parts only when the numbers say you need them.
+- System design: the parts, how they talk, where the data lives.
+- **Scale** decides the design, not features alone.
+- Every choice gives something up. No single right answer.
+- Start simple. Add parts when the numbers say so.

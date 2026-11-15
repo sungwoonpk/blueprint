@@ -2,18 +2,22 @@
 
 How a topic article reads. The first one, [What Is System Design?](../src/content/articles/system-design/what-is-system-design.md), is the model.
 
+## Reader
+
+College students and people in their first engineering job. They know how to code, not how big systems work. Use examples from their life (course registration, a campus app) and explain each new word once, briefly.
+
 ## Voice
 
-- Short paragraphs, one to three sentences. Short sentences.
-- Say the important things plainly and stop. No warm up, no filler, no summary of what is coming.
-- Show an example wherever one makes the idea click: a small running example, numbers, a table, a diagram.
+- Show, don't narrate. Most of a page is tables, diagrams, charts and bullets; prose is one or two lines between them.
+- Cut every word that isn't doing work.
+- **Bold** key terms and numbers. <u>Underline</u> the one line to remember in a section. Use a quote block (`>`) as a callout for the definition the page hangs on.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
 - No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.
 - Speak to the reader as "you" and to the team as "we".
 
 ## Shape
 
-1. Open with what the thing is, in two or three sentences.
+1. Open with a callout that says what the thing is in one line, then a short hook the reader recognizes.
 2. Then the sections the topic needs, each with a short heading.
 3. End with **Key points**: three to five lines.
 
@@ -40,6 +44,19 @@ Markdown covers paragraphs, lists, tables and code. For a diagram of boxes and a
 </div>
 </div>
 <figcaption>What the diagram shows</figcaption>
+</figure>
+```
+
+A bar chart: set each bar's height inline, and mark the bars to notice with `peak`. Give the bars an `aria-label` that says what the chart shows.
+
+```html
+<figure class="chart">
+<div class="bars" role="img" aria-label="What the chart shows, in words">
+<div class="bar peak" style="--h: 100%"></div>
+<div class="bar" style="--h: 40%"></div>
+</div>
+<div class="axis"><span>Start</span><span>End</span></div>
+<figcaption>What is measured (example numbers)</figcaption>
 </figure>
 ```
 
