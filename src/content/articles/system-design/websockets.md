@@ -29,7 +29,7 @@ Sec-WebSocket-Accept: T/blRcNYuY9ujThK5IiLZvrhJBU=
 
 From that moment, the same TCP connection stops speaking HTTP and speaks the WebSocket protocol, defined in RFC 6455. The `Accept` value is computed from the client's key plus a fixed string, using a hash, so the client can tell the server really speaks WebSocket and isn't an ordinary web server that ignored the upgrade request.
 
-The address starts with `ws://` or, over TLS as in [TLS and HTTPS](/system-design/tls-https), `wss://`, and the defaults are port 80 and port 443, the same as HTTP and HTTPS. Real sites use `wss://`.
+The address starts with `ws://` or, over TLS as in [TLS and HTTPS](/system-design/tls-https), `wss://`, and the defaults are port 80 and port 443, the same as HTTP and HTTPS. Real sites use `wss://`, since plain `ws://` can be read by anyone on the path.
 
 <figure class="diagram">
 <p class="rowname">First, Plain HTTP</p>

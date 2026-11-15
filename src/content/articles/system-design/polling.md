@@ -1,6 +1,6 @@
 > **Polling** means the client asks the server "anything new?" again and again. **Long polling** is a patient version: the server holds each question open until it has news, or until a timeout.
 
-[How Clients and Servers Talk](/system-design/client-server) left a problem: a server only answers, so how does it tell the phone "your book sold"? The client has to ask, and the simplest way to ask is to keep asking. This topic covers the two oldest answers, which need nothing beyond the ordinary HTTP requests from [How HTTP Works](/system-design/http). The sections that follow in this group cover Server-Sent Events and WebSockets for when these two aren't enough.
+[How Clients and Servers Talk](/system-design/client-server) left a problem: a server only answers, so how does it tell the phone "your book sold"? The client has to ask, and the simplest way to ask is to keep asking. This topic covers the two oldest answers, which need nothing beyond the ordinary HTTP requests from [How HTTP Works](/system-design/http). The next topics, [Server-Sent Events](/system-design/server-sent-events) and [WebSockets](/system-design/websockets), cover what to use when these two aren't enough.
 
 ## Just Ask Again
 
@@ -54,7 +54,9 @@ HTTP/1.1 304 Not Modified
 
 In HTTP's standard, a 304 tells the client to reuse the copy it already has, and it can't carry a body.
 
-GitHub's REST API shows the whole idea in a real service. Its events endpoints are built for polling with ETags, a 304 doesn't count against the caller's rate limit when the request is authenticated, and each response includes an `X-Poll-Interval` header, such as 60 seconds, which clients are expected to obey and which can grow when GitHub is under load. GitHub's own advice is still to use webhooks instead of polling where it can, covered in [Webhooks](/system-design/webhooks).
+GitHub's REST API shows the whole idea in a real service. Its events endpoints are built for polling with ETags, and a 304 doesn't count against the caller's rate limit when the request is authenticated.
+
+Each response also includes an `X-Poll-Interval` header, such as 60 seconds, which clients are expected to obey and which can grow when GitHub is under load. GitHub's own advice is still to use webhooks instead of polling where it can, covered in [Webhooks](/system-design/webhooks).
 
 ## Long Polling: Ask Once and Wait
 
@@ -110,7 +112,7 @@ def get_notifications(user, after):
     return no_content()                   # timed out, 204
 ```
 
-Two details keep it from losing news. The `after` cursor covers the short gap between one answer and the next question: anything that happened in between is returned straight away by the first line. And the timeout keeps each request ending cleanly, so a client never waits forever on a connection that has quietly died.
+Two details keep it from losing news. The `after` cursor covers the short gap between one answer and the next question: anything that happened in between is returned straight away by the first line. And the timeout keeps each request ending cleanly, so a client doesn't wait forever on a connection that has quietly died.
 
 ## What Long Polling Costs
 
@@ -140,7 +142,7 @@ With the wait set to 0, SQS answers right away even when the queue is empty, whi
 | Delay for News | Up to one interval | Close to instant |
 | Server Load | Steady, mostly empty requests | Open connections, fewer requests |
 | Complexity | Very low | Medium: timeouts, cursor, many idle connections |
-| Through Proxies | Works everywhere | Usually works, but held requests can be cut |
+| Through Proxies | Works nearly everywhere | Usually works, but held requests can be cut |
 | Fits | Rare or late-tolerant updates, such as job progress | Near live updates, with no special protocol |
 
 Neither is the end of the road. Long polling is also a fallback: Socket.IO's documentation explains that it starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software.
