@@ -2,7 +2,7 @@
 import { SITE } from '../config';
 ---
 
-<span class="wordmark"><img src="/logo.png" width="20" height="20" alt="" /><span class="name">{SITE.name}</span></span>
+<span class="wordmark"><img src="/logo.png" width="19" height="19" alt="" /><span class="name">{SITE.name}</span></span>
 
 <style>
   .wordmark {
@@ -14,8 +14,10 @@ import { SITE } from '../config';
   img {
     display: block;
     flex: none;
-    /* Optical centering: lowercase text sits a little low in its line box. */
-    transform: translateY(1px);
+    /* Optical centering: the eye reads the name from the top of its tall
+       letters to the baseline (the one descender in "p" does not count), so
+       the logo is centered on that band rather than on the line box. */
+    transform: translateY(-1.25px);
   }
   .name {
     font-size: 18px;

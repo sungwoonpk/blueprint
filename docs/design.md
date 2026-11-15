@@ -10,7 +10,7 @@ The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cro
 
 | File | Use |
 | --- | --- |
-| `public/logo.png` | Header, shown at 20px next to the name, optically centered on it (128px file for sharp high-density screens). |
+| `public/logo.png` | Header, shown at 19px next to the name (128px file for sharp high-density screens). Its center sits on the band from the top of the tall letters to the baseline, which is how the eye reads the name. |
 | `public/favicon.png` | Browser tab icon, 64px. |
 | `public/apple-touch-icon.png` | Home screen icon on iOS, 180px, the logo on white (iOS needs an opaque icon and rounds it). |
 
