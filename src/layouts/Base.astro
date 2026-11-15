@@ -23,8 +23,8 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={SITE.description} />
-    <!-- No logo: an empty icon also stops the browser asking for /favicon.ico. -->
-    <link rel="icon" href="data:," />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script is:inline>
       // Apply the saved theme before first paint to avoid a flash.
       try {
@@ -36,7 +36,7 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href="/" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <a href="/" id="home-link" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
           <Search />
           <ThemeToggle />
@@ -46,6 +46,30 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
     <main class:list={[width]}>
       <slot />
     </main>
+    <script>
+      // On the roadmap, the name scrolls back to the top quickly and smoothly
+      // instead of reloading the page. Elsewhere it is a normal link home.
+      const DURATION = 450;
+      const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+      document.getElementById('home-link')?.addEventListener('click', (e) => {
+        if (window.location.pathname !== '/') return;
+        e.preventDefault();
+        if (window.location.hash) history.replaceState(null, '', '/');
+        const start = window.scrollY;
+        if (start === 0) return;
+        // 'instant' so the page's CSS smooth scrolling does not fight each frame.
+        const jump = (top: number) => window.scrollTo({ top, behavior: 'instant' });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return jump(0);
+        const begin = performance.now();
+        const step = (now: number) => {
+          const t = Math.min(1, (now - begin) / DURATION);
+          jump(start * (1 - ease(t)));
+          if (t < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    </script>
     <footer>
       <div class:list={['foot', width]}>
         <span>Created by {SITE.author}</span>
