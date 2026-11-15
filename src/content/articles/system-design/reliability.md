@@ -2,7 +2,7 @@
 
 [Availability and the Nines](/system-design/availability) asked whether a system is up. Reliability asks a harder question: when it is up, is it right? And [Redundancy and Failover](/system-design/redundancy-failover) gave one tool for surviving failures. This topic zooms out: where failures come from, why copies don't cure all of them, and the toolbox you'll meet in the rest of the roadmap.
 
-## A Fault Is Not a Failure
+## A Fault is Not a Failure
 
 These two words mean different things. A **fault** is one part misbehaving, such as a disk dying. A **failure** is the whole system no longer serving users. A reliable design makes sure faults don't turn into failures:
 
@@ -21,14 +21,14 @@ These two words mean different things. A **fault** is one part misbehaving, such
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Nothing Takes Over</div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node hot">App Is Down<small>a failure</small></div>
+<div class="node hot">App is Down<small>a failure</small></div>
 </div>
 <figcaption>The same fault, with and without fault tolerance</figcaption>
 </figure>
 
 Building a system that holds up under faults is called **fault tolerance**. The goal isn't zero faults, which no one can promise. It is that a fault stays small.
 
-## At Scale, Failure Is Normal
+## At Scale, Failure is Normal
 
 A single disk lasts a long time, so failure feels rare. Backblaze, which runs hundreds of thousands of drives and publishes its results, reported a failure rate of about 1.4% a year across its drives in 2025. Here is what that rate means as the number of disks grows:
 
@@ -53,11 +53,11 @@ The last two points are why more copies don't fix everything, the independence c
 
 A real case is Cloudflare in July 2019. A new rule for its web firewall contained a pattern that used far too much CPU. The rule was sent to every server worldwide at once, and the CPUs handling web traffic on every machine ran out of capacity for roughly half an hour. Having many healthy servers did not help, because they were all running the same change. The details are in [Cloudflare's own write-up](https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019). A gradual release, which sends a change to a few servers first, would have caught it sooner.
 
-## Up Is Not the Same as Right
+## Up is Not the Same as Right
 
 A system can be available and still unreliable:
 
-| The System Is | Example | Reliable? |
+| The System is | Example | Reliable? |
 | --- | --- | --- |
 | Up and right | Search shows the real listings | Yes |
 | Up but wrong | A book that is already sold is sold to a second student | No: available, but not reliable |

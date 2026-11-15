@@ -2,7 +2,7 @@
 
 In [How Clients and Servers Talk](/system-design/client-server), an API was what a server offers: the requests it accepts and the responses it returns. [How HTTP Works](/system-design/http) gave the pieces, a method, a URL, headers, a status code. This phase is about the design choices built on them, and the first question is what separates an API that people enjoy from one they work around.
 
-## An API Is a Contract
+## An API is a Contract
 
 Think about who calls the textbook app's API. Our own phone app does, and so does the website. Next semester a campus bookstore might call it too. All of them depend on the same requests and responses, while the servers behind the API keep changing:
 

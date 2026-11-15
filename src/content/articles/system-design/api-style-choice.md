@@ -35,7 +35,7 @@ All three get the job done. The differences show up in what surrounds the call: 
 
 No column wins every row, which is the usual sign of a tradeoff, in the sense of [Thinking in Tradeoffs](/system-design/trade-offs). The deciding factor is rarely a row. It is who sits on the other side of the call.
 
-## Who Is Calling
+## Who is Calling
 
 Start with the caller, because it settles most of the choice:
 

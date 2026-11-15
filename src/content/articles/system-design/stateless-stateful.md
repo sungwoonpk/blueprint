@@ -35,7 +35,7 @@ State is more than logins. Anything a server remembers from one request to the n
 | Where It Hides | What Breaks | Where It Usually Goes |
 | --- | --- | --- |
 | A login in the server's memory | Random logouts | A shared store such as Redis, or a signed token |
-| An upload saved on the server's disk | The file exists on one server only | Object storage, as in [What Is System Design?](/system-design/what-is-system-design) |
+| An upload saved on the server's disk | The file exists on one server only | Object storage, as in [What is System Design?](/system-design/what-is-system-design) |
 | A cache in the server's memory | Each copy holds a different version | A shared cache, or treat it as disposable |
 | A counter or ID the server makes up | Two servers hand out the same number | A database sequence, or an ID generator that doesn't depend on one machine |
 | A scheduled job inside the app | Each server runs it | One scheduler, or a lock so only one runs it |

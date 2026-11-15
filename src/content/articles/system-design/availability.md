@@ -1,6 +1,6 @@
 > **Availability** is how much of the time, or how many of the requests, a system works when people need it. It is quoted in **nines**: 99.9% is three nines.
 
-In [What Is System Design?](/system-design/what-is-system-design), availability was one of the qualities, and its question was "Up at 9:00 AM on registration day?" This topic turns that question into numbers you can plan with.
+In [What is System Design?](/system-design/what-is-system-design), availability was one of the qualities, and its question was "Up at 9:00 AM on registration day?" This topic turns that question into numbers you can plan with.
 
 ## What the Nines Mean
 
@@ -19,7 +19,7 @@ Every extra nine cuts the allowed downtime to a tenth. The numbers look close to
 
 Look at the right end of the table. At five nines a team has about 5 minutes a year, so even one slow recovery can use it all. Providers also count differently: some leave out planned maintenance, so check what an availability promise includes before comparing two of them.
 
-## How It Is Measured
+## How It is Measured
 
 Counting minutes works for a single machine, but a service with users everywhere is rarely fully up or fully down. Google's SRE book points out that time based availability usually isn't meaningful for global services, and that counting requests works better:
 
@@ -42,7 +42,7 @@ Availability is also a calculation across the parts of a system. In a chain wher
 <div class="arrow" aria-hidden="true"></div>
 <div class="node hot">Together<small>99.7%</small></div>
 </div>
-<p class="rowname">In Parallel: One Is Enough</p>
+<p class="rowname">In Parallel: One is Enough</p>
 <div class="flow">
 <div class="stack">
 <div class="node">Server A<small>99%</small></div>

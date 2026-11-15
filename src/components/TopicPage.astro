@@ -3,7 +3,7 @@
 // src/content/articles/<subject>/<slug>.md, or "Coming soon" until it exists.
 import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Toc from './Toc.astro';
+import SideNav from './SideNav.astro';
 import type { NumberedTopic } from '../lib/roadmap';
 import type { Subject } from '../data/subjects';
 import '../styles/article.css';
@@ -19,12 +19,15 @@ const { subject, topic, prev, next } = Astro.props;
 const entry = await getEntry('articles', `${subject.path.slice(1)}/${topic.slug}`);
 const rendered = entry ? await render(entry) : null;
 const Content = rendered?.Content ?? null;
-const headings = rendered?.headings ?? [];
 ---
 
 <Base title={`${topic.number} ${topic.title}`}>
   <div class="layout">
-  <aside class="side"><Toc headings={headings} /></aside>
+  <aside class="side">
+    <div class="stick">
+      <SideNav subject={subject} topic={topic} />
+    </div>
+  </aside>
   <div class="page">
   <a class="back" href={`${subject.path}#${topic.phase.slug}`}>
     <svg viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -86,6 +89,30 @@ const headings = rendered?.headings ?? [];
   }
   .page {
     max-width: 700px;
+  }
+  .stick::-webkit-scrollbar {
+    display: none;
+  }
+  /* The side column scrolls on its own when the contents and the topic map are
+     taller than the screen. */
+  .side {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .side {
+      display: block;
+    }
+    .stick {
+      position: sticky;
+      top: 96px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      padding-right: 8px;
+      margin-right: -8px;
+    }
   }
   .back {
     display: inline-flex;

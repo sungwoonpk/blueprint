@@ -25,7 +25,7 @@ Behind that one line, generated code does the carrying. A **stub** is a small pi
 <figcaption>The stubs hide the network, and the reply travels back the same way</figcaption>
 </figure>
 
-## It Is Not a Local Call
+## It is Not a Local Call
 
 The convenience hides a trap. In 1994, Jim Waldo and colleagues at Sun wrote "A Note on Distributed Computing", arguing that a remote call can't be treated like a local one. Several differences stay no matter how good the framework is:
 

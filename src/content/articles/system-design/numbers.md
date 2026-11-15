@@ -25,7 +25,7 @@ The last row has a hard floor, because nothing is faster than light. In an optic
 
 It also turns a harmless looking habit into a problem. Suppose a page needs ten calls to another service, one after the other:
 
-| The Other Service Is | One Call | Ten in a Row |
+| The Other Service is | One Call | Ten in a Row |
 | --- | --- | --- |
 | In the same program | About 100 ns | About 1 µs |
 | In the same data center | About 0.5 ms | About 5 ms |

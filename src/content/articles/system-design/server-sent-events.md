@@ -13,7 +13,7 @@ In the textbook app, a student watches a listing page, and the page should show 
 <div class="arrow wide" data-label="GET /events" aria-hidden="true"></div>
 <div class="node">Server<small>keeps the response open</small></div>
 </div>
-<p class="rowname">Then, Whenever There Is News</p>
+<p class="rowname">Then, Whenever There is News</p>
 <div class="flow packets">
 <div class="node">Event 1</div>
 <div class="node">Event 2</div>

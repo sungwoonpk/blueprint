@@ -1,0 +1,148 @@
+---
+// The side column of a topic page: the whole subject as a folded list, so a reader
+// can jump to any phase or topic without going back to the front page. The phase
+// and the group being read are open, showing only their topics (for 1.1 that is
+// 1.1, 1.2 and 1.3). Every other group and phase is a folded row with a chevron.
+import { groupTopics } from '../lib/roadmap';
+import type { NumberedTopic } from '../lib/roadmap';
+import type { Subject } from '../data/subjects';
+
+interface Props {
+  subject: Subject;
+  topic: NumberedTopic;
+}
+
+const { subject, topic } = Astro.props;
+---
+
+<nav class="side-nav" aria-label={`${subject.name} topics`}>
+  {
+    subject.phases.map((phase, i) => (
+      <details class="phase" open={phase === topic.phase}>
+        <summary>
+          <span class="pn num">{i + 1}</span>
+          <span class="pt">{phase.title}</span>
+          <svg class="chev" viewBox="0 0 8 14" width="7" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 1l6 6-6 6"></path>
+          </svg>
+        </summary>
+        {groupTopics(subject.topics, phase).map((group) => {
+          const here = group.topics.some((t) => t.slug === topic.slug);
+          const list = (
+            <ul>
+              {group.topics.map((t) => (
+                <li>
+                  <a href={`${subject.path}/${t.slug}`} aria-current={t.slug === topic.slug ? 'page' : undefined}>
+                    <span class="n num">{t.number}</span>
+                    <span class="t">{t.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          );
+          return group.name ? (
+            <details class="group" open={here}>
+              <summary>
+                <span class="gname">{group.name}</span>
+                <svg class="chev" viewBox="0 0 8 14" width="6" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 1l6 6-6 6"></path>
+                </svg>
+              </summary>
+              {list}
+            </details>
+          ) : (
+            <div class="group">{list}</div>
+          );
+        })}
+      </details>
+    ))
+  }
+</nav>
+
+<style>
+  .side-nav {
+    font-size: 14px;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: flex;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--muted);
+    transition: color 0.2s var(--ease);
+  }
+  a:hover {
+    color: var(--text);
+  }
+  a[aria-current='page'] {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .n {
+    flex: none;
+    min-width: 28px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .chev {
+    margin-left: auto;
+    flex: none;
+    transition: transform 0.2s var(--ease);
+  }
+  details[open] > summary > .chev {
+    transform: rotate(90deg);
+  }
+
+  /* Phases */
+  .phase > summary {
+    padding: 6px 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .phase > summary:hover .pt {
+    color: var(--accent);
+  }
+  .pn {
+    min-width: 14px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .pt {
+    transition: color 0.2s var(--ease);
+  }
+
+  /* Groups inside a phase */
+  .group {
+    margin: 0 0 4px 22px;
+  }
+  .group > summary {
+    padding: 5px 0;
+    color: var(--muted);
+    transition: color 0.2s var(--ease);
+  }
+  .group > summary:hover {
+    color: var(--text);
+  }
+  .gname {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>

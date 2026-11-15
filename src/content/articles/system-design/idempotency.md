@@ -7,13 +7,13 @@ In [How Clients and Servers Talk](/system-design/client-server), a call that tim
 A network call can go wrong in three ways: the request never arrives, the server fails halfway, or the work is done and the reply is lost. The first is harmless to retry. The last one is the trap, because from the client's side it looks exactly the same:
 
 <figure class="diagram">
-<p class="rowname">The Request Is Lost</p>
+<p class="rowname">The Request is Lost</p>
 <div class="flow">
 <div class="node">Phone<small>sends and waits</small></div>
 <div class="arrow" data-label="lost" aria-hidden="true"></div>
 <div class="node wait">Server<small>never saw it</small></div>
 </div>
-<p class="rowname">The Reply Is Lost</p>
+<p class="rowname">The Reply is Lost</p>
 <div class="flow">
 <div class="node">Phone<small>times out, retries</small></div>
 <div class="arrow" data-label="sends" aria-hidden="true"></div>

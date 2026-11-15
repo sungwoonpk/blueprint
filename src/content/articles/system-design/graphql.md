@@ -30,7 +30,7 @@ The reply has the same shape as the question, and no extra fields:
 
 Twenty one round trips become one, and the response carries only what the screen shows. A web page that needs more fields, or a watch app that needs fewer, sends a different query to the same endpoint. The server doesn't need a new URL for each screen.
 
-## The Schema Is the Contract
+## The Schema is the Contract
 
 For that to work, the server publishes a **schema**: a typed description of everything a client may ask for, and how the pieces connect.
 
