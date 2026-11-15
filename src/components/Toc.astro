@@ -1,0 +1,139 @@
+---
+// The side list on an article page: the article's own section headings, with the
+// one being read highlighted. Second level headings show under their section
+// while that section is current.
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+const sections: { heading: Heading; children: Heading[] }[] = [];
+for (const h of headings) {
+  if (h.depth === 2) sections.push({ heading: h, children: [] });
+  else if (h.depth === 3) sections.at(-1)?.children.push(h);
+}
+---
+
+{
+  sections.length > 0 && (
+    <nav class="toc" aria-label="On this page">
+      <p class="label">Contents</p>
+      <ol>
+        {sections.map(({ heading, children }) => (
+          <li data-id={heading.slug}>
+            <a href={`#${heading.slug}`}>{heading.text}</a>
+            {children.length > 0 && (
+              <ol class="sub">
+                {children.map((c) => (
+                  <li data-id={c.slug}>
+                    <a href={`#${c.slug}`}>{c.text}</a>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<script>
+  // The current section is the last heading that has reached 30% down the
+  // screen; at the very bottom of the page it is the last one. Computed from
+  // scroll position, so short sections at the end still light up.
+  const heads = [...document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')];
+  const items = new Map<string, HTMLLIElement>();
+  document.querySelectorAll<HTMLLIElement>('.toc li[data-id]').forEach((li) => items.set(li.dataset.id!, li));
+
+  function update() {
+    if (!heads.length) return;
+    const root = document.documentElement;
+    let active = heads[0];
+    if (window.scrollY + window.innerHeight >= root.scrollHeight - 2) active = heads[heads.length - 1];
+    else {
+      const line = window.innerHeight * 0.3;
+      for (const h of heads) if (h.getBoundingClientRect().top <= line) active = h;
+    }
+    items.forEach((li) => li.classList.remove('active', 'open'));
+    const li = items.get(active.id);
+    li?.classList.add('active');
+    // Open the section that holds the current heading, so its steps show.
+    li?.classList.add('open');
+    li?.parentElement?.closest('li')?.classList.add('open');
+  }
+
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      update();
+    });
+  };
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  update();
+</script>
+
+<style>
+  .toc {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .toc {
+      display: block;
+      position: sticky;
+      top: 96px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+  }
+  .label {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: block;
+    padding: 5px 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--muted);
+    transition: color 0.2s var(--ease);
+  }
+  a:hover,
+  li.active > a {
+    color: var(--text);
+  }
+  li.active > a {
+    font-weight: 600;
+  }
+  .sub {
+    display: none;
+    padding-left: 12px;
+  }
+  li.open > .sub {
+    display: block;
+  }
+  .sub a {
+    padding: 3px 0;
+    font-size: 13px;
+  }
+</style>

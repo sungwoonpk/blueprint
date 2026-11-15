@@ -3,6 +3,7 @@
 // src/content/articles/<subject>/<slug>.md, or "Coming soon" until it exists.
 import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Toc from './Toc.astro';
 import type { NumberedTopic } from '../lib/roadmap';
 import type { Subject } from '../data/subjects';
 import '../styles/article.css';
@@ -16,10 +17,15 @@ interface Props {
 
 const { subject, topic, prev, next } = Astro.props;
 const entry = await getEntry('articles', `${subject.path.slice(1)}/${topic.slug}`);
-const Content = entry ? (await render(entry)).Content : null;
+const rendered = entry ? await render(entry) : null;
+const Content = rendered?.Content ?? null;
+const headings = rendered?.headings ?? [];
 ---
 
-<Base title={`${topic.number} ${topic.title}`} width="narrow">
+<Base title={`${topic.number} ${topic.title}`}>
+  <div class="layout">
+  <aside class="side"><Toc headings={headings} /></aside>
+  <div class="page">
   <a class="back" href={`${subject.path}#${topic.phase.slug}`}>
     <svg viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M7 1L1 7l6 6" />
@@ -61,9 +67,26 @@ const Content = entry ? (await render(entry)).Content : null;
       )
     }
   </nav>
+  </div>
+  </div>
 </Base>
 
 <style>
+  /* The contents list sits in the left column; an article without one keeps its
+     text in the same place. */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 900px) {
+    .layout {
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 64px;
+    }
+  }
+  .page {
+    max-width: 700px;
+  }
   .back {
     display: inline-flex;
     align-items: center;
