@@ -44,7 +44,7 @@ export const phases: Phase[] = [
       ['linear-search', 'Linear Search', 'Searching'],
       ['binary-search', 'Binary Search', 'Searching'],
       ['binary-search-on-answer', 'Binary Search on the Answer', 'Searching'],
-      ['rotated-arrays', 'Binary Search on Rotated Arrays', 'Searching'],
+      ['rotated-arrays', 'Binary Search on Rotated Arrays and Matrices', 'Searching'],
       ['simple-sorts', 'Bubble, Selection and Insertion Sort', 'Comparison Sorts'],
       ['merge-sort', 'Merge Sort', 'Comparison Sorts'],
       ['quick-sort', 'Quick Sort', 'Comparison Sorts'],
