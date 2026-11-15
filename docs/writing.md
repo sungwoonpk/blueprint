@@ -8,9 +8,9 @@ College students and people in their first engineering job. They know how to cod
 
 ## Voice
 
-- Show, don't narrate. Most of a page is tables, diagrams, charts and bullets; prose is one or two lines between them.
+- Show, don't narrate: a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
 - Cut every word that isn't doing work.
-- **Bold** key terms and numbers. <u>Underline</u> the one line to remember in a section. Use a quote block (`>`) as a callout for the definition the page hangs on.
+- Emphasis stays rare. **Bold** a term where it is defined or a label that starts a list item. <u>Underline</u> at most one or two lines a page. One callout (`>`) for the definition the page hangs on. Tables already name their rows, so no bold inside them.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
 - No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.
 - Speak to the reader as "you" and to the team as "we".
