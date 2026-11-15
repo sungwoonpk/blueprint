@@ -17,7 +17,7 @@ Design exercises and interview practice, and reading progress. There is one road
 
 ## The phases
 
-1. **Foundations**: what system design is and how to think in tradeoffs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
+1. **Foundations**: the big picture (what system design is, how a system grows, thinking in tradeoffs), how a request travels over the network, the core qualities, and then turning requirements into numbers.
 2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
 3. **Data Storage and Caching**: storage on one machine and caching: relational and NoSQL databases, caching, specialized storage, and storage internals.
 4. **Asynchronous Processing**: work that happens outside the request: messaging, events, stream processing and background jobs.
