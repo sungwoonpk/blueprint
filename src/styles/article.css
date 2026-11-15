@@ -210,6 +210,38 @@
   text-align: center;
 }
 
+/* Labeled arrows (data-label="reads") and several flows in one diagram,
+   each with a small name above it. */
+.prose .arrow[data-label] {
+  width: 64px;
+}
+
+.prose .arrow[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.prose .rowname {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.prose .flow + .rowname {
+  margin-top: 22px;
+}
+
 /* A bar chart: each bar's height is set inline (style="--h: 40%"); bars
    marked "peak" take the accent color. */
 .prose .chart {
@@ -264,6 +296,16 @@
   .prose .arrow {
     width: 2px;
     height: 22px;
+  }
+  .prose .arrow[data-label] {
+    width: 2px;
+    height: 30px;
+  }
+  .prose .arrow[data-label]::before {
+    bottom: auto;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
   }
   .prose .arrow::after {
     right: auto;

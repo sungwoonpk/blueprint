@@ -8,7 +8,7 @@ College students and people in their first engineering job. They know how to cod
 
 ## Voice
 
-- Show, don't narrate (a chart wherever numbers have a shape worth seeing, such as a sudden jump): a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
+- Show, don't narrate. A small diagram of how something works, a chart of numbers with a shape, a table of a comparison: each explains faster than paragraphs. Use one wherever it truly helps: a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
 - Cut every word that isn't doing work.
 - Emphasis stays rare. **Bold** a term where it is defined or a label that starts a list item. <u>Underline</u> at most one or two lines a page. One callout (`>`) for the definition the page hangs on. Tables already name their rows, so no bold inside them.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
@@ -70,5 +70,7 @@ A bar chart: set each bar's height inline, and mark the bars to notice with `pea
 <figcaption>What is measured (example numbers)</figcaption>
 </figure>
 ```
+
+Arrows can carry a word (`<div class="arrow" data-label="reads" aria-hidden="true"></div>`), and one diagram can hold several flows, each under a small name (`<p class="rowname">Read</p>` before its `flow`), for example a write path and a read path.
 
 Keep the HTML free of blank lines, or Markdown will break it apart. Styles live in `src/styles/article.css`.

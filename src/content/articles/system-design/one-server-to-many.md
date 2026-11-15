@@ -72,17 +72,73 @@ The cost: one more machine, and every query now crosses the network.
 
 One web server can't keep up, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Load Balancer</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack">
+<div class="node">Web Server A</div>
+<div class="node">Web Server B</div>
+<div class="node">Web Server C</div>
+</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Session Store<small>who is logged in</small></div>
+</div>
+<figcaption>Any server can take any request</figcaption>
+</figure>
+
 The catch: the next request can land on any server. If your login lived in server A's memory and your next click goes to server B, you'd be logged out. So login **sessions** move to a shared store, and the web servers keep nothing between requests. They become **stateless**. See [Stateless and Stateful Services](/system-design/stateless-stateful) and [Load Balancers](/system-design/load-balancers).
 
 ### 4. Copy the Database
 
 Now the database is the busiest part, and still a single point of failure. Most requests only read: students browse far more than they post. So we keep copies called **replicas**. The **primary** database takes every write, and the replicas take the reads. If the primary dies, a replica can take over.
 
+<figure class="diagram">
+<p class="rowname">Write</p>
+<div class="flow">
+<div class="node">Web Server</div>
+<div class="arrow" data-label="writes" aria-hidden="true"></div>
+<div class="node">Primary</div>
+<div class="arrow" data-label="copies" aria-hidden="true"></div>
+<div class="stack">
+<div class="node">Replica</div>
+<div class="node">Replica</div>
+</div>
+</div>
+<p class="rowname">Read</p>
+<div class="flow">
+<div class="node">Web Server</div>
+<div class="arrow" data-label="reads" aria-hidden="true"></div>
+<div class="node">Replica</div>
+</div>
+<figcaption>Every write goes to the primary; reads are spread over the replicas</figcaption>
+</figure>
+
 The cost: replicas run a little behind. A student posts a book and might not see it on the next page load. See [Single Leader Replication](/system-design/replication-one-leader) and [Replication Lag](/system-design/replication-lag).
 
 ### 5. Add a Cache
 
-The same popular listings get read thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database. The server checks the cache first and goes to the database only when the cache doesn't have it.
+The same popular listings get read thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database.
+
+<figure class="diagram">
+<p class="rowname">Cache Has It</p>
+<div class="flow">
+<div class="node">Web Server</div>
+<div class="arrow" data-label="asks" aria-hidden="true"></div>
+<div class="node">Cache<small>fast</small></div>
+</div>
+<p class="rowname">Cache Doesn't</p>
+<div class="flow">
+<div class="node">Web Server</div>
+<div class="arrow" data-label="asks" aria-hidden="true"></div>
+<div class="node">Cache<small>miss</small></div>
+<div class="arrow" data-label="then" aria-hidden="true"></div>
+<div class="node">Database<small>result saved to cache</small></div>
+</div>
+<figcaption>Popular data is served from memory; the database sees only the misses</figcaption>
+</figure>
 
 The cost: cached data can go out of date, and knowing when to refresh it is hard. See [Where to Put a Cache](/system-design/where-to-cache).
 
@@ -96,11 +152,38 @@ The cost: another service to pay for, and a changed photo takes time to update e
 
 Resizing an uploaded photo or sending a "your book sold" email makes the student wait. Instead, the server drops a job on a **message queue** and answers right away. Separate **worker** servers pick up jobs and do them in the background.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Web Server<small>answers right away</small></div>
+<div class="arrow" data-label="jobs" aria-hidden="true"></div>
+<div class="node">Queue</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack">
+<div class="node">Worker</div>
+<div class="node">Worker</div>
+</div>
+</div>
+<figcaption>Workers resize photos and send emails while the student moves on</figcaption>
+</figure>
+
 The cost: more moving parts, and a job can fail or run twice, so workers need retries and every job must be safe to run twice. Engineers call that **idempotent**. See [Message Queues and Pub/Sub](/system-design/message-queues).
 
 ### 8. Split the Database
 
 Even with replicas, every write still goes to one primary. When writes or data outgrow it, we split the data across several databases, for example by campus. This is **sharding**. Each database holds only its part.
+
+<figure class="diagram">
+<div class="flow">
+<div class="node">Web Servers</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack">
+<div class="node">Database 1<small>campuses A to H</small></div>
+<div class="node">Database 2<small>campuses I to P</small></div>
+<div class="node">Database 3<small>campuses Q to Z</small></div>
+</div>
+</div>
+<figcaption>Each campus's data lives in exactly one database</figcaption>
+</figure>
 
 The cost: it's one of the hardest steps. Queries that need several parts get complicated, and moving data between parts later is painful. Teams put it off as long as they can. See [Sharding Strategies](/system-design/sharding).
 
