@@ -4,6 +4,7 @@ import { SITE } from '../config';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Wordmark from '../components/Wordmark.astro';
 import Search from '../components/Search.astro';
+import Menu from '../components/Menu.astro';
 import { updatedIso, updatedLabel } from '../data/updated';
 
 interface Props {
@@ -32,14 +33,31 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
         if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
       } catch (e) {}
     </script>
+    <script is:inline>
+      // The browser may skip a page-to-page transition (for example when a link is
+      // followed before the page has settled). That is harmless, so keep its
+      // rejected promises out of the console.
+      (function () {
+        function quiet(e) {
+          var t = e.viewTransition;
+          if (!t) return;
+          ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) {
+            if (t[k] && t[k].catch) t[k].catch(function () {});
+          });
+        }
+        addEventListener('pageswap', quiet);
+        addEventListener('pagereveal', quiet);
+      })();
+    </script>
   </head>
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href="/" id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <a href={SITE.sections[0].href} id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
           <Search />
           <ThemeToggle />
+          <Menu />
         </div>
       </div>
     </header>
@@ -47,15 +65,15 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
       <slot />
     </main>
     <script>
-      // On the roadmap, the name scrolls back to the top quickly and smoothly
-      // instead of reloading the page. Elsewhere it is a normal link home.
+      // On the System Design roadmap (the home page), the name scrolls back to the
+      // top quickly and smoothly instead of reloading. Elsewhere it links home.
       const DURATION = 450;
       const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
       document.getElementById('home-link')?.addEventListener('click', (e) => {
-        if (window.location.pathname !== '/') return;
+        if (window.location.pathname.replace(/\/$/, '') !== '/system-design') return;
         e.preventDefault();
-        if (window.location.hash) history.replaceState(null, '', '/');
+        if (window.location.hash) history.replaceState(null, '', window.location.pathname);
         const start = window.scrollY;
         if (start === 0) return;
         // 'instant' so the page's CSS smooth scrolling does not fight each frame.

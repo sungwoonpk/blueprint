@@ -1,7 +1,7 @@
 // The roadmap is the single source of truth for the site structure.
 //
 // - Display numbers (1.1, 1.2, ...) come from the order here, so reordering is safe.
-// - A topic's slug is stable and names its article: src/content/topics/<slug>.md
+// - A topic's slug is stable: it is the topic's URL (/system-design/<slug>) and will name its article.
 // - A topic is "published" when its article exists and is not marked draft.
 
 export interface Topic {

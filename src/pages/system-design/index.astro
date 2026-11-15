@@ -1,9 +1,9 @@
 ---
-import Base from '../layouts/Base.astro';
-import { phases, groupedTopics } from '../data/roadmap';
+import Base from '../../layouts/Base.astro';
+import { phases, groupedTopics } from '../../data/roadmap';
 ---
 
-<Base>
+<Base title="System Design">
   <div class="layout">
     <nav class="phases" aria-label="Phases">
       <ol>
@@ -60,7 +60,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                     <ul class="topics">
                       {group.topics.map((t) => (
                         <li>
-                          <a href={`/topics/${t.slug}`} class="row">
+                          <a href={`/system-design/${t.slug}`} class="row">
                             <span class="n num">{t.number}</span>
                             <span class="t" data-title={t.title}>{t.title}</span>
                           </a>
@@ -72,7 +72,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                   <ul class="topics ungrouped">
                     {group.topics.map((t) => (
                       <li>
-                        <a href={`/topics/${t.slug}`} class="row">
+                        <a href={`/system-design/${t.slug}`} class="row">
                           <span class="n num">{t.number}</span>
                           <span class="t" data-title={t.title}>{t.title}</span>
                         </a>
@@ -150,7 +150,7 @@ import { phases, groupedTopics } from '../data/roadmap';
   // Filter the roadmap in place as you type: phases and topics that match stay,
   // groups with a matching topic open, everything else hides. The side list of
   // phases always stays. Clearing the field restores the page exactly as it was.
-  import { toTerms, matchesAll, highlight } from '../lib/match';
+  import { toTerms, matchesAll, highlight } from '../../lib/match';
 
   const input = document.getElementById('roadmap-search') as HTMLInputElement;
   const empty = document.getElementById('roadmap-empty') as HTMLParagraphElement;

@@ -4,7 +4,7 @@
 
 - Two levels: **phase** > **topic**. Phases are few (9), topics are many. Every topic has a `group`; on the roadmap a phase shows its groups and each group expands.
 - A topic has a stable `slug`, a `title` and an optional `group`. The group only clusters topics under a small heading inside a phase.
-- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/topics/<slug>`).
+- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/system-design/<slug>`).
 - Slugs are unique. Rename a title freely, but avoid changing a slug once an article exists.
 
 ## Turning a topic into an article

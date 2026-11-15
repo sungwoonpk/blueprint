@@ -11,11 +11,11 @@ export interface SearchEntry {
 }
 
 export const searchEntries: SearchEntry[] = [
-  ...phases.map((p, i) => ({ label: `Phase ${i + 1}`, title: p.title, context: '', href: `/#${p.slug}` })),
+  ...phases.map((p, i) => ({ label: `Phase ${i + 1}`, title: p.title, context: '', href: `/system-design#${p.slug}` })),
   ...numberedTopics.map((t) => ({
     label: t.number,
     title: t.title,
     context: t.phase.title,
-    href: `/topics/${t.slug}`,
+    href: `/system-design/${t.slug}`,
   })),
 ];

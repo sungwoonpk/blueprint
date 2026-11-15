@@ -27,6 +27,7 @@ npm run dev      # http://localhost:4321
 | To do this | Do this |
 | --- | --- |
 | Change the name or author credit | Edit `SITE` in `src/config.ts`. |
+| Add a subject to the header menu | Add it to `SITE.sections` in `src/config.ts` and create its page under `src/pages/`. |
 | Add, rename or move a topic | Edit `src/data/roadmap.ts`. Numbers follow the order. |
 | Change colors or fonts | Edit the tokens at the top of `src/styles/global.css`. |
 | Check everything | `npm run check` (type check plus a full build). |

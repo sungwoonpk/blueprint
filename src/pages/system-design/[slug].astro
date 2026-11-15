@@ -13,7 +13,7 @@ const { topic, prev, next } = Astro.props;
 ---
 
 <Base title={`${topic.number} ${topic.title}`} width="narrow">
-  <a class="back" href={`/#${topic.phase.slug}`}>
+  <a class="back" href={`/system-design#${topic.phase.slug}`}>
     <svg viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M7 1L1 7l6 6" />
     </svg>
@@ -29,7 +29,7 @@ const { topic, prev, next } = Astro.props;
   <nav class="pager" aria-label="Previous and next topic">
     {
       prev ? (
-        <a href={`/topics/${prev.slug}`}>
+        <a href={`/system-design/${prev.slug}`}>
           <span class="label">Previous</span>
           <span class="title">{prev.title}</span>
         </a>
@@ -39,7 +39,7 @@ const { topic, prev, next } = Astro.props;
     }
     {
       next && (
-        <a href={`/topics/${next.slug}`} class="next">
+        <a href={`/system-design/${next.slug}`} class="next">
           <span class="label">Next</span>
           <span class="title">{next.title}</span>
         </a>

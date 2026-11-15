@@ -16,8 +16,9 @@ The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cro
 
 ## Pages
 
-- **Roadmap (`/`)** is the front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
-- **Topic (`/topics/<slug>`)** is a narrow reading column with a back link, the number, the title, and previous/next links. Until an article exists it says "Coming soon."
+- **Subjects.** The site holds several subjects, each under its own path: System Design at `/system-design` and Algorithms at `/algorithms` (coming soon). `/` redirects to the first subject. The menu button at the far right of the header lists the subjects and marks the current one; it closes on outside click or Escape.
+- **Roadmap (`/system-design`)** is the System Design front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
+- **Topic (`/system-design/<slug>`)** is a narrow reading column with a back link, the number, the title, and previous/next links. Until an article exists it says "Coming soon."
 - **Footer** on every page: the author credit and the last updated date (the last commit's date, or the build date without git history).
 
 ## Search
