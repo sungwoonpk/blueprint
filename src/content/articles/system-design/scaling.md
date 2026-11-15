@@ -41,13 +41,13 @@ Neither is better everywhere, in the way [Thinking in Tradeoffs](/system-design/
 | Growing Further | Resizing often needs a restart | Add one at a time, with no restart |
 | Cost | Tends to rise faster than capacity at the top sizes | Rises in step, plus a load balancer and more to run |
 
-The ceiling for scaling up is higher than most people expect, since the largest cloud machines have hundreds of CPU cores and many terabytes of memory. That is why many teams scale up first while it is cheap and simple. The single point of failure is the reason they don't stop there, as in [Redundancy and Failover](/system-design/redundancy-failover), and the ceiling is the other reason.
+The ceiling for scaling up is higher than most people expect, since the largest cloud machines have hundreds of CPU cores and many terabytes of memory. That is why many teams scale up first while it is cheap and simple. One machine is also a **single point of failure**, a part whose failure stops everything, which [Redundancy and Failover](/system-design/redundancy-failover) returns to. That and the ceiling are the reasons teams don't stop at scaling up.
 
 ## Scaling Out Needs Some Preparation
 
 Adding a second server only helps if any server can answer any request. The next request from a user can land on a different machine, so a server that keeps your login or a half finished upload in its own memory breaks the moment it is copied. Servers that keep nothing between requests are called stateless, and making them so is the subject of [Stateless and Stateful Services](/system-design/stateless-stateful). It costs little to build that way early, and it keeps scaling out possible later.
 
-The data is harder. Copies of a stateless web server are interchangeable, but a database holds one particular set of data, so it can't simply be duplicated. That takes the replicas and the sharding from [From One Server to Many](/system-design/one-server-to-many), with the trade-offs they bring. See [Single Leader Replication](/system-design/replication-one-leader) and [Sharding Strategies](/system-design/sharding).
+The data is harder. Copies of a stateless web server are interchangeable, but a database holds one particular set of data, so it can't simply be duplicated. That takes the replicas and the sharding from [From One Server to Many](/system-design/one-server-to-many), with the tradeoffs they bring. See [Single Leader Replication](/system-design/replication-one-leader) and [Sharding Strategies](/system-design/sharding).
 
 ## In Practice, Both
 

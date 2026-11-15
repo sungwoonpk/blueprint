@@ -54,7 +54,7 @@ Availability is also a calculation across the parts of a system. In a chain wher
 <figcaption>Three parts at three nines make 99.7%, about 26 hours a year, and two parts at two nines make four nines</figcaption>
 </figure>
 
-A chain is weaker than its weakest part, and a little weaker with every part you add. Ten dependencies at 99.9% each give about 99.0%, so every extra service a request calls costs a little availability. Copies work the other way: two servers that are each up 99% of the time are both down together only 1% of 1% of the time, which is 99.99%.
+A chain is weaker than its weakest part, and a little weaker with every part you add. Ten dependencies at 99.9% each give about 99.0%, so every extra service a request calls costs a little availability. Copies work the other way: two servers that are each up 99% of the time are both down together only 1% times 1%, or 0.01%, of the time, which is 99.99%.
 
 That second number comes with two conditions. The copies have to fail independently, because two servers in one rack that lose power together count as one. And something has to notice a failure and move traffic to the healthy copy, which is the subject of [Redundancy and Failover](/system-design/redundancy-failover). The extra machinery is itself something that can break.
 

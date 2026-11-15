@@ -34,13 +34,13 @@ A call that is slow 1% of the time sounds rare. But one page often needs many ca
 <div class="hbars">
 <div class="hbar"><span>1 call</span><span class="track"><span class="fill" style="--w: 1.6%"></span></span><span class="value">1%</span></div>
 <div class="hbar"><span>10 calls</span><span class="track"><span class="fill" style="--w: 15.1%"></span></span><span class="value">10%</span></div>
-<div class="hbar"><span>50 calls</span><span class="track"><span class="fill" style="--w: 62.3%"></span></span><span class="value">39%</span></div>
+<div class="hbar"><span>50 calls</span><span class="track"><span class="fill" style="--w: 62.3%"></span></span><span class="value">40%</span></div>
 <div class="hbar peak"><span>100 calls</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">63%</span></div>
 </div>
 <figcaption>Chance that a page load meets at least one slow call</figcaption>
 </figure>
 
-The chance of meeting at least one slow call is 1 minus 0.99 to the power of the number of calls. With 100 calls, a rare 1% slowness reaches 63% of page loads. This is the tail latency effect described in Google's "The Tail at Scale" paper. It assumes slow calls are independent, and real systems often do worse. So the tail of a backend becomes the typical experience of the front end, which is one reason to cut the number of calls a request makes.
+The chance of meeting at least one slow call is 1 minus 0.99 to the power of the number of calls. With 100 calls, a rare 1% slowness reaches 63% of page loads. This is the tail latency effect described in Google's "The Tail at Scale" paper. It assumes slow calls are independent, so read it as an illustration, not a forecast. Still, the tail of a backend becomes the typical experience of the front end, which is one reason to cut the number of calls a request makes.
 
 ## Load Makes Everything Slower
 

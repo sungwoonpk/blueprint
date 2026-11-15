@@ -17,7 +17,7 @@ You can tell the kinds apart by asking: if this were missing, would a feature be
 
 ## Wishes Are Not Requirements
 
-"The app should be fast" is a wish. Nobody can build to it or tell whether it was met. A real requirement says how much, measured how, under what load:
+"The app should be fast" is a wish. You can't build to it or tell whether it was met. A real requirement says how much, measured how, under what load:
 
 | The Wish | A Requirement You Can Build To |
 | --- | --- |
@@ -27,7 +27,7 @@ You can tell the kinds apart by asking: if this were missing, would a feature be
 | Secure | Only the seller can edit a listing, and passwords are never stored as plain text |
 | Easy to change | A new engineer can ship to production in their first week |
 
-Notice how much the numbers do. They come from earlier topics, such as the percentiles in [Latency and Throughput](/system-design/latency-throughput) and the monthly budget in [Availability and the Nines](/system-design/availability), where 99.9% leaves about 43 minutes. The load condition matters just as much: a 300 ms target at 10 requests per second is a far easier promise than the same target at 3,000.
+Notice how much the numbers do. They come from earlier topics, such as the percentiles in [Latency and Throughput](/system-design/latency-throughput) and the monthly budget in [Availability and the Nines](/system-design/availability), where 99.9% leaves about 43 minutes a month. The load condition matters just as much: a 300 ms target at 10 requests per second is a far easier promise than the same target at 3,000.
 
 ## Questions That Shape the Design
 
@@ -52,7 +52,7 @@ Writing the "won't" list down matters as much as the rest. It tells everyone wha
 
 ## When Requirements Conflict or Change
 
-Nonfunctional requirements pull against each other, as in [Thinking in Tradeoffs](/system-design/trade-offs): faster often costs more, and safer often costs speed. When two collide, put numbers on the trade-off, then let the people who own the goals decide. Some of the best requirements work is finding out which of two good things matters more.
+Nonfunctional requirements pull against each other, as in [Thinking in Tradeoffs](/system-design/trade-offs): faster often costs more, and safer often costs speed. When two collide, put numbers on the tradeoff, then let the people who own the goals decide. Some of the best requirements work is finding out which of two good things matters more.
 
 Requirements also move. Users show what they really need once the app exists, and traffic grows past the first guess. That is why the process in [What Is System Design?](/system-design/what-is-system-design) ends with a step called revisit. Mistakes in requirements are cheap to fix on paper and costly after the system is built. The exact multiples that get quoted are shaky, but the direction is consistent.
 
@@ -62,4 +62,4 @@ Requirements also move. Users show what they really need once the app exists, an
 - <u>A requirement needs a number and a load</u>: "fast" becomes "95% of searches under 300 ms at peak"
 - A few questions, about users, reads and writes, freshness, downtime and scope, point straight at design choices
 - Sort features into must, should, could and won't, and write the "won't" list down
-- When requirements collide, quantify the trade-off and let the owners choose, and expect them to change
+- When requirements collide, quantify the tradeoff and let the owners choose, and expect them to change

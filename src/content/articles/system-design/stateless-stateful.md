@@ -38,7 +38,7 @@ State is more than logins. Anything a server remembers from one request to the n
 | An upload saved on the server's disk | The file exists on one server only | Object storage, as in [What Is System Design?](/system-design/what-is-system-design) |
 | A cache in the server's memory | Each copy holds a different version | A shared cache, or treat it as disposable |
 | A counter or ID the server makes up | Two servers hand out the same number | A database sequence, or an ID generator that doesn't depend on one machine |
-| A scheduled job inside the app | Every server runs it | One scheduler, or a lock so only one runs it |
+| A scheduled job inside the app | Each server runs it | One scheduler, or a lock so only one runs it |
 
 The rule of thumb is that a server's memory and disk should hold only what it can lose without anyone noticing, such as a cache it can rebuild.
 
@@ -59,19 +59,20 @@ A shared store lets you end a session instantly. A token needs no lookup, but ca
 A user's cart still exists. A stateless web server hasn't removed the state, it has moved it to places built to hold it: the database, a session store, object storage. So "stateless" describes one tier, the web servers, and the system as a whole is very much stateful.
 
 <figure class="diagram">
-<p class="rowname">Stateless: Copy Freely</p>
-<div class="flow packets">
-<div class="node">Web Servers</div>
-<div class="node">Workers</div>
+<div class="flow">
+<div class="stack">
+<div class="node">Web Server<small>keeps nothing</small></div>
+<div class="node">Web Server<small>keeps nothing</small></div>
+<div class="node">Web Server<small>keeps nothing</small></div>
 </div>
-<p class="rowname">Stateful: Handle With Care</p>
-<div class="flow packets">
+<div class="arrow wide" data-label="state lives here" aria-hidden="true"></div>
+<div class="stack">
 <div class="node">Session Store</div>
 <div class="node">Database</div>
 <div class="node">Object Storage</div>
-<div class="node">Queue</div>
 </div>
-<figcaption>The state moves into a few places built to hold it</figcaption>
+</div>
+<figcaption>Copy the stateless tier freely, and handle the few stateful places with care</figcaption>
 </figure>
 
 That is the point of the design. Copies of a stateless server are interchangeable, so you can add them, remove them and replace a failed one without a second thought. State is gathered into a few places that you handle with more care.

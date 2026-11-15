@@ -61,7 +61,7 @@ A system can be available and still unreliable:
 | --- | --- | --- |
 | Up and right | Search shows the real listings | Yes |
 | Up but wrong | A book that is already sold is sold to a second student | No: available, but not reliable |
-| Down | The app shows an error page | Not available, though it gave no wrong answers |
+| Down | The app shows an error page | No: not available, though it gave no wrong answers |
 
 Correctness is part of reliability, which is why topics later in the roadmap care about duplicates, retries and stale copies.
 

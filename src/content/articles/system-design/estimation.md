@@ -21,7 +21,7 @@ Estimating is a short chain of multiplications, and each answer feeds the next:
 <figcaption>From users to the three things you size</figcaption>
 </figure>
 
-Every number below is made up for the example. In real work they come from your own data, or from a guess you write down and later check.
+Each number below is made up for the example. In real work they come from your own data, or from a guess you write down and later check.
 
 ## Start with the Users
 
@@ -59,7 +59,7 @@ Pick the multiplier from your own traffic once you have some. A steady app may n
 
 ## How Many Servers
 
-Two quick estimates turn the rate into hardware. The first is how many requests are being handled at the same moment. A rule called **Little's Law** says that for a steady system, the number in flight equals the arrival rate times the time each one takes. Say a request takes 100 ms, as in [Latency and Throughput](/system-design/latency-throughput):
+Two quick estimates turn the rate into hardware. The first is how many requests are being handled at the same moment. **Little's Law**, from [Latency and Throughput](/system-design/latency-throughput), says that for a steady system the number in flight equals the arrival rate times the time each one takes. Say a request takes 100 ms:
 
 ```text
 600 a second x 0.1 seconds = 60 requests in flight

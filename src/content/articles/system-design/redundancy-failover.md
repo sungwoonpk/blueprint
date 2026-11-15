@@ -8,7 +8,7 @@ A single point of failure is a part with no spare, so its failure stops everythi
 
 | Part | If It Fails | A Spare |
 | --- | --- | --- |
-| DNS provider | Nobody can find the app | A second provider, as in [How DNS Works](/system-design/dns) |
+| DNS provider | Users can't find the app | A second provider, as in [How DNS Works](/system-design/dns) |
 | Load balancer | Nothing reaches the servers | A second one that takes over, in a pair |
 | One web server | Less capacity | More servers behind the load balancer |
 | Database primary | No new writes | A replica ready to be promoted, from [From One Server to Many](/system-design/one-server-to-many) |
@@ -41,9 +41,11 @@ With **active-passive**, one copy serves and the other waits, getting copies of 
 
 A standby can also be kept at different temperatures:
 
-- **Hot**: running and kept in step, so it takes over in seconds to a minute, and it costs the most
-- **Warm**: running at a smaller size or a little behind, so it needs minutes to catch up
-- **Cold**: not running, started from backups, so it takes tens of minutes to hours, and it costs the least
+| Standby | State | Takes Over In | Cost |
+| --- | --- | --- | --- |
+| Hot | Running and kept in step | Seconds to a minute | Highest |
+| Warm | Running smaller, or a little behind | Minutes | Medium |
+| Cold | Not running, started from backups | Tens of minutes to hours | Lowest |
 
 ## The Spares Need Room
 
