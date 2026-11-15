@@ -40,6 +40,13 @@ Inside a phase the same rule holds: concepts before mechanisms, and mechanisms b
 
 ## Wording
 
-Titles are short, plain and in Title Case. Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context instead.
+The roadmap reads like a book's table of contents.
+
+- One idea per topic. A topic that needs "and" to join two unrelated ideas is two topics.
+- Titles are short noun phrases in Title Case: "TCP and UDP", not "TCP vs UDP". A real choice is named as one: "Choosing Between SQL and NoSQL".
+- Patterns are named by what you do: "Scaling Reads", "Handling Contention".
+- A group often opens with the problem before the fixes ("Cascading Failures" before timeouts and circuit breakers) and ends with the tools that implement it ("Redis and Memcached" after the caching ideas).
+- Products appear only as a pair to compare ("Kafka and RabbitMQ") or in Classic Systems.
+- Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context.
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.
