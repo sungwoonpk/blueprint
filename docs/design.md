@@ -4,7 +4,7 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "Roadmap", and page titles read `blueprint` or `<topic> · blueprint`.
+The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "System Design", and page titles read `blueprint` or `<topic> · blueprint`.
 
 The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cropped to the shape. It sits directly on the page in both themes.
 
