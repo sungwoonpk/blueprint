@@ -4,7 +4,7 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows the name, **blueprint** (always lowercase), and next to it, after a hairline, the subject: **System Design**. The front page heading is "System Design", and page titles read `blueprint · System Design` or `<topic> · blueprint`. No logo in the header; the favicon is the only mark.
+The header shows only the name, **blueprint** (always lowercase). There is no logo and no favicon (an empty icon link keeps the browser from requesting one). The front page heading is "Roadmap", and page titles read `blueprint` or `<topic> · blueprint`.
 
 ## Pages
 

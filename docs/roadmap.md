@@ -17,16 +17,25 @@ A low-level design track (OOP, patterns, small design problems), per-topic diffi
 
 ## The phases
 
-1. **Foundations**: basics, networking, and the core qualities (scale, availability, reliability).
-2. **Traffic and APIs**: how requests arrive and are protected, how services are split, and how they talk.
-3. **Data Storage and Caching**: databases, storage internals, replication and consistency, partitioning, transactions, specialized stores, caching.
-4. **Messaging and Streaming**: queues, event-driven design, batch and stream processing.
-5. **Distributed Systems**: what goes wrong across machines and how nodes agree and converge.
-6. **Running in Production**: resilience, observability, delivery, security, recovery and cost.
-7. **Patterns**: recurring problems (scaling reads and writes, large files, contention, long-running work, pushing updates) and how the building blocks solve them.
-8. **AI Systems**: the building blocks of AI products (model serving, evaluation, RAG, agents).
+1. **Foundations**: what system design is and how to think in trade-offs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
+2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
+3. **Data Storage and Caching**: databases, storage internals, replication and consistency, partitioning, transactions, specialized storage, caching.
+4. **Messaging and Streaming**: messaging, event-driven design, batch and stream processing.
+5. **Distributed Systems**: what goes wrong across machines, how nodes coordinate, and how replicas converge.
+6. **Running in Production**: resilience, observability, delivery, capacity and cost, security, recovery.
+7. **Patterns**: recurring problems (scaling reads and writes, counting, large files, contention, long-running work, fan-out, pushing updates) and how the building blocks solve them.
+8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
 9. **Classic Systems**: the well-known papers and systems, grouped by area.
 
-The order follows a request through a system (traffic, then data, then async work), then the theory and operations behind it, then the patterns that combine them.
+## Why this order
+
+Each topic should only need what came before it.
+
+- Foundations first: the vocabulary (trade-offs, latency, scalability, availability) and the network a request travels over.
+- Then the building blocks in the order a request meets them: the API, the traffic layer, the services, the data, and the asynchronous work behind them.
+- Distributed systems theory comes after data and messaging, because replication and delivery guarantees are what make clocks, consensus and convergence matter.
+- Production concerns come once there is a system to run, patterns once every block they combine has been covered, and the classic papers last, as deep dives that use everything before them.
+
+Inside a phase the same rule holds: concepts before mechanisms, and mechanisms before named products (for example, caching strategies before Redis).
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.

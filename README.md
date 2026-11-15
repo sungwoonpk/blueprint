@@ -4,7 +4,7 @@ A text-first study guide for system design: fundamentals, building blocks, distr
 
 ## Status
 
-Skeleton only. The roadmap (9 phases, 127 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. The roadmap (9 phases, 145 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
@@ -26,7 +26,7 @@ npm run dev      # http://localhost:4321
 
 | To do this | Do this |
 | --- | --- |
-| Change the name, subject or author credit | Edit `SITE` in `src/config.ts`. |
+| Change the name or author credit | Edit `SITE` in `src/config.ts`. |
 | Add, rename or move a topic | Edit `src/data/roadmap.ts`. Numbers follow the order. |
 | Change colors or fonts | Edit the tokens at the top of `src/styles/global.css`. |
 | Check everything | `npm run check` (type check plus a full build). |
