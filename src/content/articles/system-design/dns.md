@@ -6,7 +6,7 @@ In [How Clients and Servers Talk](/system-design/client-server), the phone neede
 
 People remember names. Computers connect to addresses like 203.0.113.80. DNS sits between the two.
 
-It also gives us room to change things. When the textbook app grows from one server to a load balancer in front of many, the address changes and the name stays the same. Nobody has to update a bookmark.
+It also gives us room to change things. When the textbook app grows from one server to many behind a load balancer, the machine that spreads requests across servers (from [From One Server to Many](/system-design/one-server-to-many)), the address changes and the name stays the same. Nobody has to update a bookmark.
 
 ## How a Lookup Works
 
@@ -31,7 +31,7 @@ The phone doesn't do the asking itself. It hands the question to a **resolver**,
 
 The **root servers** know who runs each ending, like .com. There are 13 named root servers, each run as many copies around the world. The .com servers know who runs example.com. That last server, the **authoritative** one, holds the real answer.
 
-DNS messages are tiny, so they usually travel over UDP on port 53. More in [TCP and UDP](/system-design/tcp-udp).
+DNS messages are tiny, so they usually travel over UDP, a way of sending messages without setting up a connection first, on port 53. More in [TCP and UDP](/system-design/tcp-udp).
 
 ## Remembering Answers
 
@@ -46,7 +46,7 @@ textbooks.example.com.   300   IN   A   203.0.113.80
 
 The 300 says any cache may reuse this answer for 300 seconds, and the A says the value is an IPv4 address. Ask the same resolver a minute later and the number has counted down to about 240. Even a "that name doesn't exist" answer is cached for a while.
 
-TTL is a dial, like the ones in [Thinking in Tradeoffs](/system-design/trade-offs):
+TTL is a dial, like the tradeoffs in [Thinking in Tradeoffs](/system-design/trade-offs), where gaining one thing costs another:
 
 - A long TTL means fewer lookups and a faster app, but a change reaches people slowly
 - A short TTL means changes spread fast, but there are more lookups and more load on the authoritative server
@@ -80,9 +80,9 @@ Because DNS is consulted before a request reaches a server, it can steer traffic
 | --- | --- | --- |
 | Several addresses | One name returns many addresses, so clients spread out | It can't see how busy each server is |
 | Nearest region | The answer depends on where the resolver is | The resolver may be far from the user |
-| Failover | A health check removes a dead address from the answers | Caches can keep the old answer until the TTL runs out, and some keep it longer |
+| Failover | A health check, a regular test that a server is alive, removes a dead address from the answers | Caches can keep the old answer until the TTL runs out, and some keep it longer |
 
-DNS is a coarse tool. It sends clients toward the right neighborhood, and a load balancer inside takes over from there. See [Load Balancers](/system-design/load-balancers) and [Global Traffic Routing](/system-design/global-routing).
+DNS is a coarse tool. It sends clients toward the right neighborhood, and a load balancer inside, which spreads each request across servers, takes over from there. See [Load Balancers](/system-design/load-balancers) and [Global Traffic Routing](/system-design/global-routing).
 
 ## When DNS Fails
 
@@ -91,7 +91,7 @@ When DNS breaks, servers can be perfectly healthy and still unreachable, because
 - **Dyn, 2016**: an attack flooded Dyn, a company that ran DNS for many big sites. Twitter, Netflix, Reddit and GitHub were hard to reach for hours, though their own servers were fine
 - **AWS, 2025**: a bug in the automation that manages DynamoDB's DNS records left its regional name with an empty record. Nothing could find DynamoDB, and many services in that region failed for hours
 
-One lesson from Dyn is that a single DNS provider is a single point of failure. Teams that can't afford that run two, on separate networks, with identical records. It costs money and effort, so it is a tradeoff too. See [Redundancy and Failover](/system-design/redundancy-failover).
+One lesson from Dyn is that a single DNS provider is a single point of failure, a part whose failure takes everything down. Teams that can't afford that run two, on separate networks, with identical records. It costs money and effort, so it is a tradeoff too. See [Redundancy and Failover](/system-design/redundancy-failover).
 
 ## Key Points
 

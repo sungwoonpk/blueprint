@@ -298,6 +298,116 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* Packets in a row (class "packets" keeps them in a row on phones too). A packet
+   can be "lost" (red) or "wait" (faded, held up behind a lost one). */
+.prose .flow + .flow {
+  margin-top: 8px;
+}
+
+.prose .flow.packets {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prose .node.lost {
+  color: var(--bad);
+  box-shadow: inset 0 0 0 1.5px var(--bad);
+}
+
+.prose .node.lost small {
+  color: var(--bad);
+}
+
+.prose .node.wait {
+  opacity: 0.5;
+}
+
+/* A dial: a line between two ends with labeled points on it. Each point's
+   place is set inline (style="--x: 40%"). */
+.prose .scale {
+  position: relative;
+  height: 84px;
+  margin: 12px 14px 0;
+}
+
+.prose .scale .line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 46px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--muted), var(--accent));
+  opacity: 0.45;
+}
+
+.prose .scale .dot {
+  position: absolute;
+  left: var(--x);
+  top: 39px;
+  width: 17px;
+  height: 17px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--surface);
+}
+
+.prose .scale .dot span {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.prose .scale .ends {
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  top: 66px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Horizontal bars: a label, a bar sized inline (style="--w: 50%") and a value.
+   Bars marked "peak" take the accent color. */
+.prose .hbars {
+  display: grid;
+  gap: 14px;
+}
+
+.prose .hbar {
+  display: grid;
+  grid-template-columns: 170px 1fr 58px;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+}
+
+.prose .hbar .fill {
+  display: block;
+  width: var(--w);
+  height: 14px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.prose .hbar.peak .fill {
+  background: var(--accent);
+}
+
+.prose .hbar .value {
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* A bar chart: each bar's height is set inline (style="--h: 40%"); bars
    marked "peak" take the accent color. */
 .prose .chart {
@@ -341,6 +451,14 @@
 }
 
 @media (max-width: 560px) {
+  .prose .hbar {
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+  }
+  .prose .hbar .track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
   /* Short code samples wrap on a phone instead of scrolling sideways. */
   .prose pre {
     padding: 14px 14px;

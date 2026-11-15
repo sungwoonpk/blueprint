@@ -74,7 +74,7 @@ If the protocol is the agreement, the **API** is what the server offers under it
 
 ## Each Request Stands Alone
 
-One rule of HTTP matters a lot for system design: it has no built-in memory. The server treats every request as if it were the first one from that client. Engineers call this **stateless**. That's how [From One Server to Many](/system-design/one-server-to-many) could let any web server take any request.
+One rule of HTTP matters a lot for system design: it has no built-in memory. The server treats every request as if it were the first one from that client. Engineers call this **stateless**. That's why, in [From One Server to Many](/system-design/one-server-to-many), any web server could take any request once sessions moved to a shared store.
 
 But the app needs to know who you are. So the client sends proof with each request, usually a **cookie** holding a session ID. The server looks that ID up in a shared store and finds you.
 

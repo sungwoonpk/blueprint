@@ -1,6 +1,6 @@
 > Most big systems started on **one server**. They grew one step at a time, and each step fixed whatever was breaking at that moment.
 
-Remember the textbook app from [What Is System Design?](/system-design/what-is-system-design) Here's how it might grow from one campus to every campus in the country.
+Remember the textbook app from [What Is System Design?](/system-design/what-is-system-design)? Students post used books with a photo, and others browse and buy. Here's how it might grow from one campus to every campus in the country.
 
 ## Day One: One Server
 

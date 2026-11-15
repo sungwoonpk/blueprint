@@ -6,13 +6,26 @@ Systems work the same way, with bigger stakes: money, uptime, and how fast your 
 
 ## Choices Come With Costs
 
-Look back at [From One Server to Many](/system-design/one-server-to-many). Every step fixed one problem and paid for it somewhere else. Replicas took load off the primary but let data fall behind. A queue made pages fast but added jobs that can run twice.
+Look back at [From One Server to Many](/system-design/one-server-to-many). Every step fixed one problem and paid for it somewhere else. Replicas, extra copies of the database that serve reads, took load off the primary but let data fall behind. A queue, a line of jobs for workers to do later, made pages fast but added jobs that can run twice.
 
 That's the pattern everywhere. Making a system better at one thing usually makes it worse at another, or more expensive, or harder to run.
 
 ## The Tradeoffs You'll Meet Most
 
-A handful of tradeoffs come up again and again. Each one is a dial between two sides.
+A handful of tradeoffs come up again and again. Each one is a dial between two sides. Take how long a cache keeps a copy of the data:
+
+<figure class="diagram">
+<div class="scale">
+<div class="line"></div>
+<div class="dot" style="--x: 5%"><span>No Cache</span></div>
+<div class="dot" style="--x: 40%"><span>10 Seconds</span></div>
+<div class="dot" style="--x: 95%"><span>5 Minutes</span></div>
+<div class="ends"><span>Always current, more database load</span><span>Faster, less database load</span></div>
+</div>
+<figcaption>One dial: how long a cache keeps a copy</figcaption>
+</figure>
+
+The same shape shows up in each row below.
 
 | Tradeoff | Lean One Way | Lean the Other Way |
 | --- | --- | --- |
@@ -44,7 +57,7 @@ The same tradeoff can have opposite answers. What decides it is which failure hu
 
 Amazon built its cart this way. Its Dynamo storage system, described in a 2007 paper, was designed to keep accepting "add to cart" even when servers or networks fail, and accepts that a deleted item may occasionally come back.
 
-The textbook app needs both answers. Browsing listings can show data a few seconds old, so a cache is fine there. Marking a book as sold can't be: two students must never buy the same copy.
+The textbook app, our running example of students trading used books, needs both answers. Browsing listings can show data a few seconds old, so a cache is fine there. Marking a book as sold can't be: two students must never buy the same copy.
 
 ## How to Decide
 
@@ -55,7 +68,7 @@ When you face a tradeoff, go through it in order:
 3. **Compare them side by side**
 4. **Choose, and say what you give up**
 
-Here's that for one question in the textbook app: where should listing pages read from?
+Here's that for one question in the textbook app: where should listing pages read from? The options are the primary database, which takes every write, a replica, a copy that serves reads, and a cache, a fast copy kept in memory.
 
 |  | Primary Database | Replica | Cache |
 | --- | --- | --- | --- |
@@ -79,7 +92,7 @@ Easy to undo:
 Hard to undo:
 
 - Which database you use: every piece of data has to move
-- How data is split across shards: data has to move between machines
+- How data is split across shards, the sharding from 1.2: data has to move between machines
 - A public API others depend on: other teams' code would break
 
 Decide two way doors quickly and change them if they turn out wrong. Slow down on one way doors: gather numbers, write it down, get a second opinion.
