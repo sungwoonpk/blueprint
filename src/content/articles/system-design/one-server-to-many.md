@@ -1,4 +1,4 @@
-> Most big systems started on **one server**. It grew one step at a time, and each step fixed whatever was breaking at that moment.
+> Most big systems started on **one server**. They grew one step at a time, and each step fixed whatever was breaking at that moment.
 
 Remember the textbook app from [What Is System Design?](/system-design/what-is-system-design) Here's how it might grow from one campus to every campus in the country.
 
@@ -13,7 +13,7 @@ Remember the textbook app from [What Is System Design?](/system-design/what-is-s
 <figcaption>Everything on one machine</figcaption>
 </figure>
 
-Our code, the database and the photos all live on one machine. That's the right way to start. It's cheap, simple and easy to change while you're still finding out what students want.
+Our code, the database and the photos all live on one machine. That's usually the right way to start. It's cheap, simple and easy to change while you're still finding out what students want.
 
 It has two limits:
 
@@ -60,7 +60,7 @@ Here is how that rule usually plays out for the textbook app. The exact order ch
 
 Registration week comes and our one server slows down. The easiest fix is a bigger machine with more CPU and memory. No code changes. This is **scaling up**, also called vertical scaling.
 
-It buys time, but the ceiling is still there, big machines get expensive fast, and it's still one machine. See [Scaling Up and Scaling Out](/system-design/scaling).
+It buys time, but the ceiling is still there, big machines get expensive fast, switching to one usually means some downtime, and it's still one machine. See [Scaling Up and Scaling Out](/system-design/scaling).
 
 ### 2. Give the Database Its Own Server
 
@@ -123,17 +123,17 @@ The cost: replicas run a little behind. A student posts a book and might not see
 Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database.
 
 <figure class="diagram">
-<p class="rowname">Cache Has It</p>
+<p class="rowname">Cache Hit</p>
 <div class="flow">
 <div class="node">Web Server</div>
 <div class="arrow" data-label="asks" aria-hidden="true"></div>
-<div class="node">Cache<small>fast</small></div>
+<div class="node">Cache<small>has it, fast</small></div>
 </div>
-<p class="rowname">Cache Doesn't</p>
+<p class="rowname">Cache Miss</p>
 <div class="flow">
 <div class="node">Web Server</div>
 <div class="arrow" data-label="asks" aria-hidden="true"></div>
-<div class="node">Cache<small>miss</small></div>
+<div class="node">Cache<small>doesn't have it</small></div>
 <div class="arrow" data-label="then" aria-hidden="true"></div>
 <div class="node">Database<small>result saved to cache</small></div>
 </div>
