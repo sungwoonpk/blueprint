@@ -36,7 +36,7 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href="/" id="home-link" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <a href="/" id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
           <Search />
           <ThemeToggle />
@@ -105,6 +105,14 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   }
   .narrow {
     max-width: 720px;
+  }
+  /* A flex box, not an inline line box, so the name is centered in the bar
+     instead of sitting on a text baseline with empty space below it. */
+  .home {
+    display: flex;
+    align-items: center;
+    /* Optical: put the name's visible center level with the header icons. */
+    transform: translateY(1px);
   }
   .tools {
     display: flex;
