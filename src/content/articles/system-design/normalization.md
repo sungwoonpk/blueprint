@@ -57,7 +57,7 @@ The cost becomes real in a few places:
 
 - **Rows on different machines**: Once data is split across servers, as in [Sharding Strategies](/system-design/sharding), a join may have to cross the network
 - **Stores without joins**: Many databases in [Key-Value Stores](/system-design/key-value-stores) and [Document Stores](/system-design/document-stores) don't offer the join, so the data has to arrive already combined
-- **Big scans**: A report over millions of rows pays for the join on each of them, which is why [OLTP and OLAP](/system-design/oltp-olap) systems are often shaped differently
+- **Big scans**: A report over millions of rows pays for the join on each of them, which is why [OLTP, OLAP and Data Warehouses](/system-design/oltp-olap) systems are often shaped differently
 
 ## Copying on Purpose
 
@@ -156,7 +156,7 @@ A habit that works for most teams has four steps:
 3. **Try the cheap fixes first**: A missing index or a smaller result often solves the problem without any copy
 4. **Copy where it pays**: Pick a hot read, copy data that changes rarely, and write down how the copy is kept in sync
 
-Data that is read much more often than it is written, such as a catalog or a profile, tends to deserve a copy. Data that changes with each action rarely does. Warehouse systems for analytics go further and often store wide, flat tables, since they are mostly read, as [Column-Oriented Storage](/system-design/column-storage) explains.
+Data that is read much more often than it is written, such as a catalog or a profile, tends to deserve a copy. Data that changes with each action rarely does. Warehouse systems for analytics go further and often store wide, flat tables, since they are mostly read, as [Columnar Storage](/system-design/column-storage) explains.
 
 ## Key Points
 

@@ -41,7 +41,7 @@ Microsoft's guidance starts from the same place: list the access patterns first,
 | How much must it write? | Fits one strong server and its replicas | More than one machine can take |
 | How stale can a read be? | Not at all | A little, for speed or availability |
 
-The first question carries the most weight. A relational database lets you ask questions you haven't thought of yet, and the models in the last topics ask you to decide them up front, as in [Wide-Column Stores](/system-design/wide-column-stores), where each question gets its own table.
+The first question carries the most weight. A relational database lets you ask questions you haven't thought of yet, and the models in the last topics ask you to decide them up front, as in [Wide Column Stores](/system-design/wide-column-stores), where each question gets its own table.
 
 The last two questions are about scale and consistency, which later phases cover in depth, from [Replication Lag](/system-design/replication-lag) to [Consistency Models](/system-design/consistency-models).
 

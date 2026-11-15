@@ -54,7 +54,7 @@ Bigtable has one sorted key instead of two parts, plus **column families** that 
 
 That is why rows can be "wide": a row can have many columns, and different rows can have different ones. Cassandra's documentation points out that a wide partition is a better name than a wide row.
 
-A warning on the name. "Column store" once meant databases that store each column together on disk, for fast analytics, which is a different design, covered in [Column-Oriented Storage](/system-design/column-storage). Wide-column stores group columns into families, but they are not that.
+A warning on the name. "Column store" once meant databases that store each column together on disk, for fast analytics, which is a different design, covered in [Columnar Storage](/system-design/column-storage). Wide-column stores group columns into families, but they are not that.
 
 ## Design From the Queries
 
@@ -109,7 +109,7 @@ These stores are built for heavy writing, and the reason is the storage structur
 <figcaption>A write is an append, so it stays fast as the data grows</figcaption>
 </figure>
 
-Appending is cheaper than finding and changing data in place. Bigtable's SSTable files and Cassandra's design follow this plan, and [LSM-Trees](/system-design/lsm-trees) explains how the files are merged in the background. Two consequences show up in daily use.
+Appending is cheaper than finding and changing data in place. Bigtable's SSTable files and Cassandra's design follow this plan, and [LSM Trees](/system-design/lsm-trees) explains how the files are merged in the background. Two consequences show up in daily use.
 
 An update is just a newer write, and a delete writes a marker called a tombstone, which reads have to skip until a later cleanup removes it. Cassandra's documentation warns that using it as a queue, with constant deletes, performs badly for this reason.
 
@@ -121,7 +121,7 @@ The same design closes some doors:
 - **Small transactions**: Bigtable's operations are atomic within a single row, and nothing wider. Cassandra has tunable consistency, in the style of [Leaderless Replication and Quorums](/system-design/leaderless-replication)
 - **Costly changes**: A new query pattern can mean a new table and a backfill of existing data
 
-In return, you get writes that scale by adding machines. The documentation for Bigtable lists time series, internet of things readings, financial data and marketing data as its common uses, and the shared trait is a huge volume of writes read back by key and time. Time series has a topic of its own in [Time-Series Databases](/system-design/time-series).
+In return, you get writes that scale by adding machines. The documentation for Bigtable lists time series, internet of things readings, financial data and marketing data as its common uses, and the shared trait is a huge volume of writes read back by key and time. Time series has a topic of its own in [Time Series Databases](/system-design/time-series).
 
 For the textbook app, an honest answer is that at 2,000 campus users, PostgreSQL stores the messages without effort, and even at national scale it can be split by the techniques in [Sharding Strategies](/system-design/sharding).
 

@@ -47,7 +47,7 @@ All of them share the interface, but they were built for different jobs:
 - **Fast shared memory**: Redis and Memcached keep data in memory for very quick lookups, often as a cache or for sessions. See [Redis and Memcached](/system-design/redis-memcached)
 - **A database for huge simple data**: Amazon DynamoDB spreads items over many machines and is built for access by key at large scale. The Dynamo paper reports that Amazon's shopping cart service handled tens of millions of requests, and more than 3 million checkouts in a single day
 - **Coordination and settings**: etcd stores small, important data, such as cluster configuration. Its documentation says it favors consistency, uses Raft for agreement, and offers watches and leases. It is meant for several gigabytes, not for big data. See [Consensus and Leader Election](/system-design/consensus-leader-election)
-- **An engine inside another program**: RocksDB is a library, not a server. According to its documentation it keeps keys in sorted order, supports range scans, and leaves replication to whatever is built on top. It stores data using the structure in [LSM-Trees](/system-design/lsm-trees)
+- **An engine inside another program**: RocksDB is a library, not a server. According to its documentation it keeps keys in sorted order, supports range scans, and leaves replication to whatever is built on top. It stores data using the structure in [LSM Trees](/system-design/lsm-trees)
 
 Speed and safety trade off here too. In-memory stores are among the fastest, and a restart can lose data unless the store writes it to disk. The databases keep data on disk and copy it to other machines, at the cost of more work per write.
 
@@ -118,7 +118,7 @@ The same simplicity means some questions can't be asked:
 | Which listings cost under 20 dollars? | No, the store can't look inside values |
 | Change the listing and the seller's balance together | Depends on the store, and often limited to one key |
 
-The store gives each question one answer, by key. Everything else is built by you: a second key for each lookup you need, and care when the copies must agree, as in [Normalization and Denormalization](/system-design/normalization). The Dynamo paper accepted the same deal: no relational schema, no operations that span several items, and updates to a single key only.
+The store gives each question one answer, by key. Everything else is built by you: a second key for each lookup you need, and care when the copies must agree, as in [Choosing Between Normalization and Denormalization](/system-design/normalization). The Dynamo paper accepted the same deal: no relational schema, no operations that span several items, and updates to a single key only.
 
 It also gave up strict consistency for availability.
 
