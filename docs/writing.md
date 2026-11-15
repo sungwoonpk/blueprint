@@ -4,7 +4,7 @@ How a topic article reads. The first one, [What Is System Design?](../src/conten
 
 ## Reader
 
-Computer science seniors. They have taken data structures, operating systems, networking and databases, so processes, memory, TCP/IP, SQL, indexes and hashing need no explanation. What they haven't seen is how many machines work together in a real system: load balancers, cache tiers, replicas, queues. Explain those, briefly, the first time they appear. Use examples from their life (course registration, a campus app, internships, interviews).
+Computer science seniors and engineers in their first year on the job. They have taken data structures, operating systems, networking and databases, so processes, memory, TCP/IP, SQL, indexes and hashing need no explanation. What they haven't seen is how many machines work together in a real system: load balancers, cache tiers, replicas, queues. Explain those, briefly, the first time they appear. Use examples from their life: course registration and campus apps for students, a first team's services, on call and design reviews for new engineers, and interviews for both.
 
 ## Voice
 
