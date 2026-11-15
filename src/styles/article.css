@@ -37,7 +37,8 @@
 }
 
 /* A term in bold inside a sentence is a word being introduced, so it takes
-   its own color: cyan, the blueprint line color, never the link blue. Bold labels at
+   its own color: a strong blueprint blue. Links in the article are quiet (text
+   color, faint underline), so the terms are what the eye finds first. Bold labels at
    the start of a list item keep the text color. */
 .prose p strong {
   color: var(--term);
@@ -66,13 +67,21 @@
   margin-top: 8px;
 }
 
+/* References are quiet: text color with a faint underline, so introduced terms
+   (colored and highlighted) are what the eye finds first. Hover shows the
+   link. The Key Points card and lists use the same rule. */
 .prose a {
-  color: var(--accent);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--muted) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.15s var(--ease), text-decoration-color 0.15s var(--ease);
 }
 
 .prose a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: var(--accent);
+  text-decoration-color: currentColor;
 }
 
 .prose ul,
