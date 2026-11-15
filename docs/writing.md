@@ -18,10 +18,12 @@ College students and people in their first engineering job. They know how to cod
 ## Shape
 
 1. Open with a callout that says what the thing is in one line, then a short hook the reader recognizes.
-2. Then the sections the topic needs, each with a short heading.
-3. End with **Key points**: three to five lines.
+2. Then the sections the topic needs, in an order where each answers the question the last one raised. Headings, table headers and diagram labels are in Title Case, with no "vs" ("Code Level and System Level").
+3. End with **Key Points**: three to five lines.
 
-Link to other topics by name where they go deeper, for example `[Thinking in Tradeoffs](/system-design/trade-offs)`, instead of covering their material again.
+Carry one running example through the page, and define each new word in the sentence where it first appears instead of in a separate glossary.
+
+Link to other topics by name where they go deeper, for example `[Thinking in Tradeoffs](/system-design/trade-offs)`, instead of covering their material again. The build puts the topic's current number in front ("1.3 Thinking in Tradeoffs") and fails on a link to a topic that does not exist, so never type the number yourself.
 
 ## Sources
 

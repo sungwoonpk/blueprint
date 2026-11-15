@@ -46,7 +46,7 @@ const Content = entry ? (await render(entry)).Content : null;
       prev ? (
         <a href={`${subject.path}/${prev.slug}`}>
           <span class="label">Previous</span>
-          <span class="title">{prev.title}</span>
+          <span class="title"><span class="num">{prev.number}</span> {prev.title}</span>
         </a>
       ) : (
         <span />
@@ -56,7 +56,7 @@ const Content = entry ? (await render(entry)).Content : null;
       next && (
         <a href={`${subject.path}/${next.slug}`} class="next">
           <span class="label">Next</span>
-          <span class="title">{next.title}</span>
+          <span class="title"><span class="num">{next.number}</span> {next.title}</span>
         </a>
       )
     }
