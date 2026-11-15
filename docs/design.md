@@ -4,7 +4,15 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows only the name, **blueprint** (always lowercase). There is no logo and no favicon (an empty icon link keeps the browser from requesting one). The front page heading is "Roadmap", and page titles read `blueprint` or `<topic> · blueprint`.
+The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "Roadmap", and page titles read `blueprint` or `<topic> · blueprint`.
+
+The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cropped to the shape. It sits directly on the page in both themes.
+
+| File | Use |
+| --- | --- |
+| `public/logo.png` | Header, shown at 19px next to the name (128px file for sharp high-density screens). Its center sits on the band from the top of the tall letters to the baseline, which is how the eye reads the name. |
+| `public/favicon.png` | Browser tab icon, 64px. |
+| `public/apple-touch-icon.png` | Home screen icon on iOS, 180px, the logo on white (iOS needs an opaque icon and rounds it). |
 
 ## Pages
 
@@ -42,4 +50,4 @@ All colors and fonts are CSS custom properties at the top of `src/styles/global.
 
 ## Motion
 
-Colors ease over 0.2 to 0.3s, rows nudge their chevron on hover, in-page jumps scroll smoothly, and page-to-page navigation uses the browser's cross-document view transition (no JavaScript). All of it is switched off for `prefers-reduced-motion`.
+Colors ease over 0.2 to 0.3s, rows nudge their chevron on hover, in-page jumps scroll smoothly, and page-to-page navigation uses the browser's cross-document view transition (no JavaScript). On the roadmap, clicking the name scrolls back to the top in under half a second instead of reloading. All of it is switched off for `prefers-reduced-motion`.
