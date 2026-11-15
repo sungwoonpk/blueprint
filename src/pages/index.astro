@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import Globe from '../components/Globe.astro';
+---
+
+<Base>
+  <div class="home">
+    <Globe />
+  </div>
+</Base>
+
+<style>
+  .home {
+    display: grid;
+    place-items: center;
+    min-height: calc(100vh - 52px - 96px - 48px - 80px);
+  }
+</style>

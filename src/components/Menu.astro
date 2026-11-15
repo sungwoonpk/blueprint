@@ -1,10 +1,11 @@
 ---
-// Header menu listing the site's subjects. Built on the popover attribute, so
+// Header menu: Home, then the site's subjects. Built on the popover attribute, so
 // clicking outside or pressing Escape closes it without extra code.
 import { subjects } from '../data/subjects';
 
 const path = Astro.url.pathname;
-const isCurrent = (href: string) => path === href || path.startsWith(href + '/');
+const isCurrent = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+const items = [{ name: 'Home', path: '/' }, ...subjects];
 ---
 
 <button type="button" class="icon-btn" id="menu-button" popovertarget="site-menu" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu">
@@ -13,10 +14,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
   </svg>
 </button>
 
-<nav id="site-menu" popover aria-label="Subjects">
+<nav id="site-menu" popover aria-label="Site">
   <ul>
     {
-      subjects.map((s) => (
+      items.map((s) => (
         <li>
           <a href={s.path} aria-current={isCurrent(s.path) ? 'page' : undefined}>
             <span class="name">{s.name}</span>
@@ -61,15 +62,15 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
     opacity: 0;
     transform: translateY(-4px) scale(0.98);
     transform-origin: top right;
-    transition:
-      opacity 0.16s var(--ease),
-      transform 0.16s var(--ease),
-      overlay 0.16s allow-discrete,
-      display 0.16s allow-discrete;
+    /* Fade in on open only: closing is instant, because a menu still fading out
+       sits in the top layer and makes the browser cancel page transitions. */
   }
   #site-menu:popover-open {
     opacity: 1;
     transform: none;
+    transition:
+      opacity 0.16s var(--ease),
+      transform 0.16s var(--ease);
   }
   @starting-style {
     #site-menu:popover-open {

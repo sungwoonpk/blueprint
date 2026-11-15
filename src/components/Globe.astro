@@ -1,0 +1,356 @@
+---
+// A small planet in the logo's colors, turning slowly in the middle of the home
+// page, drawn with WebGL2 in two steps.
+//
+// 1. Bake, once: the planet's surface is generated from 3D gradient noise and
+//    written into two cube maps, one face per frame so loading never stalls.
+//    `surface` holds the color (sea by depth; coast, plains, hills, rock, snow)
+//    and the height; `detail` holds the terrain normal and the cloud cover.
+//    Cube maps have no seam and no pinched poles, and mipmaps keep the edge of
+//    the sphere from shimmering.
+// 2. Draw, every frame: find the planet point under each pixel, read the maps,
+//    light the terrain, let the sea ripple and glint, drift the clouds, and add
+//    the atmosphere. This is a few texture reads per pixel, so it stays smooth.
+//
+// Without WebGL2 the logo is shown instead; with reduced motion it holds still.
+---
+
+<div class="globe">
+  <canvas aria-hidden="true"></canvas>
+  <img class="fallback" src="/logo.png" alt="" width="128" height="128" />
+</div>
+
+<script>
+  const SECONDS_PER_TURN = 70;
+  const TILT = 0.32; // radians the axis leans toward the viewer
+  const SURFACE_SIZE = 1024; // cube face size for color and height
+  const DETAIL_SIZE = 512; // cube face size for normals and clouds
+
+  const root = document.querySelector<HTMLDivElement>('.globe')!;
+  const canvas = root.querySelector('canvas')!;
+  const gl = canvas.getContext('webgl2', { premultipliedAlpha: true, antialias: false, alpha: true });
+
+  // Shared GLSL: a good integer hash and smooth 3D gradient noise.
+  const NOISE = `
+    uvec3 pcg3d(uvec3 v) {
+      v = v * 1664525u + 1013904223u;
+      v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+      v ^= v >> 16u;
+      v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+      return v;
+    }
+    vec3 gradientAt(ivec3 p) {
+      uvec3 h = pcg3d(uvec3(p + 4096));
+      return normalize(vec3(h & 0xFFFFu) / 32767.5 - 1.0 + 1e-4);
+    }
+    float gnoise(vec3 x) {
+      ivec3 i = ivec3(floor(x));
+      vec3 f = fract(x);
+      vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+      float n000 = dot(gradientAt(i), f);
+      float n100 = dot(gradientAt(i + ivec3(1, 0, 0)), f - vec3(1, 0, 0));
+      float n010 = dot(gradientAt(i + ivec3(0, 1, 0)), f - vec3(0, 1, 0));
+      float n110 = dot(gradientAt(i + ivec3(1, 1, 0)), f - vec3(1, 1, 0));
+      float n001 = dot(gradientAt(i + ivec3(0, 0, 1)), f - vec3(0, 0, 1));
+      float n101 = dot(gradientAt(i + ivec3(1, 0, 1)), f - vec3(1, 0, 1));
+      float n011 = dot(gradientAt(i + ivec3(0, 1, 1)), f - vec3(0, 1, 1));
+      float n111 = dot(gradientAt(i + ivec3(1, 1, 1)), f - vec3(1, 1, 1));
+      return mix(mix(mix(n000, n100, u.x), mix(n010, n110, u.x), u.y),
+                 mix(mix(n001, n101, u.x), mix(n011, n111, u.x), u.y), u.z);
+    }`;
+
+  const QUAD = `#version 300 es
+    in vec2 position;
+    out vec2 p;
+    void main() { p = position; gl_Position = vec4(position, 0.0, 1.0); }`;
+
+  const BAKE = `#version 300 es
+    precision highp float;
+    precision highp int;
+    uniform int face;
+    uniform int layer;     // 0: color and height, 1: normal and clouds
+    uniform float size;
+    out vec4 outColor;
+    const float SEA = 0.56;
+    ${NOISE}
+    float fbm(vec3 x, int octaves) {
+      float v = 0.0, a = 0.5;
+      for (int i = 0; i < 8; i++) { if (i >= octaves) break; v += a * gnoise(x); x = x * 2.02 + vec3(19.1, 7.3, 3.7); a *= 0.5; }
+      return v;
+    }
+    float ridged(vec3 x, int octaves) {
+      float v = 0.0, a = 0.5;
+      for (int i = 0; i < 8; i++) { if (i >= octaves) break; float n = 1.0 - abs(gnoise(x)); v += a * n * n; x = x * 2.03 + vec3(5.2, 1.3, 8.9); a *= 0.5; }
+      return v;
+    }
+    // Continents from warped noise, mountain ranges from ridged noise on land.
+    float height(vec3 d) {
+      vec3 w = vec3(fbm(d * 1.1 + vec3(1.3), 3), fbm(d * 1.1 + vec3(7.7), 3), fbm(d * 1.1 + vec3(4.1), 3));
+      float c = fbm(d * 1.25 + w * 0.6, 6);
+      float land = smoothstep(0.02, 0.22, c);
+      return 0.5 + c * 0.5 + land * ridged(d * 3.0 + w, 6) * 0.24;
+    }
+    vec3 direction() {
+      vec2 st = gl_FragCoord.xy / size * 2.0 - 1.0;
+      float sc = st.x, tc = st.y;
+      if (face == 0) return normalize(vec3(1.0, -tc, -sc));
+      if (face == 1) return normalize(vec3(-1.0, -tc, sc));
+      if (face == 2) return normalize(vec3(sc, 1.0, tc));
+      if (face == 3) return normalize(vec3(sc, -1.0, -tc));
+      if (face == 4) return normalize(vec3(sc, -tc, 1.0));
+      return normalize(vec3(-sc, -tc, -1.0));
+    }
+    void main() {
+      vec3 d = direction();
+      float h = height(d);
+      float e = h - SEA;
+      if (layer == 0) {
+        vec3 sea = mix(vec3(0.62, 0.81, 0.97), vec3(0.27, 0.45, 0.79), smoothstep(0.0, 0.2, -e));
+        vec3 land = mix(vec3(0.97, 0.92, 0.95), vec3(0.89, 0.83, 0.93), smoothstep(0.0, 0.025, e));
+        land = mix(land, vec3(0.95, 0.80, 0.88), smoothstep(0.05, 0.15, e));
+        land = mix(land, vec3(0.72, 0.68, 0.84), smoothstep(0.15, 0.28, e));
+        land = mix(land, vec3(0.99, 0.99, 1.0), smoothstep(0.28, 0.37, e));
+        outColor = vec4(e < 0.0 ? sea : land, clamp(h / 1.4, 0.0, 1.0));
+      } else {
+        vec3 t = normalize(cross(abs(d.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0), d));
+        vec3 b = cross(d, t);
+        float step = 0.0025;
+        float onLand = smoothstep(0.0, 0.02, e);
+        vec3 slope = (t * (height(normalize(d + t * step)) - h) + b * (height(normalize(d + b * step)) - h)) / step;
+        vec3 n = normalize(d - slope * 0.05 * onLand);
+        float cloud = smoothstep(0.18, 0.52, fbm(d * 2.3 + vec3(fbm(d * 1.4, 3), fbm(d * 1.4 + 3.3, 3), 0.0) * 0.8, 6));
+        outColor = vec4(n * 0.5 + 0.5, cloud);
+      }
+    }`;
+
+  const DRAW = `#version 300 es
+    precision highp float;
+    precision highp int;
+    in vec2 p;
+    out vec4 outColor;
+    uniform samplerCube surface;
+    uniform samplerCube detail;
+    uniform float turn;
+    uniform float tilt;
+    uniform float time;
+    uniform float pixel;
+    const float RADIUS = 0.84;   // sphere radius in canvas units; the rest is atmosphere
+    const float SEA = 0.56;
+    ${NOISE}
+    vec3 toPlanet(vec3 v) {
+      v = vec3(v.x, v.y * cos(tilt) - v.z * sin(tilt), v.y * sin(tilt) + v.z * cos(tilt));
+      float c = cos(turn), s = sin(turn);
+      return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c);
+    }
+    void main() {
+      vec2 c = p / RADIUS;
+      float r = length(c);
+      float px = pixel / RADIUS;
+      vec3 sun = normalize(vec3(-0.55, 0.45, 0.70));
+
+      if (r > 1.0) {
+        float lit = 0.55 + 0.45 * dot(normalize(c), normalize(sun.xy));
+        // Fade to nothing before the canvas edge so the glow is never cut off.
+        float a = exp(-(r - 1.0) * 15.0) * 0.30 * lit * smoothstep(1.18, 1.06, r);
+        outColor = vec4(vec3(0.58, 0.74, 1.0) * a, a);
+        return;
+      }
+
+      float coverage = clamp((1.0 - r) / px, 0.0, 1.0);
+      vec3 n = vec3(c, sqrt(max(0.0, 1.0 - r * r)));
+      vec3 s = toPlanet(n);
+      vec3 sunP = toPlanet(sun);
+      float diffuse = max(dot(n, sun), 0.0);
+
+      vec4 A = texture(surface, s);
+      vec4 B = texture(detail, s);
+      float h = A.a * 1.4;
+      float edge = fwidth(h) * 0.8 + 0.002;
+      float land = smoothstep(SEA - edge, SEA + edge, h);
+
+      // Sea: swells flowing two ways tilt the surface, so light moves across it.
+      float r1 = gnoise(s * 11.0 + vec3(0.0, time * 0.24, time * 0.16));
+      float r2 = gnoise(s * 23.0 - vec3(time * 0.30, 0.0, time * 0.20));
+      float r3 = gnoise(s * 58.0 + vec3(time * 0.55, time * 0.35, 0.0));
+      vec3 wn = normalize(n + vec3(r1 + r3 * 0.35, r2 + r3 * 0.35, 0.0) * 0.16);
+      float sparkle = 0.55 + 0.9 * max(r3, 0.0);
+      float glint = pow(max(dot(wn, normalize(sun + vec3(0.0, 0.0, 1.0))), 0.0), 220.0) * sparkle;
+      float swell = dot(wn, sun) - dot(n, sun);
+      vec3 sea = A.rgb * (0.66 + 0.42 * diffuse) + swell * 0.10 + glint * 0.55;
+      // Waves rolling in: thin crests travel toward the shore and fade out there.
+      float offshore = clamp((SEA - h) / 0.05, 0.0, 1.0);
+      float crest = smoothstep(0.80, 1.0, sin(offshore * 30.0 + time * 1.5 + r1 * 2.5));
+      float surf = crest * (1.0 - offshore) * (0.5 + 0.5 * (r2 * 0.5 + 0.5));
+      float foam = max(smoothstep(0.012, 0.0, SEA - h), surf * 0.8);
+      sea = mix(sea, vec3(0.99, 0.98, 1.0) * (0.78 + 0.26 * diffuse), foam * 0.5 * (1.0 - land));
+
+      // Land: lit by the baked terrain normal.
+      vec3 terrain = B.rgb * 2.0 - 1.0;
+      vec3 ground = A.rgb * (0.62 + 0.46 * max(dot(terrain, sunP), 0.0));
+
+      vec3 color = mix(sea, ground, land);
+
+      // Clouds drift a little faster than the ground turns.
+      float drift = time * 0.006;
+      vec3 sc = vec3(s.x * cos(drift) + s.z * sin(drift), s.y, -s.x * sin(drift) + s.z * cos(drift));
+      float cloud = texture(detail, sc).a * 0.45;
+      color = mix(color, vec3(1.0) * (0.78 + 0.26 * diffuse), cloud);
+
+      // Atmosphere seen edge on.
+      color = mix(color, vec3(0.64, 0.79, 1.0), pow(1.0 - n.z, 3.0) * 0.45);
+
+      // A trace of noise keeps soft gradients free of banding.
+      color += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+
+      outColor = vec4(color * coverage, coverage);
+    }`;
+
+  function program(context: WebGL2RenderingContext, fragment: string) {
+    const make = (type: number, source: string) => {
+      const shader = context.createShader(type)!;
+      context.shaderSource(shader, source);
+      context.compileShader(shader);
+      if (!context.getShaderParameter(shader, context.COMPILE_STATUS)) throw new Error(context.getShaderInfoLog(shader) ?? 'shader');
+      return shader;
+    };
+    const prog = context.createProgram()!;
+    context.attachShader(prog, make(context.VERTEX_SHADER, QUAD));
+    context.attachShader(prog, make(context.FRAGMENT_SHADER, fragment));
+    context.bindAttribLocation(prog, 0, 'position');
+    context.linkProgram(prog);
+    if (!context.getProgramParameter(prog, context.LINK_STATUS)) throw new Error(context.getProgramInfoLog(prog) ?? 'link');
+    return prog;
+  }
+
+  function cubeMap(context: WebGL2RenderingContext, size: number) {
+    const texture = context.createTexture()!;
+    context.bindTexture(context.TEXTURE_CUBE_MAP, texture);
+    context.texStorage2D(context.TEXTURE_CUBE_MAP, Math.log2(size) + 1, context.RGBA8, size, size);
+    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MIN_FILTER, context.LINEAR_MIPMAP_LINEAR);
+    context.texParameteri(context.TEXTURE_CUBE_MAP, context.TEXTURE_MAG_FILTER, context.LINEAR);
+    const aniso = context.getExtension('EXT_texture_filter_anisotropic');
+    if (aniso) context.texParameterf(context.TEXTURE_CUBE_MAP, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, context.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+    return texture;
+  }
+
+  function start(context: WebGL2RenderingContext) {
+    const quad = context.createBuffer();
+    context.bindBuffer(context.ARRAY_BUFFER, quad);
+    context.bufferData(context.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), context.STATIC_DRAW);
+    context.enableVertexAttribArray(0);
+    context.vertexAttribPointer(0, 2, context.FLOAT, false, 0, 0);
+
+    const bake = program(context, BAKE);
+    const draw = program(context, DRAW);
+    const surface = cubeMap(context, SURFACE_SIZE);
+    const detail = cubeMap(context, DETAIL_SIZE);
+    const framebuffer = context.createFramebuffer();
+
+    // Twelve bake steps (six faces, two maps), one per frame.
+    const steps: Array<{ texture: WebGLTexture; size: number; layer: number; face: number }> = [];
+    for (let face = 0; face < 6; face++) {
+      steps.push({ texture: surface, size: SURFACE_SIZE, layer: 0, face });
+      steps.push({ texture: detail, size: DETAIL_SIZE, layer: 1, face });
+    }
+
+    const bakeStep = () => {
+      const step = steps.shift()!;
+      context.useProgram(bake);
+      context.bindFramebuffer(context.FRAMEBUFFER, framebuffer);
+      context.framebufferTexture2D(context.FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_CUBE_MAP_POSITIVE_X + step.face, step.texture, 0);
+      if (context.checkFramebufferStatus(context.FRAMEBUFFER) !== context.FRAMEBUFFER_COMPLETE) throw new Error('framebuffer');
+      context.viewport(0, 0, step.size, step.size);
+      context.uniform1i(context.getUniformLocation(bake, 'face'), step.face);
+      context.uniform1i(context.getUniformLocation(bake, 'layer'), step.layer);
+      context.uniform1f(context.getUniformLocation(bake, 'size'), step.size);
+      context.drawArrays(context.TRIANGLE_STRIP, 0, 4);
+      context.bindFramebuffer(context.FRAMEBUFFER, null);
+    };
+
+    const finishBake = () => {
+      for (const texture of [surface, detail]) {
+        context.bindTexture(context.TEXTURE_CUBE_MAP, texture);
+        context.generateMipmap(context.TEXTURE_CUBE_MAP);
+      }
+      context.useProgram(draw);
+      context.activeTexture(context.TEXTURE0);
+      context.bindTexture(context.TEXTURE_CUBE_MAP, surface);
+      context.activeTexture(context.TEXTURE1);
+      context.bindTexture(context.TEXTURE_CUBE_MAP, detail);
+      context.uniform1i(context.getUniformLocation(draw, 'surface'), 0);
+      context.uniform1i(context.getUniformLocation(draw, 'detail'), 1);
+      context.uniform1f(context.getUniformLocation(draw, 'tilt'), TILT);
+    };
+
+    const uTurn = context.getUniformLocation(draw, 'turn');
+    const uTime = context.getUniformLocation(draw, 'time');
+    const uPixel = context.getUniformLocation(draw, 'pixel');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let begin = 0;
+
+    const frame = (now: number) => {
+      if (steps.length) {
+        bakeStep();
+        if (!steps.length) {
+          finishBake();
+          begin = now;
+          root.classList.add('ready');
+        }
+        requestAnimationFrame(frame);
+        return;
+      }
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const size = Math.round(canvas.clientWidth * ratio);
+      if (canvas.width !== size) canvas.width = canvas.height = size;
+      context.viewport(0, 0, size, size);
+      context.uniform1f(uPixel, 2 / size);
+      const seconds = still.matches ? 0 : (now - begin) / 1000;
+      context.uniform1f(uTurn, 0.8 + (seconds / SECONDS_PER_TURN) * Math.PI * 2);
+      context.uniform1f(uTime, seconds);
+      context.drawArrays(context.TRIANGLE_STRIP, 0, 4);
+      if (!still.matches) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+    still.addEventListener('change', () => requestAnimationFrame(frame));
+  }
+
+  if (gl) {
+    try {
+      start(gl);
+    } catch {
+      // Keep the plain logo.
+    }
+  }
+</script>
+
+<style>
+  .globe {
+    position: relative;
+    width: min(70vmin, 480px);
+    aspect-ratio: 1;
+  }
+  canvas,
+  .fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  canvas {
+    opacity: 0;
+    transition: opacity 0.9s var(--ease);
+  }
+  .ready canvas {
+    opacity: 1;
+  }
+  .ready .fallback {
+    opacity: 0;
+    transition: opacity 0.9s var(--ease);
+  }
+  .fallback {
+    inset: 8%;
+    width: 84%;
+    height: 84%;
+    border-radius: 50%;
+  }
+</style>
