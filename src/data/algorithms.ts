@@ -122,7 +122,7 @@ export const phases: Phase[] = [
       ['representing-graphs', 'Representing Graphs', 'Traversal'],
       ['breadth-first-search', 'Breadth-First Search', 'Traversal'],
       ['depth-first-search', 'Depth-First Search', 'Traversal'],
-      ['grids-as-graphs', 'Grids as Graphs', 'Traversal'],
+      ['grids-implicit-graphs', 'Grids and Implicit Graphs', 'Traversal'],
       ['components-cycles', 'Connected Components and Cycles', 'Structure'],
       ['topological-sort', 'Topological Sort', 'Structure'],
       ['union-find', 'Union-Find', 'Structure'],
