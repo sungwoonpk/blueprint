@@ -36,7 +36,7 @@ Design exercises and interview practice, and reading progress. There is one road
 5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
 6. **Design Strategies**: brute force and backtracking, divide and conquer, greedy, randomness.
 7. **Graphs**: traversal, structure (topological sort, union-find), shortest paths, spanning trees, advanced graphs.
-8. **Strings, Math and Bits**: string matching, number theory and combinatorics, bit manipulation.
+8. **Math, Strings and Bits**: number theory and combinatorics, string matching (rolling hashes need modular arithmetic, so math comes first), bit manipulation.
 9. **Dynamic Programming**: fundamentals, classic problems, and advanced forms (interval, tree, bitmask, state machine, digit).
 
 The order follows what a learner needs next: complexity and recursion before anything that uses them; data structures before the techniques that run on them; strategies before graphs, because graph algorithms are those strategies applied (DFS is backtracking, Dijkstra and Prim are greedy); bits and modular arithmetic before dynamic programming, which uses both.
