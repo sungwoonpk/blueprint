@@ -1,9 +1,19 @@
 ---
+// The front page of one subject: its phases, groups and topics, with an
+// in-place filter and a side list of phases.
 import Base from '../layouts/Base.astro';
-import { phases, groupedTopics } from '../data/roadmap';
+import { groupTopics } from '../lib/roadmap';
+import type { Subject } from '../data/subjects';
+
+interface Props {
+  subject: Subject;
+}
+
+const { subject } = Astro.props;
+const { phases } = subject;
 ---
 
-<Base>
+<Base title={subject.name}>
   <div class="layout">
     <nav class="phases" aria-label="Phases">
       <ol>
@@ -21,7 +31,7 @@ import { phases, groupedTopics } from '../data/roadmap';
     </nav>
 
     <div class="content">
-      <h1>Roadmap</h1>
+      <h1>{subject.name}</h1>
 
       <label class="search-field">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -47,7 +57,7 @@ import { phases, groupedTopics } from '../data/roadmap';
             <p class="eyebrow">Phase {i + 1}</p>
             <h2>{phase.title}</h2>
             <div class="groups">
-              {groupedTopics(phase).map((group) =>
+              {groupTopics(subject.topics, phase).map((group) =>
                 group.name ? (
                   <details class="group">
                     <summary>
@@ -60,7 +70,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                     <ul class="topics">
                       {group.topics.map((t) => (
                         <li>
-                          <a href={`/topics/${t.slug}`} class="row">
+                          <a href={`${subject.path}/${t.slug}`} class="row">
                             <span class="n num">{t.number}</span>
                             <span class="t" data-title={t.title}>{t.title}</span>
                           </a>
@@ -72,7 +82,7 @@ import { phases, groupedTopics } from '../data/roadmap';
                   <ul class="topics ungrouped">
                     {group.topics.map((t) => (
                       <li>
-                        <a href={`/topics/${t.slug}`} class="row">
+                        <a href={`${subject.path}/${t.slug}`} class="row">
                           <span class="n num">{t.number}</span>
                           <span class="t" data-title={t.title}>{t.title}</span>
                         </a>
@@ -281,7 +291,7 @@ import { phases, groupedTopics } from '../data/roadmap';
     max-width: 700px;
   }
   h1 {
-    font-size: clamp(34px, 6vw, 46px);
+    font-size: clamp(32px, 5.5vw, 40px);
     line-height: 1.05;
     font-weight: 700;
     letter-spacing: -0.04em;

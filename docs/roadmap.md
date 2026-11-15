@@ -1,10 +1,10 @@
 # Roadmap data
 
-`src/data/roadmap.ts` is the single source of truth for the structure of the site.
+Each subject has one data file, `src/data/system-design.ts` and `src/data/algorithms.ts`, and `src/data/subjects.ts` lists the subjects. The shared shape and helpers (numbering, grouping) are in `src/lib/roadmap.ts`.
 
 - Two levels: **phase** > **topic**. Phases are few (9), topics are many. Every topic has a `group`; on the roadmap a phase shows its groups and each group expands.
 - A topic has a stable `slug`, a `title` and an optional `group`. The group only clusters topics under a small heading inside a phase.
-- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/topics/<slug>`).
+- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/<subject>/<slug>`).
 - Slugs are unique. Rename a title freely, but avoid changing a slug once an article exists.
 
 ## Turning a topic into an article
@@ -13,19 +13,33 @@ Not built yet. The plan: an article is a Markdown file named after the slug. A t
 
 ## Out of scope for now
 
-A low-level design track (OOP, patterns, small design problems), per-topic difficulty levels, design exercises and interview practice, and reading progress.
+Design exercises and interview practice, and reading progress. There is one roadmap for everyone: no separate tracks and no levels.
 
 ## The phases
 
-1. **Foundations**: what system design is and how to think in tradeoffs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
+1. **Foundations**: the big picture (what system design is, how a system grows, thinking in tradeoffs), how a request travels over the network, the core qualities, and then turning requirements into numbers.
 2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
-3. **Data Storage and Caching**: relational and NoSQL databases, storage internals, replication and consistency, partitioning, distributed transactions, caching, specialized storage.
-4. **Messaging and Streaming**: messaging, events, stream processing and background jobs.
-5. **Distributed Systems**: failure, time and order, coordination, and how replicas converge.
+3. **Data Storage and Caching**: storage on one machine and caching: relational and NoSQL databases, caching, specialized storage, and storage internals.
+4. **Asynchronous Processing**: work that happens outside the request: when to go asynchronous, messaging, background jobs, events, and batch and stream processing.
+5. **Distributed Systems**: why spreading data over machines is hard, replication, consistency, partitioning, distributed transactions, time and order, coordination, and how replicas converge.
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
-7. **Patterns**: recurring problems (scaling reads and writes, traffic spikes, counting, large files, contention, long jobs, fanout, pushing updates) and how the building blocks solve them.
-8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
-9. **Classic Systems**: the well-known papers and systems, grouped by area.
+7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, hot and cold tiers, copies in sync, counting and ranking, location, tenant isolation), correctness (contention, duplicate work, long multistep work), reaching users (feeds, pushing updates) and evolving a running system (breaking up a monolith, migrating between datastores).
+8. **AI Systems**: how models run and what they cost, retrieval (embeddings, vector databases, RAG, and when to fine-tune instead), building applications and agents within a context window, and keeping them good and safe in production.
+9. **Classic Systems**: the well-known papers and systems, grouped by area and ordered by year, each one tied back to the chapters it illustrates (for example Dataflow to windowing and watermarks, Borg to container orchestration).
+
+## The Algorithms phases
+
+1. **Foundations**: what an algorithm is, Big O, recursion, and how to approach a problem (reading constraints, edge cases).
+2. **Core Data Structures**: arrays and strings, linked lists, stacks and queues, then hashing (hash tables are built from arrays and linked lists), and designing your own structures.
+3. **Searching and Sorting**: binary search (including on the answer), comparison and linear time sorts, quickselect.
+4. **Array Techniques** (they work on strings too): two pointers and the sliding windows built on them, rearranging in place, prefix sums and maximum subarrays, monotonic structures, intervals, matrices.
+5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
+6. **Design Strategies**: brute force and backtracking, divide and conquer, greedy, randomness.
+7. **Graphs**: traversal, structure (topological sort, union-find), shortest paths, spanning trees, advanced graphs.
+8. **Math, Strings and Bits**: number theory and combinatorics, string matching (rolling hashes need modular arithmetic, so math comes first), bit manipulation.
+9. **Dynamic Programming**: fundamentals, classic problems, and advanced forms (interval, tree, bitmask, state machine, digit).
+
+The order follows what a learner needs next: complexity and recursion before anything that uses them; data structures before the techniques that run on them; strategies before graphs, because graph algorithms are those strategies applied (DFS is backtracking, Dijkstra and Prim are greedy); bits and modular arithmetic before dynamic programming, which uses both.
 
 ## Why this order
 
@@ -33,13 +47,22 @@ Each topic should only need what came before it.
 
 - Foundations first: the vocabulary (trade-offs, latency, scalability, availability) and the network a request travels over.
 - Then the building blocks in the order a request meets them: the API, the traffic layer, the services, the data, and the asynchronous work behind them.
-- Distributed systems theory comes after data and messaging, because replication and delivery guarantees are what make clocks, consensus and convergence matter.
+- The roadmap has to make sense both ways it is read: in order, no topic needs something not yet covered; opened at any phase, that phase is one complete subject. That is why each phase is a single subject: the building blocks (phases 2 to 4), distributed data together with the theory behind it (phase 5), running a system (phase 6), the patterns that combine everything (phase 7), AI systems (phase 8) and the classic papers (phase 9).
 - Production concerns come once there is a system to run, patterns once every block they combine has been covered, and the classic papers last, as deep dives that use everything before them.
 
 Inside a phase the same rule holds: concepts before mechanisms, and mechanisms before named products (for example, caching strategies before Redis). Single-node ideas come before distributed ones: ACID transactions sit with databases, two-phase commit and sagas come after partitioning.
 
 ## Wording
 
-Titles are short, plain and in Title Case. Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context instead.
+The roadmap reads like a book's table of contents.
+
+- One idea per topic. A topic that needs "and" to join two unrelated ideas is two topics.
+- Titles read like a book's chapters. A named algorithm or concept is simply its name ("Depth-First Search", "Circuit Breakers"). Words are added only when they add meaning ("Binary Search on the Answer", "Building Reliable Systems from Unreliable Parts"), never to dress a title up. The key term always stays in the title, because search matches titles. A real choice is named as one: "Choosing Between REST, RPC and GraphQL". No "vs".
+- Group names stay short labels ("Networking", "Caching", "Background Jobs"). Groups are for finding your way while they are collapsed; the story is told by the topic titles inside them.
+- Patterns are named by what you do: "Scaling Reads", "Handling Contention".
+- A group often opens with the problem before the fixes ("Cascading Failures" before timeouts and circuit breakers) and ends with the tools that implement it ("Redis and Memcached" after the caching ideas).
+- Products appear only as a pair to compare ("Redis and Memcached") or in Classic Systems.
+- No two topics teach the same thing. Where a building block and a pattern touch (Idempotency and Avoiding Duplicate Work), the building block explains the mechanism and the pattern combines it with others.
+- Hyphens appear only when they are part of a term or a name (B-Trees, Key-Value, Two-Phase Commit, Depth-First Search, Bellman-Ford). Anything else is rephrased ("Columnar Storage", not "Column-Oriented Storage"). No "Title: subtitle" forms; the group name gives the context.
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.

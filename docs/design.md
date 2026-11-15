@@ -4,29 +4,30 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "Roadmap", and page titles read `blueprint` or `<topic> · blueprint`.
+The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "System Design", and page titles read `blueprint` or `<topic> · blueprint`.
 
 The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cropped to the shape. It sits directly on the page in both themes.
 
 | File | Use |
 | --- | --- |
-| `public/logo.png` | Header, shown at 19px next to the name (128px file for sharp high-density screens). Its center sits on the band from the top of the tall letters to the baseline, which is how the eye reads the name. |
+| `public/logo.png` | Header, shown at 19px, 13px left of the name (128px file for sharp high-density screens). Its center sits on the band from the top of the tall letters to the baseline, which is how the eye reads the name. |
 | `public/favicon.png` | Browser tab icon, 64px. |
 | `public/apple-touch-icon.png` | Home screen icon on iOS, 180px, the logo on white (iOS needs an opaque icon and rounds it). |
 
 ## Pages
 
-- **Roadmap (`/`)** is the front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
-- **Topic (`/topics/<slug>`)** is a narrow reading column with a back link, the number, the title, and previous/next links. Until an article exists it says "Coming soon."
+- **Subjects.** The site holds several subjects, each under its own path: System Design at `/system-design` and Algorithms at `/algorithms`. `/` redirects to the first subject. Both subjects use the same two components, `RoadmapPage` and `TopicPage`. The menu button at the far right of the header lists the subjects and marks the current one; it closes on outside click or Escape.
+- **Roadmap (`/system-design`, `/algorithms`)** is a subject's front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
+- **Topic (`/<subject>/<slug>`)** is a narrow reading column with a back link, the number, the title, and previous/next links. Until an article exists it says "Coming soon."
 - **Footer** on every page: the author credit and the last updated date (the last commit's date, or the build date without git history).
 
 ## Search
 
-Search covers phase titles and topic titles only. Every term must appear; `-` and `/` count as spaces, so "trade off" finds "Trade-offs". Matches are shown in the accent color.
+Search covers phase titles and topic titles of every subject. In the dialog, the current subject's results come first and other subjects' results name their subject. Every term must appear; `-` and `/` count as spaces, so "trade off" finds "Trade-offs". Matches are shown in the accent color.
 
 - **On the roadmap**, the field under the title filters the page in place: phases and topics that match stay, groups with a match open, the rest hides. Enter opens the first matching topic, Esc clears and restores the page as it was.
-- **On other pages**, the header icon opens a search dialog with arrow-key navigation.
-- `Cmd/Ctrl+K` and `/` start a search: they focus the roadmap field on the roadmap and open the dialog elsewhere.
+- **The header icon** opens a search dialog with arrow-key navigation, on every page.
+- `Cmd/Ctrl+K` and `/` focus the roadmap field on the roadmap and open the dialog on other pages.
 
 Matching lives in `src/lib/match.ts` and is shared by both.
 

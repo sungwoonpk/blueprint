@@ -2,8 +2,9 @@
 // The index is small (a few hundred titles), so it is embedded in the page and
 // matched in the browser. No server, no build step.
 import { searchEntries } from '../data/search';
+import { subjectOf } from '../data/subjects';
 
-const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
+const json = JSON.stringify(searchEntries(subjectOf(Astro.url.pathname))).replace(/</g, '\\u003c');
 ---
 
 <button type="button" class="icon-btn" data-search-open aria-label="Search topics" title="Search (⌘K)">
@@ -67,7 +68,7 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
 
     if (terms.length === 0) {
       // Before typing, offer the phases as quick jumps.
-      results = entries.filter((e) => e.context === '');
+      results = entries.filter((e) => e.kind === 'phase' && (e.current || !entries.some((x) => x.current)));
     } else {
       results = entries
         .map((entry, i) => ({ entry, i, text: index[i] }))
@@ -115,8 +116,8 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     input.focus();
   }
 
-  // On the roadmap page the inline filter is the search, so the header icon and
-  // shortcuts focus it instead of opening the dialog.
+  // The header icon always opens the dialog. On the roadmap page the keyboard
+  // shortcuts focus the inline filter instead, which shows the shortcut hint.
   const inline = document.getElementById('roadmap-search') as HTMLInputElement | null;
   function start() {
     if (!inline) return open();
@@ -124,7 +125,7 @@ const json = JSON.stringify(searchEntries).replace(/</g, '\\u003c');
     inline.focus({ preventScroll: true });
     inline.select();
   }
-  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', start));
+  document.querySelectorAll('[data-search-open]').forEach((el) => el.addEventListener('click', open));
 
   document.addEventListener('keydown', (e) => {
     const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, [contenteditable]');

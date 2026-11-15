@@ -1,19 +1,21 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { numberedTopics } from '../../data/roadmap';
+// One topic's page inside a subject. Until its article exists it says so.
+import Base from '../layouts/Base.astro';
+import type { NumberedTopic } from '../lib/roadmap';
+import type { Subject } from '../data/subjects';
 
-export function getStaticPaths() {
-  return numberedTopics.map((topic, i) => ({
-    params: { slug: topic.slug },
-    props: { topic, prev: numberedTopics[i - 1], next: numberedTopics[i + 1] },
-  }));
+interface Props {
+  subject: Subject;
+  topic: NumberedTopic;
+  prev?: NumberedTopic;
+  next?: NumberedTopic;
 }
 
-const { topic, prev, next } = Astro.props;
+const { subject, topic, prev, next } = Astro.props;
 ---
 
 <Base title={`${topic.number} ${topic.title}`} width="narrow">
-  <a class="back" href={`/#${topic.phase.slug}`}>
+  <a class="back" href={`${subject.path}#${topic.phase.slug}`}>
     <svg viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M7 1L1 7l6 6" />
     </svg>
@@ -29,7 +31,7 @@ const { topic, prev, next } = Astro.props;
   <nav class="pager" aria-label="Previous and next topic">
     {
       prev ? (
-        <a href={`/topics/${prev.slug}`}>
+        <a href={`${subject.path}/${prev.slug}`}>
           <span class="label">Previous</span>
           <span class="title">{prev.title}</span>
         </a>
@@ -39,7 +41,7 @@ const { topic, prev, next } = Astro.props;
     }
     {
       next && (
-        <a href={`/topics/${next.slug}`} class="next">
+        <a href={`${subject.path}/${next.slug}`} class="next">
           <span class="label">Next</span>
           <span class="title">{next.title}</span>
         </a>
