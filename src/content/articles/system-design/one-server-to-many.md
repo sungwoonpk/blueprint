@@ -50,7 +50,7 @@ Here is how that rule usually plays out for the textbook app. The exact order ch
 
 ### 1. Make the Server Bigger
 
-Registration week comes and our one server slows down. The easiest fix is a bigger machine with more CPU and memory. No code changes. This is **scaling up**, also called vertical scaling.
+Registration week comes and our one server slows down. The easiest fix is a bigger machine with more CPU and memory (in the cloud, a bigger instance type). No code changes. This is **scaling up**, also called vertical scaling.
 
 It buys time, but the ceiling is still there, big machines get expensive fast, switching to one usually means some downtime, and it's still one machine. See [Scaling Up and Scaling Out](/system-design/scaling).
 
@@ -62,7 +62,7 @@ The cost: one more machine, and every query now crosses the network.
 
 ### 3. Add Servers Behind a Load Balancer
 
-With the database moved out, the web server is next: one can't keep up at peak, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going. The load balancer itself usually runs as a pair, so it doesn't become the new single point of failure.
+With the database moved out, the web server is next: one can't keep up at peak, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going. The load balancer itself usually runs as a pair, so it doesn't become the new single point of failure. Common ones are NGINX, HAProxy and the load balancers cloud providers sell.
 
 <figure class="diagram">
 <div class="flow">
@@ -112,7 +112,7 @@ The cost: replicas run a little behind. A student posts a book and might not see
 
 ### 5. Add a Cache
 
-Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database.
+Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database. Redis and Memcached are the usual picks.
 
 <figure class="diagram">
 <p class="rowname">Cache Hit</p>
@@ -136,13 +136,13 @@ The cost: cached data can go out of date, and knowing when to refresh it is hard
 
 ### 6. Serve Photos From a CDN
 
-Pages now come back fast, except the photos. They are the heaviest part of every page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close.
+Pages now come back fast, except the photos. They are the heaviest part of every page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close. Cloudflare, Amazon CloudFront and Akamai are well known ones.
 
 The cost: another service to pay for, and a changed photo takes time to update everywhere. See [Content Delivery Networks (CDNs)](/system-design/cdn).
 
 ### 7. Move Slow Work to a Queue
 
-Reading is fast everywhere now. What's still slow are actions with heavy work behind them: resizing an uploaded photo or sending a "your book sold" email makes the student wait. Instead, the server drops a job on a **message queue** and answers right away. Separate **worker** servers pick up jobs and do them in the background.
+Reading is fast everywhere now. What's still slow are actions with heavy work behind them: resizing an uploaded photo or sending a "your book sold" email makes the student wait. Instead, the server drops a job on a **message queue** and answers right away. Separate **worker** servers pick up jobs and do them in the background. RabbitMQ and Amazon SQS are common queues.
 
 <figure class="diagram">
 <div class="flow">

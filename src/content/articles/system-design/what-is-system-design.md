@@ -16,7 +16,7 @@ You'll also hear these called **low level design** and **high level design**. Th
 
 ## Why It Matters to You
 
-- **First job**: teams plan big changes in design docs, and you'll read them early on.
+- **Your first team**: design docs, design reviews and on call all assume you know how the parts fit. When something breaks at 2 AM, that's how you know where to look.
 - **Better code**: a slow query is easier to spot when you know what your code talks to.
 - **Interviews**: standard for experienced hires, and some companies ask new grads too.
 
@@ -38,7 +38,7 @@ Take a used textbook app. Students post books with a photo. Others browse and bu
 <figcaption>A first design for the textbook app</figcaption>
 </figure>
 
-The phone is the **client**. It sends **requests**, like "show me calculus books", to the **server**. The server runs our code, reads or writes the **database** and sends back a **response**. The database keeps data for good, even when the server restarts. Photos are big, so they go to separate **file storage**.
+A request like "show me calculus books" goes from the phone to the web server, which runs our code, queries the database and sends the response back. Photos are too big for the database, so they go to separate file storage, usually **object storage** such as Amazon S3, built to hold huge numbers of files cheaply.
 
 ## What Decides the Design
 
