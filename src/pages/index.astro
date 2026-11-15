@@ -90,21 +90,60 @@ import { phases, groupedTopics } from '../data/roadmap';
 </Base>
 
 <script>
-  // Highlight the phase currently in view in the side list.
+  // Highlight the phase being read in the side list. Computed from scroll
+  // position rather than an intersection band, so short phases at the end of
+  // the page still light up.
+  const sections = [...document.querySelectorAll<HTMLElement>('.content section[id]')];
   const links = new Map<string, HTMLAnchorElement>();
   document.querySelectorAll<HTMLAnchorElement>('.phases a').forEach((a) => links.set(a.hash.slice(1), a));
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        links.forEach((a) => a.classList.remove('active'));
-        links.get(entry.target.id)?.classList.add('active');
-      }
-    },
-    { rootMargin: '-20% 0px -70% 0px' },
+  // A phase picked in the side list stays highlighted while it is on screen,
+  // even when the page cannot scroll far enough to bring it to the top.
+  let picked: HTMLElement | null = null;
+
+  const onScreen = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return r.top < window.innerHeight && r.bottom > 0;
+  };
+
+  function current(): HTMLElement | undefined {
+    const shown = sections.filter((s) => !s.hidden);
+    if (picked && !picked.hidden && onScreen(picked)) return picked;
+    picked = null;
+    const root = document.documentElement;
+    if (window.scrollY + window.innerHeight >= root.scrollHeight - 2) return shown[shown.length - 1];
+    const line = window.innerHeight * 0.3;
+    let active = shown[0];
+    for (const s of shown) if (s.getBoundingClientRect().top <= line) active = s;
+    return active;
+  }
+
+  function update() {
+    const active = current();
+    links.forEach((a, id) => a.classList.toggle('active', id === active?.id));
+  }
+
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      update();
+    });
+  };
+
+  links.forEach((a, id) =>
+    a.addEventListener('click', () => {
+      picked = document.getElementById(id);
+      schedule();
+    }),
   );
-  document.querySelectorAll('section[id]').forEach((s) => observer.observe(s));
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  // The roadmap filter hides and shows phases, which changes what is current.
+  document.getElementById('roadmap-search')?.addEventListener('input', schedule);
+  update();
 </script>
 
 <script>
