@@ -13,7 +13,7 @@ interface Props {
 }
 
 const { title, width = 'wide' } = Astro.props;
-const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.subject}`;
+const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
 ---
 
 <!doctype html>
@@ -23,7 +23,8 @@ const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.s
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={SITE.description} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- No logo: an empty icon also stops the browser asking for /favicon.ico. -->
+    <link rel="icon" href="data:," />
     <script is:inline>
       // Apply the saved theme before first paint to avoid a flash.
       try {
@@ -35,7 +36,7 @@ const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.s
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href="/" aria-label={`${SITE.name}, ${SITE.subject}: home`}><Wordmark /></a>
+        <a href="/" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
           <Search />
           <ThemeToggle />
