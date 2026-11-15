@@ -8,7 +8,7 @@ College students and people in their first engineering job. They know how to cod
 
 ## Voice
 
-- Show, don't narrate: a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
+- Show, don't narrate (a chart wherever numbers have a shape worth seeing, such as a sudden jump): a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
 - Cut every word that isn't doing work.
 - Emphasis stays rare. **Bold** a term where it is defined or a label that starts a list item. <u>Underline</u> at most one or two lines a page. One callout (`>`) for the definition the page hangs on. Tables already name their rows, so no bold inside them.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
@@ -19,7 +19,7 @@ College students and people in their first engineering job. They know how to cod
 
 1. Open with a callout that says what the thing is in one line, then a short hook the reader recognizes.
 2. Then the sections the topic needs, in an order where each answers the question the last one raised. Headings, table headers and diagram labels are in Title Case, with no "vs" ("Code Level and System Level").
-3. End with **Key Points**: three to five lines.
+3. End with **Key Points**: three to five lines. The heading and its list are shown together as a summary card automatically.
 
 Carry one running example through the page, and define each new word in the sentence where it first appears instead of in a separate glossary.
 
