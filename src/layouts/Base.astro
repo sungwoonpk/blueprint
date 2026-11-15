@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { SITE } from '../config';
+import { subjects } from '../data/subjects';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Wordmark from '../components/Wordmark.astro';
 import Search from '../components/Search.astro';
@@ -53,7 +54,7 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href={SITE.sections[0].href} id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <a href={subjects[0].path} id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
           <Search />
           <ThemeToggle />
@@ -65,13 +66,14 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
       <slot />
     </main>
     <script>
-      // On the System Design roadmap (the home page), the name scrolls back to the
-      // top quickly and smoothly instead of reloading. Elsewhere it links home.
+      // On the home page (the first subject's roadmap), the name scrolls back to
+      // the top quickly and smoothly instead of reloading. Elsewhere it links home.
       const DURATION = 450;
       const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
       document.getElementById('home-link')?.addEventListener('click', (e) => {
-        if (window.location.pathname.replace(/\/$/, '') !== '/system-design') return;
+        const home = (e.currentTarget as HTMLAnchorElement).pathname;
+        if (window.location.pathname.replace(/\/$/, '') !== home) return;
         e.preventDefault();
         if (window.location.hash) history.replaceState(null, '', window.location.pathname);
         const start = window.scrollY;

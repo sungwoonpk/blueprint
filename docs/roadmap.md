@@ -1,10 +1,10 @@
 # Roadmap data
 
-`src/data/roadmap.ts` is the single source of truth for the structure of the site.
+Each subject has one data file, `src/data/system-design.ts` and `src/data/algorithms.ts`, and `src/data/subjects.ts` lists the subjects. The shared shape and helpers (numbering, grouping) are in `src/lib/roadmap.ts`.
 
 - Two levels: **phase** > **topic**. Phases are few (9), topics are many. Every topic has a `group`; on the roadmap a phase shows its groups and each group expands.
 - A topic has a stable `slug`, a `title` and an optional `group`. The group only clusters topics under a small heading inside a phase.
-- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/system-design/<slug>`).
+- Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/<subject>/<slug>`).
 - Slugs are unique. Rename a title freely, but avoid changing a slug once an article exists.
 
 ## Turning a topic into an article
@@ -27,6 +27,20 @@ Design exercises and interview practice, and reading progress. There is one road
 8. **AI Systems**: how models run and what they cost, retrieval (embeddings, vector databases, RAG, and when to fine-tune instead), building applications and agents within a context window, and keeping them good and safe in production.
 9. **Classic Systems**: the well-known papers and systems, grouped by area and ordered by year, each one tied back to the chapters it illustrates (for example Dataflow to windowing and watermarks, Borg to container orchestration).
 
+## The Algorithms phases
+
+1. **Foundations**: what an algorithm is, Big O, recursion, and how to approach a problem (reading constraints, edge cases).
+2. **Core Data Structures**: arrays, strings, hashing, linked lists, stacks and queues, and designing your own structures.
+3. **Searching and Sorting**: binary search (including on the answer), comparison and linear time sorts, quickselect.
+4. **Array and String Techniques**: two pointers, rearranging in place, sliding windows, prefix sums, monotonic structures, intervals, matrices.
+5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
+6. **Design Strategies**: brute force and backtracking, divide and conquer, greedy, randomness.
+7. **Graphs**: traversal, structure (topological sort, union-find), shortest paths, spanning trees, advanced graphs.
+8. **Strings, Math and Bits**: string matching, number theory and combinatorics, bit manipulation.
+9. **Dynamic Programming**: fundamentals, classic problems, and advanced forms (interval, tree, bitmask, state machine, digit).
+
+The order follows what a learner needs next: complexity and recursion before anything that uses them; data structures before the techniques that run on them; strategies before graphs, because graph algorithms are those strategies applied (DFS is backtracking, Dijkstra and Prim are greedy); bits and modular arithmetic before dynamic programming, which uses both.
+
 ## Why this order
 
 Each topic should only need what came before it.
@@ -43,12 +57,12 @@ Inside a phase the same rule holds: concepts before mechanisms, and mechanisms b
 The roadmap reads like a book's table of contents.
 
 - One idea per topic. A topic that needs "and" to join two unrelated ideas is two topics.
-- Titles tell the reader what the chapter does, so the list reads like a story, not a glossary: "Finding Servers with DNS", not "DNS". The key term stays in the title, because search matches titles. A real choice is named as one: "Choosing Between REST, RPC and GraphQL". No "vs".
+- Titles read like a book's chapters. A named algorithm or concept is simply its name ("Depth-First Search", "Circuit Breakers"). Words are added only when they add meaning ("Binary Search on the Answer", "Building Reliable Systems from Unreliable Parts"), never to dress a title up. The key term always stays in the title, because search matches titles. A real choice is named as one: "Choosing Between REST, RPC and GraphQL". No "vs".
 - Group names stay short labels ("Networking", "Caching", "Background Jobs"). Groups are for finding your way while they are collapsed; the story is told by the topic titles inside them.
 - Patterns are named by what you do: "Scaling Reads", "Handling Contention".
 - A group often opens with the problem before the fixes ("Cascading Failures" before timeouts and circuit breakers) and ends with the tools that implement it ("Redis and Memcached" after the caching ideas).
 - Products appear only as a pair to compare ("Redis and Memcached") or in Classic Systems.
 - No two topics teach the same thing. Where a building block and a pattern touch (Idempotency and Avoiding Duplicate Work), the building block explains the mechanism and the pattern combines it with others.
-- Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context.
+- Hyphens appear only when they are part of a term or a name (B-Trees, Key-Value, Two-Phase Commit, Depth-First Search, Bellman-Ford). Anything else is rephrased ("Columnar Storage", not "Column-Oriented Storage"). No "Title: subtitle" forms; the group name gives the context.
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.

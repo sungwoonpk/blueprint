@@ -1,7 +1,7 @@
 ---
 // Header menu listing the site's subjects. Built on the popover attribute, so
 // clicking outside or pressing Escape closes it without extra code.
-import { SITE } from '../config';
+import { subjects } from '../data/subjects';
 
 const path = Astro.url.pathname;
 const isCurrent = (href: string) => path === href || path.startsWith(href + '/');
@@ -16,11 +16,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
 <nav id="site-menu" popover aria-label="Subjects">
   <ul>
     {
-      SITE.sections.map((s) => (
+      subjects.map((s) => (
         <li>
-          <a href={s.href} aria-current={isCurrent(s.href) ? 'page' : undefined}>
+          <a href={s.path} aria-current={isCurrent(s.path) ? 'page' : undefined}>
             <span class="name">{s.name}</span>
-            {s.soon && <span class="soon">Soon</span>}
           </a>
         </li>
       ))
@@ -31,6 +30,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
 <script>
   const button = document.getElementById('menu-button')!;
   const menu = document.getElementById('site-menu')!;
+
+  // Close the menu before following a link, so the page transition does not
+  // start with the menu still on screen.
+  menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => menu.hidePopover()));
 
   // Place the menu under the button, right edges aligned.
   menu.addEventListener('beforetoggle', (e) => {
@@ -95,9 +98,5 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
   a[aria-current='page'] .name {
     font-weight: 600;
     color: var(--accent);
-  }
-  .soon {
-    font-size: 12px;
-    color: var(--muted);
   }
 </style>

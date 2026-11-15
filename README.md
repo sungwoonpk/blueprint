@@ -1,10 +1,10 @@
 # blueprint
 
-A text-first study guide for system design: fundamentals, building blocks, distributed systems, patterns and the classic papers, in one ordered roadmap. It is for learning concepts, not for practicing design exercises. The name is always lowercase and lives in `src/config.ts`.
+A text-first study guide with one ordered roadmap per subject: **System Design** (fundamentals, building blocks, distributed systems, patterns and the classic papers) and **Algorithms** (the data structures, techniques and strategies behind coding problems). It is for learning concepts, not for practicing exercises. The name is always lowercase and lives in `src/config.ts`.
 
 ## Status
 
-Skeleton only. The roadmap (9 phases, 187 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. System Design has 9 phases and 187 topics, Algorithms has 9 phases and 120 topics. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. The header has search across both subjects, a theme toggle and a menu to switch subjects. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
@@ -27,8 +27,8 @@ npm run dev      # http://localhost:4321
 | To do this | Do this |
 | --- | --- |
 | Change the name or author credit | Edit `SITE` in `src/config.ts`. |
-| Add a subject to the header menu | Add it to `SITE.sections` in `src/config.ts` and create its page under `src/pages/`. |
-| Add, rename or move a topic | Edit `src/data/roadmap.ts`. Numbers follow the order. |
+| Add a subject | Add its data file in `src/data/`, list it in `src/data/subjects.ts`, and add `index.astro` and `[slug].astro` under `src/pages/<subject>/` (copy an existing subject's two files). |
+| Add, rename or move a topic | Edit `src/data/system-design.ts` or `src/data/algorithms.ts`. Numbers follow the order. |
 | Change colors or fonts | Edit the tokens at the top of `src/styles/global.css`. |
 | Check everything | `npm run check` (type check plus a full build). |
 
@@ -38,4 +38,4 @@ npm run dev      # http://localhost:4321
 | --- | --- |
 | [docs/design.md](docs/design.md) | Visual design, tokens, theming, search. |
 | [docs/roadmap.md](docs/roadmap.md) | How the roadmap data works and how topics become articles. |
-| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases, distributed data in one phase, our own patterns. |
+| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases, distributed data in one phase, our own patterns, subjects and the Algorithms roadmap. |
