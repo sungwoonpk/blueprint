@@ -17,13 +17,13 @@ A low-level design track (OOP, patterns, small design problems), per-topic diffi
 
 ## The phases
 
-1. **Foundations**: what system design is and how to think in trade-offs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
+1. **Foundations**: what system design is and how to think in tradeoffs, how a request travels over the network, and the core qualities (performance, scalability, availability, reliability).
 2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
-3. **Data Storage and Caching**: databases, storage internals, replication and consistency, partitioning, transactions, specialized storage, caching.
-4. **Messaging and Streaming**: messaging, event-driven design, batch and stream processing.
-5. **Distributed Systems**: what goes wrong across machines, how nodes coordinate, and how replicas converge.
-6. **Running in Production**: resilience, observability, delivery, capacity and cost, security, recovery.
-7. **Patterns**: recurring problems (scaling reads and writes, counting, large files, contention, long-running work, fan-out, pushing updates) and how the building blocks solve them.
+3. **Data Storage and Caching**: relational and NoSQL databases, storage internals, replication and consistency, partitioning, distributed transactions, caching, specialized storage.
+4. **Messaging and Streaming**: messaging, events, stream processing and background jobs.
+5. **Distributed Systems**: failure, time and order, coordination, and how replicas converge.
+6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
+7. **Patterns**: recurring problems (scaling reads and writes, traffic spikes, counting, large files, contention, long jobs, fanout, pushing updates) and how the building blocks solve them.
 8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
 9. **Classic Systems**: the well-known papers and systems, grouped by area.
 
@@ -36,6 +36,10 @@ Each topic should only need what came before it.
 - Distributed systems theory comes after data and messaging, because replication and delivery guarantees are what make clocks, consensus and convergence matter.
 - Production concerns come once there is a system to run, patterns once every block they combine has been covered, and the classic papers last, as deep dives that use everything before them.
 
-Inside a phase the same rule holds: concepts before mechanisms, and mechanisms before named products (for example, caching strategies before Redis).
+Inside a phase the same rule holds: concepts before mechanisms, and mechanisms before named products (for example, caching strategies before Redis). Single-node ideas come before distributed ones: ACID transactions sit with databases, two-phase commit and sagas come after partitioning.
+
+## Wording
+
+Titles are short, plain and in Title Case. Hyphens appear only when they are part of a term (B-Trees, Key-Value, Two-Phase Commit). No "Title: subtitle" forms; the group name gives the context instead.
 
 The site teaches concepts. Hands-on exercises ("Design a URL shortener" and the like) and interview practice are deliberately left out.
