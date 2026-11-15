@@ -17,8 +17,8 @@ Our code, the database and the photos all live on one machine. That's usually th
 
 It has two limits:
 
-- **A ceiling**: one machine only has so much CPU, memory and disk.
-- **A single point of failure**: a part whose failure stops everything. If this machine dies, the app is down.
+- **A ceiling**: one machine only has so much CPU, memory and disk
+- **A single point of failure**: a part whose failure stops everything. If this machine dies, the app is down
 
 Hitting the ceiling doesn't feel gradual. Response time stays flat, then shoots up once the machine is full:
 
@@ -38,9 +38,9 @@ That jump is the signal to take the next step. But which step?
 
 Whichever one fixes what is breaking right now. Don't add parts because big companies have them.
 
-1. **Measure**: response times, errors, and how busy each machine is. See [Logs, Metrics and Traces](/system-design/observability).
-2. **Find the bottleneck**: the one part that holds everything else back.
-3. **Fix that part**, then measure again.
+1. **Measure**: response times, errors, and how busy each machine is. See [Logs, Metrics and Traces](/system-design/observability)
+2. **Find the bottleneck**: the one part that holds everything else back
+3. **Fix that part**, then measure again
 
 This goes a long way. Around 2016, Stack Overflow served millions of programmers from about 11 web servers and 4 database servers, and most of them were barely busy.
 
@@ -210,15 +210,15 @@ Put together, steps 1 to 7 turn the single server into this:
 
 Look back over the nine steps and the same pattern repeats:
 
-- Each step fixes one bottleneck, and the next one shows up somewhere else.
-- Each step adds parts to run, watch and pay for.
-- Each step brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice.
+- Each step fixes one bottleneck, and the next one shows up somewhere else
+- Each step adds parts to run, watch and pay for
+- Each step brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice
 
 <u>So add a step only when the numbers say you need it.</u>
 
 ## Key Points
 
-- Start on one server. It's cheap, simple and enough for longer than most people think.
-- Grow by measuring, finding the bottleneck and fixing just that.
-- A common order: bigger server, separate database, more servers behind a load balancer, database copies, cache, CDN, queue, then sharding and more regions.
-- Every step fixes one problem and brings new costs and new ways to fail.
+- Start on one server. It's cheap, simple and enough for longer than most people think
+- Grow by measuring, finding the bottleneck and fixing just that
+- A common order: bigger server, separate database, more servers behind a load balancer, database copies, cache, CDN, queue, then sharding and more regions
+- Every step fixes one problem and brings new costs and new ways to fail

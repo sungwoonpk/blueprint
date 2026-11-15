@@ -14,7 +14,7 @@ Computer science seniors and engineers in their first year on the job. They have
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
 - No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.
 - Speak to the reader as "you" and to the team as "we".
-- Every list item starts with a capital letter. A bold term inside a sentence shows in the term color (violet), so bold only words being introduced there.
+- Every list item starts with a capital letter and ends without a period. A bold term inside a sentence shows in the term color (violet), so bold only words being introduced there.
 
 ## Shape
 

@@ -16,9 +16,9 @@ You'll also hear these called **low level design** and **high level design**. Th
 
 ## Why It Matters to You
 
-- **Your first team**: design docs, design reviews and on call all assume you know how the parts fit. When something breaks at 2 AM, that's how you know where to look.
-- **Better code**: a slow query is easier to spot when you know what your code talks to.
-- **Interviews**: standard for experienced hires, and some companies ask new grads too.
+- **Your first team**: design docs, design reviews and on call all assume you know how the parts fit. When something breaks at 2 AM, that's how you know where to look
+- **Better code**: a slow query is easier to spot when you know what your code talks to
+- **Interviews**: standard for experienced hires, and some companies ask new grads too
 
 ## The Parts of a System
 
@@ -73,17 +73,17 @@ You can't max out all of them. Say we keep a second copy of the database on anot
 
 ## How a Design Comes Together
 
-1. **Requirements**: the features and the "how well". See [Functional and Nonfunctional Requirements](/system-design/requirements).
-2. **Estimate**: rough numbers for users, requests per second and storage. See [Estimating Capacity](/system-design/estimation).
-3. **Sketch**: boxes and arrows, like the diagram above.
-4. **Deep dive**: find what breaks first under load and fix it.
-5. **Revisit**: real traffic shows what you missed.
+1. **Requirements**: the features and the "how well". See [Functional and Nonfunctional Requirements](/system-design/requirements)
+2. **Estimate**: rough numbers for users, requests per second and storage. See [Estimating Capacity](/system-design/estimation)
+3. **Sketch**: boxes and arrows, like the diagram above
+4. **Deep dive**: find what breaks first under load and fix it
+5. **Revisit**: real traffic shows what you missed
 
 <u>Step 1 matters most.</u> Get the requirements wrong and every later step solves the wrong problem.
 
 ## Key Points
 
-- System design decides the parts of a system, how they talk and where the data lives.
-- Features say what to build. Scale and quality goals decide how.
-- Every choice gives something up. There's no single right answer, only one that fits.
-- Start simple. Add parts when the numbers say so.
+- System design decides the parts of a system, how they talk and where the data lives
+- Features say what to build. Scale and quality goals decide how
+- Every choice gives something up. There's no single right answer, only one that fits
+- Start simple. Add parts when the numbers say so
