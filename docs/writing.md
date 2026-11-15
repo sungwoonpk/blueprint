@@ -25,6 +25,15 @@ Carry one running example through the page, and define each new word in the sent
 
 Link to other topics by name where they go deeper, for example `[Thinking in Tradeoffs](/system-design/trade-offs)`, instead of covering their material again. The build puts the topic's current number in front ("1.3 Thinking in Tradeoffs") and fails on a link to a topic that does not exist, so never type the number yourself.
 
+## Review before calling it done
+
+- Does each section follow from the one before? Does the running example carry through?
+- Is the definition complete, including what the thing is for?
+- Are the standard terms a reader will hear named, not only explained (for example high level and low level design)?
+- Is every key point backed by the body?
+- Any overstated or vague line? Any word doing no work? Any dash?
+- Any table, chart or emphasis that is there just to be there?
+
 ## Sources
 
 Read widely before writing, and keep only what most good sources agree is common and important. Never copy: no sentences taken as they are, and examples are changed or made up so they are our own.
