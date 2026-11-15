@@ -35,6 +35,6 @@ npm run dev      # http://localhost:4321
 
 | Doc | What is in it |
 | --- | --- |
-| [docs/design.md](docs/design.md) | Visual design, tokens, theming. |
+| [docs/design.md](docs/design.md) | Visual design, tokens, theming, search. |
 | [docs/roadmap.md](docs/roadmap.md) | How the roadmap data works and how topics become articles. |
 | [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases. |
