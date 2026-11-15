@@ -106,6 +106,8 @@ Horizontal bars, for a few labeled values (see 1.6): a `chart` figure holding `h
 
 Packets in rows, for showing what happens to a lost message (see 1.6): `<div class="flow packets">` holding `<div class="node">1</div>`, with `node lost` for a lost one and `node wait` for one held up behind it.
 
+A waterfall, for where time goes (see 1.9): a `chart` figure holding `waterfall`, each row `<div class="wf"><span>DNS lookup</span><span class="track"><span class="bar" style="--s: 0%; --w: 13%"></span></span><span class="value">40 ms</span></div>`, where `--s` is where the bar starts and `--w` how long it lasts on a shared axis, and `peak` marks the row to look at.
+
 A dial between two ends (see 1.3): a `scale` holding a `line`, `dot` points placed with `style="--x: 40%"` whose label is a `span`, and an `ends` row with the two end labels.
 
 Keep the HTML free of blank lines, or Markdown will break it apart. Styles live in `src/styles/article.css`.
