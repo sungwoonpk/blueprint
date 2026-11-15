@@ -208,11 +208,11 @@ Put together, steps 1 to 7 turn the single server into this:
 
 ## What Every Step Has in Common
 
-Look back over the nine steps and the same pattern repeats. Each one:
+Look back over the nine steps and the same pattern repeats:
 
-- fixes one bottleneck, and the next one shows up somewhere else
-- adds parts to run, watch and pay for
-- brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice
+- Each step fixes one bottleneck, and the next one shows up somewhere else.
+- Each step adds parts to run, watch and pay for.
+- Each step brings new ways to fail: a replica that lags, a cache that's out of date, a job that runs twice.
 
 <u>So add a step only when the numbers say you need it.</u>
 
