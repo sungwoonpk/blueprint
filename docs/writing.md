@@ -10,6 +10,7 @@ Computer science seniors and engineers in their first year on the job. They have
 
 - Show, don't narrate. A small diagram of how something works, a chart of numbers with a shape, a table of a comparison: each explains faster than paragraphs. Use one wherever it truly helps: a table, diagram, chart or list where it makes the point clearer, with a line or two of prose between them. Never add one just to have it, and never repeat what a diagram already shows.
 - Cut every word that isn't doing work.
+- The goal is to make the idea click in an enjoyable way, never to overwhelm. One visual per idea: if a diagram already shows it, don't add a table or code for the same thing. A page with five tables and three diagrams is too much; drop whichever adds least.
 - Emphasis stays rare. **Bold** a term where it is defined or a label that starts a list item. <u>Underline</u> at most one or two lines a page. One callout (`>`) for the definition the page hangs on. Tables already name their rows, so no bold inside them.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
 - No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.

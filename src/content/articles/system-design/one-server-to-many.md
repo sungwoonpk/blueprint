@@ -4,15 +4,6 @@ Remember the textbook app from [What Is System Design?](/system-design/what-is-s
 
 ## Day One: One Server
 
-<figure class="diagram">
-<div class="flow">
-<div class="node">Phone or Browser<small>client</small></div>
-<div class="arrow" aria-hidden="true"></div>
-<div class="node">One Server<small>our code, database, photos</small></div>
-</div>
-<figcaption>Everything on one machine</figcaption>
-</figure>
-
 Our code, the database and the photos all live on one machine. That's usually the right way to start. It's cheap, simple and easy to change while you're still finding out what students want.
 
 It has two limits:
@@ -81,7 +72,17 @@ With the database moved out, the web server is next: one can't keep up at peak, 
 <figcaption>Any server can take any request</figcaption>
 </figure>
 
-The catch: the next request can land on any server. If your login lived in server A's memory and your next click goes to server B, you'd be logged out. So login **sessions** move to a shared store, and the web servers keep nothing between requests. They become **stateless**. See [Stateless and Stateful Services](/system-design/stateless-stateful) and [Load Balancers](/system-design/load-balancers).
+The catch: the next request can land on any server. If your login lived in server A's memory and your next click goes to server B, you'd be logged out. So login **sessions** move to a shared store, and the web servers keep nothing between requests. They become **stateless**. In code, the change is where the sessions live:
+
+```python
+# One server: sessions live in this server's memory
+sessions = {}
+
+# Many servers: a shared store every server asks
+sessions = redis.Redis(host="session-store")
+```
+
+See [Stateless and Stateful Services](/system-design/stateless-stateful) and [Load Balancers](/system-design/load-balancers).
 
 ### 4. Copy the Database
 

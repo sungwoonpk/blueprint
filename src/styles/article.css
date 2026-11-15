@@ -120,6 +120,17 @@
   font-size: inherit;
 }
 
+/* Code blocks use two highlight themes (set in astro.config.mjs); this picks the
+   one for the current theme and keeps the block on the card color. */
+.prose pre.astro-code {
+  background-color: var(--surface) !important;
+}
+
+:root[data-theme='dark'] .prose .astro-code,
+:root[data-theme='dark'] .prose .astro-code span {
+  color: var(--shiki-dark) !important;
+}
+
 /* Tables compare things side by side, in a soft rounded card. The first
    column names each row, so it is a little heavier without any markup. */
 .prose table {
@@ -330,6 +341,13 @@
 }
 
 @media (max-width: 560px) {
+  /* Short code samples wrap on a phone instead of scrolling sideways. */
+  .prose pre {
+    padding: 14px 14px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
   .prose table {
     font-size: 14px;
   }

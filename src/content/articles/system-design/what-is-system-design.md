@@ -40,6 +40,16 @@ Take a used textbook app. Students post books with a photo. Others browse and bu
 
 A request like "show me calculus books" goes from the phone to the web server, which runs our code, queries the database and sends the response back. Photos are too big for the database, so they go to separate file storage, usually **object storage** such as Amazon S3, built to hold huge numbers of files cheaply.
 
+The web server's code for that request can be this small:
+
+```python
+def list_books(subject):
+    sql = "SELECT title, price FROM listings WHERE subject = ?"
+    return db.query(sql, subject)
+```
+
+Everything here is the code level you already know, except one call. `db.query` leaves this program, goes to the database and comes back, and the database is a separate part that can be slow, busy or down. That call is where the code level meets the system level.
+
 ## What Decides the Design
 
 Two things: what the app must do, and how well it must do it. These are its **functional** and **nonfunctional requirements**.

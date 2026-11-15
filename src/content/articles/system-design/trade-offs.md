@@ -70,14 +70,17 @@ Browsing doesn't need perfect freshness and gets the most traffic, so listing pa
 
 Some decisions are cheap to reverse. Others lock you in for years. Jeff Bezos described them as **two way doors** you can walk back through and **one way doors** you can't.
 
-| Decision | Undo | Why |
-| --- | --- | --- |
-| How long the cache keeps data | easy | change one setting |
-| Server size | easy | resize and restart |
-| Adding a replica | easy | remove it again |
-| Which database you use | hard | every piece of data has to move |
-| How data is split across shards | hard | data has to move between machines |
-| A public API others depend on | hard | other teams' code would break |
+Easy to undo:
+
+- How long the cache keeps data: change one setting
+- Server size: resize and restart
+- Adding a replica: remove it again
+
+Hard to undo:
+
+- Which database you use: every piece of data has to move
+- How data is split across shards: data has to move between machines
+- A public API others depend on: other teams' code would break
 
 Decide two way doors quickly and change them if they turn out wrong. Slow down on one way doors: gather numbers, write it down, get a second opinion.
 
@@ -90,7 +93,20 @@ Decide two way doors quickly and change them if they turn out wrong. Slow down o
 - **What you give up**: "a sold book may show as available for a moment"
 - **What would change your mind**: "if students complain about seeing sold books, we'd keep listings in the cache for less time"
 
-This is what interviewers listen for, and it's how teams record decisions at work. Many teams write each one down as an **architecture decision record** (ADR): the context, the decision, and its consequences.
+This is what interviewers listen for, and it's how teams record decisions at work. Many teams write each one down as an **architecture decision record** (ADR): the context, the decision, and its consequences. The cache decision from above could read:
+
+```markdown
+# ADR 7: Serve listing pages from a cache
+
+Context: Browsing is most of our traffic and
+can be a few seconds old.
+
+Decision: Listing pages read from a cache kept
+for 10 seconds. "Mark as sold" reads the primary.
+
+Consequences: A sold book may show as available
+for up to 10 seconds. We run one more service.
+```
 
 ## Key Points
 
