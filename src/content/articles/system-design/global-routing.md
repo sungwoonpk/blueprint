@@ -78,7 +78,7 @@ The catch is long connections. A TCP connection has to stay on one node, and the
 
 | | DNS Routing | Anycast |
 | --- | --- | --- |
-| How the User Is Placed | The answer depends on the asker | The network's routing picks the nearest node |
+| How the User is Placed | The answer depends on the asker | The network's routing picks the nearest node |
 | Failover Speed | As slow as the cache TTL | Fast, when routes are withdrawn |
 | Control | Fine, by policy | Coarse, by routing |
 | Main Risk | Stale and misplaced answers | Route changes breaking long connections |

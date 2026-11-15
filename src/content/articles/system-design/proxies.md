@@ -32,7 +32,7 @@ The HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html), draw
 | --- | --- | --- |
 | Works For | The clients | The servers |
 | Set Up By | The client or its network | The site's operators |
-| Client Knows It Is There | Yes, it is configured | No, it looks like the site |
+| Client Knows It is There | Yes, it is configured | No, it looks like the site |
 | Hides | Who the clients are | What the servers are |
 | Typical Home | A school, company or home network | In front of an app, API or website |
 

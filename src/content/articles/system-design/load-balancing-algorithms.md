@@ -19,7 +19,7 @@ Here the first server gets 3 of every 4 requests. AWS recommends plain round rob
 
 The weakness is that round robin is blind. It deals requests out in turn without noticing that one server is stuck on a slow search while another is idle. When requests vary in cost, the unlucky server falls behind and a queue builds up, even though the others have room.
 
-## Send It Where It Is Quiet
+## Send It Where It is Quiet
 
 The next idea is to look before picking. **Least connections**, or in AWS's words **least outstanding requests**, sends each request to the server with the fewest requests in progress. A server stuck on slow work has a long list, so it gets fewer new ones. nginx calls it `least_conn`, and AWS recommends it when request cost or server capacity varies.
 

@@ -26,7 +26,7 @@ A CDN has many servers near users, called **edge** servers or points of presence
 
 The server behind the CDN is called the **origin**. A file that the edge already holds is a hit, and one it must fetch is a miss. A miss costs a little more than a hit, and after it everyone nearby gets hits.
 
-## Why It Is Faster
+## Why It is Faster
 
 Think back to the connection costs in [TCP and UDP](/system-design/tcp-udp): a new HTTPS connection needs three round trips before the first byte of a photo arrives. Now compare a student far from our servers with one near an edge. Say the round trip to our origin is 150 ms, as for a trip across an ocean in [Numbers Every Engineer Should Know](/system-design/numbers), and 20 ms to the edge:
 
