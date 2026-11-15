@@ -32,7 +32,7 @@ Design exercises and interview practice, and reading progress. There is one road
 1. **Foundations**: what an algorithm is, Big O, recursion, and how to approach a problem (reading constraints, edge cases).
 2. **Core Data Structures**: arrays and strings, linked lists, stacks and queues, then hashing (hash tables are built from arrays and linked lists), and designing your own structures.
 3. **Searching and Sorting**: binary search (including on the answer), comparison and linear time sorts, quickselect.
-4. **Array Techniques** (they work on strings too): two pointers, rearranging in place, sliding windows, prefix sums, monotonic structures, intervals, matrices.
+4. **Array Techniques** (they work on strings too): two pointers and the sliding windows built on them, rearranging in place, prefix sums and maximum subarrays, monotonic structures, intervals, matrices.
 5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
 6. **Design Strategies**: brute force and backtracking, divide and conquer, greedy, randomness.
 7. **Graphs**: traversal, structure (topological sort, union-find), shortest paths, spanning trees, advanced graphs.
