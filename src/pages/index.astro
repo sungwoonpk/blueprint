@@ -1,0 +1,464 @@
+---
+import Base from '../layouts/Base.astro';
+import { phases, groupedTopics } from '../data/roadmap';
+---
+
+<Base>
+  <div class="layout">
+    <nav class="phases" aria-label="Phases">
+      <ol>
+        {
+          phases.map((phase, i) => (
+            <li>
+              <a href={`#${phase.slug}`}>
+                <span class="num">{i + 1}</span>
+                {phase.title}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="content">
+      <h1>Roadmap</h1>
+
+      <label class="search-field">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input
+          id="roadmap-search"
+          type="search"
+          placeholder="Search topics"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search phases and topics"
+          aria-describedby="roadmap-empty"
+        />
+        <kbd class="shortcut">⌘K</kbd>
+      </label>
+      <p id="roadmap-empty" class="empty" role="status" hidden></p>
+
+      {
+        phases.map((phase, i) => (
+          <section id={phase.slug} data-title={phase.title}>
+            <p class="eyebrow">Phase {i + 1}</p>
+            <h2>{phase.title}</h2>
+            <div class="groups">
+              {groupedTopics(phase).map((group) =>
+                group.name ? (
+                  <details class="group">
+                    <summary>
+                      <span class="g">{group.name}</span>
+                      <span class="count num">{group.topics.length}</span>
+                      <svg class="chev" viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M1 1l6 6-6 6" />
+                      </svg>
+                    </summary>
+                    <ul class="topics">
+                      {group.topics.map((t) => (
+                        <li>
+                          <a href={`/topics/${t.slug}`} class="row">
+                            <span class="n num">{t.number}</span>
+                            <span class="t" data-title={t.title}>{t.title}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : (
+                  <ul class="topics ungrouped">
+                    {group.topics.map((t) => (
+                      <li>
+                        <a href={`/topics/${t.slug}`} class="row">
+                          <span class="n num">{t.number}</span>
+                          <span class="t" data-title={t.title}>{t.title}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              )}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Highlight the phase being read in the side list. Computed from scroll
+  // position rather than an intersection band, so short phases at the end of
+  // the page still light up.
+  const sections = [...document.querySelectorAll<HTMLElement>('.content section[id]')];
+  const links = new Map<string, HTMLAnchorElement>();
+  document.querySelectorAll<HTMLAnchorElement>('.phases a').forEach((a) => links.set(a.hash.slice(1), a));
+
+  // A phase picked in the side list stays highlighted while it is on screen,
+  // even when the page cannot scroll far enough to bring it to the top.
+  let picked: HTMLElement | null = null;
+
+  const onScreen = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return r.top < window.innerHeight && r.bottom > 0;
+  };
+
+  function current(): HTMLElement | undefined {
+    const shown = sections.filter((s) => !s.hidden);
+    if (picked && !picked.hidden && onScreen(picked)) return picked;
+    picked = null;
+    const root = document.documentElement;
+    if (window.scrollY + window.innerHeight >= root.scrollHeight - 2) return shown[shown.length - 1];
+    const line = window.innerHeight * 0.3;
+    let active = shown[0];
+    for (const s of shown) if (s.getBoundingClientRect().top <= line) active = s;
+    return active;
+  }
+
+  function update() {
+    const active = current();
+    links.forEach((a, id) => a.classList.toggle('active', id === active?.id));
+  }
+
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      update();
+    });
+  };
+
+  links.forEach((a, id) =>
+    a.addEventListener('click', () => {
+      picked = document.getElementById(id);
+      schedule();
+    }),
+  );
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  // The roadmap filter hides and shows phases, which changes what is current.
+  document.getElementById('roadmap-search')?.addEventListener('input', schedule);
+  update();
+</script>
+
+<script>
+  // Filter the roadmap in place as you type: phases and topics that match stay,
+  // groups with a matching topic open, everything else hides. The side list of
+  // phases always stays. Clearing the field restores the page exactly as it was.
+  import { toTerms, matchesAll, highlight } from '../lib/match';
+
+  const input = document.getElementById('roadmap-search') as HTMLInputElement;
+  const empty = document.getElementById('roadmap-empty') as HTMLParagraphElement;
+  const sections = [...document.querySelectorAll<HTMLElement>('.content section[data-title]')];
+  const groups = [...document.querySelectorAll<HTMLDetailsElement>('details.group')];
+  let savedOpen: boolean[] | null = null;
+
+  function setText(el: HTMLElement, title: string, terms: string[], hit: boolean) {
+    if (hit) el.innerHTML = highlight(title, terms);
+    else el.textContent = title;
+  }
+
+  function reset() {
+    for (const section of sections) {
+      section.hidden = false;
+      section.querySelector('h2')!.textContent = section.dataset.title!;
+      section.querySelectorAll<HTMLElement>('.groups > *, li').forEach((el) => (el.hidden = false));
+      section.querySelectorAll<HTMLElement>('.t').forEach((t) => (t.textContent = t.dataset.title!));
+    }
+    if (savedOpen) groups.forEach((g, i) => (g.open = savedOpen![i]));
+    savedOpen = null;
+    empty.hidden = true;
+  }
+
+  function filter(raw: string) {
+    const terms = toTerms(raw);
+    if (terms.length === 0) return reset();
+    savedOpen ??= groups.map((g) => g.open);
+
+    let shown = 0;
+    for (const section of sections) {
+      const phaseHit = matchesAll(section.dataset.title!, terms);
+      let topicHit = false;
+
+      for (const block of section.querySelectorAll<HTMLElement>('.groups > *')) {
+        let blockHit = false;
+        for (const li of block.querySelectorAll<HTMLLIElement>('li')) {
+          const t = li.querySelector<HTMLElement>('.t')!;
+          const hit = matchesAll(t.dataset.title!, terms);
+          setText(t, t.dataset.title!, terms, hit);
+          li.hidden = !hit && !phaseHit;
+          blockHit ||= hit;
+        }
+        block.hidden = !blockHit && !phaseHit;
+        // A phase-only match shows its groups closed; a topic match opens its group.
+        if (block instanceof HTMLDetailsElement) block.open = blockHit;
+        topicHit ||= blockHit;
+      }
+
+      setText(section.querySelector('h2')!, section.dataset.title!, terms, phaseHit);
+      section.hidden = !phaseHit && !topicHit;
+      if (!section.hidden) shown++;
+    }
+
+    empty.hidden = shown > 0;
+    empty.textContent = shown ? '' : `No topics match “${raw.trim()}”.`;
+  }
+
+  input.addEventListener('input', () => filter(input.value));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (input.value) {
+        input.value = '';
+        filter('');
+      } else {
+        input.blur();
+      }
+    } else if (e.key === 'Enter') {
+      // Open the first matching topic.
+      const first = document.querySelector<HTMLAnchorElement>('.content li:not([hidden]) .row:has(mark)');
+      if (first) window.location.href = first.href;
+    }
+  });
+</script>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 900px) {
+    .layout {
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 64px;
+    }
+  }
+
+  .phases {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .phases {
+      display: block;
+      position: sticky;
+      top: 96px;
+      align-self: start;
+    }
+  }
+  .phases ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .phases a {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--muted);
+    transition: color 0.2s var(--ease);
+  }
+  .phases a .num {
+    flex: none;
+    width: 1.2ch;
+  }
+  .phases a:hover,
+  .phases a.active {
+    color: var(--text);
+  }
+  .phases a.active {
+    font-weight: 600;
+  }
+
+  .content {
+    max-width: 700px;
+  }
+  h1 {
+    font-size: clamp(34px, 6vw, 46px);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  section {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 48px;
+    margin-top: 28px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--muted);
+    cursor: text;
+    transition: box-shadow 0.2s var(--ease), background-color 0.3s var(--ease);
+  }
+  .search-field:hover {
+    box-shadow: inset 0 0 0 1px var(--muted);
+  }
+  .search-field:focus-within {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  #roadmap-search {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+  }
+  #roadmap-search::placeholder {
+    color: var(--muted);
+  }
+  #roadmap-search::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-field:has(input:not(:placeholder-shown)) .shortcut {
+    display: none;
+  }
+  .empty {
+    margin-top: 40px;
+    color: var(--muted);
+  }
+  .shortcut {
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+  }
+  @media (hover: none) {
+    .shortcut {
+      display: none;
+    }
+  }
+
+  /* The first phase still shown (search can hide earlier ones) has no divider. */
+  .content > :nth-child(1 of section:not([hidden])) {
+    margin-top: 48px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .eyebrow {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  h2 {
+    margin-top: 2px;
+    font-size: 32px;
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+
+  /* One rounded list per phase; each group is a row that expands. */
+  .groups {
+    margin-top: 24px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    transition: background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .groups > :not([hidden]) ~ :not([hidden]) {
+    border-top: 1px solid var(--border);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 18px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background-color 0.2s var(--ease);
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover {
+    background: var(--surface-hover);
+  }
+  .g {
+    flex: 1;
+    font-weight: 550;
+  }
+  .count {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .chev {
+    flex: none;
+    color: var(--muted);
+    transition: transform 0.25s var(--ease);
+  }
+  .group[open] .chev {
+    transform: rotate(90deg);
+  }
+
+  /* Smooth open and close where the browser supports animating to auto height. */
+  .group {
+    interpolate-size: allow-keywords;
+  }
+  .group::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.3s var(--ease),
+      content-visibility 0.3s var(--ease) allow-discrete;
+  }
+  .group[open]::details-content {
+    block-size: auto;
+  }
+
+  .topics {
+    margin: 0;
+    padding: 0 0 8px;
+    list-style: none;
+  }
+  .topics.ungrouped {
+    padding: 8px 0;
+  }
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 9px 18px 9px 18px;
+    transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+  }
+  .row:hover {
+    background: var(--surface-hover);
+  }
+  .row:hover .t {
+    color: var(--accent);
+  }
+  .n {
+    flex: none;
+    min-width: 3.6ch;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .t {
+    flex: 1;
+    line-height: 1.4;
+    transition: color 0.2s var(--ease);
+  }
+</style>

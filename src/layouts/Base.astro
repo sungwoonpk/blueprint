@@ -1,0 +1,113 @@
+---
+import '../styles/global.css';
+import { SITE } from '../config';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Wordmark from '../components/Wordmark.astro';
+import Search from '../components/Search.astro';
+import { updatedIso, updatedLabel } from '../data/updated';
+
+interface Props {
+  title?: string;
+  /** Page width: the roadmap is wide, an article is a narrow reading column. */
+  width?: 'wide' | 'narrow';
+}
+
+const { title, width = 'wide' } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={SITE.description} />
+    <!-- No logo: an empty icon also stops the browser asking for /favicon.ico. -->
+    <link rel="icon" href="data:," />
+    <script is:inline>
+      // Apply the saved theme before first paint to avoid a flash.
+      try {
+        var saved = localStorage.getItem('theme');
+        if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class:list={['bar', width]}>
+        <a href="/" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <div class="tools">
+          <Search />
+          <ThemeToggle />
+        </div>
+      </div>
+    </header>
+    <main class:list={[width]}>
+      <slot />
+    </main>
+    <footer>
+      <div class:list={['foot', width]}>
+        <span>Created by {SITE.author}</span>
+        <span>Updated <time datetime={updatedIso}>{updatedLabel}</time></span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease);
+    /* Keep the header still during page transitions. */
+    view-transition-name: site-header;
+  }
+  .bar,
+  main,
+  .foot {
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .wide {
+    max-width: 1000px;
+  }
+  .narrow {
+    max-width: 720px;
+  }
+  .tools {
+    display: flex;
+    gap: 4px;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+  }
+  main {
+    padding-top: 48px;
+    padding-bottom: 96px;
+  }
+  footer {
+    border-top: 1px solid var(--border);
+    transition: border-color 0.3s var(--ease);
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 24px;
+    padding-top: 20px;
+    padding-bottom: 32px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+</style>
