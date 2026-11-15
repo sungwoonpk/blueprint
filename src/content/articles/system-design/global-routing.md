@@ -17,7 +17,7 @@ There are three reasons, and each one connects to something earlier:
 <div class="node">Users in the US</div>
 <div class="node">Users in Europe</div>
 </div>
-<div class="arrow" data-label="routing layer" aria-hidden="true"></div>
+<div class="arrow wide" data-label="routing layer" aria-hidden="true"></div>
 <div class="stack">
 <div class="node">Region: US East</div>
 <div class="node lost">Region: Europe<small>down, skipped</small></div>
@@ -105,7 +105,7 @@ The routing layer is also a dependency of everything behind it, and it fails in 
 <p class="rowname">What the World Saw</p>
 <div class="flow">
 <div class="node">DNS Servers<small>can't reach data centers</small></div>
-<div class="arrow" data-label="withdrew routes" aria-hidden="true"></div>
+<div class="arrow wide" data-label="withdrew routes" aria-hidden="true"></div>
 <div class="node hot">Names Unreachable<small>servers still running</small></div>
 </div>
 <figcaption>A safety rule in the routing layer turned an internal failure into a global one</figcaption>

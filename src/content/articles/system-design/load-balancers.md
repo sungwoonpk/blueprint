@@ -13,7 +13,7 @@ Three jobs make up most of what a load balancer is for:
 <figure class="diagram">
 <div class="flow">
 <div class="node">Phones</div>
-<div class="arrow" data-label="one address" aria-hidden="true"></div>
+<div class="arrow wide" data-label="one address" aria-hidden="true"></div>
 <div class="node">Load Balancer</div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="stack">
@@ -113,7 +113,7 @@ A related feature matters on deploy day. When a server is removed from rotation,
 <p class="rowname">Still Taking New Requests</p>
 <div class="flow">
 <div class="node">Load Balancer</div>
-<div class="arrow" data-label="new requests" aria-hidden="true"></div>
+<div class="arrow wide" data-label="new requests" aria-hidden="true"></div>
 <div class="stack">
 <div class="node">Server B</div>
 <div class="node">Server C</div>

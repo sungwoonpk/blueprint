@@ -33,9 +33,9 @@ How can one codebase serve hundreds of old versions? In the design that post des
 <figure class="diagram">
 <div class="flow">
 <div class="node">Newest Response<small>built by current code</small></div>
-<div class="arrow" data-label="undo change C" aria-hidden="true"></div>
+<div class="arrow" data-label="undo C" aria-hidden="true"></div>
 <div class="node">Older Shape</div>
-<div class="arrow" data-label="undo change B" aria-hidden="true"></div>
+<div class="arrow" data-label="undo B" aria-hidden="true"></div>
 <div class="node">Pinned Version<small>what this client expects</small></div>
 </div>
 <figcaption>Each breaking change is written once, as a small step that can be undone</figcaption>

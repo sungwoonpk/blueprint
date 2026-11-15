@@ -103,7 +103,7 @@ The fixed shape of each URL is both a strength and a weakness. The phone's listi
 <div class="node">Phone</div>
 <div class="arrow" data-label="1 request" aria-hidden="true"></div>
 <div class="node">GET /listings<small>20 listings</small></div>
-<div class="arrow" data-label="20 requests" aria-hidden="true"></div>
+<div class="arrow wide" data-label="20 requests" aria-hidden="true"></div>
 <div class="node hot">GET /users/7<small>one per seller</small></div>
 </div>
 <figcaption>One screen, 21 requests: each round trip adds its own wait</figcaption>

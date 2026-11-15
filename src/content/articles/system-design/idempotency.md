@@ -18,7 +18,7 @@ A network call can go wrong in three ways: the request never arrives, the server
 <div class="node">Phone<small>times out, retries</small></div>
 <div class="arrow" data-label="sends" aria-hidden="true"></div>
 <div class="node">Server<small>charged the card</small></div>
-<div class="arrow" data-label="reply lost" aria-hidden="true"></div>
+<div class="arrow wide" data-label="reply lost" aria-hidden="true"></div>
 <div class="node hot">Charged Twice<small>the retry ran again</small></div>
 </div>
 <figcaption>In both cases the phone only sees silence, and only one of them is safe to retry blindly</figcaption>
@@ -71,7 +71,7 @@ An **idempotency key** is a unique token the client creates for one logical oper
 <div class="node">Phone<small>key 8f1c</small></div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Server<small>new key, does the work</small></div>
-<div class="arrow" data-label="saved together" aria-hidden="true"></div>
+<div class="arrow wide" data-label="saved together" aria-hidden="true"></div>
 <div class="node">Database<small>the order and key 8f1c</small></div>
 </div>
 <p class="rowname">The Retry</p>
@@ -79,7 +79,7 @@ An **idempotency key** is a unique token the client creates for one logical oper
 <div class="node">Phone<small>key 8f1c again</small></div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Server<small>sees key 8f1c</small></div>
-<div class="arrow" data-label="same reply" aria-hidden="true"></div>
+<div class="arrow wide" data-label="same reply" aria-hidden="true"></div>
 <div class="node">Phone<small>gets the first answer</small></div>
 </div>
 <figcaption>The retry gets the saved answer, and no work runs twice</figcaption>
