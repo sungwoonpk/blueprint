@@ -63,7 +63,7 @@ Do all of these after the last edit, every time:
 
 ## Sources
 
-Read widely before writing, and keep only what most good sources agree is common and important. Never copy: no sentences taken as they are, and examples are changed or made up so they are our own.
+Read widely before writing, and keep only what most good sources agree is common and important. Learn the idea, then write it fresh. Never copy: no sentences taken as they are, no structure lifted from one article, and examples are made up so they are our own. Only formulas and definitions that are standard (Little's Law, Amdahl's law) stay as they are. Name the source in the text when a specific fact or number comes from one place, such as a paper or a postmortem, and list what was read when reporting.
 
 ## Building blocks
 
