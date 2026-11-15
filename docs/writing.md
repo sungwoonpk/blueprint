@@ -46,6 +46,13 @@ Bars, lines and box and arrow diagrams exist already (below). Build any other ty
 
 ## Review before calling it done
 
+Do all of these after the last edit, every time:
+
+- **Visuals**: reread each section and ask whether a diagram, chart, table or example would explain it faster. Decide on purpose, and add one where it truly helps. If nothing helps, leave it
+- **Facts**: check each claim, number and example against the sources once more, and fix anything wrong or misleading
+- **Grammar and wording**: read the whole page aloud in your head for broken or awkward sentences, and for absolutes
+- **Fit**: check every diagram, table and code block at phone width and at the widths in between
+
 - Does each section follow from the one before? Does the running example carry through?
 - Is the definition complete, including what the thing is for?
 - Are the standard terms a reader will hear named, not only explained (for example high level and low level design)?

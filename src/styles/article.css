@@ -114,6 +114,12 @@
   line-height: 1.55;
 }
 
+/* Code samples here are short, so a long line wraps instead of scrolling sideways. */
+.prose pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .prose pre code {
   padding: 0;
   background: none;
@@ -241,6 +247,10 @@
    each with a small name above it. */
 .prose .arrow[data-label] {
   width: 64px;
+}
+
+.prose .arrow.wide {
+  width: 130px;
 }
 
 .prose .arrow[data-label]::before {
@@ -459,12 +469,9 @@
     grid-column: 1 / -1;
     order: 3;
   }
-  /* Short code samples wrap on a phone instead of scrolling sideways. */
   .prose pre {
     padding: 14px 14px;
     font-size: 13px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
   }
   .prose table {
     font-size: 14px;
@@ -477,6 +484,16 @@
   .prose thead th {
     font-size: 12.5px;
   }
+}
+
+/* A diagram turns its rows into columns when the space it has is narrow, which
+   depends on the screen and on the contents list beside it, so it asks its own
+   width instead of the window's. */
+.prose .diagram {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
   .prose .flow {
     flex-direction: column;
   }
@@ -505,6 +522,10 @@
     top: auto;
     bottom: -1px;
     transform: rotate(135deg);
+  }
+  .prose .arrow.wide {
+    width: 2px;
+    height: 30px;
   }
 }
 
