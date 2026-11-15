@@ -116,7 +116,7 @@ CREATE INDEX listings_extras_idx ON listings USING GIN (extras);
 SELECT id FROM listings WHERE extras @> '{"highlighted": false}';
 ```
 
-PostgreSQL's documentation prefers `jsonb` over `json` for most uses, and describes JSON as something that complements relational tables, not replaces them. It also warns that updating a JSON document locks the whole row, so documents should stay small. The rule of thumb: anything you filter, sort or join on belongs in a real column, and `jsonb` is for the leftovers.
+PostgreSQL's documentation prefers `jsonb` over `json` for most uses, and says the JSON and relational approaches can coexist in one application. It also warns that updating a JSON document locks the whole row, so documents should stay small. The rule of thumb: anything you filter, sort or join on belongs in a real column, and `jsonb` is for the leftovers.
 
 ## Model for the Questions You Will Ask
 
