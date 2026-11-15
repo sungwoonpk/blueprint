@@ -12,6 +12,7 @@ Computer science seniors and engineers in their first year on the job. They have
 - Cut every word that isn't doing work.
 - The goal is to make the idea click in an enjoyable way, never to overwhelm. One visual per idea: if a diagram already shows it, don't add a table or code for the same thing. A page with five tables and three diagrams is too much; drop whichever adds least.
 - Emphasis stays rare. **Bold** a term where it is defined or a label that starts a list item. <u>Underline</u> at most one or two lines a page. One callout (`>`) for the definition the page hangs on. Tables already name their rows, so no bold inside them.
+- Be careful with absolutes. "Never", "always", "every", "nothing" and "only" are rarely exactly true in system design, and readers (and interviewers) distrust them. Say "usually", "often" or "can", or name the condition. Keep a strong word only when it is really true, and check each fact once more.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
 - No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.
 - Speak to the reader as "you" and to the team as "we".

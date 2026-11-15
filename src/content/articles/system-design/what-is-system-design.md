@@ -38,7 +38,7 @@ Take a used textbook app. Students post books with a photo. Others browse and bu
 <figcaption>A first design for the textbook app</figcaption>
 </figure>
 
-A request like "show me calculus books" goes from the phone to the web server, which runs our code, queries the database and sends the response back. Photos are too big for the database, so they go to separate file storage, usually **object storage** such as Amazon S3, built to hold huge numbers of files cheaply.
+A request like "show me calculus books" goes from the phone to the web server, which runs our code, queries the database and sends the response back. Photos are large, so they usually go to separate file storage, often **object storage** such as Amazon S3, built to hold huge numbers of files cheaply.
 
 The web server's code for that request can be this small:
 
@@ -61,7 +61,7 @@ Here the features stay the same. Only the "how well" changes:
 | Users | 2,000 | 3 million |
 | Busiest Moment | a few requests per second | thousands per second |
 | One Hour Down | a few annoyed students | lost sales, angry users |
-| Design | 1 server | many servers, a load balancer, copies of the data, a cache |
+| A Likely Design | 1 server | many servers, a load balancer, copies of the data, a cache |
 
 A **load balancer** spreads requests across servers. A **cache** keeps a fast copy of popular data, like the most viewed listings. Start with the simple version and add parts only when the numbers call for them. How one server grows into many is the next topic, [From One Server to Many](/system-design/one-server-to-many).
 
@@ -79,7 +79,7 @@ A **load balancer** spreads requests across servers. A **cache** keeps a fast co
 | Cost | Worth what it costs? |
 | Security | Only the right people see the data? |
 
-You can't max out all of them. Say we keep a second copy of the database on another machine. If one machine dies, the app stays up. But we pay for two machines, and every new listing has to reach both copies. Choosing what to give up is the core of the job, and it's why there's rarely one right design, only one that fits the requirements. More in [Thinking in Tradeoffs](/system-design/trade-offs).
+You can't max out all of them. Say we keep a second copy of the database on another machine. If one machine dies, the app can stay up. But we pay for two machines, and every new listing has to reach both copies. Choosing what to give up is the core of the job, and it's why there's rarely one right design, only one that fits the requirements. More in [Thinking in Tradeoffs](/system-design/trade-offs).
 
 ## How a Design Comes Together
 
@@ -89,11 +89,11 @@ You can't max out all of them. Say we keep a second copy of the database on anot
 4. **Deep dive**: find what breaks first under load and fix it
 5. **Revisit**: real traffic shows what you missed
 
-<u>Step 1 matters most.</u> Get the requirements wrong and every later step solves the wrong problem.
+<u>Step 1 often matters most.</u> Get the requirements wrong and every later step solves the wrong problem.
 
 ## Key Points
 
 - System design decides the parts of a system, how they talk and where the data lives
 - Features say what to build. Scale and quality goals decide how
-- Every choice gives something up. There's no single right answer, only one that fits
+- Every choice gives something up. There's rarely a single right answer, only one that fits
 - Start simple. Add parts when the numbers say so

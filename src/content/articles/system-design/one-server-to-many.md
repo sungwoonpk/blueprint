@@ -113,7 +113,7 @@ The cost: replicas run a little behind. A student posts a book and might not see
 
 ### 5. Add a Cache
 
-Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is far faster than the database. Redis and Memcached are the usual picks.
+Replicas spread the reads, but the same popular listings are still read from the database thousands of times. A **cache** keeps a copy of them in memory, which is usually far faster than the database. Redis and Memcached are the usual picks.
 
 <figure class="diagram">
 <p class="rowname">Cache Hit</p>
@@ -137,7 +137,7 @@ The cost: cached data can go out of date, and knowing when to refresh it is hard
 
 ### 6. Serve Photos From a CDN
 
-Pages now come back fast, except the photos. They are the heaviest part of every page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close. Cloudflare, Amazon CloudFront and Akamai are well known ones.
+Pages now come back fast, except the photos. They are usually the heaviest part of a page, and students far from our servers wait the longest. A **CDN** (content delivery network) keeps copies of files on servers around the world, so each photo comes from somewhere close. Cloudflare, Amazon CloudFront and Akamai are well known ones.
 
 The cost: another service to pay for, and a changed photo takes time to update everywhere. See [Content Delivery Networks (CDNs)](/system-design/cdn).
 
@@ -222,4 +222,4 @@ Look back over the nine steps and the same pattern repeats:
 - Start on one server. It's cheap, simple and enough for longer than most people think
 - Grow by measuring, finding the bottleneck and fixing just that
 - A common order: bigger server, separate database, more servers behind a load balancer, database copies, cache, CDN, queue, then sharding and more regions
-- Every step fixes one problem and brings new costs and new ways to fail
+- Each step usually fixes one problem and brings new costs and new ways to fail

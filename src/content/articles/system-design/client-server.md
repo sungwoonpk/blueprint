@@ -40,7 +40,7 @@ Content-Type: application/json
 [{"title": "Calculus, Early Transcendentals", "price": 45}]
 ```
 
-A request says what the client wants (a method and a path, with extra details in headers). A response says how it went (a status code) and carries the result. The first digit of the status code tells you who to blame:
+A request says what the client wants (a method and a path, with extra details in headers). A response says how it went (a status code) and carries the result. The first digit of the status code usually tells you who to look at:
 
 | Code | Meaning | Who Should Look |
 | --- | --- | --- |
@@ -74,7 +74,7 @@ If the protocol is the agreement, the **API** is what the server offers under it
 
 ## Each Request Stands Alone
 
-One rule of HTTP matters a lot for system design: it has no memory. The server treats every request as if it were the first one from that client. Engineers call this **stateless**. That's how [From One Server to Many](/system-design/one-server-to-many) could let any web server take any request.
+One rule of HTTP matters a lot for system design: it has no built-in memory. The server treats every request as if it were the first one from that client. Engineers call this **stateless**. That's how [From One Server to Many](/system-design/one-server-to-many) could let any web server take any request.
 
 But the app needs to know who you are. So the client sends proof with each request, usually a **cookie** holding a session ID. The server looks that ID up in a shared store and finds you.
 
@@ -91,19 +91,19 @@ This model has a limit: the server only answers. So how does it tell the phone "
 
 Start with the simplest one that meets the need. Each has its own topic: [Polling and Long Polling](/system-design/polling), [Server-Sent Events](/system-design/server-sent-events) and [WebSockets](/system-design/websockets).
 
-## Never Trust the Client
+## The Client Is Outside Your Control
 
-The model has another consequence. The client runs on someone else's device, so a user can change it, or skip it and send requests directly. Everything it sends has to be checked again on the server.
+The model has another consequence. The client runs on someone else's device, so a user can change it, or skip it and send requests directly. Treat what it sends as unchecked input, and verify anything that affects security or correctness on the server.
 
 In the textbook app, the phone hides the Delete button on listings that aren't yours. That only tidies the screen. Anyone can send `DELETE /listings/42` directly, so the server checks that listing 42 really belongs to the person asking.
 
-The same goes for numbers the client sends. If a request says a $45 book costs $0.01, the server ignores that and uses the price saved in its own database.
+The same goes for numbers the client sends. If a request says a $45 book costs $0.01, the server ignores that and uses the price saved in its own database. Checks on the phone are still worth having, because they give users quick feedback. They just can't be the only check.
 
 ## When Something Goes Wrong
 
 Last, the exchange itself can fail. A request can fail at three points: it never reaches the server, the server stalls, or the response gets lost on the way back. From the client's side all three look the same: silence.
 
-So every request needs a **timeout**, a limit on how long to wait. Without one, a silent server leaves the client waiting forever, and stuck waits pile up and use up threads and connections.
+So every network call needs a **timeout**, a limit on how long to wait. Without one, a silent server leaves the client waiting forever, and stuck waits pile up and use up threads and connections. The number matters: too long and waits pile up, too short and slow but healthy responses get thrown away and retried.
 
 After a timeout the client can try again. But the first try may have worked, with only the response lost. A retry is only safe if repeating the request does no harm. Paying twice is not harmless. Reading a list is. See [Idempotency and Safe Retries](/system-design/idempotency) and [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 
@@ -114,4 +114,5 @@ After a timeout the client can try again. But the first try may have worked, wit
 - To reach a server, the client needs a name, an address, a port and a protocol
 - HTTP is stateless: each request stands alone, and cookies and session IDs add the memory
 - The server only answers, so clients poll or keep a connection open
-- <u>Never trust the client</u>, and always set a timeout
+- <u>The client is outside your control</u>, so check what it sends on the server
+- Silence is how failure looks, so give network calls a sensible timeout

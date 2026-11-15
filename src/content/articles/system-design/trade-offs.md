@@ -4,7 +4,7 @@ You've made tradeoffs since your algorithms class. A hash table finds a key in O
 
 Systems work the same way, with bigger stakes: money, uptime, and how fast your team can ship.
 
-## Every Choice Costs Something
+## Choices Come With Costs
 
 Look back at [From One Server to Many](/system-design/one-server-to-many). Every step fixed one problem and paid for it somewhere else. Replicas took load off the primary but let data fall behind. A queue made pages fast but added jobs that can run twice.
 
@@ -42,7 +42,7 @@ The same tradeoff can have opposite answers. What decides it is which failure hu
 | Smaller problem | a removed item shows up again | a buyer sees an error and tries again |
 | So it picks | availability | consistency |
 
-Amazon built its cart this way. Its Dynamo storage system, described in a 2007 paper, was designed so "add to cart" never fails, even when servers are down, and accepts that a deleted item may occasionally come back.
+Amazon built its cart this way. Its Dynamo storage system, described in a 2007 paper, was designed to keep accepting "add to cart" even when servers or networks fail, and accepts that a deleted item may occasionally come back.
 
 The textbook app needs both answers. Browsing listings can show data a few seconds old, so a cache is fine there. Marking a book as sold can't be: two students must never buy the same copy.
 
@@ -59,9 +59,9 @@ Here's that for one question in the textbook app: where should listing pages rea
 
 |  | Primary Database | Replica | Cache |
 | --- | --- | --- | --- |
-| Freshness | always current | usually under a second behind | a few seconds old |
+| Freshness | always current | usually under a second behind | up to 10 seconds old |
 | Speed | database speed | database speed | much faster, from memory |
-| Load on the primary | all of it | none | none |
+| Reads the Primary Handles | all of them | none | only cache misses |
 | Extra parts to run | none | the replica | the cache |
 
 Browsing doesn't need perfect freshness and gets the most traffic, so listing pages read from the cache. The "mark as sold" check reads from the primary, because only the primary is always current. We give up some freshness on browse pages and pay for one more part to run.
@@ -93,7 +93,7 @@ Decide two way doors quickly and change them if they turn out wrong. Slow down o
 - **What you give up**: "a sold book may show as available for a moment"
 - **What would change your mind**: "if students complain about seeing sold books, we'd keep listings in the cache for less time"
 
-This is what interviewers listen for, and it's how teams record decisions at work. Many teams write each one down as an **architecture decision record** (ADR): the context, the decision, and its consequences. The cache decision from above could read:
+This is what interviewers often listen for, and it's how teams record decisions at work. Many teams write each one down as an **architecture decision record** (ADR): the context, the decision, and its consequences. The cache decision from above could read:
 
 ```markdown
 # ADR 7: Serve listing pages from a cache
