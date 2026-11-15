@@ -1,10 +1,12 @@
 // Title matching shared by the search dialog and the roadmap filter.
 
 /**
- * Lowercase and treat "-" and "/" as spaces. Length is preserved, so a match
+ * Lowercase, treat "-" and "/" as spaces and a typographic apostrophe as a
+ * plain one. Length is preserved, so a match
  * position in the normalized text is also a position in the original title.
  */
-export const normalize = (s: string) => s.toLowerCase().replace(/[-/]/g, ' ');
+export const normalize = (s: string) =>
+  s.toLowerCase().replace(/[-/]/g, ' ').replace(/\u2019/g, "'");
 
 /** Split a raw query into normalized terms. Every term must match. */
 export const toTerms = (raw: string) => normalize(raw).split(/\s+/).filter(Boolean);
