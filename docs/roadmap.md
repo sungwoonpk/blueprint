@@ -23,7 +23,7 @@ Design exercises and interview practice, and reading progress. There is one road
 4. **Asynchronous Processing**: work that happens outside the request: messaging, events, stream processing and background jobs.
 5. **Distributed Systems**: why spreading data over machines is hard, replication, consistency, partitioning, distributed transactions, time and order, coordination, and how replicas converge.
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
-7. **Patterns**: recurring problems (scaling reads and writes, traffic spikes, counting, large files, contention, long jobs, fanout, pushing updates) and how the building blocks solve them.
+7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, copies in sync, counting and ranking, location), correctness (contention, duplicate work, long multistep work) and reaching users (feeds, pushing updates).
 8. **AI Systems**: the building blocks of AI products, and how to evaluate and guard them.
 9. **Classic Systems**: the well-known papers and systems, grouped by area.
 

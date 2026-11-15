@@ -4,7 +4,7 @@ A text-first study guide for system design: fundamentals, building blocks, distr
 
 ## Status
 
-Skeleton only. The roadmap (9 phases, 166 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. The roadmap (9 phases, 171 numbered topics) is the front page: phases show their groups, groups expand to show topics, and a search field filters it as you type. Light by default, with a dark theme. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 
@@ -37,4 +37,4 @@ npm run dev      # http://localhost:4321
 | --- | --- |
 | [docs/design.md](docs/design.md) | Visual design, tokens, theming, search. |
 | [docs/roadmap.md](docs/roadmap.md) | How the roadmap data works and how topics become articles. |
-| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases, distributed data in one phase. |
+| [docs/decisions/](docs/decisions/) | Short records of the decisions that shape the project: static site, roadmap as data, nine phases, distributed data in one phase, our own patterns. |
