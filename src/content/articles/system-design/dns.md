@@ -6,7 +6,7 @@ In [How Clients and Servers Talk](/system-design/client-server), the phone neede
 
 People remember names. Computers connect to addresses like 203.0.113.80. DNS sits between the two.
 
-It also gives us room to change things. When the textbook app grows from one server to many behind a load balancer, the machine that spreads requests across servers (from [From One Server to Many](/system-design/one-server-to-many)), the address changes and the name stays the same. Nobody has to update a bookmark.
+It also gives us room to change things. When the textbook app grows from one server to many behind a load balancer, the machine that spreads requests across servers (from [From One Server to Many](/system-design/one-server-to-many)), the address changes and the name stays the same, so bookmarks keep working.
 
 ## How a Lookup Works
 
@@ -29,7 +29,7 @@ The phone doesn't do the asking itself. It hands the question to a **resolver**,
 <figcaption>The resolver walks down the name, one step closer each time</figcaption>
 </figure>
 
-The **root servers** know who runs each ending, like .com. There are 13 named root servers, each run as many copies around the world. The .com servers know who runs example.com. That last server, the **authoritative** one, holds the real answer.
+The **root servers** know who runs each ending, like .com. There are 13 named root servers, each served by many copies around the world. The .com servers know who runs example.com. That last server, the **authoritative** one, holds the real answer.
 
 DNS messages are tiny, so they usually travel over UDP, a way of sending messages without setting up a connection first, on port 53. More in [TCP and UDP](/system-design/tcp-udp).
 
@@ -64,11 +64,11 @@ A name can point at more than an address. Each kind of answer is a **record**:
 | Record | What It Holds | Example |
 | --- | --- | --- |
 | A | An IPv4 address | textbooks.example.com is 203.0.113.80 |
-| AAAA | An IPv6 address | the same name, in the newer format |
+| AAAA | An IPv6 address | The same name, in the newer format |
 | CNAME | Another name to follow | www.example.com is an alias of example.com |
 | MX | Where to deliver email | mail for example.com goes to mail.example.com |
-| TXT | Free text, such as proof you own the domain | verification codes, email rules |
-| NS | Which servers answer for this domain | the authoritative servers |
+| TXT | Free text, such as proof you own the domain | Verification codes, email rules |
+| NS | Which servers answer for this domain | The authoritative servers |
 
 A CNAME can't sit on the bare domain, only on names like www.
 
@@ -86,10 +86,10 @@ DNS is a coarse tool. It sends clients toward the right neighborhood, and a load
 
 ## When DNS Fails
 
-When DNS breaks, servers can be perfectly healthy and still unreachable, because nobody can find them. Engineers joke that when something is mysteriously broken, "it's always DNS". Two real cases:
+When DNS breaks, servers can be perfectly healthy and still unreachable, because clients can't find them. Engineers joke that when something is mysteriously broken, "it's always DNS". Two real cases:
 
 - **Dyn, 2016**: an attack flooded Dyn, a company that ran DNS for many big sites. Twitter, Netflix, Reddit and GitHub were hard to reach for hours, though their own servers were fine
-- **AWS, 2025**: a bug in the automation that manages DynamoDB's DNS records left its regional name with an empty record. Nothing could find DynamoDB, and many services in that region failed for hours
+- **AWS, 2025**: a bug in the automation that manages DynamoDB's DNS records left its regional name with an empty record. Clients could not find DynamoDB, and many services in that region failed for hours
 
 One lesson from Dyn is that a single DNS provider is a single point of failure, a part whose failure takes everything down. Teams that can't afford that run two, on separate networks, with identical records. It costs money and effort, so it is a tradeoff too. See [Redundancy and Failover](/system-design/redundancy-failover).
 

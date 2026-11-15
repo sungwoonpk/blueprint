@@ -9,8 +9,8 @@ You already know the code level. System design works one level up.
 |  | Code Level | System Level |
 | --- | --- | --- |
 | Question | Does this feature work? | Does it keep working for everyone? |
-| Scope | a function, a class | servers, databases, the network |
-| Example | the code that resizes a photo | photos go to file storage, not the database |
+| Scope | A function, a class | Servers, databases, the network |
+| Example | The code that resizes a photo | Photos go to file storage, not the database |
 
 You'll also hear these called **low level design** and **high level design**. This roadmap stays at the high level.
 
@@ -59,9 +59,9 @@ Here the features stay the same. Only the "how well" changes:
 |  | One Campus | Every Campus in the Country |
 | --- | --- | --- |
 | Users | 2,000 | 3 million |
-| Busiest Moment | a few requests per second | thousands per second |
-| One Hour Down | a few annoyed students | lost sales, angry users |
-| A Likely Design | 1 server | many servers, a load balancer, copies of the data, a cache |
+| Busiest Moment | A few requests per second | Thousands per second |
+| One Hour Down | A few annoyed students | Lost sales, angry users |
+| A Likely Design | 1 server | Many servers, a load balancer, copies of the data, a cache |
 
 A **load balancer** spreads requests across servers. A **cache** keeps a fast copy of popular data, like the most viewed listings. Start with the simple version and add parts only when the numbers call for them. How one server grows into many is the next topic, [From One Server to Many](/system-design/one-server-to-many).
 
@@ -89,11 +89,11 @@ You can't max out all of them. Say we keep a second copy of the database on anot
 4. **Deep dive**: find what breaks first under load and fix it
 5. **Revisit**: real traffic shows what you missed
 
-<u>Step 1 often matters most.</u> Get the requirements wrong and every later step solves the wrong problem.
+<u>Step 1 often matters most.</u> Get the requirements wrong and the later steps solve the wrong problem.
 
 ## Key Points
 
 - System design decides the parts of a system, how they talk and where the data lives
 - Features say what to build. Scale and quality goals decide how
-- Every choice gives something up. There's rarely a single right answer, only one that fits
+- Each choice gives something up. There's rarely a single right answer, only one that fits
 - Start simple. Add parts when the numbers say so

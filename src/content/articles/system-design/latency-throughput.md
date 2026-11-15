@@ -8,9 +8,9 @@ Picture a highway:
 
 | On a Highway | In a System | Measured In |
 | --- | --- | --- |
-| How long one car takes to get from A to B | Latency | milliseconds |
-| How many cars pass per hour | Throughput | requests per second, or megabytes per second |
-| How many lanes there are | Bandwidth, the most the pipe could carry | megabytes per second |
+| How long one car takes to get from A to B | Latency | Milliseconds |
+| How many cars pass per hour | Throughput | Requests per second, or megabytes per second |
+| How many lanes there are | Bandwidth, the most the pipe could carry | Megabytes per second |
 
 Throughput is what you actually get, so it is at or below the bandwidth. And adding lanes doesn't shorten anyone's trip. In the same way, adding servers, from [From One Server to Many](/system-design/one-server-to-many), lets you finish more requests per second, but one request isn't any faster.
 

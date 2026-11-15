@@ -44,10 +44,10 @@ A request says what the client wants (a method and a path, with extra details in
 
 | Code | Meaning | Who Should Look |
 | --- | --- | --- |
-| 2xx | It worked | nobody |
-| 3xx | Look somewhere else | the client follows the redirect |
-| 4xx | The request was wrong | the client's developer |
-| 5xx | The server failed | us, the server's developer |
+| 2xx | It worked | Nobody |
+| 3xx | Look somewhere else | The client follows the redirect |
+| 4xx | The request was wrong | The client's developer |
+| 5xx | The server failed | Us, the server's developer |
 
 On call, a spike of 5xx means we have a problem. A spike of 4xx usually means a client or a bad release is sending something wrong. HTTP gets its own topic, [How HTTP Works](/system-design/http).
 
@@ -103,7 +103,7 @@ The same goes for numbers the client sends. If a request says a $45 book costs $
 
 Last, the exchange itself can fail. A request can fail at three points: it never reaches the server, the server stalls, or the response gets lost on the way back. From the client's side all three look the same: silence.
 
-So every network call needs a **timeout**, a limit on how long to wait. Without one, a silent server leaves the client waiting forever, and stuck waits pile up and use up threads and connections. The number matters: too long and waits pile up, too short and slow but healthy responses get thrown away and retried.
+So every network call needs a **timeout**, a limit on how long to wait. Without one, a silent server can leave the client waiting indefinitely, and stuck waits pile up and use up threads and connections. The number matters: too long and waits pile up, too short and slow but healthy responses get thrown away and retried.
 
 After a timeout the client can try again. But the first try may have worked, with only the response lost. A retry is only safe if repeating the request does no harm. Paying twice is not harmless. Reading a list is. See [Idempotency and Safe Retries](/system-design/idempotency) and [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 

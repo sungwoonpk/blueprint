@@ -96,7 +96,7 @@ In [From One Server to Many](/system-design/one-server-to-many), a load balancer
 - **Ending at the load balancer** is the simpler choice: certificates live in one place, the web servers do less work, and the load balancer can read each request to route it. The cost is that traffic inside your network is not encrypted
 - **Encrypting to the web servers too** keeps traffic protected inside the network. The cost is a certificate on every server, more CPU, and harder debugging
 
-Teams usually pick the second when the internal network isn't fully trusted, or when rules such as PCI DSS or HIPAA call for it. When services should also prove their identity to each other, they use mutual TLS, covered in [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity).
+Teams usually pick the second when the internal network isn't fully trusted, or when rules such as PCI DSS or HIPAA can call for it. When services should also prove their identity to each other, they use mutual TLS, covered in [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity).
 
 ## What HTTPS Does Not Hide
 

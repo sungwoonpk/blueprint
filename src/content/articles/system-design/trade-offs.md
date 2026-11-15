@@ -29,12 +29,12 @@ The same shape shows up in each row below.
 
 | Tradeoff | Lean One Way | Lean the Other Way |
 | --- | --- | --- |
-| Latency and Throughput | handle each request at once: each is fast, less done per second | batch requests: more done per second, each waits a little |
-| Freshness and Speed | read the database: always current, slower | read a cache: faster, maybe out of date |
-| Consistency and Availability | refuse to answer when copies may disagree: always current, sometimes down | answer anyway: always up, maybe out of date |
-| Reads and Writes | do the work when data is written: cheap reads, costly writes | do the work when data is read: cheap writes, costly reads |
-| Cost and Reliability | one copy of everything: cheap, one failure loses it | three copies: survives failures, costs about 3× |
-| Simplicity and Flexibility | one codebase: easy to build and run, crowded as teams grow | many services: teams move on their own, harder to run |
+| Latency and Throughput | Handle each request at once: each is fast, less done per second | Batch requests: more done per second, each waits a little |
+| Freshness and Speed | Read the database: always current, slower | Read a cache: faster, maybe out of date |
+| Consistency and Availability | Refuse to answer when copies may disagree: always current, sometimes down | Answer anyway: always up, maybe out of date |
+| Reads and Writes | Do the work when data is written: cheap reads, costly writes | Do the work when data is read: cheap writes, costly reads |
+| Cost and Reliability | One copy of everything: cheap, one failure loses it | Three copies: survives failures, costs about 3× |
+| Simplicity and Flexibility | One codebase: easy to build and run, crowded as teams grow | Many services: teams move on their own, harder to run |
 
 Each of these gets its own topic later:
 
@@ -51,9 +51,9 @@ The same tradeoff can have opposite answers. What decides it is which failure hu
 
 |  | Amazon's Shopping Cart | Concert Tickets |
 | --- | --- | --- |
-| Worst outcome | "add to cart" fails and the sale is lost | the same seat is sold to two people |
-| Smaller problem | a removed item shows up again | a buyer sees an error and tries again |
-| So it picks | availability | consistency |
+| Worst outcome | "add to cart" fails and the sale is lost | The same seat is sold to two people |
+| Smaller problem | A removed item shows up again | A buyer sees an error and tries again |
+| So it picks | Availability | Consistency |
 
 Amazon built its cart this way. Its Dynamo storage system, described in a 2007 paper, was designed to keep accepting "add to cart" even when servers or networks fail, and accepts that a deleted item may occasionally come back.
 
@@ -72,16 +72,16 @@ Here's that for one question in the textbook app: where should listing pages rea
 
 |  | Primary Database | Replica | Cache |
 | --- | --- | --- | --- |
-| Freshness | always current | usually under a second behind | up to 10 seconds old |
-| Speed | database speed | database speed | much faster, from memory |
-| Reads the Primary Handles | all of them | none | only cache misses |
-| Extra parts to run | none | the replica | the cache |
+| Freshness | Always current | Usually under a second behind | Up to 10 seconds old |
+| Speed | Database speed | Database speed | Much faster, from memory |
+| Reads the Primary Handles | All of them | None | Only cache misses |
+| Extra Parts to Run | None | The replica | The cache |
 
 Browsing doesn't need perfect freshness and gets the most traffic, so listing pages read from the cache. The "mark as sold" check reads from the primary, because only the primary is always current. We give up some freshness on browse pages and pay for one more part to run.
 
 ## Can You Undo It?
 
-Some decisions are cheap to reverse. Others lock you in for years. Jeff Bezos described them as **two way doors** you can walk back through and **one way doors** you can't.
+Some decisions are cheap to reverse. Others lock you in for years. Jeff Bezos described them in a letter to Amazon's shareholders as **two way doors** you can walk back through and **one way doors** you can't.
 
 Easy to undo:
 
@@ -92,7 +92,7 @@ Easy to undo:
 Hard to undo:
 
 - Which database you use: every piece of data has to move
-- How data is split across shards, the sharding from 1.2: data has to move between machines
+- How data is split across shards, the sharding from [From One Server to Many](/system-design/one-server-to-many): data has to move between machines
 - A public API others depend on: other teams' code would break
 
 Decide two way doors quickly and change them if they turn out wrong. Slow down on one way doors: gather numbers, write it down, get a second opinion.

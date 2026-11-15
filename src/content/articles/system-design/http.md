@@ -49,11 +49,11 @@ The method says what to do. Two properties of each matter for system design: whe
 
 | Method | What It Means | Only Reads | Safe to Repeat |
 | --- | --- | --- | --- |
-| GET | Read something | yes | yes |
-| POST | Create something or run an action | no | no |
-| PUT | Replace something with what you send | no | yes |
-| PATCH | Change part of something | no | not always |
-| DELETE | Remove something | no | yes |
+| GET | Read something | Yes | Yes |
+| POST | Create something or run an action | No | No |
+| PUT | Replace something with what you send | No | Yes |
+| PATCH | Change part of something | No | Not always |
+| DELETE | Remove something | No | Yes |
 
 Repeating a PUT writes the same thing again. Repeating a DELETE leaves it just as deleted, though the second call may answer 404. Repeating a POST can create a second listing or charge a card twice, so a client that has to retry a POST, like a payment, sends a unique key that the server uses to spot repeats. More in [Idempotency and Safe Retries](/system-design/idempotency).
 
@@ -90,7 +90,7 @@ The 5xx errors point at the part of the path that failed. With a load balancer i
 - **503**: nothing is ready to answer, because of overload or maintenance
 - **504**: the server behind it took too long
 
-A 4xx other than 429 means the request itself needs fixing, so repeating it won't help. The codes 429, 502, 503 and 504 are often temporary, so clients retry them with growing waits and follow a `Retry-After` header when one is sent. A 500 is only worth retrying if the request is safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+A 4xx other than 429 usually means the request itself needs fixing, so repeating it won't help. The codes 429, 502, 503 and 504 are often temporary, so clients retry them with growing waits and follow a `Retry-After` header when one is sent. A 500 is only worth retrying if the request is safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 
 One classic cause of random 502s comes from connection reuse, covered in [TCP and UDP](/system-design/tcp-udp). The load balancer keeps connections to the server open and reuses them. If the server closes an idle connection first, the load balancer's next request on it fails. The usual fix is to keep the server's idle timeout longer than the load balancer's.
 
