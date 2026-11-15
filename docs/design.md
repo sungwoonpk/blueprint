@@ -4,7 +4,7 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows the logo and the name, **blueprint** (always lowercase). The front page heading is "System Design", and page titles read `blueprint` or `<topic> · blueprint`.
+The header shows the logo and the name, **blueprint** (always lowercase). The name links to Home. Browser tabs read `blueprint` on Home, the subject name on a subject's roadmap ("System Design", "Algorithms"), and `<topic> · blueprint` on a topic.
 
 The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cropped to the shape. It sits directly on the page in both themes.
 
@@ -16,7 +16,8 @@ The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cro
 
 ## Pages
 
-- **Subjects.** The site holds several subjects, each under its own path: System Design at `/system-design` and Algorithms at `/algorithms`. `/` redirects to the first subject. Both subjects use the same two components, `RoadmapPage` and `TopicPage`. The menu button at the far right of the header lists the subjects and marks the current one; it closes on outside click or Escape.
+- **Home (`/`)** is a plain page with one thing in the middle: a small planet in the logo's colors, turning slowly, with flowing sea, waves rolling onto the coast, hills, snowy peaks, drifting clouds and a soft atmosphere (`src/components/Globe.astro`, WebGL2). The surface is baked once into cube maps (no seams, no pinched poles), so each frame only reads textures and stays smooth. Without WebGL2 the logo is shown; with reduced motion it holds still.
+- **Subjects.** The site holds several subjects, each under its own path: System Design at `/system-design` and Algorithms at `/algorithms`. Both subjects use the same two components, `RoadmapPage` and `TopicPage`. The menu button at the far right of the header lists Home and the subjects and marks the current one; it closes on outside click or Escape, instantly (a menu still fading out would cancel the page transition).
 - **Roadmap (`/system-design`, `/algorithms`)** is a subject's front page. A side list of phases (always shown, current one highlighted as you scroll) and, for each phase, a rounded list of its groups. A group expands to show its numbered topics.
 - **Topic (`/<subject>/<slug>`)** is a narrow reading column with a back link, the number, the title, and previous/next links. Until an article exists it says "Coming soon."
 - **Footer** on every page: the author credit and the last updated date (the last commit's date, or the build date without git history).
