@@ -20,7 +20,7 @@ Design exercises and interview practice, and reading progress. There is one road
 1. **Foundations**: the big picture (what system design is, how a system grows, thinking in tradeoffs), how a request travels over the network, the core qualities, and then turning requirements into numbers.
 2. **APIs, Traffic and Services**: how clients talk to a service, how requests reach many servers and are protected, and how a system is split into services.
 3. **Data Storage and Caching**: storage on one machine and caching: relational and NoSQL databases, caching, specialized storage, and storage internals.
-4. **Asynchronous Processing**: work that happens outside the request: messaging, events, stream processing and background jobs.
+4. **Asynchronous Processing**: work that happens outside the request: when to go asynchronous, messaging, background jobs, events, and batch and stream processing.
 5. **Distributed Systems**: why spreading data over machines is hard, replication, consistency, partitioning, distributed transactions, time and order, coordination, and how replicas converge.
 6. **Running in Production**: observability, resilience, capacity and cost, delivery, security, recovery.
 7. **Patterns**: problems that come up again and again and can only be solved by combining building blocks from phases 2 to 6, grouped by where the pressure comes from: load (reads, writes, hot spots, spikes, users worldwide), data (large files, copies in sync, counting and ranking, location), correctness (contention, duplicate work, long multistep work), reaching users (feeds, pushing updates) and evolving a running system (breaking up a monolith, migrating between datastores).
