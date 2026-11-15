@@ -11,6 +11,8 @@
   --muted: #6e6e73;
   --accent: #0071e3;
   --orbit: rgb(96 120 220 / 0.3);
+  --term: #1d4ed8;
+  --bad: #d92d20;
 
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Inter, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
@@ -28,6 +30,8 @@
   --muted: #98989d;
   --accent: #2997ff;
   --orbit: rgb(176 190 255 / 0.28);
+  --term: #5c9dff;
+  --bad: #ff6b61;
   color-scheme: dark;
 }
 
