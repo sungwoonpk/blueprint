@@ -16,7 +16,9 @@ Protocol Buffers, 14 bytes, as hex:
 08 2a 12 08 43 61 6c 63 75 6c 75 73 18 2d
 ```
 
-Both hold the same facts. The JSON repeats the words "id", "title" and "price" and writes the numbers as digits. The binary version replaces each name with a small number, called a **field number**, and packs the numbers tightly. To read the bytes you need the **schema**, a description such as "field 1 is the id, field 2 is the title, field 3 is the price". The JSON carries its own field names, so a person or a program can read it without one.
+Both hold the same facts. The JSON repeats the words "id", "title" and "price" and writes the numbers as digits. The binary version replaces each name with a small number, called a **field number**, and packs the numbers tightly.
+
+To read the bytes you need the **schema**, a description such as "field 1 is the id, field 2 is the title, field 3 is the price". The JSON carries its own field names, so a person or a program can read it without one.
 
 ## The Common Formats
 
@@ -28,7 +30,9 @@ Both hold the same facts. The JSON repeats the words "id", "title" and "price" a
 
 A few others are worth knowing by name: XML, which is older and wordier and still common in enterprise systems, MessagePack, a binary format shaped like JSON, and CSV, for flat tables.
 
-Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second. Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats. JSON has its own quirks. It has one kind of number, and many programs, JavaScript among them, read it as a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) can lose digits. The JSON standard, RFC 8259, warns about this, and the JSON form of Protocol Buffers writes 64 bit integers as strings for that reason. APIs often send very large ids as strings too.
+Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second. Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats.
+
+JSON has its own quirks. It has one kind of number, and many programs, JavaScript among them, read it as a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) can lose digits. The JSON standard, RFC 8259, warns about this, and the JSON form of Protocol Buffers writes 64 bit integers as strings for that reason. APIs often send very large ids as strings too.
 
 ## Why the Shape Changes
 
@@ -50,7 +54,9 @@ Now the harder part. The listing will gain fields next month. Ask what happens d
 <figcaption>New code must cope with old data, and old code must cope with new data</figcaption>
 </figure>
 
-Both directions matter. **Backward compatibility** is new code reading old data, which means a missing field gets a sensible default. **Forward compatibility** is old code reading new data, which means a field it doesn't know is skipped, not treated as an error. In JSON, forward compatibility means readers ignore fields they don't know, since a strict reader that rejects them breaks the day a field is added. A format and a set of habits that allow both directions let you change one side at a time, without a moment where everything has to switch together.
+Both directions matter. **Backward compatibility** is new code reading old data, which means a missing field gets a sensible default. **Forward compatibility** is old code reading new data, which means a field it doesn't know is skipped, not treated as an error.
+
+In JSON, forward compatibility means readers ignore fields they don't know, since a strict reader that rejects them breaks the day a field is added. A format and a set of habits that allow both directions let you change one side at a time, without a moment where everything has to switch together.
 
 ## Changes That Are Safe, and Ones That Aren't
 
@@ -78,7 +84,9 @@ message Listing {
 }
 ```
 
-The `reserved` lines tell the compiler to reject any future attempt to reuse that number or name, and the Protocol Buffers documentation is blunt about the rule: never reuse a field number. For a while the server writes both the old field and the new one, then drops the old one once no client reads it. This is the expand, migrate, contract path from [Designing for Maintainability](/system-design/maintainability), applied to a message. Avro works differently, resolving the writer's schema against the reader's by field name and filling in declared defaults, but the idea is the same: each change needs a default or a retirement plan. JSON has no schema to enforce any of this, so the rules live in team habits and tests.
+The `reserved` lines tell the compiler to reject any future attempt to reuse that number or name, and the Protocol Buffers documentation is blunt about the rule: never reuse a field number. For a while the server writes both the old field and the new one, then drops the old one once no client reads it. This is the expand, migrate, contract path from [Designing for Maintainability](/system-design/maintainability), applied to a message.
+
+Avro works differently, resolving the writer's schema against the reader's by field name and filling in declared defaults, but the idea is the same: each change needs a default or a retirement plan. JSON has no schema to enforce any of this, so the rules live in team habits and tests.
 
 ## Catching Breaks Before They Ship
 

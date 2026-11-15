@@ -28,7 +28,9 @@ The textbook app has this exact risk where students pay. A double charge is the 
 
 ## What Idempotent Means
 
-The formal definition comes from the HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html): a method is idempotent if the effect on the server of several identical requests is the same as the effect of one. Notice it talks about the server's state, not the reply. A second DELETE can answer 404 because the listing is already gone, and the method is still idempotent, since the state is the same either way. The standard lists PUT, DELETE and read only methods like GET as idempotent, which matches the table in [How HTTP Works](/system-design/http). It also says a client shouldn't automatically retry a non idempotent request, such as a POST, unless it knows the request is safe to repeat.
+The formal definition comes from the HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html): a method is idempotent if the effect on the server of several identical requests is the same as the effect of one. Notice it talks about the server's state, not the reply. A second DELETE can answer 404 because the listing is already gone, and the method is still idempotent, since the state is the same either way.
+
+The standard lists PUT, DELETE and read only methods like GET as idempotent, which matches the table in [How HTTP Works](/system-design/http). It also says a client shouldn't automatically retry a non idempotent request, such as a POST, unless it knows the request is safe to repeat.
 
 The idea is about what a request does, so it is easiest to see in examples:
 
@@ -133,7 +135,9 @@ Clients aren't the only ones who repeat things. A message queue, from [From One 
 
 ## Deciding Whether to Retry
 
-Idempotency answers whether a retry is safe. Whether it's worthwhile is a separate question. From [How HTTP Works](/system-design/http), a 4xx other than 429 usually means the request itself needs fixing, so retrying changes nothing, while 429, 502, 503 and 504 are often temporary. [Azure's retry guidance](https://learn.microsoft.com/en-us/azure/architecture/patterns/retry) adds two cautions: retry a limited number of times, and avoid stacking retries in several layers, because three layers with three tries each can send nine attempts at a service that is already struggling. The waiting between attempts, the timeouts and the limits are covered in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+Idempotency answers whether a retry is safe. Whether it's worthwhile is a separate question. From [How HTTP Works](/system-design/http), a 4xx other than 429 usually means the request itself needs fixing, so retrying changes nothing, while 429, 502, 503 and 504 are often temporary.
+
+[Azure's retry guidance](https://learn.microsoft.com/en-us/azure/architecture/patterns/retry) adds two cautions: retry a limited number of times, and avoid stacking retries in several layers, because three layers with three tries each can send nine attempts at a service that is already struggling. The waiting between attempts, the timeouts and the limits are covered in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 
 ## Key Points
 

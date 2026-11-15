@@ -57,7 +57,9 @@ Anything that returns a long list needs paging, which gets its own topic: [Pagin
 
 ## When the Action Isn't a Noun
 
-"Mark as sold" has no obvious noun. There are two common answers. If the action only flips a field, change the field: `PATCH /listings/42` with `{"status": "sold"}`. If the action produces something new, make that a resource: sending a message is `POST /listings/42/messages`, and the message that comes back is a thing with its own URL. A third option, an endpoint named for the action such as `POST /listings/42/mark-sold`, is acceptable when neither fits. What matters is picking one style and holding to it, as [What Makes a Good API](/system-design/good-apis) asked.
+"Mark as sold" has no obvious noun. There are two common answers. If the action only flips a field, change the field: `PATCH /listings/42` with `{"status": "sold"}`. If the action produces something new, make that a resource: sending a message is `POST /listings/42/messages`, and the message that comes back is a thing with its own URL.
+
+A third option, an endpoint named for the action such as `POST /listings/42/mark-sold`, is acceptable when neither fits. What matters is picking one style and holding to it, as [What Makes a Good API](/system-design/good-apis) asked.
 
 ## What the Style Gives You
 
@@ -118,7 +120,9 @@ This is often called the **N+1** problem, one request plus one per item. Remembe
 
 ## Describing the API
 
-A REST API needs a contract anyone can read. The usual standard is the OpenAPI specification: a file listing each URL, method, parameter and response. Tools turn it into documentation pages, test clients and generated code, so the docs and the code stay close. One caution is that the file describes what the server should do, and nothing in it forces the server to do it, so tests have to check that the two still agree. Changes to the contract are covered in [API Versioning](/system-design/api-versioning).
+A REST API needs a contract anyone can read. The usual standard is the OpenAPI specification: a file listing each URL, method, parameter and response. Tools turn it into documentation pages, test clients and generated code, so the docs and the code stay close.
+
+One caution is that the file describes what the server should do, and nothing in it forces the server to do it, so tests have to check that the two still agree. Changes to the contract are covered in [API Versioning](/system-design/api-versioning).
 
 ## Key Points
 

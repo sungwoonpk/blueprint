@@ -30,7 +30,9 @@ The cost has two sides, and they pull against each other. A shorter interval mea
 <figcaption>Requests per second for 100,000 users, and how late news arrives (example numbers)</figcaption>
 </figure>
 
-The second half of the cost is waste. Suppose each student gets about one notification an hour, which is roughly 28 a second across all users. At the 10 second interval, 10,000 polls a second go out and 28 of them carry news, so over 99% come back empty. Each of those empty polls still costs a request to parse and a response to send, and it adds to the load figures from [Estimating Capacity](/system-design/estimation). So the interval is a tradeoff, in the sense of [Thinking in Tradeoffs](/system-design/trade-offs): lower delay, higher load.
+The second half of the cost is waste. Suppose each student gets about one notification an hour, which is roughly 28 a second across all users.
+
+At the 10 second interval, 10,000 polls a second go out and 28 of them carry news, so over 99% come back empty. Each of those empty polls still costs a request to parse and a response to send, and it adds to the load figures from [Estimating Capacity](/system-design/estimation). So the interval is a tradeoff, in the sense of [Thinking in Tradeoffs](/system-design/trade-offs): lower delay, higher load.
 
 ## Making Polls Cheaper
 
@@ -50,7 +52,9 @@ If-None-Match: "v42"
 HTTP/1.1 304 Not Modified
 ```
 
-In HTTP's standard, a 304 tells the client to reuse the copy it already has, and it can't carry a body. GitHub's REST API shows the whole idea in a real service. Its events endpoints are built for polling with ETags, a 304 doesn't count against the caller's rate limit when the request is authenticated, and each response includes an `X-Poll-Interval` header, such as 60 seconds, which clients are expected to obey and which can grow when GitHub is under load. GitHub's own advice is still to use webhooks instead of polling where it can, covered in [Webhooks](/system-design/webhooks).
+In HTTP's standard, a 304 tells the client to reuse the copy it already has, and it can't carry a body.
+
+GitHub's REST API shows the whole idea in a real service. Its events endpoints are built for polling with ETags, a 304 doesn't count against the caller's rate limit when the request is authenticated, and each response includes an `X-Poll-Interval` header, such as 60 seconds, which clients are expected to obey and which can grow when GitHub is under load. GitHub's own advice is still to use webhooks instead of polling where it can, covered in [Webhooks](/system-design/webhooks).
 
 ## Long Polling: Ask Once and Wait
 
@@ -139,7 +143,9 @@ With the wait set to 0, SQS answers right away even when the queue is empty, whi
 | Through Proxies | Works everywhere | Usually works, but held requests can be cut |
 | Fits | Rare or late-tolerant updates, such as job progress | Near live updates, with no special protocol |
 
-Neither is the end of the road. Long polling is also a fallback: Socket.IO's documentation explains that it starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software. When the server needs to send a steady stream one way, [Server-Sent Events](/system-design/server-sent-events) is a better fit, and when both sides talk freely, [WebSockets](/system-design/websockets) are. When the receiver is another server and not a person's app, [Webhooks](/system-design/webhooks) let the sender make the call instead.
+Neither is the end of the road. Long polling is also a fallback: Socket.IO's documentation explains that it starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software.
+
+When the server needs to send a steady stream one way, [Server-Sent Events](/system-design/server-sent-events) is a better fit, and when both sides talk freely, [WebSockets](/system-design/websockets) are. When the receiver is another server and not a person's app, [Webhooks](/system-design/webhooks) let the sender make the call instead.
 
 ## Key Points
 

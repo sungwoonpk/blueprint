@@ -87,7 +87,9 @@ With no strong signal, start with REST and JSON. It has the most tools, the most
 
 ## Changing Your Mind Later
 
-Not every choice is equally hard to undo. In [Thinking in Tradeoffs](/system-design/trade-offs), a public API was one of the one way doors, because outside clients depend on it. The style of the edge is therefore the choice to make carefully. The calls between your own services are a two way door: you control both sides, so you can move one service at a time. A new style can be added next to the old one, and the old one retired once no one calls it. See [API Versioning](/system-design/api-versioning) for how to move callers over.
+Not every choice is equally hard to undo. In [Thinking in Tradeoffs](/system-design/trade-offs), a public API was one of the one way doors, because outside clients depend on it. The style of the edge is therefore the choice to make carefully.
+
+The calls between your own services are a two way door: you control both sides, so you can move one service at a time. A new style can be added next to the old one, and the old one retired once no one calls it. See [API Versioning](/system-design/api-versioning) for how to move callers over.
 
 ## Key Points
 

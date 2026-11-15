@@ -60,7 +60,9 @@ The word `stream` in the second line points at something REST doesn't have built
 
 ## Deadlines, Errors and Retries
 
-A call that hangs ties up the caller, as in [How Clients and Servers Talk](/system-design/client-server), so gRPC makes the time limit a normal part of every call. The caller sets a **deadline**, how long it will wait in total, and the server can see how much is left. gRPC sets none by default, so each call should get one. The useful part is that the deadline travels along the chain. If the phone gives up after 300 ms, there is no point in a service three calls deep working for 2 seconds:
+A call that hangs ties up the caller, as in [How Clients and Servers Talk](/system-design/client-server), so gRPC makes the time limit a normal part of every call. The caller sets a **deadline**, how long it will wait in total, and the server can see how much is left. gRPC sets none by default, so each call should get one.
+
+The useful part is that the deadline travels along the chain. If the phone gives up after 300 ms, there is no point in a service three calls deep working for 2 seconds:
 
 <figure class="diagram">
 <div class="flow">
@@ -75,7 +77,9 @@ A call that hangs ties up the caller, as in [How Clients and Servers Talk](/syst
 
 Whether the deadline passes down the chain by itself depends on the language. According to gRPC's [deadline guide](https://grpc.io/docs/guides/deadlines/), Go and Java do it by default and C++ needs it switched on, so check yours. gRPC sends the time that remains, not a clock time, so machines with different clocks still agree. When the deadline passes, the server cancels the call, but work your own code started has to stop too, or a slow call keeps burning resources after no one is waiting for the answer.
 
-Errors use gRPC's own status codes, not the HTTP ones from [How HTTP Works](/system-design/http). Names such as `NOT_FOUND`, `INVALID_ARGUMENT`, `DEADLINE_EXCEEDED` and `UNAVAILABLE` carry the meaning. The outcome travels in a status sent after the response, and the HTTP status of the underlying message is normally 200 even when the call failed, as the protocol definition lays out. `UNAVAILABLE` is the one meant for temporary trouble, worth retrying with backoff, and `INVALID_ARGUMENT` means the request itself is wrong, so retrying won't help. gRPC doesn't assume a call is safe to repeat. Retries are off until you configure them for a method, with a number of attempts, a backoff and a list of codes, often just `UNAVAILABLE`, and they are only safe for calls that are safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Idempotency and Safe Retries](/system-design/idempotency).
+Errors use gRPC's own status codes, not the HTTP ones from [How HTTP Works](/system-design/http). Names such as `NOT_FOUND`, `INVALID_ARGUMENT`, `DEADLINE_EXCEEDED` and `UNAVAILABLE` carry the meaning. The outcome travels in a status sent after the response, and the HTTP status of the underlying message is normally 200 even when the call failed, as the protocol definition lays out.
+
+`UNAVAILABLE` is the one meant for temporary trouble, worth retrying with backoff, and `INVALID_ARGUMENT` means the request itself is wrong, so retrying won't help. gRPC doesn't assume a call is safe to repeat. Retries are off until you configure them for a method, with a number of attempts, a backoff and a list of codes, often just `UNAVAILABLE`, and they are only safe for calls that are safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Idempotency and Safe Retries](/system-design/idempotency).
 
 ## Load Balancing Needs Care
 

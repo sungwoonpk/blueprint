@@ -166,7 +166,9 @@ Every connected user also holds an open connection on a server, so at 100,000 us
 | Reconnect and Resume | You build it | Built in, with Last-Event-ID |
 | Direction | Server to client | Server to client |
 
-SSE suits anything where the server pushes and the client mostly listens: notifications such as "your book sold", live scores and prices, the progress of a long job, a dashboard, a log being tailed. Many APIs that stream a reply word by word, such as those of language models, use it too. When the browser also has to send often and quickly, as in chat or a shared whiteboard, move on to [WebSockets](/system-design/websockets). And when the listener is another server and not a browser, [Webhooks](/system-design/webhooks) are the usual route.
+SSE suits anything where the server pushes and the client mostly listens: notifications such as "your book sold", live scores and prices, the progress of a long job, a dashboard, a log being tailed. Many APIs that stream a reply word by word, such as those of language models, use it too.
+
+When the browser also has to send often and quickly, as in chat or a shared whiteboard, move on to [WebSockets](/system-design/websockets). And when the listener is another server and not a browser, [Webhooks](/system-design/webhooks) are the usual route.
 
 ## Key Points
 

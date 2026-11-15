@@ -1,6 +1,8 @@
 > **GraphQL** is a query language for APIs. The client describes exactly which data it wants, in the shape it wants it, and the server returns that and no more, through a single endpoint.
 
-In [REST APIs](/system-design/rest), the phone's listings screen needed 21 requests: one for the list and one per seller. It was also handed 30 fields to show two. GraphQL was built to fix that kind of mismatch. Facebook's engineers created it in 2012 so the native News Feed on phones could ask for exactly the data a screen needed. The GraphQL specification says development of an open standard began in 2015, the year Facebook described it publicly in [GraphQL: A Data Query Language](https://engineering.fb.com/2015/09/14/core-data/graphql-a-data-query-language/). This topic covers how it works, and what it costs in exchange.
+In [REST APIs](/system-design/rest), the phone's listings screen needed 21 requests: one for the list and one per seller. It was also handed 30 fields to show two. GraphQL was built to fix that kind of mismatch.
+
+Facebook's engineers created it in 2012 so the native News Feed on phones could ask for exactly the data a screen needed. The GraphQL specification says development of an open standard began in 2015, the year Facebook described it publicly in [GraphQL: A Data Query Language](https://engineering.fb.com/2015/09/14/core-data/graphql-a-data-query-language/). This topic covers how it works, and what it costs in exchange.
 
 ## Ask for What You Need
 

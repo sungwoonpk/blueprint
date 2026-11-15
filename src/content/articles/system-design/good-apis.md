@@ -78,11 +78,15 @@ HTTP/1.1 400 Bad Request
  "field": "price"}
 ```
 
-The three parts have different readers. A program reads the code, which stays stable. A person reads the message, which can change. The field points to what to fix. A standard format for this exists, RFC 9457 "Problem Details for HTTP APIs", with fields such as type, title, status and detail, so teams don't each invent their own. Stripe's API shows the same idea at work, with an error type and a code on each failure. Two cautions: keep internal details such as stack traces out of errors, and don't confirm facts you would rather not reveal, such as whether an email is registered.
+The three parts have different readers. A program reads the code, which stays stable. A person reads the message, which can change. The field points to what to fix. A standard format for this exists, RFC 9457 "Problem Details for HTTP APIs", with fields such as type, title, status and detail, so teams don't each invent their own.
+
+Stripe's API shows the same idea at work, with an error type and a code on each failure. Two cautions: keep internal details such as stack traces out of errors, and don't confirm facts you would rather not reveal, such as whether an email is registered.
 
 ## Be Safe to Retry
 
-From [How Clients and Servers Talk](/system-design/client-server), a client that times out can't tell whether its request arrived, so it tries again. Reads are harmless to repeat. A POST that creates something or charges a card isn't, unless the API plans for it. The usual plan is a client generated unique key sent with the request, which the server remembers so a repeat returns the first result. Stripe's API works this way, with an `Idempotency-Key` header on its POST requests. See [Idempotency and Safe Retries](/system-design/idempotency).
+From [How Clients and Servers Talk](/system-design/client-server), a client that times out can't tell whether its request arrived, so it tries again. Reads are harmless to repeat. A POST that creates something or charges a card isn't, unless the API plans for it.
+
+The usual plan is a client generated unique key sent with the request, which the server remembers so a repeat returns the first result. Stripe's API works this way, with an `Idempotency-Key` header on its POST requests. See [Idempotency and Safe Retries](/system-design/idempotency).
 
 ## Plan for Big Lists and Busy Days
 
@@ -107,7 +111,9 @@ Sooner or later the API has to change, and the way to keep clients working is to
 | Change a field's type or meaning | Yes |
 | Make a request stricter, such as a new required field | Yes |
 
-Adding is usually safe and removing or changing isn't. The catch is that clients depend on more than what you wrote down. This is known as [Hyrum's Law](https://www.hyrumslaw.com/), named for Hyrum Wright, who made the observation, and spread by Titus Winters and the book *Software Engineering at Google*: with enough users, someone will depend on any behavior they can observe. Say our list of listings happens to come back newest first, though the docs never promised it. A client that relies on it breaks the day you change the sort. So write down what you promise, and be careful with what you don't. When a breaking change can't be avoided, version it, as in [API Versioning](/system-design/api-versioning).
+Adding is usually safe and removing or changing isn't. The catch is that clients depend on more than what you wrote down. This is known as [Hyrum's Law](https://www.hyrumslaw.com/), named for Hyrum Wright, who made the observation, and spread by Titus Winters and the book *Software Engineering at Google*: with enough users, someone will depend on any behavior they can observe.
+
+Say our list of listings happens to come back newest first, though the docs never promised it. A client that relies on it breaks the day you change the sort. So write down what you promise, and be careful with what you don't. When a breaking change can't be avoided, version it, as in [API Versioning](/system-design/api-versioning).
 
 ## Don't Hand Out More Than Needed
 

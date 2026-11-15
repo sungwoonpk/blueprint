@@ -80,7 +80,9 @@ ORDER BY created_at DESC, id DESC
 LIMIT 20;
 ```
 
-The condition asks for rows strictly older than the last one the client saw. (Some databases need that comparison written out as two conditions.) With an index on `(created_at, id)`, the database jumps to that spot without reading what comes before it, so page 5,000 costs about the same as page 2. New listings at the top don't shift the next page, since the cursor points at a specific row and not a position. The `id` in the sort is a tiebreaker: two listings can share a timestamp, and without a unique second column, one of them could be skipped at a page boundary.
+The condition asks for rows strictly older than the last one the client saw. (Some databases need that comparison written out as two conditions.) With an index on `(created_at, id)`, the database jumps to that spot without reading what comes before it, so page 5,000 costs about the same as page 2.
+
+New listings at the top don't shift the next page, since the cursor points at a specific row and not a position. The `id` in the sort is a tiebreaker: two listings can share a timestamp, and without a unique second column, one of them could be skipped at a page boundary.
 
 The client never builds that condition. The server packs the last row's values into a **cursor**, usually an encoded string the client treats as opaque and hands back unchanged:
 

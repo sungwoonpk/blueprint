@@ -1,6 +1,8 @@
 > **API versioning** lets an API make a breaking change without breaking the clients that already exist, by keeping the old behavior alongside the new for a while and retiring it on a schedule.
 
-[What Makes a Good API](/system-design/good-apis) sorted changes into safe ones, such as adding a field, and breaking ones, such as renaming or removing it. The best versioning plan is to need it rarely: add instead of change, and keep old fields working. But sometimes a break can't be avoided. In [Serialization and Schema Evolution](/system-design/serialization), the textbook app's price moved from dollars to cents, and an old phone app that read the new number would show a $4,500 book. Phones are the hard case, because people don't update, and an app from two years ago still calls the API today.
+[What Makes a Good API](/system-design/good-apis) sorted changes into safe ones, such as adding a field, and breaking ones, such as renaming or removing it. The best versioning plan is to need it rarely: add instead of change, and keep old fields working. But sometimes a break can't be avoided.
+
+In [Serialization and Schema Evolution](/system-design/serialization), the textbook app's price moved from dollars to cents, and an old phone app that read the new number would show a $4,500 book. Phones are the hard case, because people don't update, and an app from two years ago still calls the API today.
 
 ## Saying Which Version You Mean
 
@@ -22,7 +24,9 @@ Most public APIs use the path. It is the easiest for outsiders to understand and
 
 ## What a Version Covers
 
-A version number can mean different amounts of change. Some APIs bump a single number for the whole API, `v1` to `v2`, and move everything at once. Some version each resource separately. Stripe's API, which is known for keeping old integrations working, uses dates instead. According to its engineering blog, an account is pinned to the newest version at its first request, and each later request uses that version unless the caller sets a `Stripe-Version` header. Its 2017 post says Stripe had stayed compatible with all its versions since 2011.
+A version number can mean different amounts of change. Some APIs bump a single number for the whole API, `v1` to `v2`, and move everything at once. Some version each resource separately. Stripe's API, which is known for keeping old integrations working, uses dates instead.
+
+According to its engineering blog, an account is pinned to the newest version at its first request, and each later request uses that version unless the caller sets a `Stripe-Version` header. Its 2017 post says Stripe had stayed compatible with all its versions since 2011.
 
 How can one codebase serve hundreds of old versions? In the design that post describes, the code builds the newest response, then a chain of small steps, one for each breaking change, rewrites it back to the shape an older version expects:
 
