@@ -28,7 +28,7 @@ Both hold the same facts. The JSON repeats the words "id", "title" and "price" a
 
 A few others are worth knowing by name: XML, which is older and wordier and still common in enterprise systems, MessagePack, a binary format shaped like JSON, and CSV, for flat tables.
 
-Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second. Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats. JSON has its own quirks. It has one kind of number, and in JavaScript that is a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) lose digits. APIs often send very large ids as strings for that reason.
+Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second. Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats. JSON has its own quirks. It has one kind of number, and many programs, JavaScript among them, read it as a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) can lose digits. The JSON standard, RFC 8259, warns about this, and the JSON form of Protocol Buffers writes 64 bit integers as strings for that reason. APIs often send very large ids as strings too.
 
 ## Why the Shape Changes
 
@@ -50,7 +50,7 @@ Now the harder part. The listing will gain fields next month. Ask what happens d
 <figcaption>New code must cope with old data, and old code must cope with new data</figcaption>
 </figure>
 
-Both directions matter. **Backward compatibility** is new code reading old data, which means a missing field gets a sensible default. **Forward compatibility** is old code reading new data, which means a field it doesn't know is skipped, not treated as an error. A format and a set of habits that allow both let you change one side at a time, without a moment where everything has to switch together.
+Both directions matter. **Backward compatibility** is new code reading old data, which means a missing field gets a sensible default. **Forward compatibility** is old code reading new data, which means a field it doesn't know is skipped, not treated as an error. In JSON, forward compatibility means readers ignore fields they don't know, since a strict reader that rejects them breaks the day a field is added. A format and a set of habits that allow both directions let you change one side at a time, without a moment where everything has to switch together.
 
 ## Changes That Are Safe, and Ones That Aren't
 
@@ -108,7 +108,7 @@ Many systems use two, JSON at the edge for clients and a binary format inside. W
 
 - Serialization turns in memory data into bytes for sending or storing, and deserialization rebuilds it
 - JSON is readable and needs no schema, binary formats like Protocol Buffers and Avro are smaller and faster but need one
-- Old and new versions always meet during updates, so data must be backward compatible and forward compatible
+- Old and new versions meet during every update, so data must be backward compatible and forward compatible
 - <u>Never reuse a field number</u>: add a new field, stop using the old one and reserve it
 - Check schema changes automatically, with a build check or a schema registry
 - Pick the format by who reads the data, and don't rebuild objects from untrusted bytes

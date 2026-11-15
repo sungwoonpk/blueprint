@@ -22,7 +22,7 @@ Most public APIs use the path. It is the easiest for outsiders to understand and
 
 ## What a Version Covers
 
-A version number can mean different amounts of change. Some APIs bump a single number for the whole API, `v1` to `v2`, and move everything at once. Some version each resource separately. Stripe's API, which is known for keeping old integrations working, uses dates instead. According to its engineering blog, an account is pinned to the newest version at its first request, and each later request uses that version unless the caller sets a `Stripe-Version` header. Stripe says it has stayed compatible with all its versions since 2011.
+A version number can mean different amounts of change. Some APIs bump a single number for the whole API, `v1` to `v2`, and move everything at once. Some version each resource separately. Stripe's API, which is known for keeping old integrations working, uses dates instead. According to its engineering blog, an account is pinned to the newest version at its first request, and each later request uses that version unless the caller sets a `Stripe-Version` header. Its 2017 post says Stripe had stayed compatible with all its versions since 2011.
 
 How can one codebase serve hundreds of old versions? In the design that post describes, the code builds the newest response, then a chain of small steps, one for each breaking change, rewrites it back to the shape an older version expects:
 
@@ -79,15 +79,16 @@ A version that nobody switches off can live forever. Retiring one is a schedule,
 4. **Chase the stragglers**: contact the biggest remaining callers directly
 5. **Switch it off**: on the announced date, or after short planned outages that flush out whoever hasn't moved
 
-The warning in step 3 can use headers made for this. `Sunset`, defined in RFC 8594, carries the date the version stops working, and a `Link` header can point at the replacement:
+The warning in step 3 can use headers made for this. `Sunset`, defined in RFC 8594, carries the date the version stops working. `Deprecation`, defined in RFC 9745, says when the version was or will be marked deprecated, written as `@` and a Unix timestamp. A `Link` header with the relation `sunset` points to a page that explains the plan:
 
 ```http
 HTTP/1.1 200 OK
+Deprecation: @1796083200
 Sunset: Sun, 30 May 2027 23:59:59 GMT
-Link: </v2/listings/42>; rel="successor-version"
+Link: </docs/v1-sunset>; rel="sunset"
 ```
 
-A standard `Deprecation` header exists too, for marking a version as deprecated before its end date. Clients that log response headers will pick these up without anyone reading an email.
+Clients that log response headers will pick these up without anyone reading an email.
 
 ## The Price of Each Version
 

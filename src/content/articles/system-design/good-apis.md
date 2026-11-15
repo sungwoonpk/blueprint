@@ -107,7 +107,7 @@ Sooner or later the API has to change, and the way to keep clients working is to
 | Change a field's type or meaning | Yes |
 | Make a request stricter, such as a new required field | Yes |
 
-Adding is usually safe and removing or changing isn't. The catch is that clients depend on more than what you wrote down. This is known as Hyrum's Law, named for Hyrum Wright and popular through the book *Software Engineering at Google*: with enough users, someone will depend on any behavior they can observe. Say our list of listings happens to come back newest first, though the docs never promised it. A client that relies on it breaks the day you change the sort. So write down what you promise, and be careful with what you don't. When a breaking change can't be avoided, version it, as in [API Versioning](/system-design/api-versioning).
+Adding is usually safe and removing or changing isn't. The catch is that clients depend on more than what you wrote down. This is known as [Hyrum's Law](https://www.hyrumslaw.com/), named for Hyrum Wright, who made the observation, and spread by Titus Winters and the book *Software Engineering at Google*: with enough users, someone will depend on any behavior they can observe. Say our list of listings happens to come back newest first, though the docs never promised it. A client that relies on it breaks the day you change the sort. So write down what you promise, and be careful with what you don't. When a breaking change can't be avoided, version it, as in [API Versioning](/system-design/api-versioning).
 
 ## Don't Hand Out More Than Needed
 

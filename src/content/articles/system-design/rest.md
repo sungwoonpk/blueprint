@@ -83,14 +83,14 @@ Fielding's original description includes one more rule that most APIs skip: **hy
            "messages": "/listings/42/messages"}}
 ```
 
-A popular way to describe how far an API goes is the Richardson maturity model, named for Leonard Richardson and popularized by Martin Fowler:
+A popular way to describe how far an API goes is the Richardson maturity model, developed by Leonard Richardson and described in [Martin Fowler's article](https://martinfowler.com/articles/richardsonMaturityModel.html) on it:
 
 - **Level 0**: one URL, with everything tunneled through it
 - **Level 1**: separate URLs for separate resources
 - **Level 2**: the right HTTP methods and status codes on those resources
 - **Level 3**: hypermedia links in the responses
 
-Most APIs called REST stop at level 2, and they work well there. Fielding has argued that an API without hypermedia shouldn't be called REST, so some people call the rest "HTTP APIs with JSON". It isn't worth arguing over the name. The useful part is the resources, the methods and the status codes, which are the parts clients actually benefit from.
+Most APIs called REST stop at level 2, and they work well there. Fielding has argued, in a [2008 blog post](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven), that an API without hypermedia shouldn't be called REST, so some people call the rest "HTTP APIs with JSON". It isn't worth arguing over the name. The useful part is the resources, the methods and the status codes, which are the parts clients actually benefit from.
 
 ## Where REST Hurts
 

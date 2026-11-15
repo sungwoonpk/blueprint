@@ -60,7 +60,7 @@ The word `stream` in the second line points at something REST doesn't have built
 
 ## Deadlines, Errors and Retries
 
-A call that hangs ties up the caller, as in [How Clients and Servers Talk](/system-design/client-server), so gRPC makes the time limit a normal part of every call. The caller sets a **deadline**, how long it will wait in total, and the server can see it. The useful part is that the deadline travels along the chain. If the phone gives up after 300 ms, there is no point in a service three calls deep working for 2 seconds:
+A call that hangs ties up the caller, as in [How Clients and Servers Talk](/system-design/client-server), so gRPC makes the time limit a normal part of every call. The caller sets a **deadline**, how long it will wait in total, and the server can see how much is left. gRPC sets none by default, so each call should get one. The useful part is that the deadline travels along the chain. If the phone gives up after 300 ms, there is no point in a service three calls deep working for 2 seconds:
 
 <figure class="diagram">
 <div class="flow">
@@ -73,9 +73,9 @@ A call that hangs ties up the caller, as in [How Clients and Servers Talk](/syst
 <figcaption>Each service passes along the time that remains (example numbers)</figcaption>
 </figure>
 
-Most frameworks make passing the deadline along easy, but your code still has to do it. Without that, a slow call keeps burning resources after no one is waiting for the answer.
+Whether the deadline passes down the chain by itself depends on the language. According to gRPC's [deadline guide](https://grpc.io/docs/guides/deadlines/), Go and Java do it by default and C++ needs it switched on, so check yours. gRPC sends the time that remains, not a clock time, so machines with different clocks still agree. When the deadline passes, the server cancels the call, but work your own code started has to stop too, or a slow call keeps burning resources after no one is waiting for the answer.
 
-Errors use gRPC's own status codes, not the HTTP ones from [How HTTP Works](/system-design/http). Names such as `NOT_FOUND`, `INVALID_ARGUMENT`, `DEADLINE_EXCEEDED` and `UNAVAILABLE` carry the meaning, and the HTTP status of the underlying message is usually 200 either way. `UNAVAILABLE` is the one that usually means "try again", and `INVALID_ARGUMENT` means retrying won't help. Retrying is safe only for calls that are safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Idempotency and Safe Retries](/system-design/idempotency).
+Errors use gRPC's own status codes, not the HTTP ones from [How HTTP Works](/system-design/http). Names such as `NOT_FOUND`, `INVALID_ARGUMENT`, `DEADLINE_EXCEEDED` and `UNAVAILABLE` carry the meaning. The outcome travels in a status sent after the response, and the HTTP status of the underlying message is normally 200 even when the call failed, as the protocol definition lays out. `UNAVAILABLE` is the one meant for temporary trouble, worth retrying with backoff, and `INVALID_ARGUMENT` means the request itself is wrong, so retrying won't help. gRPC doesn't assume a call is safe to repeat. Retries are off until you configure them for a method, with a number of attempts, a backoff and a list of codes, often just `UNAVAILABLE`, and they are only safe for calls that are safe to repeat. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Idempotency and Safe Retries](/system-design/idempotency).
 
 ## Load Balancing Needs Care
 
@@ -109,7 +109,7 @@ One side effect of HTTP/2 catches teams out. A gRPC client opens a connection an
 <figcaption>With long lived connections, the balancer has to look at individual calls</figcaption>
 </figure>
 
-The fixes are a balancer that understands HTTP/2 and routes each call, a client that knows all the servers and picks one per call, or a service mesh doing the same job beside each service. See [Load Balancers](/system-design/load-balancers) and [Service Meshes and Sidecars](/system-design/service-mesh).
+The fixes, which gRPC's [own post on load balancing](https://grpc.io/blog/grpc-load-balancing/) describes, are a balancer that understands HTTP/2 and routes each call, a client that knows all the servers and picks one per call, or a service mesh doing the same job beside each service. See [Load Balancers](/system-design/load-balancers) and [Service Meshes and Sidecars](/system-design/service-mesh).
 
 ## Where gRPC Fits
 
@@ -120,7 +120,7 @@ gRPC suits calls between services you control:
 - **Streaming**: it is built in, instead of added later with polling or WebSockets
 - **Strict contracts**: the compiler catches many mistakes
 
-It is a weaker fit in a few places. Browsers can't speak the full protocol, so a web app needs a proxy and a variant called gRPC-Web, which supports fewer call types. Third parties trying out a public API prefer something they can call with `curl` and read in a log, which favors REST and JSON. And binary messages need tools to inspect, where JSON can be read as is.
+It is a weaker fit in a few places. Browsers can't speak the full protocol, so a web app needs a proxy and a variant called gRPC-Web, which supports only plain calls and server streaming. Third parties trying out a public API prefer something they can call with `curl` and read in a log, which favors REST and JSON. And binary messages need tools to inspect, where JSON can be read as is.
 
 So many systems use both: REST and JSON at the edge for browsers and partners, and gRPC between the services inside, often with an [API Gateway](/system-design/api-gateways) translating between them. gRPC is also one choice among several RPC systems, such as Apache Thrift and JSON-RPC, which share the same idea. [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) puts the styles side by side.
 

@@ -1,6 +1,6 @@
 > **GraphQL** is a query language for APIs. The client describes exactly which data it wants, in the shape it wants it, and the server returns that and no more, through a single endpoint.
 
-In [REST APIs](/system-design/rest), the phone's listings screen needed 21 requests: one for the list and one per seller. It was also handed 30 fields to show two. GraphQL was built to fix that kind of mismatch. Facebook's engineers started it in 2012 so the native News Feed on phones could ask for exactly the data a screen needed, and Facebook open sourced it in 2015, as its engineering post [GraphQL: A Data Query Language](https://engineering.fb.com/2015/09/14/core-data/graphql-a-data-query-language/) describes. This topic covers how it works, and what it costs in exchange.
+In [REST APIs](/system-design/rest), the phone's listings screen needed 21 requests: one for the list and one per seller. It was also handed 30 fields to show two. GraphQL was built to fix that kind of mismatch. Facebook's engineers created it in 2012 so the native News Feed on phones could ask for exactly the data a screen needed. The GraphQL specification says development of an open standard began in 2015, the year Facebook described it publicly in [GraphQL: A Data Query Language](https://engineering.fb.com/2015/09/14/core-data/graphql-a-data-query-language/). This topic covers how it works, and what it costs in exchange.
 
 ## Ask for What You Need
 
@@ -100,7 +100,7 @@ The flexibility that helps clients also removes some defaults that REST gives fo
 
 - **Caching is harder**: all requests go to one URL, usually as a POST, so the browser and CDN caching from [How HTTP Works](/system-design/http) don't apply on their own. Teams use persisted queries, where the client sends the id of a query the server already knows, which can be sent as a GET and cached, and they cache by field inside the server
 - **Queries can be expensive**: nothing stops a client from asking for listings, each with its seller, each with that seller's other listings, several levels deep. Servers set limits on depth and give each field a cost, and they refuse a query over budget before running it. For the same reason, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) counts query cost, not just requests
-- **Errors can hide**: a response often carries both data and an `errors` list, and many servers send HTTP 200 either way. A dashboard that watches status codes, as in [Logs, Metrics and Traces](/system-design/observability), will miss failures unless it also looks inside the body
+- **Errors can hide**: a response can carry both data and an `errors` list when only some fields fail, and the official guidance is to answer 2xx, usually 200, whenever the query ran and produced data. Only a request that can't run at all, such as an invalid query, gets a 4xx. A dashboard that watches status codes, as in [Logs, Metrics and Traces](/system-design/observability), will miss failures unless it also looks inside the body
 - **Access checks per field**: any field can be requested from anywhere in the query, so each resolver has to check who is asking, as in [Authentication and Authorization](/system-design/authn-authz). Many teams also switch off the schema browsing feature, called introspection, in production
 
 ## When It Fits
