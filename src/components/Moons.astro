@@ -1,0 +1,267 @@
+---
+// Two moons circle the home page's planet, one for each subject: each is a link
+// with the subject's name under it. Placed inside Globe, they share the planet's
+// layer, so a moon passes in front of the planet and behind it along a thin
+// orbit. A moon slows to a stop under the pointer or keyboard focus; with
+// reduced motion both hold still where they start, side by side.
+import { subjects } from '../data/subjects';
+---
+
+<svg class="orbit back" viewBox="-1 -1 2 2" aria-hidden="true"><path></path></svg>
+<svg class="orbit front" viewBox="-1 -1 2 2" aria-hidden="true"><path></path></svg>
+<nav class="moons" aria-label="Subjects">
+  {
+    subjects.map((s) => (
+      <a class="moon" href={s.path} draggable="false">
+        <span class="body" aria-hidden="true" />
+        <span class="ghost" aria-hidden="true" />
+        <span class="name">{s.name}</span>
+      </a>
+    ))
+  }
+</nav>
+
+<script>
+  const PLANET = 0.84; // the planet's radius in half widths of the globe, as in Globe
+  const PERIOD = 60; // seconds per orbit
+  const LEAN = (-10 * Math.PI) / 180; // the orbit's tilt on screen
+  const FLAT = 0.3; // the orbit seen from a little above: its height over its width
+  const GUTTER = 16; // room kept between a name and the edge of the screen
+  const LABEL_GAP = 8; // between a moon and its name
+
+  const globe = document.querySelector<HTMLElement>('.globe')!;
+  const moons = [...globe.querySelectorAll<HTMLAnchorElement>('.moon')];
+  const parts = moons.map((moon) => ({
+    body: moon.querySelector<HTMLElement>('.body')!,
+    ghost: moon.querySelector<HTMLElement>('.ghost')!,
+    name: moon.querySelector<HTMLElement>('.name')!,
+  }));
+  const GHOST = 0.4; // how much of a moon shows through the planet it is behind
+  const [behindPath, frontPath] = [...globe.querySelectorAll<SVGPathElement>('.orbit path')];
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Start where every moon is in view: the first in front on the left, the
+  // next behind on the right, the rest spaced evenly.
+  const start = moons.map((_, i) => (150 * Math.PI) / 180 + (i * 2 * Math.PI) / moons.length);
+
+  let half = 0; // half the globe's width, in pixels
+  let wide = 1.3; // the orbit's radius, in half widths
+  let angle = 0;
+  let pace = still.matches ? 0 : 1;
+  let focused: HTMLAnchorElement | null = null;
+  const held = new Set<HTMLAnchorElement>();
+
+  const smooth = (from: number, to: number, x: number) => {
+    const t = Math.min(Math.max((x - from) / (to - from), 0), 1);
+    return t * t * (3 - 2 * t);
+  };
+
+  // A point on the orbit, in half widths from the planet's center, y down.
+  const point = (t: number) => {
+    const x = wide * Math.cos(t);
+    const y = wide * FLAT * Math.sin(t);
+    return [x * Math.cos(LEAN) - y * Math.sin(LEAN), x * Math.sin(LEAN) + y * Math.cos(LEAN)];
+  };
+
+  // The moon goes behind the planet or in front of it. Its name always sits
+  // above the planet, so the planet's edge never cuts it. Where the moon is
+  // hidden behind the planet, a faint copy of it and its name show through, in
+  // front of the planet, so it can still be seen and clicked.
+  const place = () => {
+    const planet = PLANET * half;
+    moons.forEach((moon, i) => {
+      const { body, ghost, name } = parts[i];
+      const t = start[i] + angle;
+      const [x, y] = point(t).map((v) => v * half);
+      const toward = Math.sin(t); // 1 nearest the viewer, -1 farthest
+      const radius = body.offsetWidth / 2;
+      const below = y + radius + LABEL_GAP;
+      const hidden = smooth(0, -0.2, toward) * (1 - smooth(planet - radius, planet + radius, Math.hypot(x, y)));
+      const raised = moon === focused;
+      const faint = raised ? 0 : hidden;
+      const lift = `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${(1 + 0.12 * toward).toFixed(3)})`;
+      body.style.transform = lift;
+      body.style.zIndex = raised || toward > 0 ? '2' : '0';
+      ghost.style.transform = lift;
+      ghost.style.opacity = (faint * GHOST).toFixed(3);
+      ghost.style.pointerEvents = faint > 0.01 ? '' : 'none';
+      name.style.transform = `translate(${x}px, ${below}px) translateX(-50%)`;
+      name.style.opacity = (1 - faint * 0.4).toFixed(3);
+    });
+  };
+
+  // Size the orbit to the room beside the planet, then draw its two halves:
+  // the far one under the planet, the near one over it.
+  const layout = () => {
+    half = globe.clientWidth / 2;
+    const box = globe.getBoundingClientRect();
+    const center = box.left + half;
+    const room = Math.min(center, document.documentElement.clientWidth - center) - GUTTER;
+    const name = Math.max(...parts.map((p) => p.name.offsetWidth)) / 2;
+    wide = Math.min(1.32, Math.max(1.1, (room - name) / half));
+    const tilt = (LEAN * 180) / Math.PI;
+    const [rx, ry] = [wide, wide * FLAT];
+    const [x0, y0] = point(0);
+    const [x1, y1] = point(Math.PI);
+    frontPath.setAttribute('d', `M${x0} ${y0}A${rx} ${ry} ${tilt} 0 1 ${x1} ${y1}`);
+    behindPath.setAttribute('d', `M${x1} ${y1}A${rx} ${ry} ${tilt} 0 1 ${x0} ${y0}`);
+    place();
+  };
+
+  let running = false;
+  let last = 0;
+  const frame = (now: number) => {
+    const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
+    last = now;
+    const target = held.size || still.matches ? 0 : 1;
+    pace += (target - pace) * (1 - Math.exp(-dt * 5));
+    angle += ((pace * 2 * Math.PI) / PERIOD) * dt;
+    place();
+    if (target || pace > 0.001) requestAnimationFrame(frame);
+    else running = false;
+  };
+  const wake = () => {
+    if (running) return;
+    running = true;
+    last = 0;
+    requestAnimationFrame(frame);
+  };
+
+  moons.forEach((moon) => {
+    const hold = () => {
+      held.add(moon);
+      wake();
+    };
+    const free = () => {
+      held.delete(moon);
+      wake();
+    };
+    moon.addEventListener('pointerenter', hold);
+    moon.addEventListener('pointerleave', free);
+    // A moon reached by keyboard comes in front of the planet and waits there.
+    moon.addEventListener('focus', () => {
+      focused = moon;
+      hold();
+      place();
+    });
+    moon.addEventListener('blur', () => {
+      focused = null;
+      free();
+      place();
+    });
+  });
+
+  new ResizeObserver(layout).observe(globe);
+  window.addEventListener('resize', layout);
+  document.fonts?.ready.then(layout);
+  still.addEventListener('change', wake);
+  layout();
+  wake();
+</script>
+
+<style>
+  .orbit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orbit.front {
+    z-index: 2;
+  }
+  .orbit path {
+    fill: none;
+    stroke: var(--orbit);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  /* The nav and its links make no layer of their own, so each moon and each
+     name can sit above or below the planet on its own. */
+  .moons {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .moon {
+    --moon: clamp(15px, 7cqw, 22px);
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .body,
+  .ghost,
+  .name {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    pointer-events: auto;
+    will-change: transform;
+  }
+  .ghost {
+    z-index: 2;
+    opacity: 0;
+  }
+  .name {
+    z-index: 3;
+  }
+  .orbit,
+  .body,
+  .name {
+    animation: appear 1.2s var(--ease) both;
+  }
+  @keyframes appear {
+    from {
+      opacity: 0;
+    }
+  }
+  /* Pearl moons in the logo's colors, lit from the same side as the planet. */
+  .moon:nth-child(odd) {
+    --tint: #c4d3fb;
+    --shade: #6b83d9;
+    --glow: rgb(150 175 255 / 0.5);
+  }
+  .moon:nth-child(even) {
+    --tint: #f7cde3;
+    --shade: #c987b3;
+    --glow: rgb(245 170 210 / 0.5);
+  }
+  .body,
+  .ghost {
+    width: var(--moon);
+    height: var(--moon);
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #ffffff 0%, var(--tint) 42%, var(--shade) 100%);
+    box-shadow: 0 0 calc(var(--moon) * 0.6) var(--glow);
+    transition: box-shadow 0.25s var(--ease);
+  }
+  .name {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    color: var(--text);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 0 1px var(--border);
+    transition: color 0.2s var(--ease);
+  }
+  .moon:hover .body,
+  .moon:hover .ghost,
+  .moon:focus-visible .body,
+  .moon:focus-visible .ghost {
+    box-shadow: 0 0 calc(var(--moon) * 1.1) var(--glow);
+  }
+  .moon:hover .name,
+  .moon:focus-visible .name {
+    color: var(--accent);
+  }
+  .moon:focus-visible .name {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>

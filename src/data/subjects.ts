@@ -2,8 +2,8 @@ import { numberTopics, type NumberedTopic, type Phase } from '../lib/roadmap';
 import { phases as systemDesign } from './system-design';
 import { phases as algorithms } from './algorithms';
 
-// Every subject on the site. The first one is the home page; the header menu
-// lists them in this order.
+// Every subject on the site, in the order the header menu and the home page's
+// moons list them.
 export interface Subject {
   name: string;
   /** URL path, also the folder under src/pages. */

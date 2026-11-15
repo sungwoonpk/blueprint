@@ -4,7 +4,7 @@ A text-first study guide with one ordered roadmap per subject: **System Design**
 
 ## Status
 
-Skeleton only. System Design has 9 phases and 187 topics, Algorithms has 9 phases and 121 topics. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. The header has search across both subjects, a theme toggle and a menu to switch subjects. No articles are written yet, so every topic page says "Coming soon."
+Skeleton only. System Design has 9 phases and 187 topics, Algorithms has 9 phases and 121 topics. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. Home shows a slowly turning planet in the logo's colors, with one moon per subject circling it. The header has search across both subjects, a theme toggle and a menu for Home and the subjects. No articles are written yet, so every topic page says "Coming soon."
 
 ## Why this shape
 

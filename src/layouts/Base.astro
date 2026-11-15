@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import { SITE } from '../config';
-import { subjects } from '../data/subjects';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Wordmark from '../components/Wordmark.astro';
 import Search from '../components/Search.astro';
@@ -10,12 +9,16 @@ import { updatedIso, updatedLabel } from '../data/updated';
 
 interface Props {
   title?: string;
+  /** Use the title alone in the browser tab, without the site name. */
+  plainTitle?: boolean;
   /** Page width: the roadmap is wide, an article is a narrow reading column. */
   width?: 'wide' | 'narrow';
+  /** Show search in the header; Home has nothing to search. */
+  search?: boolean;
 }
 
-const { title, width = 'wide' } = Astro.props;
-const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const { title, plainTitle = false, width = 'wide', search = true } = Astro.props;
+const pageTitle = title ? (plainTitle ? title : `${title} · ${SITE.name}`) : SITE.name;
 ---
 
 <!doctype html>
@@ -54,9 +57,9 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   <body>
     <header>
       <div class:list={['bar', width]}>
-        <a href={subjects[0].path} id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
+        <a href="/" id="home-link" class="home" aria-label={`${SITE.name} home`}><Wordmark /></a>
         <div class="tools">
-          <Search />
+          {search && <Search />}
           <ThemeToggle />
           <Menu />
         </div>

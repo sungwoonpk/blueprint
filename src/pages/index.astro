@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Globe from '../components/Globe.astro';
+import Moons from '../components/Moons.astro';
+import { SITE } from '../config';
+---
+
+<Base search={false}>
+  <div class="home">
+    <h1 class="visually-hidden">{SITE.name}</h1>
+    <Globe><Moons /></Globe>
+  </div>
+</Base>
+
+<style>
+  .home {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 52px - 48px - 96px - 80px);
+  }
+</style>
