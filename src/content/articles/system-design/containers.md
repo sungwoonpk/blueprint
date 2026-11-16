@@ -6,7 +6,7 @@ Containers solve the packaging half, and an orchestrator solves the running half
 
 ## A Box Around a Program
 
-Docker's documentation describes a container as an isolated process with all the files it needs to run. It is self-contained, so it doesn't rely on anything pre-installed on the host, and it runs the same on a laptop, in a data center or in the cloud.
+Docker's documentation describes a container as an isolated process with all the files it needs to run. It is complete in itself, so it doesn't rely on anything installed in advance on the host, and it runs the same on a laptop, in a data center or in the cloud.
 
 A **virtual machine** isolates by running a whole separate operating system. A container is lighter, because all the containers on a machine share one operating system kernel:
 
@@ -107,7 +107,7 @@ spec:
             httpGet: { path: /health/ready, port: 8000 }
 ```
 
-The readiness probe is the check from [Health Checks](/system-design/health-checks): a pod gets traffic only once it passes. The payoff is **self-healing**. If a machine dies, the controller sees that fewer than six pods exist and starts replacements elsewhere:
+The readiness probe is the check from [Health Checks](/system-design/health-checks): a pod gets traffic only once it passes. The payoff is **automatic recovery**. If a machine dies, the controller sees that fewer than six pods exist and starts replacements elsewhere:
 
 <figure class="diagram">
 <p class="rowname">Desired: 6 Copies</p>
@@ -200,7 +200,7 @@ Set the memory limit too low and you get surprise restarts, and set requests too
 
 ## What It Costs
 
-Kubernetes solves real problems and is a large system itself. Its own documentation says what it is not: it is no all-in-one platform, and it leaves logging, monitoring and databases to other tools. Running your own cluster takes expertise, so most teams use a managed service from a cloud provider, or something simpler such as a platform that runs containers without exposing a cluster.
+Kubernetes solves real problems and is a large system itself. Its own documentation says what it is not: it is not a complete platform, and it leaves logging, monitoring and databases to other tools. Running your own cluster takes expertise, so most teams use a managed service from a cloud provider, or something simpler such as a platform that runs containers without exposing a cluster.
 
 At the simplest end, [Serverless Computing](/system-design/serverless) goes further and removes the machines from view entirely. For one small team and one app, a single server or a few, as in [From One Server to Many](/system-design/one-server-to-many), is often enough, and containers can still help by making the build the same everywhere.
 

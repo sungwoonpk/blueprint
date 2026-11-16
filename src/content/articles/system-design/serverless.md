@@ -114,7 +114,7 @@ Serverless is billed by use. For Lambda, that is a small price per request and a
 | Request Cost | $0.54 | $155.52 |
 | Monthly Total | About $18.54 | About $803.52 |
 
-The first is a bargain. It is bursty, it sits idle most of the day, and it would waste a server. The second adds up fast, because it is busy around the clock, and a server costs the same busy or idle. That is the pattern: serverless wins for spiky, rare or unpredictable work, and an always-on fleet often wins for steady heavy load. The comparison needs your own numbers.
+The first is a bargain. It is bursty, it sits idle most of the day, and it would waste a server. The second adds up fast, because it is busy around the clock, and a server costs the same busy or idle. That is the pattern: serverless wins for spiky, rare or unpredictable work, and a fleet that is always running often wins for steady heavy load. The comparison needs your own numbers.
 
 ## The Limits of the Model
 
@@ -133,7 +133,7 @@ Other cautions come from Martin Fowler's overview: the provider's limits and pri
 | Event driven glue, such as resizing photos or sending emails | Steady, high traffic that keeps servers busy anyway |
 | Handling [webhooks](/system-design/webhooks) and scheduled jobs | Long running work |
 | Rare or spiky traffic, and prototypes | Tight loops that need microsecond access to data |
-| Consuming queues, as in [Task Queues](/system-design/task-queues) | Work that needs special hardware, or heavy in-memory state |
+| Consuming queues, as in [Task Queues](/system-design/task-queues) | Work that needs special hardware, or heavy state held in memory |
 
 Most systems mix styles. The textbook app's main API might run in containers, with functions around the edges for photo resizing, webhooks and nightly clean ups. The next topics move on to protecting all of this from too much traffic, starting with [Rate Limiting Algorithms](/system-design/rate-limiting-algorithms).
 
@@ -143,5 +143,5 @@ Most systems mix styles. The textbook app's main API might run in containers, wi
 - Functions are stateless and event triggered, and state lives in databases and storage
 - Platforms scale by concurrency, which is requests per second times duration, within limits on concurrency, scaling speed, run time and size
 - Cold starts delay the first request on a new environment, and provisioned concurrency, snapshots or minimum instances reduce them
-- <u>Billing by use favors spiky work</u>, while a steady heavy load can cost more than always-on servers
+- <u>Billing by use favors spiky work</u>, while a steady heavy load can cost more than servers that are always running
 - Use it for event driven glue and uneven traffic, and keep long, data heavy or steady work on regular servers

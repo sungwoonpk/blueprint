@@ -35,7 +35,7 @@ Neither is better everywhere, in the way [Thinking in Tradeoffs](/system-design/
 | | Scaling Up | Scaling Out |
 | --- | --- | --- |
 | What You Do | Move to a bigger machine | Add more machines of the same size |
-| Code Changes | Usually none | Servers must not keep per-user data |
+| Code Changes | Usually none | Servers must not keep data for each user |
 | The Limit | The biggest machine you can buy | Far away, though coordination costs grow |
 | If a Machine Fails | Everything stops | The others keep serving |
 | Growing Further | Resizing often needs a restart | Add one at a time, with no restart |

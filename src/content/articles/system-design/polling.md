@@ -119,7 +119,7 @@ Two details keep it from losing news. The `after` cursor covers the short gap be
 Waiting isn't free, because every waiting client holds an open connection on the server, and that connection takes memory. RFC 6202 lists this among the main issues, and notes that some proxies and servers limit how many requests can be outstanding at once. A server that gives each waiting request its own thread runs out quickly, so long polling usually runs on a server built for many idle connections at once. Further costs and limits:
 
 - **Timeouts**: the hold time must stay below the idle timeout of the load balancers and proxies in the path, the same problem as the random 502s in [How HTTP Works](/system-design/http). Real services pick tens of seconds. Amazon SQS caps its long poll at 20 seconds, and Socket.IO's default heartbeat interval is 25 seconds
-- **Per-request overhead**: each answer is a full HTTP message with headers, which RFC 6202 points out matters when messages are small and frequent
+- **Overhead on each request**: each answer is a full HTTP message with headers, which RFC 6202 points out matters when messages are small and frequent
 - **Connection limits**: browsers allow about 6 parallel connections to a host over HTTP/1.1, according to MDN, so a page with several long polls can use them up. One shared long poll per page is a common answer. HTTP/2 lets requests share a connection, as in [How HTTP Works](/system-design/http)
 - **Delay is small but not zero**: after each answer there is a gap before the next request lands, so the worst case is longer than one trip
 
@@ -143,7 +143,7 @@ With the wait set to 0, SQS answers right away even when the queue is empty, whi
 | Server Load | Steady, mostly empty requests | Open connections, fewer requests |
 | Complexity | Very low | Medium: timeouts, cursor, many idle connections |
 | Through Proxies | Works nearly everywhere | Usually works, but held requests can be cut |
-| Fits | Rare or late-tolerant updates, such as job progress | Near live updates, with no special protocol |
+| Fits | Rare updates, or ones that can be late, such as job progress | Near live updates, with no special protocol |
 
 Neither is the end of the road. Long polling is also a fallback: Socket.IO's documentation explains that it starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software.
 
@@ -156,4 +156,4 @@ When the server needs to send a steady stream one way, [Server-Sent Events](/sys
 - <u>Long polling</u> holds each request until there is news or a timeout, then the client asks again right away
 - Use a cursor so nothing is lost between answers, and keep the hold time below proxy and load balancer timeouts
 - Held requests cost connections and memory, so long polling needs a server built for many idle connections
-- Pick polling for simple or late-tolerant updates, long polling for near live ones, and move to SSE or WebSockets when a steady stream is needed
+- Pick polling for simple updates, or ones that can arrive late,, long polling for near live ones, and move to SSE or WebSockets when a steady stream is needed

@@ -63,7 +63,7 @@ def verify(secret, header, body):
 
 Three details matter:
 
-- **Use the raw bytes of the body**: parsing and re-serializing the JSON can change it and break the match
+- **Use the raw bytes of the body**: parsing the JSON and serializing it again can change it and break the match
 - **Compare in constant time**, as GitHub's guidance says: an ordinary `==` can leak how many characters matched
 - **Protect the secret**: keep it out of code and logs, and rotate it when needed. Stripe lets the old secret keep working for a while after a rotation, so nothing breaks in between
 

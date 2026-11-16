@@ -52,7 +52,7 @@ TLS 1.3 also has a "0-RTT" mode for returning clients, which sends data in the v
 
 ## Proving Who You Are
 
-Encrypting to a stranger is no help, so the server also sends a **certificate**: a statement that this public key belongs to textbooks.example.com, signed by an organization called a certificate authority. Your device can't know every website, but it already holds a built-in list of authorities it trusts. Trust passes down a chain:
+Encrypting to a stranger is no help, so the server also sends a **certificate**: a statement that this public key belongs to textbooks.example.com, signed by an organization called a certificate authority. Your device can't know every website, but it already holds a list of authorities it trusts, installed in advance. Trust passes down a chain:
 
 <figure class="diagram">
 <div class="flow">
