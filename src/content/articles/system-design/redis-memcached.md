@@ -1,10 +1,10 @@
-> **Memcached** and **Redis** are two in-memory servers that store data by key and answer in a fraction of a millisecond. Memcached does one job in a small, simple way. Redis does the same job and adds data structures, persistence and replication, at the price of more to understand.
+> **Memcached** and **Redis** are two servers that keep data in memory and store it by key and answer in a fraction of a millisecond. Memcached does one job in a small, simple way. Redis does the same job and adds data structures, persistence and replication, at the price of more to understand.
 
 The last topics talked about "a cache server" in general. In practice a team picks one of these two, and the choice shapes what the cache can do. This topic walks through both, using the textbook app's data, and ends with how to choose.
 
 ## Memcached: Small and Simple
 
-Memcached's documentation describes it as an in-memory key-value store for small pieces of arbitrary data. The server doesn't care what the data looks like: it stores bytes under a key.
+Memcached's documentation describes it as a key-value store that keeps data in memory, for small pieces of arbitrary data. The server doesn't care what the data looks like: it stores bytes under a key.
 
 The servers are unaware of each other and don't replicate, and the client chooses a server by hashing the key, as in [Consistent Hashing](/system-design/consistent-hashing). When memory fills, old entries are evicted by LRU, and entries can carry an expiry time.
 
@@ -42,7 +42,7 @@ The first two keep a listing as a hash, and `HINCRBY` adds one to the view count
 
 The last two keep a student's 20 most recently viewed listings. In Memcached each of these would be a value that the client reads, changes and writes back, and `cas` would be needed to make that safe.
 
-Redis's benchmark page says that Redis is mostly a single-threaded server as far as executing commands goes, though modern versions use threads for other work. It adds that Redis isn't designed to gain from many CPU cores, and suggests running several instances to scale out, which is what [Distributed Caches](/system-design/distributed-caches) describes.
+Redis's benchmark page says that Redis is mostly a server that runs commands on a single thread, though modern versions use threads for other work. It adds that Redis isn't designed to gain from many CPU cores, and suggests running several instances to scale out, which is what [Distributed Caches](/system-design/distributed-caches) describes.
 
 A command that runs alone is atomic, which is why `INCR` is safe. The same page explains that each command normally waits for its reply, so a round trip is paid for each command, and **pipelining** sends many commands without waiting, which raises throughput significantly.
 
@@ -82,7 +82,7 @@ AWS's comparison page lists the same differences, and that page is from a vendor
 
 ## Choosing
 
-AWS's page says Memcached suits you if you want the simplest model, run large multi-core nodes, scale by adding and removing nodes, and mainly cache objects. Redis suits you if you want its wider set of features.
+AWS's page says Memcached suits you if you want the simplest model, run large nodes with many cores, scale by adding and removing nodes, and mainly cache objects. Redis suits you if you want its wider set of features.
 
 For the textbook app, that gives a clear split:
 
@@ -98,7 +98,7 @@ One more factor is the license. AWS's page says Redis OSS 7.2 was the last versi
 
 ## Key Points
 
-- Memcached is a simple, multi-threaded cache of bytes by key, with no replication or disk, where the client chooses the server
+- Memcached is a simple, multithreaded cache of bytes by key, with no replication or disk, where the client chooses the server
 - Redis adds data structures changed in place, atomic commands, persistence with snapshots and a log, replicas and clusters
 - Redis mostly runs commands on one thread, so scale it with more instances and use pipelining to cut round trips
 - <u>Treat Redis as a database once it holds data you can't rebuild</u>, with persistence, replicas, backups and a memory limit

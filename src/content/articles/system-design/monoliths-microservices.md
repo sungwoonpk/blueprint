@@ -66,7 +66,7 @@ Fowler names three costs, and each one connects to something earlier in this roa
 <figcaption>Milliseconds added by calls between services, at half a millisecond each and made one after another (example numbers)</figcaption>
 </figure>
 
-Microsoft's guidance on the chatty I/O anti-pattern puts it plainly: many small requests, each with its own overhead, drag down a system that one larger request would serve well. A bad split makes exactly that happen.
+Microsoft's guidance on the chatty I/O antipattern puts it plainly: many small requests, each with its own overhead, drag down a system that one larger request would serve well. A bad split makes exactly that happen.
 
 **Eventual consistency.** Each service owns its data, so there is no single transaction across them. In the monolith, selling a book is one database transaction:
 

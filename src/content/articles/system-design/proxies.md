@@ -41,7 +41,7 @@ The HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html), draw
 A campus network might send all web traffic through one proxy. That gives the network a place to do things no single laptop can:
 
 - **Filter and log**: block sites, and record who asked for what
-- **Cache for everyone**: when 500 students download the same file, the proxy fetches it once. Squid, a long-running open source caching proxy, is built for this
+- **Cache for everyone**: when 500 students download the same file, the proxy fetches it once. Squid, an open source caching proxy that has been around for a long time, is built for this
 - **Hide the client**: the website sees the proxy's address and not the student's
 - **Control outbound traffic from servers**: a production server in a private network can be allowed to reach only a short list of hosts, through a proxy that enforces the list. It also helps against the server side request forgery from [Webhooks](/system-design/webhooks)
 

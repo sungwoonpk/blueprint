@@ -133,7 +133,7 @@ Other cautions come from Martin Fowler's overview: the provider's limits and pri
 | Event driven glue, such as resizing photos or sending emails | Steady, high traffic that keeps servers busy anyway |
 | Handling [webhooks](/system-design/webhooks) and scheduled jobs | Long running work |
 | Rare or spiky traffic, and prototypes | Tight loops that need microsecond access to data |
-| Consuming queues, as in [Task Queues](/system-design/task-queues) | Work that needs special hardware, or heavy in-memory state |
+| Consuming queues, as in [Task Queues](/system-design/task-queues) | Work that needs special hardware, or heavy state held in memory |
 
 Most systems mix styles. The textbook app's main API might run in containers, with functions around the edges for photo resizing, webhooks and nightly clean ups. The next topics move on to protecting all of this from too much traffic, starting with [Rate Limiting Algorithms](/system-design/rate-limiting-algorithms).
 

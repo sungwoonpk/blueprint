@@ -33,7 +33,7 @@ Whichever one fixes what is breaking right now. Don't add parts because big comp
 2. **Find the bottleneck**: the one part that holds everything else back
 3. **Fix that part**, then measure again
 
-This goes a long way. In its 2016 architecture write-up, Stack Overflow reported serving millions of programmers from about 11 web servers and 4 SQL Servers, and most of them were barely busy.
+This goes a long way. In its 2016 architecture article, Stack Overflow reported serving millions of programmers from about 11 web servers and 4 SQL Servers, and most of them were barely busy.
 
 ## The Usual Steps
 

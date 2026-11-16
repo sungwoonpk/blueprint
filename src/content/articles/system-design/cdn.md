@@ -158,7 +158,7 @@ The next topics turn from how requests reach the servers to how the servers them
 
 - A CDN keeps copies of content on edge servers near users, so hits are answered quickly and the origin sees only misses
 - The hit ratio decides the origin's load: at 3,000 requests a second, 99% hits leave about 30 for the origin
-- Cache static files for a long time under versioned names, short-lived pages briefly, and personalized pages not at all, using `private`
+- Cache static files for a long time under versioned names, pages that change often for a short time, and personalized pages not at all, using `private`
 - `s-maxage` sets the CDN's lifetime separately from the browser's, and the cache key is the URL plus the `Vary` headers
 - <u>Prefer a new file name over a purge</u>, because no header can remove a copy that is already cached
 - Shields and request collapsing spare the origin from many edges asking at once, and Netflix pushes copies into providers' networks ahead of demand

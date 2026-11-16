@@ -134,7 +134,7 @@ A written runbook answers them: how to confirm it is an attack, which stricter r
 
 ## Key Points
 
-- A DDoS floods a target from many sources, so per-client limits don't trigger and the defenses live at the edge
+- A DDoS floods a target from many sources, so limits for each client don't trigger and the defenses live at the edge
 - Floods come in three kinds: volumetric, protocol and application, and each needs its own defense
 - Reflection and amplification turn small forged requests into huge floods, and SYN cookies stop SYN floods from filling the connection table
 - Application floods look like real users, so rely on caches, limits on expensive paths, a WAF and challenges

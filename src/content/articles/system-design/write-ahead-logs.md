@@ -81,7 +81,7 @@ Once a database keeps an ordered record of each change, other uses follow:
 - **Replication**: Send the log to another server that replays it, as in a warm standby, which is how many replicas are kept up to date
 - **Change feeds**: Tools such as the change capture in [Cache Invalidation](/system-design/cache-invalidation) read the log to learn what changed
 
-The same pattern appears far beyond relational databases. RocksDB, the engine behind many stores, writes each update to its WAL and to an in-memory table, and the WAL recovers the table after a failure. A log is deleted once everything in it has been flushed to files.
+The same pattern appears far beyond relational databases. RocksDB, the engine behind many stores, writes each update to its WAL and to a table in memory, and the WAL recovers the table after a failure. A log is deleted once everything in it has been flushed to files.
 
 Its documentation describes recovery modes for the awkward case of a damaged end of the log, which a crash in the middle of a write can leave: one tolerates a corrupted tail, one stops at the first error and returns to a consistent earlier point, and one treats any error as corruption.
 

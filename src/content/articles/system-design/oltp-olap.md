@@ -96,11 +96,11 @@ WHERE d.year = 2026
 GROUP BY c.name, d.month;
 ```
 
-Wikipedia points out that the dimensions are deliberately denormalized, so each one repeats its attributes, in exchange for simpler queries and fast aggregation. This is the opposite choice to the one in [Choosing Between Normalization and Denormalization](/system-design/normalization), made for the same reason: a read-heavy system pays for copies once, in the load, and saves on each query.
+Wikipedia points out that the dimensions are deliberately denormalized, so each one repeats its attributes, in exchange for simpler queries and fast aggregation. This is the opposite choice to the one in [Choosing Between Normalization and Denormalization](/system-design/normalization), made for the same reason: a system that is mostly read pays for copies once, in the load, and saves on each query.
 
 A **snowflake schema** normalizes the dimensions back into linked tables, and the guidance Wikipedia cites from Kimball is to avoid it unless there is a clear need.
 
-The questions analysts ask have names. A **roll-up** adds up along a dimension, such as campuses into a region. A **drill-down** goes the other way, from a month into its days. A **slice** fixes one value, such as only the North campus, and a **dice** picks a sub-block, such as two campuses in two terms.
+The questions analysts ask have names. A **roll-up** adds up along a dimension, such as campuses into a region. A **drill-down** goes the other way, from a month into its days. A **slice** fixes one value, such as only the North campus, and a **dice** picks a smaller block, such as two campuses in two terms.
 
 ## Getting Data In
 

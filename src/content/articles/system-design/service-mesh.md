@@ -99,7 +99,7 @@ Istio's own comparison rates the resource cost of sidecars as large and ambient 
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Node Proxy<small>shared by all three</small></div>
 </div>
-<figcaption>Ambient mode trades per-pod proxies for shared ones, to cut the resource and operations cost</figcaption>
+<figcaption>Ambient mode trades proxies for each pod for shared ones, to cut the resource and operations cost</figcaption>
 </figure>
 
 ## Do You Need One?

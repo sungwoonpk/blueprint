@@ -8,12 +8,12 @@ The name is read as "not only SQL" or as "non-relational", and both AWS and Mong
 
 Wikipedia traces the modern use of the term to 2009, when it named a meetup about open source, distributed, non-relational stores, many inspired by Google's Bigtable and Amazon's Dynamo.
 
-The reasons they appeared, according to Wikipedia, are a simple design without a fixed schema, scaling out over clusters of machines, and control over availability. AWS calls them purpose-built databases, each designed for one data model. The four families from this group:
+The reasons they appeared, according to Wikipedia, are a simple design without a fixed schema, scaling out over clusters of machines, and control over availability. AWS describes them as databases built for a purpose, each designed for one data model. The four families from this group:
 
 | Family | Good At | Example in the App |
 | --- | --- | --- |
 | Key-Value | Fast lookups by one key | A login session |
-| Document | Self-contained records with a varied shape | A listing with its photos and extras |
+| Document | Standalone records with a varied shape | A listing with its photos and extras |
 | Wide-Column | A huge volume of writes read by key and time | Messages in conversations |
 | Graph | Questions about connections, many hops deep | Books sold by friends of friends |
 
@@ -23,7 +23,7 @@ Microsoft's guide lists more kinds of data stores around them, such as search in
 
 Two slogans used to sum up the choice: relational databases can't scale out, and NoSQL databases have no transactions. Neither is a safe rule now.
 
-NoSQL systems have added what they lacked. Wikipedia's comparison table marks ACID transactions as supported by several of them, including DynamoDB and MongoDB, and MongoDB's own page says some NoSQL databases, MongoDB among them, support ACID transactions. The caveats remain: as [Document Stores](/system-design/document-stores) noted, MongoDB's transactions usually cost more than single-document writes.
+NoSQL systems have added what they lacked. Wikipedia's comparison table marks ACID transactions as supported by several of them, including DynamoDB and MongoDB, and MongoDB's own page says some NoSQL databases, MongoDB among them, support ACID transactions. The caveats remain: as [Document Stores](/system-design/document-stores) noted, MongoDB's transactions usually cost more than writes to one document.
 
 Relational databases have moved toward flexibility. PostgreSQL stores and indexes JSON, as in [Data Modeling](/system-design/data-modeling), and its documentation says the JSON and relational styles can coexist in one application. It also claims databases of many terabytes, and [Sharding Strategies](/system-design/sharding) shows how a relational database can be split across machines when one is not enough.
 

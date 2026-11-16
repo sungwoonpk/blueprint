@@ -48,7 +48,7 @@ A query with two words combines two lists. For "early calculus" with both words 
 <figcaption>Walking two sorted lists together finds the listings that contain both words</figcaption>
 </figure>
 
-Wikipedia notes two variants. A record-level index stores only which documents contain a word. A word-level index also stores the position of each occurrence, which makes phrase searches such as "linear algebra" possible, at the cost of more space and work to build.
+Wikipedia notes two variants. A record level index stores only which documents contain a word. A word level index also stores the position of each occurrence, which makes phrase searches such as "linear algebra" possible, at the cost of more space and work to build.
 
 The price of the whole idea, in Wikipedia's words, is more processing when a document is added: a new title touches the list of each word in it.
 
@@ -100,9 +100,9 @@ A score is only comparable inside one query. Real systems combine it with other 
 
 ## Search Engines in Practice
 
-**Apache Lucene** is the library at the center. Its site describes a high-performance search library in Java, with ranked search, phrase and proximity queries, faceting and vector search, and it lets documents be added while searches run. Elasticsearch and Solr, the best known search servers, are built around it.
+**Apache Lucene** is the library at the center. Its site describes a fast search library in Java, with ranked search, phrase and proximity queries, faceting and vector search, and it lets documents be added while searches run. Elasticsearch and Solr, the best known search servers, are built around it.
 
-In Elasticsearch, an index is split into shards, each a self-contained Lucene index holding a subset of the documents. Each document belongs to one primary shard, replicas copy the primaries for safety and read capacity, and the number of primaries is fixed when the index is created, while replicas can be changed at any time.
+In Elasticsearch, an index is split into shards, each a complete Lucene index holding a subset of the documents. Each document belongs to one primary shard, replicas copy the primaries for safety and read capacity, and the number of primaries is fixed when the index is created, while replicas can be changed at any time.
 
 A query goes to the shards, each returns its best matches, and the results are merged. This is the same split as [Secondary Indexes on Sharded Data](/system-design/sharded-secondary-indexes) describes for any index spread over machines.
 
@@ -134,11 +134,11 @@ The `websearch_to_tsquery` function reads the syntax people type: words are join
 
 Its documentation says it never raises a syntax error, so raw user input is safe to pass. Other functions highlight matches (`ts_headline`) and rank them, with the caveat that ranking has to read each matching document and can be slow on large result sets.
 
-What the built-in search lacks is mostly polish: it has no spelling correction, and similarity matching needs an extension such as `pg_trgm`.
+What the search that comes with PostgreSQL lacks is mostly polish: it has no spelling correction, and similarity matching needs an extension such as `pg_trgm`.
 
 ## Choosing
 
-Start in the database you have. PostgreSQL search is enough while the data is modest and a good-enough ranking will do. The usual reasons to add a search engine are:
+Start in the database you have. PostgreSQL search is enough while the data is modest and a ranking that is good enough will do. The usual reasons to add a search engine are:
 
 - **Relevance work**: Boosting titles over descriptions, synonyms, and tuning by what students click
 - **Forgiving queries**: Typos, autocomplete and "did you mean"

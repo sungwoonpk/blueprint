@@ -143,7 +143,7 @@ Elasticsearch has a `geo_point` field and a `geo_distance` query, which accepts 
 | Need | Good Fit |
 | --- | --- |
 | Nearby points and areas, in an app already on PostgreSQL | PostGIS |
-| A fast in-memory "what is near me" lookup | Redis geo commands |
+| A fast "what is near me" lookup held in memory | Redis geo commands |
 | Nearby results mixed with text search and filters | Elasticsearch |
 | Sharding or grouping data by area, in any store | Cell ids from geohash, H3 or S2 |
 

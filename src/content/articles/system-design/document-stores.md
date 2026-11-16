@@ -1,6 +1,6 @@
-> A **document store** is a database that keeps each record as a self-contained document, usually JSON, and can look inside it to search, index and update individual fields. It sits between a [key-value store](/system-design/key-value-stores), which treats the value as opaque, and a relational database, which splits a record across tables.
+> A **document store** is a database that keeps each record as a complete document, usually JSON, and can look inside it to search, index and update individual fields. It sits between a [key-value store](/system-design/key-value-stores), which treats the value as opaque, and a relational database, which splits a record across tables.
 
-In the last topic we ended at a signal: when you start asking questions about what is inside the values, a plain key-value store stops being enough. A document store is the next step. It keeps the one-lookup-by-key habit, and adds the ability to ask "which listings from the North campus cost under 20 dollars?"
+In the last topic we ended at a signal: when you start asking questions about what is inside the values, a plain key-value store stops being enough. A document store is the next step. It keeps the habit of looking things up by key, and adds the ability to ask "which listings from the North campus cost under 20 dollars?"
 
 ## A Listing as a Document
 
@@ -123,9 +123,9 @@ db.listings.updateMany(
 )
 ```
 
-MongoDB offers multi-document transactions, in the sense of [Transactions and ACID](/system-design/transactions-acid), but its documentation is blunt about them.
+MongoDB offers transactions that span several documents, in the sense of [Transactions and ACID](/system-design/transactions-acid), but its documentation is blunt about them.
 
-They usually cost more than single-document writes, they run under a time limit that is one minute by default, and they should not replace good schema design. A model that needs one for each routine operation may be a sign that the data wants tables.
+They usually cost more than writes to one document, they run under a time limit that is one minute by default, and they should not replace good schema design. A model that needs one for each routine operation may be a sign that the data wants tables.
 
 ## When Documents Fit
 
@@ -141,8 +141,8 @@ Listings suit documents, and balances and orders might suit tables. Many teams r
 
 ## Key Points
 
-- A document store keeps self-contained JSON like documents and, unlike a key-value store, can query, index and update fields inside them
+- A document store keeps complete JSON like documents and, unlike a key-value store, can query, index and update fields inside them
 - Embed data that is small, bounded, changes rarely and is read with its parent, and reference data that grows without limit, changes often or is used on its own
 - A write to one document is atomic, so embedding gives atomicity for free, while changes across documents are separate writes or costly transactions
 - <u>The schema is flexible, not absent</u>: your code still depends on a shape, so version it, validate it and migrate it with care
-- Documents fit varied, self-contained data, and tables fit data with many relationships and cross record rules
+- Documents fit varied, standalone data, and tables fit data with many relationships and cross record rules

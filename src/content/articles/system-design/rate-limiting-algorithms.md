@@ -19,7 +19,7 @@ The last two are the idea behind [Load Shedding and Graceful Degradation](/syste
 
 ## Fixed Window Counter
 
-The simplest approach: split time into fixed windows, such as each minute, and count requests per client in the current one. Over the limit means rejected, and a new window starts at zero. Redis, an in-memory store, makes this a few lines, as its documentation shows with the `INCR` command:
+The simplest approach: split time into fixed windows, such as each minute, and count requests per client in the current one. Over the limit means rejected, and a new window starts at zero. Redis, a store that keeps its data in memory, makes this a few lines, as its documentation shows with the `INCR` command:
 
 ```python
 def allow(client_id, limit=100, window=60):

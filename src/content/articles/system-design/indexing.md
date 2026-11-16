@@ -125,7 +125,7 @@ Indexes are not applied by command. The database's **query planner** estimates t
 
 ## Reading a Query Plan
 
-To see what the planner chose, put `EXPLAIN ANALYZE` in front of the query. It prints the plan and runs the query, so the timings are measured, not guessed. Here is the book search without a helpful index, shortened and with made-up numbers:
+To see what the planner chose, put `EXPLAIN ANALYZE` in front of the query. It prints the plan and runs the query, so the timings are measured, not guessed. Here is the book search without a helpful index, shortened and with invented numbers:
 
 ```text
 Limit  (actual time=412.1..412.2 rows=20.00)

@@ -30,7 +30,7 @@ The cost of a time series database depends on the number of series as much as on
 | Method (4), route (30), status (8), server (6) | 5,760 |
 | The same, plus the user id (2,000 users) | 11,520,000 |
 
-One extra label with many values turns thousands of series into millions, and each series carries its own index entry and in-memory state. The InfluxDB documentation draws the same line between tags, which are indexed and meant to be few and stable, and fields, which hold the measured values.
+One extra label with many values turns thousands of series into millions, and each series carries its own index entry and state held in memory. The InfluxDB documentation draws the same line between tags, which are indexed and meant to be few and stable, and fields, which hold the measured values.
 
 It adds that newer InfluxDB 3 handles very high cardinality much better than earlier versions, so check the version of the system you use. The safe habit is to keep unbounded values out of labels and in the logs or traces from [Logs, Metrics and Traces](/system-design/observability).
 

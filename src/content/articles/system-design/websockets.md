@@ -127,7 +127,7 @@ Two students chatting about the same listing can easily be connected to differen
 
 The usual fix is a **publish and subscribe** layer. Each server subscribes to the channels its connected users care about, and a message published to a channel reaches all the subscribed servers, which then write it to its own sockets. Redis and message brokers are common choices, and [Message Queues and Pub/Sub](/system-design/message-queues) covers the idea properly. Two large products describe the same shape in their engineering blogs.
 
-Slack's account of its [real-time messaging](https://slack.engineering/real-time-messaging/) has gateway servers that hold the WebSockets, and channel servers, chosen by hashing the channel id, that forward each message to each gateway that has a subscriber. Discord's post on [reaching 5 million concurrent users](https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users) describes one session process per WebSocket, with up to about 500,000 sessions on one Erlang virtual machine, and says most of the rest comes down to publish and subscribe.
+Slack's account of its [real time messaging](https://slack.engineering/real-time-messaging/) has gateway servers that hold the WebSockets, and channel servers, chosen by hashing the channel id, that forward each message to each gateway that has a subscriber. Discord's post on [reaching 5 million concurrent users](https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users) describes one session process per WebSocket, with up to about 500,000 sessions on one Erlang virtual machine, and says most of the rest comes down to publish and subscribe.
 
 Long lived connections create operational wrinkles too:
 

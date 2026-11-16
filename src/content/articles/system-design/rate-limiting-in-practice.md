@@ -18,7 +18,7 @@ Splitting the limit fixes the even case, and punishes a client unfairly when the
 
 ## Where the Counter Lives
 
-The usual shared store is Redis, a fast in-memory database. Each gateway asks it before letting a request through:
+The usual shared store is Redis, a fast database that keeps its data in memory. Each gateway asks it before letting a request through:
 
 <figure class="diagram">
 <p class="rowname">Separate Counters</p>

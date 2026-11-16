@@ -49,7 +49,7 @@ All of them share the interface, but they were built for different jobs:
 - **Coordination and settings**: etcd stores small, important data, such as cluster configuration. Its documentation says it favors consistency, uses Raft for agreement, and offers watches and leases. It is meant for several gigabytes, not for big data. See [Consensus and Leader Election](/system-design/consensus-leader-election)
 - **An engine inside another program**: RocksDB is a library, not a server. According to its documentation it keeps keys in sorted order, supports range scans, and leaves replication to whatever is built on top. It stores data using the structure in [LSM Trees](/system-design/lsm-trees)
 
-Speed and safety trade off here too. In-memory stores are among the fastest, and a restart can lose data unless the store writes it to disk. The databases keep data on disk and copy it to other machines, at the cost of more work per write.
+Speed and safety trade off here too. Stores that keep data in memory are among the fastest, and a restart can lose data unless the store writes it to disk. The databases keep data on disk and copy it to other machines, at the cost of more work per write.
 
 ## Values With Shape
 

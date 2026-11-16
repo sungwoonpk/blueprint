@@ -6,7 +6,7 @@ Where should it go? Not in the database rows, and not on the web server's own di
 
 ## Block: A Raw Disk Over the Network
 
-AWS's comparison of the three describes block storage as data split into fixed-size blocks, each with a number, which can be read or written one at a time.
+AWS's comparison of the three describes block storage as data split into blocks of a fixed size, each with a number, which can be read or written one at a time.
 
 The operating system puts a file system or a database on top. Amazon's EBS documentation says a volume is used the way you would use a local hard drive, even though it sits across a network.
 

@@ -65,7 +65,7 @@ The average request tells the same story: roughly 990 ms for random, 550 ms for 
 
 ## Same Client, Same Server
 
-Sometimes the goal is the opposite of spreading evenly. A cache server holds recently used data, and a request lands better on the server that already has it. Per-user data in a server's memory has the same pull. The tool is **hashing**: compute a number from something in the request and use it to pick the server, so the same input lands in the same place.
+Sometimes the goal is the opposite of spreading evenly. A cache server holds recently used data, and a request lands better on the server that already has it. Data kept for each user in a server's memory has the same pull. The tool is **hashing**: compute a number from something in the request and use it to pick the server, so the same input lands in the same place.
 
 - **By client address**: nginx's `ip_hash` uses the first three parts of an IPv4 address, so one office tends to reach one server
 - **By URL**: send each file to the same cache, so it sits in one place and not in all of them
@@ -107,7 +107,7 @@ A server that has just started has empty caches and unwarmed code, so handing it
 | Similar servers and similar requests | Round robin |
 | Servers of different sizes | Weights |
 | Request cost varies, or many balancers share the work | Fewest in flight, or two random choices |
-| Caches or per-user data | Hashing, preferably consistent |
+| Caches or data kept for each user | Hashing, preferably consistent |
 
 Start with the default, which is usually round robin, and change it when measurements show a reason, as in [Load Testing](/system-design/load-testing). The best rule is no help to a server that is already broken, which is the next topic: [Health Checks](/system-design/health-checks).
 

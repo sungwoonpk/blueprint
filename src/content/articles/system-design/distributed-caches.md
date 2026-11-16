@@ -68,7 +68,7 @@ When a client gets no answer from its server, it asks a Gutter server instead, a
 
 The paper compares this with the obvious alternative, where clients rehash the keys of the dead server onto the survivors. It warns that this can cascade: one key can account for 20 percent of a server's requests, so the server that inherits a hot key may be overwhelmed in turn.
 
-Sending the load to idle spare servers avoids that. Facebook reports that Gutter reduced client-visible failures by 99 percent, and that it turned 10 to 25 percent of failures into hits each day. The price is that its entries can be slightly stale.
+Sending the load to idle spare servers avoids that. Facebook reports that Gutter reduced the failures that clients see by 99 percent, and that it turned 10 to 25 percent of failures into hits each day. The price is that its entries can be slightly stale.
 
 ## One Hot Key
 
@@ -90,7 +90,7 @@ Facebook's paper describes an empty cluster as a standing risk, and its answer i
 
 The paper says this brings a cold cluster to full capacity in a few hours, where it used to take a few days.
 
-It adds a guard against a race, in which a stale value copied from the warm cluster would stay forever: deletes sent to the cold cluster carry a hold-off of 2 seconds, during which attempts to add the key are rejected.
+It adds a guard against a race, in which a stale value copied from the warm cluster would stay forever: deletes sent to the cold cluster carry a delay of 2 seconds, during which attempts to add the key are rejected.
 
 A page that needs hundreds of keys also fans out across many cache servers, and the answers can arrive at the same moment.
 

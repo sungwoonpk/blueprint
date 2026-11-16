@@ -111,7 +111,7 @@ Facebook's engineering team shows a middle path. In its 2013 article on TAO, it 
 
 Yet TAO is not a graph database in the sense above. It keeps the data in MySQL, with a large cache in front, and supports a few simple questions: is A connected to B, which 50 associations are newest, and how many are there.
 
-The post says there is no server-side traversal, by design, and that clients combine simple queries themselves. The lesson is that a graph shaped dataset doesn't force a graph database. When the questions are shallow and the volume is huge, tables and a cache can do the job.
+The post says there is no traversal on the server, by design, and that clients combine simple queries themselves. The lesson is that a graph shaped dataset doesn't force a graph database. When the questions are shallow and the volume is huge, tables and a cache can do the job.
 
 ## Two Models, Several Languages
 

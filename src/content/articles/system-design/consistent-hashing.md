@@ -72,7 +72,7 @@ Wikipedia gives the average cost as about K divided by N keys moved, where K is 
 
 ## Virtual Nodes
 
-A plain ring has a flaw. A server's position is random, so some servers get long stretches of the circle and others get short ones. The Dynamo paper says exactly this: random placement leads to non-uniform data and load, and the basic algorithm ignores that machines differ in power.
+A plain ring has a flaw. A server's position is random, so some servers get long stretches of the circle and others get short ones. The Dynamo paper says exactly this: random placement leads to uneven data and load, and the basic algorithm ignores that machines differ in power.
 
 In our run with one point per server, the busiest of the 6 servers held 3.3 times the average load, and the quietest held 3 percent of it.
 
@@ -85,7 +85,7 @@ The fix, used by Dynamo and by Cassandra, is to give each server many points on 
 | 100 | 1.20 times | 0.88 times |
 | 200 | 1.07 times | 0.86 times |
 
-The numbers are from our simulation with 6 servers and 100,000 keys, and will differ on another run, but the trend holds. Libketama, a hashing library for memcached clients, uses somewhere between 100 and 200 points per server, according to its author's write-up.
+The numbers are from our simulation with 6 servers and 100,000 keys, and will differ on another run, but the trend holds. Libketama, a hashing library for memcached clients, uses somewhere between 100 and 200 points per server, according to its author's article.
 
 Virtual nodes help in two more ways. A server that leaves has its slices scattered around the ring, so its load spreads over several neighbors instead of doubling one: in our run, a lost server's keys went to all five others.
 

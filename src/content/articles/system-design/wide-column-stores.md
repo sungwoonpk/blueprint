@@ -89,7 +89,7 @@ Now one month of one channel is one partition, and "the latest 50" reads the cur
 
 Bigtable has the same worry with its row keys. Its documentation says to avoid row keys that start with a timestamp or a sequential number, because new rows pile onto the same machine.
 
-A key that begins with a high-variety value, such as `conversation#41#`, spreads the writes. It also suggests keeping a row under 100 MB, with a hard limit of 256 MB.
+A key that begins with a value that has many different options, such as `conversation#41#`, spreads the writes. It also suggests keeping a row under 100 MB, with a hard limit of 256 MB.
 
 ## Why Writes Are Cheap
 

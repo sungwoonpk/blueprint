@@ -12,7 +12,7 @@ Each of these is an **anomaly**, a result that couldn't happen if transactions r
 - **Lost update**: Two transactions read a value, and both write a new one based on what they read, so one write vanishes. Two requests read a view counter of 120, and each stores 121, when it should be 122
 - **Write skew**: Two transactions each check a rule, then write different rows, and together they break it. A seller may have at most 3 open listings. Two requests each count 2, and each adds one, so the seller now has 4
 
-The first three are listed in the SQL standard. The last two are not, and databases treat them differently. PostgreSQL's documentation adds one more name for the general case, the **serialization anomaly**: a result that matches no one-at-a-time order of the transactions. Write skew is the most common example.
+The first three are listed in the SQL standard. The last two are not, and databases treat them differently. PostgreSQL's documentation adds one more name for the general case, the **serialization anomaly**: a result that matches no order in which the transactions run one after another. Write skew is the most common example.
 
 ## The Four Levels
 
@@ -78,7 +78,7 @@ UPDATE listings SET views = 121 WHERE id = 17;
 UPDATE listings SET views = views + 1 WHERE id = 17;
 ```
 
-PostgreSQL's documentation explains why the second form is safe. If another transaction changed the row first, the `UPDATE` waits for it to finish, then re-checks the row's newest version and applies its change to that one.
+PostgreSQL's documentation explains why the second form is safe. If another transaction changed the row first, the `UPDATE` waits for it to finish, then checks the row's newest version again and applies its change to that one.
 
 When the read has to be separate, because the app needs the value to decide something, there are two tools. `SELECT ... FOR UPDATE` locks the rows you read, so that others wait until your transaction ends. A stronger level fails instead of losing the update. At Repeatable Read, PostgreSQL stops the second writer with an error:
 
@@ -103,7 +103,7 @@ Two copies of this run at once. Each snapshot shows 2 listings, each check passe
 
 Jepsen describes the same pattern with two electricians who each see room for one more circuit on a panel and both add one.
 
-At **Serializable**, PostgreSQL watches for exactly this: transactions that read what another one writes, and write what another one read. It uses what its documentation calls Serializable Snapshot Isolation. When it finds a pattern that no one-at-a-time order could produce, it aborts one of the transactions:
+At **Serializable**, PostgreSQL watches for exactly this: transactions that read what another one writes, and write what another one read. It uses what its documentation calls Serializable Snapshot Isolation. When it finds a pattern that no order of running them one after another could produce, it aborts one of the transactions:
 
 ```text
 ERROR:  could not serialize access due to
