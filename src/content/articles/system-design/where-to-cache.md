@@ -92,7 +92,7 @@ The same article lists the defenses:
 - **Expect cold starts**: A new server or a flushed cache sends a burst of misses to the database, and merging duplicate requests for the same item into one helps. See [Cache Stampedes](/system-design/cache-stampedes)
 - **Choose expiry on purpose**: Staleness, size and eviction are hard to pick once and forget, so measure the hit ratio, the misses and the load that reaches the database. See [Cache Eviction Policies](/system-design/cache-eviction) and [Cache Invalidation](/system-design/cache-invalidation)
 
-When one failing part drags another down, the effect is called a [Cascading Failure](/system-design/cascading-failures), and an overloaded database behind a failed cache is a common start.
+When one failing part drags another down, the effect is called a [Cascading Failures](/system-design/cascading-failures), and an overloaded database behind a failed cache is a common start.
 
 ## Key Points
 
