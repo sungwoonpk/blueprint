@@ -15,7 +15,7 @@ Computer science seniors and engineers in their first year on the job. They have
 - Remind, don't assume. When a topic uses an idea from an earlier one (the textbook app, a replica, a load balancer, a port), restate it in one short clause and link to it. Readers skip around and forget; a few words cost little.
 - Be careful with absolutes. "Never", "always", "every", "nothing" and "only" are rarely exactly true in system design, and readers (and interviewers) distrust them. Say "usually", "often" or "can", or name the condition. Keep a strong word only when it is really true, and check each fact once more.
 - Plain words over impressive ones. No "crucial", "robust", "seamless", "leverage", "delve", "in today's world".
-- No em dashes, and no hyphens used as dashes. Hyphens only inside real terms.
+- No em dashes, and no hyphens used as dashes. Hyphens only inside real terms and names (key-value, write-ahead, B-tree, `Cache-Control`), not in plain compound adjectives: write "keeps data in memory", "for each user", "complete", not "in-memory", "per-user", "self-contained". Too many hyphens read as machine written.
 - Speak to the reader as "you" and to the team as "we".
 - Every list item starts with a capital letter and ends without a period. A bold term inside a sentence shows in the term color (strong blue), so bold only words being introduced there.
 
