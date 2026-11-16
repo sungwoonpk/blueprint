@@ -61,7 +61,7 @@ Turn the hit ratio into servers. At skew 1.0, with 2,700 reads and 300 writes a 
 
 | Cache Size | Hit Ratio | Reads Reaching the Database | Database Servers, Reads Plus Writes |
 | --- | --- | --- | --- |
-| None | 0% | 2,700 | 4 |
+| No Cache | 0% | 2,700 | 4 |
 | 0.1% | 34.9% | 1,758 | 3 |
 | 1% | 54.7% | 1,223 | 2 |
 | 5% | 69.1% | 834 | 2 |
