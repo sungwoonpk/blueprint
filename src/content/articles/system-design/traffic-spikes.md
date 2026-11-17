@@ -44,43 +44,47 @@ A spike made mostly of reads should hit a cache or a CDN first, as in [Scaling R
 
 ### A queue to level the load
 
-Queue based load leveling puts a queue between a task and the service it invokes, as a buffer.
+Queue based load leveling puts a queue between a task and the service it invokes, as a buffer. The producer posts a message and moves on, and the service pulls messages at its own pace.
 
-The producer posts a message and moves on, and the service pulls messages at its own pace. The app can be sized for the average and not the peak, and it keeps accepting work when the service is slow or down.
+The app can be sized for the average and not the peak, and it keeps accepting work when the service is slow or down.
 
-The pattern comes with conditions:
+A queue buys time and nothing more. If the producers keep outpacing the consumers on average, the queue keeps growing and latency with it, so a queue absorbs a spike and doesn't fix a lasting overload.
 
-- **The queue grows if production exceeds consumption**: If the average producer rate exceeds the consumer rate, the queue continues to grow and latency increases, so a queue absorbs a spike and doesn't fix a lasting overload
-- **Scaling consumers can move the problem**: Autoscaling consumers without bounding their combined rate downstream just moves the overload to the dependencies
-- **Replies are separate**: A queue is one way, so a caller that needs an answer needs another channel for it
-- **Delivery is usually at least once**: Consumers need to be idempotent, as in [Idempotency and Safe Retries](/system-design/idempotency), and poison messages go to a dead letter queue
-- **It is a poor fit for a synchronous request**: A user who is waiting for a page can't wait on a queue
+Adding consumers doesn't change that by itself: without a bound on their combined rate, the overload just moves to the database or the service behind them.
+
+Two more conditions follow from the design. A queue is one way, so a caller that needs an answer needs another channel for it, and a user who is waiting for a page can't wait on a queue.
+
+And since delivery is usually at least once, consumers need to be idempotent, as in [Idempotency and Safe Retries](/system-design/idempotency), with poison messages sent to a dead letter queue.
 
 For the textbook app, the receipts, emails and statistics from a registration go through a queue, as in [Task Queues](/system-design/task-queues), and the student sees a confirmation page at once. The step that decides whether a student gets a seat can't be queued silently, since the answer is what the student is waiting for.
 
 ### Throttling: say no early
 
-The Azure throttling pattern limits the resources that an application instance, a tenant or a service can use. For HTTP, it names two statuses.
+Throttling limits the resources that an application instance, a tenant or a service can use, and the HTTP status says which kind of refusal it is. A 429 says the caller exceeded a configured rate over a window.
 
-A 429 says the caller exceeded a configured rate over a window, and a 503 says the service can't handle the request right now, often because of a load spike, and a `Retry-After` header helps the client pick a retry strategy. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanisms.
+A 503 says the service can't handle the request right now, often because of a load spike. A `Retry-After` header helps the client choose when to try again. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanisms.
 
-Amazon API Gateway shows the shape with a token bucket. Its default for an account in a region is 10,000 requests a second with a bucket of 5,000 for bursts, clients receive a 429 beyond that, and both throttles and quotas are best effort targets and not guaranteed ceilings.
+A token bucket is the usual shape. A gateway might allow 10,000 requests a second for an account with a bucket of 5,000 for bursts, and answer 429 beyond that. Such limits are best effort targets and not guaranteed ceilings.
 
 A fast refusal is cheap for the server, which is the point of [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
 Throttling can cover the time while autoscaling catches up, though it may not buy enough time when demand grows faster than capacity arrives.
 
-Priorities help: the Priority Queue pattern serves high priority work first. With one pool of consumers, low priority messages can be continually delayed and potentially left unprocessed, so separate pools or an aging rule are used.
+Priorities help, by serving high priority work first. With one pool of consumers, low priority messages can be delayed continually and may stay unprocessed, so use separate pools or an aging rule.
 
 ### A waiting room
 
-A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. Cloudflare's Waiting Room shows the design in its settings:
+A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. The design has a few knobs, and each answers a question.
 
-- **Total active users**: The most sessions allowed on the protected path at one time, and Cloudflare's guidance is to set it to 75 percent of the origin's capacity
-- **New users per minute**: A threshold on admissions, not on the number added each minute, and it must not exceed the total active users
-- **Session duration**: Between 1 and 30 minutes, with a default of 5, during which a visitor who left can return without queueing again
-- **Queueing methods**: First in, first out by default, which rewards those who arrived first, random, where open spots go to random visitors, passthrough, which just collects traffic statistics, and reject, where nobody enters and a static page is shown
-- **The wait estimate**: Visitors ahead divided by the rate at which users enter the application, which applies to the first in, first out method
+How many people may be inside at once? Set the total of active users to about 75 percent of what the origin can serve, so that a burst of admitted users doesn't tip it over.
+
+How fast may new people enter? A rate of new users a minute caps admissions, and it must not exceed the total of active users.
+
+How long does a place last? A session of a few minutes, 5 by default and up to 30, lets a visitor who left come back without queueing again.
+
+Who goes first? First in, first out is the default and rewards those who arrived first. A random draw gives open spots to random visitors, which removes the edge of refreshing early. Two other modes exist: passthrough, which just collects traffic statistics, and reject, where nobody enters and a static page is shown.
+
+The wait estimate for first in, first out is the number of visitors ahead divided by the rate at which users enter the application.
 
 <figure class="diagram">
 <p class="rowname">Queue Leveling</p>
@@ -102,7 +106,7 @@ A waiting room holds visitors outside the application and admits them at a contr
 <figcaption>Two ways to level a spike: a queue behind the user, a waiting room in front of the app</figcaption>
 </figure>
 
-The tracking uses an encrypted cookie that holds the place in line and is renewed at 20 second intervals while a visitor waits.
+Tracking uses an encrypted cookie that holds the place in line and is renewed at 20 second intervals while a visitor waits.
 
 ## What the Options Do
 
@@ -125,12 +129,11 @@ We simulated the textbook spike on the six servers: 8,000 users a second for 30 
 <figcaption>Share of the 240,000 users served during the spike, by policy, from our simulation</figcaption>
 </figure>
 
-Each row teaches something:
+Each row teaches something. When each request is accepted, the queue grows to many seconds, users leave before their turn, and the servers work on requests nobody is waiting for. Just 13.8 percent of the spike's users were served, though the servers ran at full speed. This is the goodput collapse from [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
-- **Accept each request**: The queue grew to many seconds, users left before their turn, and the servers worked on requests nobody was waiting for. Just 13.8 percent of the spike's users were served, though the servers ran at full speed. This is the goodput collapse from [Load Shedding and Graceful Degradation](/system-design/load-shedding)
-- **Refuse quickly**: The servers served what they could, 45.5 percent, which is the share that capacity allows in those 30 seconds, and the rest were told at once
-- **Refuse with retries**: Retries recovered 3 points of users and added 14 percent to the load on the app, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries), and some users spent 15 seconds on it
-- **Waiting room**: The whole crowd was served, with a wait of up to 36.7 seconds, which equals the excess divided by the capacity. The price of fairness was time, and no error pages
+Refusing quickly served what capacity allows in those 30 seconds, 45.5 percent, and told the rest at once. Adding retries recovered 3 more points of users and added 14 percent to the load on the app, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries), and some users spent 15 seconds on it.
+
+The waiting room served the whole crowd, with a wait of up to 36.7 seconds, which equals the excess divided by the capacity. The price of fairness was time, and no error pages.
 
 The right choice depends on what a failure costs. For a catalog page, a refusal is fine and a retry works. For a seat in a course, a user would rather wait 30 seconds than refresh into an error, so the waiting room fits.
 
