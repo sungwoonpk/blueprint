@@ -48,7 +48,7 @@ Queue based load leveling puts a queue between a task and the service it invokes
 
 The app can be sized for the average and not the peak, and it keeps accepting work when the service is slow or down.
 
-A queue buys time and nothing more. If the producers keep outpacing the consumers on average, the queue keeps growing and latency with it, so a queue absorbs a spike and doesn't fix a lasting overload.
+A queue buys time, and that is its whole value. If the producers keep outpacing the consumers on average, the queue keeps growing and latency with it, so a queue absorbs a spike and doesn't fix a lasting overload.
 
 Adding consumers doesn't change that by itself: without a bound on their combined rate, the overload just moves to the database or the service behind them.
 
