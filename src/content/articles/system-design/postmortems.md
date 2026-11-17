@@ -8,11 +8,9 @@ Nobody knows what the others did, and when search recovers, nobody can say which
 
 ## Deciding That It Is an Incident
 
-Declare early, and don't start the framework hours into a problem. Three criteria help, and any one is enough:
+Declare early, and don't start the framework hours into a problem. Three criteria help, and any one is enough. A second team is needed, because the problem can't be fixed by one group alone.
 
-- **A second team is needed**: The problem can't be fixed by one group alone
-- **Customers can see it**: The outage is visible to them
-- **It is unsolved after an hour**: An hour of concentrated analysis hasn't found the answer
+Customers can see it, because the outage is visible to them. Or it is unsolved after an hour, because an hour of concentrated analysis hasn't found the answer.
 
 A scale helps. Severity levels run from SEV-1, a critical issue that warrants public notice and contact with executives, to SEV-5, a cosmetic problem. Anything above SEV-3 counts as a major incident and starts the full response.
 
@@ -31,7 +29,7 @@ The alerts from [Alerting and Dashboards](/system-design/alerting) and the burn 
 
 ## Who Does What
 
-Separate the work into roles so that people don't collide. The four: incident command, operations, communication and planning. Between them:
+Separate the work into roles so that people don't collide. Four jobs matter: command, operations, communication and planning. Between them:
 
 | Role | Does | Doesn't |
 | --- | --- | --- |
@@ -41,31 +39,29 @@ Separate the work into roles so that people don't collide. The four: incident co
 | Scribe | Records actions and findings in the incident document | Wait for a request to write things down |
 | Subject Matter Experts | Investigate, report findings, suggest fixes | Act on a fix before the commander approves |
 
-- **Command**: The commander holds each position that hasn't been delegated, and can remove roadblocks for the operations lead. The most important duty is keeping the live incident state document
-- **Operations**: The operations team should be the sole group modifying the system during an incident, which solves the five engineers problem
-- **Communication**: The public face of the response, with periodic updates. If there is doubt about posting a public message, post it
-- **Planning**: Longer term work, such as filing bugs, arranging handoffs and tracking how the system has drifted from normal
-- **Splitting**: Separation is recursive: when one person's load is too high, they ask for staff and delegate, possibly by creating subincidents
+The commander holds each position that hasn't been delegated, and can remove roadblocks for the operations lead. The most important duty is keeping the live incident state document. The operations team should be the sole group modifying the system during an incident, which solves the five engineers problem.
+
+Communication is the public face of the response, with periodic updates, and if there is doubt about posting a public message, post it. Planning covers the longer term work, such as filing bugs, arranging handoffs and tracking how the system has drifted from normal.
+
+The separation is recursive: when one person's load is too high, they ask for staff and delegate, possibly by creating subincidents.
 
 ## Running It
 
-A few habits from the sources make a response steadier:
+A few habits make a response steadier. Give it a central place, a war room or a chat channel, where the conversation is logged for the postmortem, since bots can record the traffic.
 
-- **A central place**: A war room or a chat channel, where the conversation is logged for the postmortem, since bots can record the traffic
-- **A live state document**: It can be messy but must be functional, editable by several people at once, with the most important facts at the top
-- **Explicit handoffs**: The outgoing commander says "you are now the incident commander", and doesn't leave until the new one acknowledges
-- **A rhythm of updates**: PagerDuty's guide has the internal liaison update executives at roughly 30 minute intervals, and the customer liaison post at set times
-- **Mitigate first**: Roll back a release, switch off a feature with a flag from [Feature Flags](/system-design/feature-flags), shed load, or move traffic, and find the root cause once users are safe
+Keep a live state document. It can be messy but must be functional, editable by several people at once, with the most important facts at the top. Make handoffs explicit: the outgoing commander says "you are now the incident commander", and doesn't leave until the new one acknowledges.
 
-PagerDuty adds a rule about severity during the incident: assume the worst, and don't debate the level while the system is down.
+Keep a rhythm of updates, with the internal liaison updating executives at roughly 30 minute intervals and the customer liaison posting at set times.
+
+And mitigate first. Roll back a release, switch off a feature with a flag from [Feature Flags](/system-design/feature-flags), shed load, or move traffic, and find the root cause once users are safe. Assume the worst about severity during the incident, and don't debate the level while the system is down.
 
 ## A Long Night: GitHub, October 2018
 
-GitHub's own account of 21 and 22 October 2018 shows the shape of a big incident, with its timestamps. Routine maintenance to replace failing optical equipment cut the link between the East Coast network hub and the primary data center. Connectivity returned in 43 seconds.
+The shape of a big incident shows in GitHub's long night of 21 and 22 October 2018, which is well documented with timestamps. Routine maintenance to replace failing optical equipment cut the link between the East Coast network hub and the primary data center. Connectivity returned in 43 seconds.
 
 The failover system, built on Raft, had meanwhile promoted the West Coast to take writes, and the East Coast held a small set of writes that hadn't replicated. Failing back wasn't safe, and the result was a degraded service for 24 hours and 11 minutes.
 
-Times are UTC, and the elapsed figures are our arithmetic from the post:
+Times are UTC, and the elapsed figures are our arithmetic:
 
 | Time | Event | Since the Trigger |
 | --- | --- | --- |
@@ -84,13 +80,13 @@ No user data was lost, after a manual reconciliation of the unreplicated writes.
 
 Two choices stand out. The team stated its priority early: data integrity over site usability and time to recovery. That's a decision a commander can make at minute 27 and a communicator can explain.
 
-And the post admits that its public estimate of two hours missed variables, since catch up followed a decaying curve and not a straight line. A promise of a time is a risk, so estimates should say what they rest on.
+And the team admitted that its public estimate of two hours missed variables, since catch up followed a decaying curve and not a straight line. A promise of a time is a risk, so estimates should say what they rest on.
 
-Its changes are a model of follow up work: configure the failover tool not to promote primaries across regional boundaries, build a richer status page that shows components, continue the work toward redundancy across multiple data centers, and add fault injection and chaos tooling, as in [Chaos Engineering](/system-design/chaos-engineering). The mechanics tie to [Replication Lag](/system-design/replication-lag) and [Backups and Disaster Recovery](/system-design/backup-dr).
+The changes that followed are a model of follow up work: configure the failover tool not to promote primaries across regional boundaries, build a richer status page that shows components, continue the work toward redundancy across multiple data centers, and add fault injection and chaos tooling, as in [Chaos Engineering](/system-design/chaos-engineering). The mechanics tie to [Replication Lag](/system-design/replication-lag) and [Backups and Disaster Recovery](/system-design/backup-dr).
 
 ## Writing the Postmortem
 
-A postmortem is a written record of an incident, its impact, the actions taken to mitigate or resolve it, the root causes and the follow up actions. It lists common triggers, with room for teams to adapt them:
+A postmortem is a written record of an incident, its impact, the actions taken to mitigate or resolve it, the root causes and the follow up actions. Common triggers for writing one, which teams can adapt, are:
 
 1. User visible downtime or degradation beyond a threshold
 2. Data loss of any kind
@@ -110,11 +106,9 @@ Lessons: what went well, what went poorly, where we got lucky
 Action items: type, priority, owner, tracking ticket
 ```
 
-Compare a good and a bad example. The bad one had four owners, no owners on the action items, subjective language and was published four months late.
+A good one has a single owner with several collaborators, action items with a priority, an owner and a tracking ticket, quantified impact, and circulation within a week. A bad one has four owners, no owners on the action items, subjective language, and is published four months late. Make the action items specific enough to be verified.
 
-The good one had a single owner, action items with a priority, an owner and a tracking bug, quantified impact and circulation within a week. The workbook's advice is a single owner with several collaborators, and action items that are specific enough to be verified.
-
-The action types it lists are useful because they push for a mix: investigate, prevent, mitigate, repair and detect. A set of preventive items alone assumes the same incident can be prevented, and a set of repairs alone leaves the next one untouched.
+The action types are useful because they push for a mix: investigate, prevent, mitigate, repair and detect. A set of preventive items alone assumes the same incident can be prevented, and a set of repairs alone leaves the next one untouched.
 
 ## Blameless Doesn't Mean Pointless
 
@@ -122,25 +116,19 @@ Blamelessness is a tenet of the culture. A blameless postmortem names the contri
 
 You can't fix people, but you can fix systems and processes. The practical reason is that blame teaches people to hide incidents, and hidden incidents can't be learned from.
 
-Blameless doesn't mean avoiding the truth about what to improve. The book's example contrasts an action item that points fingers, to rewrite the backend, with one that names the cost for the next on call engineer. The first judges people, and the second describes the system.
+Blameless doesn't mean avoiding the truth about what to improve. Compare two action items: to rewrite the backend, and to cut the cost of the next on call engineer's night. The first judges people, and the second describes the system.
 
 It also means looking past one root cause. The October 2025 AWS event in [Surviving a Region Outage](/system-design/region-outage) had a race in DNS automation, a deletion step, a dependency of a server fleet on the database, a recovery that had no procedure, and a health check system whose automatic action removed capacity.
 
 A single root cause would have missed four of the five lessons.
 
-The workbook quotes a Google SRE leader on what makes it count: to users, a postmortem without subsequent action is indistinguishable from no postmortem.
-
-An unreviewed postmortem might as well not have existed, so drafts get reviewed for the quality of the data, the depth of the cause, the appropriateness of the action plan and the priority of its tickets.
+What makes a postmortem count is action. To users, a postmortem without subsequent action is indistinguishable from no postmortem. An unreviewed postmortem might as well not have existed, so drafts get reviewed for the quality of the data, the depth of the cause, the appropriateness of the action plan and the priority of its tickets.
 
 ## Closing the Loop
 
-The postmortem is the start of the learning, and the follow up decides whether it happens:
+The postmortem is the start of the learning, and the follow up decides whether it happens. Track the action items: each has an owner and a ticket, and an owner reports on them at a regular review. Look for repeats, since the same cause twice means the actions were too weak or too slow.
 
-- **Track the action items**: Each has an owner and a ticket, and an owner reports on them at a regular review
-- **Look for repeats**: The same cause twice means the actions were too weak or too slow
-- **Share widely**: The SRE book wants the widest audience that benefits, with no end user identifying data
-- **Practice**: Wheel of Misfortune role playing, where on call engineers respond to a simulated page, and game days like those of [Chaos Engineering](/system-design/chaos-engineering)
-- **Reward it**: Recognize people who write good postmortems and run good responses, with senior leaders taking part
+Share the postmortem widely, with the widest audience that benefits and no end user identifying data. Practice with role playing, where on call engineers respond to a simulated page, and with game days like those of [Chaos Engineering](/system-design/chaos-engineering). And reward the work: recognize people who write good postmortems and run good responses, with senior leaders taking part.
 
 The measurements come from the timeline: time to detect, to assemble a response, to mitigate and to resolve. In GitHub's case the first two were 2 and 19 minutes, and the long part was the restore. Each number points at a different investment, in alerting, in on call, in rollback or in backups.
 

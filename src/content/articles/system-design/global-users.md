@@ -73,19 +73,17 @@ The limit is what can be cached. Listing pages, search results and photos can be
 
 ## Move the Computation
 
-If each request must go to the origin, run an origin near each group of users. Azure's geode pattern is one version: a set of geographic nodes, each able to serve any request from any client in any region.
+If each request must go to the origin, run an origin near each group of users. One version of this is the geode pattern: a set of geographic nodes, each able to serve any request from any client in any region.
 
-Its summary is that it brings the compute to the data. A global routing service with health checks sends the user to a geode, and each geode reads and writes a data store replicated across regions.
+It brings the compute to the data. A global routing service with health checks sends the user to a geode, and each geode reads and writes a data store replicated across regions.
 
-The pattern has conditions:
+The pattern has conditions. The data is replicated asynchronously, so different geodes may see different versions of an item while replication is in progress.
 
-- **The data is replicated asynchronously**: Different geodes may see different versions of an item while replication is in progress
-- **Read your writes needs help**: A session token returned to the client and sent with later reads lets a user's writes follow them from one geode to another
-- **Conflicts need a policy**: Concurrent writes in two regions have to be resolved, as in [Detecting and Resolving Conflicts](/system-design/conflicts)
-- **Surviving geodes must absorb the load**: The failure of a geode sends its traffic to the others, the capacity arithmetic of [Surviving a Region Outage](/system-design/region-outage)
-- **It doesn't suit data tied to a place**: The page points to deployment stamps for data or users restricted to particular deployments, such as under residency rules
+Read your writes needs help: a session token returned to the client and sent with later reads lets a user's writes follow them from one geode to another. Concurrent writes in two regions need a conflict policy, as in [Detecting and Resolving Conflicts](/system-design/conflicts).
 
-The page's own advice on cost is to compare adding geodes with adding capacity to each geode, and its advice on when not to use the pattern includes cases where one region is enough.
+The surviving geodes must absorb the load when one fails, the capacity arithmetic of [Surviving a Region Outage](/system-design/region-outage). And the pattern doesn't suit data tied to a place, such as data or users restricted to particular deployments under residency rules, which belong in deployment stamps.
+
+Compare adding geodes with adding capacity to each geode, and if one region is enough, don't use the pattern.
 
 ## Move the Data
 
@@ -100,9 +98,13 @@ The hard part is where the writes happen. The managed databases show the options
 
 In each design, reads are served locally, and they run a little behind except in the strong designs.
 
-- **One primary**: The distance is paid by writes from far away. On a planned switch, Aurora reports a recovery point of zero and, on qualifying versions, read and write recovery typically under 30 seconds. An unplanned failover has a non zero recovery point measured in seconds and takes a few minutes to promote
-- **Multi active**: Each region commits locally, and the copies converge afterward. DynamoDB's default is eventual consistency between regions with last writer wins for conflicting writes, and a strongly consistent mode that can't be mixed in the same table. It offers 99.999 percent availability for global tables. The replication latency depends on the distance between regions and has no promised figure
-- **Strong across regions**: A commit has to reach a majority of regions before it is acknowledged, and the cost follows from the table of distances
+With one primary, the distance is paid by writes from far away. On a planned switch, Aurora reports a recovery point of zero and, on qualifying versions, read and write recovery typically under 30 seconds. An unplanned failover has a non zero recovery point measured in seconds and takes a few minutes to promote.
+
+With multi active, each region commits locally and the copies converge afterward. DynamoDB's default is eventual consistency between regions with last writer wins for conflicting writes, plus a strongly consistent mode that can't be mixed in the same table.
+
+It offers 99.999 percent availability for global tables, and the replication latency depends on the distance between regions and has no promised figure.
+
+With strong consistency across regions, a commit has to reach a majority of regions before it is acknowledged, and the cost follows from the table of distances.
 
 We computed that cost for three regions, Seoul, Tokyo and Frankfurt, with the leader in Seoul and a majority of 2:
 
@@ -124,13 +126,11 @@ The home region is stored with the user, requests are routed to it, and a user w
 
 A global design has to respect where data is allowed to be.
 
-The GDPR is the best known example, and its Chapter V sets the principle in Article 44: a transfer of personal data to a third country takes place if the conditions of the chapter are met, and the level of protection must not be undermined, including for onward transfers.
+The GDPR is the best known example. Its rules for transfers allow personal data to go to a third country when conditions are met, and the level of protection must not be undermined, including for onward transfers.
 
-Article 45 lets the Commission decide that a country ensures an adequate level of protection, and such a transfer needs no specific authorization, with a review at intervals of at most four years.
+A country can be judged to ensure an adequate level of protection, and then such a transfer needs no specific authorization, with a review at intervals of at most four years. Without that decision, appropriate safeguards are needed, including standard data protection clauses with enforceable data subject rights and effective legal remedies.
 
-Article 46 provides for appropriate safeguards where there is no such decision, including standard data protection clauses adopted by the Commission, with enforceable data subject rights and effective legal remedies.
-
-The articles don't say that data must stay inside the Union. They say a transfer needs a basis.
+The rules don't say that data must stay inside the Union. They say a transfer needs a basis.
 
 For the design, that suggests the stamp idea again: keep personal data in the home region by default, replicate the non personal data freely, hold keys per region, and record the legal basis for each flow that crosses a border.
 
