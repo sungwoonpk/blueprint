@@ -1,6 +1,8 @@
 > A **load balancer** sits in front of several servers, accepts each request and passes it to one that can handle it. It spreads the work, steers around failures and lets you add or remove servers without clients noticing.
 
-The load balancer first appeared in [From One Server to Many](/system-design/one-server-to-many), as the step that let one web server become several. The last topic showed that it is a [reverse proxy](/system-design/proxies) with a particular specialty. In [Estimating Capacity](/system-design/estimation), registration day needed about six servers, and this is the part that makes six machines look like one address to every student.
+The load balancer first appeared in [From One Server to Many](/system-design/one-server-to-many), as the step that let one web server become several. The last topic showed that it is a [Forward and Reverse Proxy Servers](/system-design/proxies) with a particular specialty.
+
+In [Estimating Capacity](/system-design/estimation), registration day needed about six servers, and this is the part that makes six machines look like one address to every student.
 
 ## What It Does
 
@@ -40,7 +42,9 @@ Load balancers come in two main kinds, named after the network layers you may re
 | Protocols | Anything over TCP or UDP | HTTP and similar |
 | Examples | AWS Network Load Balancer, Google passthrough Network Load Balancer | AWS Application Load Balancer, Google Application Load Balancer, nginx |
 
-The practical difference is what you can decide. Sending `/api/` to one group of servers and `/photos/` to another needs layer 7, because only that one can read the path. A UDP service, such as the metrics collector from [TCP and UDP](/system-design/tcp-udp), has no HTTP to read, so it uses layer 4. HAProxy shows the split inside a single tool, with a `tcp` mode and an `http` mode.
+The practical difference is what you can decide. Sending `/api/` to one group of servers and `/photos/` to another needs layer 7, because only that one can read the path.
+
+A UDP service, such as the metrics collector from [TCP and UDP](/system-design/tcp-udp), has no HTTP to read, so it uses layer 4. HAProxy shows the split inside a single tool, with a `tcp` mode and an `http` mode.
 
 Here are the two in nginx, which does layer 7 in its `http` block and layer 4 in a `stream` block:
 
@@ -76,11 +80,11 @@ Keeping the client's address intact is one reason to choose layer 4, since a lay
 
 If every request goes through the load balancer, it can become the weak spot. Two answers appear in real systems.
 
-The first is to run several. AWS describes it this way: turning on an availability zone creates a load balancer node there, the Application Load Balancer needs at least two zones, and its DNS name returns the addresses of the nodes. A client picks one, and AWS adds and removes nodes as traffic changes.
+The first is to run several. Managed load balancers work this way. In AWS, turning on an availability zone creates a balancer node there, the Application Load Balancer needs at least two zones, and its DNS name returns the addresses of the nodes. A client picks one, and AWS adds and removes nodes as traffic changes.
 
 A DNS answer is cached, as in [How DNS Works](/system-design/dns), so when a zone has no healthy servers and its address is taken out, clients that cached it can keep hitting it for up to the TTL, which AWS sets to 60 seconds.
 
-The second is to spread packets across many balancers before they arrive. Google's Maglev paper describes software load balancers on ordinary servers, with the network's routers sharing packets among them using equal cost multipath routing, and each machine then choosing a backend. Meta's open source Katran follows the same pattern.
+The second is to spread packets across many balancers before they arrive. Google's Maglev is a software load balancer built from ordinary servers, with the network's routers sharing packets among them using equal cost multipath routing, and each machine then choosing a backend. Meta's open source Katran follows the same pattern.
 
 ## Spread Across Zones, Evenly
 
@@ -107,7 +111,9 @@ With **sticky sessions** it sets a cookie on the first response and reads it on 
 
 The costs are the ones from [Stateless and Stateful Services](/system-design/stateless-stateful): uneven load, and a user who loses the session if that server goes away.
 
-A related feature matters on deploy day. When a server is removed from rotation, for an update or because the fleet shrank, the load balancer stops giving it new requests but lets the ones in flight finish. This is **draining**, and AWS calls the wait the deregistration delay, 300 seconds by default and adjustable up to an hour:
+A related feature matters on deploy day. When a server is removed from rotation, for an update or because the fleet shrank, the load balancer stops giving it new requests but lets the ones in flight finish.
+
+This is **draining**, and AWS calls the wait the deregistration delay, 300 seconds by default and adjustable up to an hour:
 
 <figure class="diagram">
 <p class="rowname">Still Taking New Requests</p>

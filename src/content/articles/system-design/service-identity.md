@@ -14,7 +14,7 @@ The same document adds tenets that shape the design:
 - **Dynamic policy**: The decision uses the observable state of the client's identity, the application or service, and the requesting asset, and it can include behavior and environment
 - **Strict enforcement**: Authentication and authorization are dynamic and strictly enforced before access is allowed
 
-It describes two roles. A policy decision point, split into a policy engine and a policy administrator, decides. A policy enforcement point enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays the second role, and Istio's documentation calls sidecar and perimeter proxies policy enforcement points.
+There are two roles. A policy decision point, split into a policy engine and a policy administrator, decides. A policy enforcement point enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays the second role, and Istio calls sidecar and perimeter proxies policy enforcement points.
 
 ## What TLS Gives
 
@@ -50,7 +50,7 @@ That is CPU alone, without network delay, and it is paid on a new connection, no
 
 An address says where a service runs now. Containers move and addresses are reused, so a name tied to an address names the wrong thing within minutes. SPIFFE, the Secure Production Identity Framework for Everyone, defines a name that follows the workload:
 
-- **SPIFFE ID**: A URI in the form `spiffe://trust domain/workload identifier`, such as the documentation's example `spiffe://acme.com/billing/payments`
+- **SPIFFE ID**: A URI in the form `spiffe://trust domain/workload identifier`, such as `spiffe://acme.com/billing/payments`
 - **Trust domain**: The root of trust for a system, such as an organization or an environment. The guidance is to keep different environments, like staging and production, in different trust domains
 - **SVID**: A SPIFFE verifiable identity document, which holds one SPIFFE ID and is valid when signed by an authority of that trust domain. It comes as an X.509 certificate or a JWT
 - **Trust bundle**: The root certificates a workload uses to check the other side
@@ -68,7 +68,7 @@ Issuing a certificate to a service raises a bootstrap question: how does a new p
 
 The server signs a certificate for a match, and the agent caches it.
 
-The workload fetches its certificate and key through a local API, and the SPIFFE documentation notes that the caller needs no prior knowledge of its own identity and no authentication token, so no secret has to be shipped with the code. The keys and certificates are described as short lived, rotated frequently and automatically.
+The workload fetches its certificate and key through a local API, and the caller needs no prior knowledge of its own identity and no authentication token, so no secret has to be shipped with the code. The keys and certificates are short lived, rotated frequently and automatically.
 
 Istio does the same job for a mesh. An agent next to each proxy creates the private key and a signing request, sends it to the control plane, and passes the signed certificate to the proxy. The process repeats periodically for rotation.
 
@@ -93,7 +93,7 @@ Alert on days to expiry and on renewal failures, as in [Alerting and Dashboards]
 
 mTLS proves who the caller is. It doesn't decide what the caller may do. That is authorization, and the identity in the certificate is the input.
 
-Istio's AuthorizationPolicy shows the shape: rules that allow or deny by the caller's principal, namespace or other attributes, applied at the proxy in front of each service. Its documentation recommends strict mutual TLS when rules rely on principals or namespaces, since a plaintext request has no verified principal to match.
+Istio's AuthorizationPolicy shows the shape: rules that allow or deny by the caller's principal, namespace or other attributes, applied at the proxy in front of each service. Use strict mutual TLS when rules rely on principals or namespaces, since a plaintext request has no verified principal to match.
 
 For the textbook app:
 

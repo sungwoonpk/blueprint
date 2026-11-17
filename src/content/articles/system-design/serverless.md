@@ -33,13 +33,15 @@ def handler(event, context):
         storage.write("thumbs/" + key, shrink(photo, width=300))
 ```
 
-Amazon's documentation describes Lambda this way: you provide the handler and a trigger, and each invocation runs on its own, with no state shared between them. That fits the stateless idea from [Stateless and Stateful Services](/system-design/stateless-stateful) taken as far as it goes. Anything that must last goes to a database or storage, and the function's own memory isn't safe to rely on.
+A function platform such as AWS Lambda works this way: you provide the handler and a trigger, and each invocation runs on its own, with no state shared between them.
+
+That fits the stateless idea from [Stateless and Stateful Services](/system-design/stateless-stateful) taken as far as it goes. Anything that must last goes to a database or storage, and the function's own memory isn't safe to rely on.
 
 ## Scaling Without Asking
 
 No one sets a server count. For each request that is in flight, the platform gives the function an execution environment of its own, and in Lambda's model an environment handles one request at a time.
 
-AWS gives a formula for how many that makes: concurrency equals requests per second times the average duration in seconds. It is the same relation as in [Latency and Throughput](/system-design/latency-throughput), and with the numbers from [Estimating Capacity](/system-design/estimation) it says what to expect:
+The number of environments running at once follows a simple formula: concurrency equals requests per second times the average duration in seconds. It is the same relation as in [Latency and Throughput](/system-design/latency-throughput), and with the numbers from [Estimating Capacity](/system-design/estimation) it says what to expect:
 
 ```text
 3,000 requests a second x 0.1 seconds = 300 environments running at once
@@ -81,7 +83,7 @@ When no environment is free, a new one has to be built: the code is downloaded, 
 <figcaption>A warm environment skips straight to the handler</figcaption>
 </figure>
 
-AWS says cold starts happen in under 1% of invocations in production workloads, and last from under 100 ms to over a second. They are more common for rarely used functions and during sudden growth, since each new environment starts cold. The tools to reduce them:
+On AWS Lambda, cold starts happen in under 1% of invocations in production workloads, and last from under 100 ms to over a second. They are more common for rarely used functions and during sudden growth, since each new environment starts cold. The tools to reduce them:
 
 - **Provisioned concurrency**: keeps a set number of environments initialized and ready, and it is billed
 - **SnapStart**: starts new environments from a saved snapshot of an already initialized one. It is available for Java, Python and .NET, with some restrictions
@@ -97,13 +99,15 @@ def handler(event, context):
     return db.query("SELECT 1")   # reused while the environment stays warm
 ```
 
-AWS warns not to count on an environment lasting. It is recycled every few hours, so code should check that a cached connection still works before using it.
+Don't count on an environment lasting: it is recycled every few hours, so code should check that a cached connection still works before using it.
 
 And since each environment holds its own connection, 300 busy environments mean 300 database connections, which a database sized for a few web servers may not tolerate. The pooling idea from [TCP and UDP](/system-design/tcp-udp) applies, usually with a pooling proxy in front of the database.
 
 ## What It Costs
 
-Serverless is billed by use. For Lambda, that is a small price per request and a price per GB-second, which is memory times running time. Using the rates on AWS's pricing page for x86 functions in US East, $0.20 per million requests and $0.0000166667 per GB-second, and ignoring the free allowance, here are two workloads of the textbook app:
+Serverless is billed by use. For Lambda, that is a small price per request and a price per GB-second, which is memory times running time.
+
+Using the rates on AWS's pricing page for x86 functions in US East, $0.20 per million requests and $0.0000166667 per GB-second, and ignoring the free allowance, here are two workloads of the textbook app:
 
 | | Photo Resizing | The Main API |
 | --- | --- | --- |
@@ -114,7 +118,9 @@ Serverless is billed by use. For Lambda, that is a small price per request and a
 | Request Cost | $0.54 | $155.52 |
 | Monthly Total | About $18.54 | About $803.52 |
 
-The first is a bargain. It is bursty, it sits idle most of the day, and it would waste a server. The second adds up fast, because it is busy around the clock, and a server costs the same busy or idle. That is the pattern: serverless wins for spiky, rare or unpredictable work, and a fleet that is always running often wins for steady heavy load. The comparison needs your own numbers.
+The first is a bargain. It is bursty, it sits idle most of the day, and it would waste a server. The second adds up fast, because it is busy around the clock, and a server costs the same busy or idle.
+
+That is the pattern: serverless wins for spiky, rare or unpredictable work, and a fleet that is always running often wins for steady heavy load. The comparison needs your own numbers.
 
 ## The Limits of the Model
 
@@ -124,7 +130,7 @@ Researchers at Berkeley, in a paper from 2018 titled "Serverless Computing: One 
 - **Slow data access**: functions can't be reached directly, so they pass data through storage. They measured about 108 ms to read 1 KB from S3, against about 290 microseconds for direct messaging, the gap from [Numbers Every Engineer Should Know](/system-design/numbers)
 - **Code goes to the data**: the model moves data to the code, which is costly for heavy data work
 
-Other cautions come from Martin Fowler's overview: the provider's limits and prices are not yours to control, local testing doesn't match the cloud exactly, and a function that runs rarely pays startup latency on each call. Azure adds a detail worth knowing: an HTTP triggered function must answer within 230 seconds, whatever its own timeout says.
+Other cautions: the provider's limits and prices are not yours to control, local testing doesn't match the cloud exactly, and a function that runs rarely pays startup latency on each call. One more detail worth knowing: on Azure an HTTP triggered function must answer within 230 seconds, whatever its own timeout says.
 
 ## Where It Fits
 

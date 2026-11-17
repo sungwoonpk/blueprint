@@ -103,7 +103,7 @@ We calculated the same effect for the textbook app's search, if one slow request
 | 20 | 18.2% |
 | 100 | 63.4% |
 
-The paper adds that a service whose servers are slow for 1 request in 10,000 will still see almost one request in five slow, when each request waits for 2,000 servers.
+A service whose servers are slow for 1 request in 10,000 will still see almost one request in five slow, when each request waits for 2,000 servers.
 
 In a real Google service it measured, the 99th percentile for one request to finish was 10 ms, and the 99th percentile for the full set of leaf requests was 140 ms.
 

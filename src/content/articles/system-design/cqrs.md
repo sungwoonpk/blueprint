@@ -10,21 +10,21 @@ At first both use the same tables, and the search page joins five of them. Write
 
 The idea comes from a rule for single methods. Bertrand Meyer's command query separation, which Martin Fowler describes in a 2005 note, says a method either returns a result with no side effects, a **query**, or changes state and returns no value, a **command**. A query can be called anywhere, in any order, with confidence.
 
-CQRS applies the same split to whole models. Fowler's 2011 article says it came to him from Greg Young, and defines it as using a different model to update information than the one used to read it. Microsoft's guidance adds that queries return plain data objects with no domain logic.
+CQRS applies the same split to whole models: it means using a different model to update information than the one used to read it, an idea that comes from Greg Young. Queries return plain data objects with no domain logic.
 
 | Side | Job | Shaped By |
 | --- | --- | --- |
 | Command (Write) | Check the rules, change the data | Business rules and transactions |
 | Query (Read) | Return exactly what a screen needs | The screens and their speed |
 
-Microsoft recommends that commands describe a business task, such as `PostListing`, and not a low level update such as `SetListingStatusOpen`. The task keeps the rules in one place, and it gives the write side something that can fail with a reason.
+Commands should describe a business task, such as `PostListing`, and not a low level update such as `SetListingStatusOpen`. The task keeps the rules in one place, and it gives the write side something that can fail with a reason.
 
 ## Two Models, Two Stores
 
-The separation has two levels. Microsoft describes both, and Fowler's article lists the same forms:
+The separation has two levels:
 
 - **Two models, one database**: The simplest form. The write model has the rules and the transactions, and the read model is a set of queries that return flat objects. Microsoft's guide for .NET microservices suggests this as the starting point
-- **Two models, two stores**: Each side can use the technology and the scaling that suits it. Microsoft's example is a relational database for writes and a document database for reads, and AWS lists combinations of relational and NoSQL stores on either side
+- **Two models, two stores**: Each side can use the technology and the scaling that suits it. A typical pair is a relational database for writes and a document database for reads, and other combinations of relational and NoSQL stores work on either side
 
 With two stores, something must carry changes from one to the other.
 
@@ -69,11 +69,11 @@ Both are small because everything was in memory and the tables had indexes, and 
 
 The read model also changes without touching the write side. A new screen means a new projection, built by replaying the events, and a read store can be a search engine or a cache if that is the better fit.
 
-Microsoft lists these gains: independent scaling of reads and writes, schemas tuned to each, a simpler query side and better security, since just the write side needs permission to change data.
+The gains: independent scaling of reads and writes, schemas tuned to each, a simpler query side and better security, since just the write side needs permission to change data.
 
 ## Keeping the Read Side Current
 
-Writes and the events that describe them must not disagree, which is the dual write problem from [The Transactional Outbox](/system-design/transactional-outbox). Microsoft's CQRS page recommends exactly that outbox, together with an idempotent consumer, because duplicates arrive.
+Writes and the events that describe them must not disagree, which is the dual write problem from [The Transactional Outbox](/system-design/transactional-outbox). The fix is that outbox, together with an idempotent consumer, because duplicates arrive.
 
 Reading the changes from the log with [Change Data Capture](/system-design/cdc) is another route, and with [Event Sourcing](/system-design/event-sourcing) the events are the write model, so the projection reads them directly.
 
@@ -88,11 +88,11 @@ ON CONFLICT (listing_id) DO UPDATE
 -- an old or repeated event matches no row and changes no data
 ```
 
-If a projection has a bug or a new column, rebuild it: Microsoft notes that views can be regenerated from the history, and for long histories it suggests periodic snapshots so the whole history need not be read again.
+If a projection has a bug or a new column, rebuild it: views can be regenerated from the history, and for long histories periodic snapshots mean the whole history need not be read again.
 
 ## The Price: Stale Reads
 
-Two stores mean the read side trails the write side, a delay Microsoft, AWS and Richardson each name as eventual consistency. The delay is short, and it still shows. We simulated a read side that takes 200 ms on average to apply an event, with random delays that average that.
+Two stores mean the read side trails the write side, a delay called eventual consistency. The delay is short, and it still shows. We simulated a read side that takes 200 ms on average to apply an event, with random delays that average that.
 
 A seller who posts a listing and sees the next page 100 ms later would miss it in 60.8 percent of the posts. After 1 second, 0.65 percent still missed it, and after 2 seconds, 0.01 percent.
 
@@ -103,7 +103,7 @@ The numbers depend on our assumed delay, and the shape holds: most readers see t
 - **Tell the user later**: A command that fails after it was accepted is reported by a notification, since it can't answer at once
 - **Read from the write side for a moment**: A common remedy of our own choosing, not from the sources: after a user's own write, serve that user's next read from the write store
 
-Microsoft adds a similar point for commands: validate in the client where possible, so most commands succeed, and queue the rest. The design has to expect that a user may act on stale data and decide what happens then.
+A similar point for commands: validate in the client where possible, so most commands succeed, and queue the rest. The design has to expect that a user may act on stale data and decide what happens then.
 
 ## When Not to Use It
 
@@ -115,11 +115,11 @@ He also names a lighter option: if just some queries are heavy, copy data to a r
 
 The sources describe when the cost is worth it:
 
-- **Many people changing the same data**: Dahan's test is collaboration, and Microsoft names collaborative environments and task based screens
+- **Many people changing the same data**: collaborative environments and task based screens
 - **Reads and writes with different needs**: Microsoft points to workloads that read much more than they write and need to scale separately
 - **Queries across services**: Richardson's problem is a query that needs data from several services that each own theirs. A view database is one answer, and he lists API composition, which calls the services and joins the results, as the alternative
 
-Microsoft says to skip it when the domain and the rules are simple. In the textbook app, the listing search is a fit: many more reads than writes, and a shape that differs from the tables. The seller's profile page is a plain table that one model handles.
+Skip it when the domain and the rules are simple. In the textbook app, the listing search is a fit: many more reads than writes, and a shape that differs from the tables. The seller's profile page is a plain table that one model handles.
 
 ## Key Points
 

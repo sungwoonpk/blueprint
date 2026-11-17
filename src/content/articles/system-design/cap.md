@@ -71,16 +71,16 @@ His examples are an airline that overbooks and compensates, and Facebook's use o
 
 The labels CP and AP are common, and the detail behind them is richer:
 
-- **Cassandra**: Its guarantees page says it picks availability and partition tolerance, and settles for eventual consistency of ordinary writes. It adds lightweight transactions, built on Paxos, for linearizable compare and set, as in [Leaderless Replication and Quorums](/system-design/leaderless-replication)
-- **etcd**: Jepsen's 2020 analysis of etcd found its key value operations were strictly serializable by default, through partitions, crashes and clock skew, and found no safety violation in those tests. Its documentation says that a cluster that loses its majority stops making progress, and that three members tolerate 1 failure and five tolerate 2. Jepsen also found that etcd's locks failed to give mutual exclusion under pauses, with about 18 percent of acknowledged updates lost in one test, and advised fencing tokens, the subject of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks)
+- **Cassandra**: It picks availability and partition tolerance, and settles for eventual consistency of ordinary writes. It adds lightweight transactions, built on Paxos, for linearizable compare and set, as in [Leaderless Replication and Quorums](/system-design/leaderless-replication)
+- **etcd**: Jepsen's 2020 analysis of etcd found its key value operations were strictly serializable by default, through partitions, crashes and clock skew, and found no safety violation in those tests. A cluster that loses its majority stops making progress, and three members tolerate 1 failure while five tolerate 2. Jepsen also found that etcd's locks failed to give mutual exclusion under pauses, with about 18 percent of acknowledged updates lost in one test, and advised fencing tokens, the subject of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks)
 - **CockroachDB**: Jepsen's 2016 report found single keys looked linearizable under partitions, but while clock offset stayed under its 250 ms default, since above that nodes shut themselves down
 - **Spanner**: Brewer's own 2017 paper calls Spanner technically a CP system, because in some partitions it chooses consistency and gives up availability, and effectively CA in practice, since real availability is high
 
-The Spanner paper offers a sobering table. Its internal incidents came from user errors for 52.5 percent, software bugs 13.3 percent, cluster problems such as servers and power 12.1 percent, other causes 10.9 percent, the network 7.6 percent and operators 3.7 percent.
+Spanner's incident data is sobering. Its internal incidents came from user errors for 52.5 percent, software bugs 13.3 percent, cluster problems such as servers and power 12.1 percent, other causes 10.9 percent, the network 7.6 percent and operators 3.7 percent.
 
 The two biggest outages were both software bugs that hit each replica of a database at once. Brewer argues that when partitions are far rarer than other faults, the label matters less than the engineering around the other faults.
 
-Chubby shows the numbers: its first paper reported nine outages of 30 seconds or longer in 700 days, six of them from the network, and later geographically distributed cells averaged 99.99958 percent availability for such outages.
+Chubby shows the numbers: Google reported nine outages of 30 seconds or longer in 700 days, six of them from the network, and later geographically distributed cells averaged 99.99958 percent availability for such outages.
 
 ## Why Some Engineers Retire the Labels
 

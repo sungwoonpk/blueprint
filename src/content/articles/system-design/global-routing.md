@@ -1,6 +1,8 @@
 > **Global traffic routing** decides which region, or which data center, each user's request goes to. It sends users to a nearby place that works, and moves them away from one that doesn't.
 
-Everything so far in this phase happened inside one place: a load balancer, some servers, one data center. [Load Balancers](/system-design/load-balancers) spread requests across those servers. This topic is about the layer above, choosing between whole regions. It matters once the textbook app has users far from the servers, or once losing a whole data center is a risk worth planning for.
+Everything so far in this phase happened inside one place: a load balancer, some servers, one data center. [Load Balancers](/system-design/load-balancers) spread requests across those servers.
+
+This topic is about the layer above, choosing between whole regions. It matters once the textbook app has users far from the servers, or once losing a whole data center is a risk worth planning for.
 
 ## Why Route by Place
 
@@ -27,7 +29,7 @@ There are three reasons, and each one connects to something earlier:
 <figcaption>Each user goes to a nearby region that works, and a failed region is skipped</figcaption>
 </figure>
 
-Two tools do this routing. One answers with different [DNS](/system-design/dns) addresses for different users. The other gives all the regions the same address and lets the network's own routing pick.
+Two tools do this routing. One answers with different [How DNS Works](/system-design/dns) addresses for different users. The other gives all the regions the same address and lets the network's own routing pick.
 
 ## Routing With DNS
 
@@ -56,7 +58,9 @@ Each region gets its own record, tagged with where it is and how to tell if it's
 }
 ```
 
-One record per region shares a name, and the service answers with the best healthy one. The word "best" needs a caveat: Route 53 says latency routing uses delays it has measured between users and AWS regions, which isn't the same as geographic distance, and it changes as networks change. Its own example is that a user sent to Oregon one week might be sent to Singapore the next.
+One record per region shares a name, and the service answers with the best healthy one. The word "best" needs a caveat: Route 53 says latency routing uses delays it has measured between users and AWS regions, which isn't the same as geographic distance, and it changes as networks change.
+
+Its own example is that a user sent to Oregon one week might be sent to Singapore the next.
 
 ## Where DNS Routing Falls Short
 
@@ -70,11 +74,13 @@ DNS is easy to use and has built in blind spots:
 
 The second tool avoids the question. With **anycast**, the same IP address is announced from many places at once, and the internet's routing sends each packet toward the nearest announcer. RFC 4786, the standard on operating anycast, is blunt that "nearest" means closest by network topology, which doesn't always mean fastest.
 
-It suits two jobs well. DNS root servers use it, so a lookup is answered close to the user. And it contains attacks: the RFC lists keeping damage from a denial of service attack near the nodes it hits as a goal, because traffic lands on the nodes closest to each attacker and isn't piled on one.
+It suits two jobs well. DNS root servers use it, so a lookup is answered close to the user. And it contains attacks: traffic lands on the nodes closest to each attacker and isn't piled on one, so the damage of a denial of service attack stays near where it hits.
 
-Google's global load balancer shows the idea at full scale. It gives each service a single anycast address, and Google's documentation says traffic enters its private network at the point of presence closest to the user, from over 200 of them, and then crosses Google's own backbone to the right region. No DNS tricks are needed, and a failed region only needs the load balancer to stop sending to it.
+Google's global load balancer shows the idea at full scale. It gives each service a single anycast address, and traffic enters Google's private network at the point of presence closest to the user, one of over 200, and then crosses Google's own backbone to the right region.
 
-The catch is long connections. A TCP connection has to stay on one node, and the RFC warns that if routes change in the middle, packets of a single connection can reach a different node and break it. That is one reason to end the connection at a nearby edge, which then carries the traffic inward over a stable path.
+No DNS tricks are needed, and a failed region only needs the load balancer to stop sending to it.
+
+The catch is long connections. A TCP connection has to stay on one node, and if routes change in the middle, packets of a single connection can reach a different node and break it. That is one reason to end the connection at a nearby edge, which then carries the traffic inward over a stable path.
 
 | | DNS Routing | Anycast |
 | --- | --- | --- |
@@ -87,13 +93,15 @@ The catch is long connections. A TCP connection has to stay on one node, and the
 
 Health checks, as in [Health Checks](/system-design/health-checks), are how the routing layer finds out. Route 53 checks an endpoint from many locations at once, with checks every 30 seconds, or every 10 seconds at an extra cost, and treats it as healthy if more than 18% of those checkers say so.
 
-The docs say this keeps a few checkers with bad network paths from declaring a good region dead, and that the figure may change. If all the records look unhealthy, Route 53 answers with all of them anyway, a fail open safety net like the one in [Health Checks](/system-design/health-checks).
+Requiring a share of the checkers keeps a few with bad network paths from declaring a good region dead. If all the records look unhealthy, Route 53 answers with all of them anyway, a fail open safety net like the one in [Health Checks](/system-design/health-checks).
 
-Then comes the part that is easy to forget: the surviving regions need room. In [Redundancy and Failover](/system-design/redundancy-failover), three servers at 70% busy became 105% when one died. Regions work the same way. Three regions at 60% busy, minus one, leave the other two at 90%, which is already a slow place to be. And users sent to a new region need their data there, the subject of [Serving Users Worldwide](/system-design/global-users).
+Then comes the part that is easy to forget: the surviving regions need room. In [Redundancy and Failover](/system-design/redundancy-failover), three servers at 70% busy became 105% when one died. Regions work the same way.
+
+Three regions at 60% busy, minus one, leave the other two at 90%, which is already a slow place to be. And users sent to a new region need their data there, the subject of [Serving Users Worldwide](/system-design/global-users).
 
 ## When the Routing Layer Breaks
 
-The routing layer is also a dependency of everything behind it, and it fails in its own ways. On October 4, 2021, Meta's services, including Facebook, Instagram and WhatsApp, disappeared from the internet for about five and a half hours, according to Cloudflare's timeline. Meta's engineering posts describe the chain:
+The routing layer is also a dependency of everything behind it, and it fails in its own ways. On October 4, 2021, Meta's services, including Facebook, Instagram and WhatsApp, disappeared from the internet for about five and a half hours. The chain of events went like this:
 
 <figure class="diagram">
 <p class="rowname">What Happened Inside</p>
@@ -111,7 +119,9 @@ The routing layer is also a dependency of everything behind it, and it fails in 
 <figcaption>A safety rule in the routing layer turned an internal failure into a global one</figcaption>
 </figure>
 
-A command run during routine maintenance accidentally took down the connections between Meta's data centers. Its DNS servers were built to withdraw their own routes from the internet when they can't reach the data centers, a health rule meant to steer users away from a broken site. With all the data centers unreachable, all of them withdrew, and the rest of the internet could no longer find Meta's DNS servers or anything behind them.
+A command run during routine maintenance accidentally took down the connections between Meta's data centers. Its DNS servers were built to withdraw their own routes from the internet when they can't reach the data centers, a health rule meant to steer users away from a broken site.
+
+With all the data centers unreachable, all of them withdrew, and the rest of the internet could no longer find Meta's DNS servers or anything behind them.
 
 Recovery was slow, because the tools engineers would normally use to reach the network were down too, and people had to go to the data centers in person.
 

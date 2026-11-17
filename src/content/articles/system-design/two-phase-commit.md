@@ -8,7 +8,7 @@ Two-phase commit is the classic answer. It makes the two databases agree, and, a
 
 ## The Protocol
 
-One node is the **coordinator**, and the others are **participants**, also called cohorts. Wikipedia's account of the protocol follows the steps in two phases:
+One node is the **coordinator**, and the others are **participants**, also called cohorts. The protocol runs in two phases:
 
 - **Phase 1, voting**: The coordinator sends a query to commit and waits for each reply. Each participant does the work up to the point of committing, writes undo and redo records to its log on stable storage, and votes yes, or votes no if it can't commit
 - **Phase 2, decision**: If each vote is yes, the coordinator sends commit, and each participant commits, releases its locks and acknowledges. If any vote is no, or a vote times out, the coordinator sends rollback, and each participant undoes its work
@@ -39,7 +39,7 @@ One node is the **coordinator**, and the others are **participants**, also calle
 
 The key rule is in the vote. A participant that votes yes has promised to commit if told to, which means it must keep its changes and its locks safely until it hears the decision, even through a crash. That promise is written to disk before the vote is sent.
 
-PostgreSQL exposes the participant side directly. Its documentation says that after `PREPARE TRANSACTION`, the state is stored on disk, so it is very likely that it can be committed even after a crash, and the commit can come from any session:
+PostgreSQL exposes the participant side directly. After `PREPARE TRANSACTION`, the state is stored on disk, so the transaction can almost certainly be committed even after a crash, and the commit can come from any session:
 
 ```sql
 -- on the listings shard
@@ -63,7 +63,7 @@ XA RECOVER lists the prepared branches after a crash. A transaction with a singl
 
 ## The Price: Prepared Means Locked
 
-A prepared transaction is neither committed nor rolled back, and it holds its locks. PostgreSQL's documentation warns that leaving one prepared for long interferes with vacuum and, in extreme cases, can force a shutdown to prevent transaction ID wraparound.
+A prepared transaction is neither committed nor rolled back, and it holds its locks. Leaving one prepared for long interferes with vacuum in PostgreSQL and, in extreme cases, can force a shutdown to prevent transaction ID wraparound.
 
 It says the feature is meant for external transaction managers and not for applications, and that if no manager tracks prepared transactions, `max_prepared_transactions` should stay at its default of 0. A prepared transaction that is forgotten holds its locks until someone finds it in `pg_prepared_xacts`.
 
@@ -84,23 +84,23 @@ With 107 ms of lock time across regions, the row's ceiling falls from 286 to 9 t
 
 The weakness of the protocol shows when the coordinator fails after the votes. A participant that voted yes can't commit on its own, since another participant may have voted no. It can't roll back either, since the coordinator may already have decided to commit.
 
-It must wait. Wikipedia lists this as the main disadvantage: it is a blocking protocol, and a participant that voted yes waits until it hears the decision, with its locks held.
+It must wait. That is the main disadvantage: it is a blocking protocol, and a participant that voted yes waits until it hears the decision, with its locks held.
 
 The recovery is for the coordinator to come back, read its log and finish the decision. If the coordinator is gone for good, an operator has to resolve each prepared transaction by hand.
 
 In our table, 21 transactions would be stuck at 200 a second across two regions when the coordinator crashed, and less than one in a single data center.
 
-Narayana, a Java transaction manager, runs a recovery manager in periodic passes, which finds in doubt transactions and retries them, with defaults of a 120 second period and a 10 second backoff. Its documentation notes that rows can stay locked by in doubt transactions until recovery completes.
+Narayana, a Java transaction manager, runs a recovery manager in periodic passes, which finds in doubt transactions and retries them, with defaults of a 120 second period and a 10 second backoff. Rows can stay locked by in doubt transactions until recovery completes.
 
 Several fixes exist:
 
-- **Paxos Commit**: Jim Gray and Leslie Lamport's design gives each participant's vote its own consensus instance, so a failed coordinator can be replaced. The paper's summary says two phase commit is Paxos Commit that tolerates no faults
-- **Three-phase commit**: It adds a stage so that participants can decide if the coordinator fails, and Wikipedia notes that it assumes bounded network delays and needs at least three round trips, so it is rarely used
+- **Paxos Commit**: Jim Gray and Leslie Lamport's design gives each participant's vote its own consensus instance, so a failed coordinator can be replaced. Two phase commit turns out to be Paxos Commit that tolerates no faults
+- **Three-phase commit**: It adds a stage so that participants can decide if the coordinator fails, but it assumes bounded network delays and needs extra round trips, so it is rarely used
 - **Replicated participants and coordinator**: This is the approach of real databases, described next
 
 ## How Databases Make It Practical
 
-Google Spanner uses two phase commit when a transaction spans more than one split, its unit of data. A transaction inside one split commits through that split's Paxos group, which the documentation says takes typically a handful of milliseconds. A transaction across splits has a participant leader act as coordinator.
+Google Spanner uses two phase commit when a transaction spans more than one split, its unit of data. A transaction inside one split commits through that split's Paxos group, which typically takes a handful of milliseconds. A transaction across splits has a participant leader act as coordinator.
 
 In phase 1, each participant takes locks and records its prepared state in its own Paxos log. If each succeeds, the coordinator logs the commit decision in its Paxos group, and that log write is the commit point. Phase 2 tells the participants, which replicate the decision.
 
@@ -108,7 +108,7 @@ Because each participant and the coordinator are replicated groups, a single mac
 
 CockroachDB cut the cost further with parallel commits. Writing the changes is the prepare, and marking the transaction record committed is the commit, which classically costs two rounds of consensus. With parallel commits, the record is written as staging together with the list of writes in flight, in parallel with them.
 
-The transaction counts as committed once each listed write has succeeded, which any observer can check, so the commit takes one round of consensus, and the blog says this halves latency for transactions across ranges. If the coordinator dies, a later observer checks the listed writes and either commits or aborts the transaction.
+The transaction counts as committed once each listed write has succeeded, which any observer can check, so the commit takes one round of consensus, which halves the latency of transactions across ranges. If the coordinator dies, a later observer checks the listed writes and either commits or aborts the transaction.
 
 The pattern shows up in messaging as well. Kafka's transactions use a coordinator with a replicated transaction log, which defaults to 50 partitions and 3 replicas. The producer's coordinator writes a prepare record, then appends commit or abort markers to the partitions it wrote to, and then marks the transaction complete.
 

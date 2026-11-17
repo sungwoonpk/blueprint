@@ -6,7 +6,7 @@ It knows nothing about word forms, so "Algorithm" won't find "Algorithms". And i
 
 ## Index the Words, Not the Documents
 
-An ordinary index maps a document to its content. Wikipedia describes an inverted index as the reverse: it maps each word to the places it occurs. Here are six listings, and part of the index built from their titles:
+An ordinary index maps a document to its content. An **inverted index** is the reverse: it maps each word to the places it occurs. Here are six listings, and part of the index built from their titles:
 
 | Listing | Title |
 | --- | --- |
@@ -48,17 +48,17 @@ A query with two words combines two lists. For "early calculus" with both words 
 <figcaption>Walking two sorted lists together finds the listings that contain both words</figcaption>
 </figure>
 
-Wikipedia notes two variants. A record level index stores only which documents contain a word. A word level index also stores the position of each occurrence, which makes phrase searches such as "linear algebra" possible, at the cost of more space and work to build.
+There are two variants. A record level index stores only which documents contain a word. A word level index also stores the position of each occurrence, which makes phrase searches such as "linear algebra" possible, at the cost of more space and work to build.
 
-The price of the whole idea, in Wikipedia's words, is more processing when a document is added: a new title touches the list of each word in it.
+The price of the whole idea is more processing when a document is added: a new title touches the list of each word in it.
 
 ## Analysis: What Counts as a Word
 
-Before indexing, text is turned into the words to be indexed, a step Elastic's documentation calls **text analysis**. It has three jobs. Tokenization splits text into tokens, usually words, so that "quick fox" can match a title containing both.
+Before indexing, text is turned into the words to be indexed, a step called **text analysis**. It has three jobs. Tokenization splits text into tokens, usually words, so that "quick fox" can match a title containing both.
 
 Normalization maps tokens to a standard form: lowercasing, stemming ("foxes" becomes "fox"), or treating synonyms as one word. Stop words, the common ones like "the", are removed. In Elasticsearch an analyzer is a short pipeline: optional character filters, such as stripping HTML, then exactly one tokenizer, then optional token filters such as lowercasing.
 
-The same analysis is applied to the query, so what the user types is reduced the same way as the documents, and "Foxes leap" can match a text about "a quick fox jumps". PostgreSQL's documentation shows the result on its own example:
+The same analysis is applied to the query, so what the user types is reduced the same way as the documents, and "Foxes leap" can match a text about "a quick fox jumps". Here is the result in PostgreSQL:
 
 ```sql
 SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
@@ -73,7 +73,7 @@ Matching words isn't enough, since "calculus" matches three of the six titles. T
 
 The idea behind most scoring is **tf-idf**, introduced by Karen Spärck Jones in 1972: a word counts for more when it is frequent in a document and rare in the collection. A word that is in all the documents tells you nothing.
 
-Elasticsearch and Lucene default to a refinement called **BM25**, which Wikipedia writes like this, with `f` the count of a word in the document, `|D|` its length and `avgdl` the average length:
+Elasticsearch and Lucene default to a refinement called **BM25**, which is written like this, with `f` the count of a word in the document, `|D|` its length and `avgdl` the average length:
 
 ```text
 score = sum over query words of
@@ -96,7 +96,7 @@ Listing 1 wins because it has both words. The next result is a surprise: listing
 
 Searching for "calculus" alone gives another order: the workbook at 1.01, then "Calculus Made Easy" at 0.79, then listing 1 at 0.65. The short title scores higher than the long one, because of `b`.
 
-A score is only comparable inside one query. Real systems combine it with other signals, such as price, distance or recency. PostgreSQL's documentation says its own ranking functions are only examples and that applications can add factors.
+A score is only comparable inside one query. Real systems combine it with other signals, such as price, distance or recency. PostgreSQL's ranking functions are just examples, and applications can add factors.
 
 ## Search Engines in Practice
 
@@ -108,11 +108,11 @@ A query goes to the shards, each returns its best matches, and the results are m
 
 A search engine is usually a copy of data that lives elsewhere. The main database holds the listings, and changes are sent to the engine through a feed such as the change capture from [Cache Invalidation](/system-design/cache-invalidation) or a queue from [The Transactional Outbox](/system-design/transactional-outbox).
 
-New documents appear in search after a short delay, not instantly. Microsoft's guidance lists making a search index the only copy of the data as a mistake, so the index should be rebuildable.
+New documents appear in search after a short delay, not instantly. A search index shouldn't be the only copy of the data, so it should be rebuildable.
 
 ## Search Inside PostgreSQL
 
-For a small app, the database may be enough. PostgreSQL has full text search built in. Its `tsvector` is the analyzed document, and its `tsquery` the analyzed query, and `@@` tests whether they match. The setup its documentation recommends keeps the analyzed text in a generated column and indexes it with GIN, an inverted index:
+For a small app, the database may be enough. PostgreSQL has full text search built in. Its `tsvector` is the analyzed document, and its `tsquery` the analyzed query, and `@@` tests whether they match. The usual setup keeps the analyzed text in a generated column and indexes it with GIN, an inverted index:
 
 ```sql
 ALTER TABLE books ADD COLUMN search tsvector
@@ -132,7 +132,7 @@ LIMIT 20;
 
 The `websearch_to_tsquery` function reads the syntax people type: words are joined with AND, a quoted phrase must match in order, `or` means either, and a leading `-` excludes a word.
 
-Its documentation says it never raises a syntax error, so raw user input is safe to pass. Other functions highlight matches (`ts_headline`) and rank them, with the caveat that ranking has to read each matching document and can be slow on large result sets.
+It doesn't raise a syntax error, so raw user input is safe to pass. Other functions highlight matches (`ts_headline`) and rank them, with the caveat that ranking has to read each matching document and can be slow on large result sets.
 
 What the search that comes with PostgreSQL lacks is mostly polish: it has no spelling correction, and similarity matching needs an extension such as `pg_trgm`.
 

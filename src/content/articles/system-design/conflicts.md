@@ -49,17 +49,17 @@ Last write wins loses half the work, by design. A union keeps the additions and 
 
 Last write wins is the easiest rule, and its cost is silent loss. Couchbase documents two policies: sequence numbers, where the higher count wins, and timestamps, where the later one wins. Its examples fit the rule: a hit counter suits the higher count, and a thermometer that keeps overwriting one key suits the latest timestamp.
 
-Riak's documentation gives the same guidance: last write wins suits data that is immutable or inserted once, caches and sessions, and resolving by plain timestamps is risky for data loss.
+Last write wins suits data that is immutable or inserted once, caches and sessions, and resolving by plain timestamps is risky for data loss.
 
 Timestamps need clocks, so Couchbase says synchronized clocks are required, typically with NTP, and the hybrid clock reduces the effect of drift and doesn't remove it. Before failing over, it advises waiting for the longer of the replication latency and the clock skew between sites.
 
 ## Keeping Both
 
-When both versions matter, keep them. Riak returns the siblings to the client, which merges them and writes back with the context. Its documentation recommends that order of preference: use a built in Data Type where possible, and otherwise resolve siblings in the application.
+When both versions matter, keep them. Riak returns the siblings to the client, which merges them and writes back with the context. The order of preference: use a built in Data Type where possible, and otherwise resolve siblings in the application.
 
 Siblings have a risk. Unresolved ones build up, which slows reads, can run a node out of memory and, in extreme cases, a huge object can crash a node on read.
 
-Riak advises doing a read, modify and write each time with the causal context, and dotted version vectors keep the sibling count proportional to the number of concurrent updates and not unbounded. With plain vector clocks, its documentation notes that five concurrent clients writing one key can produce duplicate siblings.
+In Riak, do a read, modify and write each time with the causal context. Dotted version vectors keep the sibling count proportional to the number of concurrent updates and not unbounded, while with plain vector clocks five concurrent clients writing one key can produce duplicate siblings.
 
 Dropbox shows the human version. When two people change a file and sync conflicts, it keeps both: the version saved last appears as a conflicted copy named with the editor, the words conflicted copy and the date.
 
@@ -67,9 +67,9 @@ It does no merging, and its advice is to compare the versions by hand, or to avo
 
 ## Merging by Rule
 
-Amazon's Dynamo paper describes two kinds of reconciliation. In syntactic reconciliation, a new version subsumes the old and the system chooses. When versions are concurrent, the store returns the leaves with their context, and the client performs semantic reconciliation, collapsing the branches into one.
+Dynamo has two kinds of reconciliation. In syntactic reconciliation, a new version subsumes the old and the system chooses. When versions are concurrent, the store returns the leaves with their context, and the client performs semantic reconciliation, collapsing the branches into one.
 
-Its example is the shopping cart, where the collapse is a merge of the carts. The paper states the consequence: an add to cart is not lost, and deleted items can resurface.
+Its example is the shopping cart, where the collapse is a merge of the carts. The consequence: an add to cart is not lost, and deleted items can resurface.
 
 That is the second row of our test, and it shows the lesson. A merge rule must say what to do with deletions, which a plain union forgets.
 

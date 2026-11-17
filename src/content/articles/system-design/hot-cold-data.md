@@ -70,7 +70,7 @@ Two lessons come out of it. A CDN, covered in [Content Delivery Networks (CDNs)]
 
 The same idea is older than the cloud. The five minute rule, from Jim Gray and Franco Putzolu in the 1980s, asks whether to keep a page in memory or on disk, and its formula for the interval at which keeping a page in memory pays off is the pages per megabyte of memory divided by the accesses per second per disk, times the price of a disk drive divided by the price per megabyte of memory.
 
-Its original answer, which gives it the name, was to keep in memory the pages used again within about five minutes. Later reviews changed the interval as prices changed, and the Wikipedia article reports figures of about 90 minutes for disk to memory and 15 minutes for flash to memory in a 2007 update.
+Its original answer, which gives it the name, was to keep in memory the pages used again within about five minutes. A review ten years later, in 1997, found the rule still held for random pages of 8 KB, and the interval moves as prices change.
 
 The method is what lasts: compare the cost of holding the data in the faster tier with the cost of fetching it on access.
 
@@ -78,7 +78,7 @@ The method is what lasts: compare the cost of holding the data in the faster tie
 
 ### Object storage classes and rules
 
-The Amazon S3 documentation gives the structure of the classes. Standard, infrequent access and the instant retrieval archive class offer millisecond access, with durability designed at 99.999999999 percent.
+The S3 classes have a clear structure. Standard, infrequent access and the instant retrieval archive class offer millisecond access, with durability designed at 99.999999999 percent.
 
 Availability falls from 99.99 percent for standard to 99.9 percent for infrequent access, and the one zone class is 99.5 percent in a single zone. The coldest classes need a restore first: Glacier Flexible Retrieval is for retrieval in minutes to hours, and Deep Archive for hours.
 
@@ -91,7 +91,7 @@ The charges have conditions that catch people:
 
 A **lifecycle rule** moves data on a schedule. It has transition actions, which move objects to another class, and expiration actions, which delete them, and it applies to existing objects as well as new ones.
 
-The documentation says there are no data retrieval charges for lifecycle transitions, though there are request charges, and that a bucket policy can't prevent a lifecycle rule from deleting or transitioning an object. A rule such as move to infrequent access after 90 days and to archive after a year is a few lines of configuration.
+There are no data retrieval charges for lifecycle transitions, though there are request charges, and a bucket policy can't prevent a lifecycle rule from deleting or transitioning an object. A rule such as move to infrequent access after 90 days and to archive after a year is a few lines of configuration.
 
 For data whose pattern isn't known, Intelligent-Tiering decides for you. Objects move to an infrequent tier after 30 days without access and to an instant archive tier after 90, with optional deeper archive tiers that need a restore call.
 
@@ -101,13 +101,13 @@ It has no retrieval fees, charges a small monthly monitoring fee, and doesn't mo
 
 A database table that grows with time is a candidate for partitioning by date. PostgreSQL's declarative partitioning splits a table into ranges, such as a month for each partition, and queries that filter on the date touch the matching partitions and no others, which the planner decides by pruning. The tiering benefits are concrete:
 
-- **Dropping old data is cheap**: The documentation says dropping a partition, or detaching it, is far faster than a bulk delete, and avoids the vacuum overhead of a bulk delete. A detached partition remains a standalone table that can be archived first
-- **Old partitions on cheap storage**: A partition can be placed in a tablespace on slower disks, and the documentation lists migrating seldom used data to cheaper and slower media as a use
+- **Dropping old data is cheap**: Dropping a partition, or detaching it, is far faster than a bulk delete, and avoids the vacuum overhead of a bulk delete. A detached partition remains a standalone table that can be archived first
+- **Old partitions on cheap storage**: A partition can be placed in a tablespace on slower disks, and migrating seldom used data to cheaper and slower media is a typical use
 - **Attaching safely**: Adding a prepared table as a partition needs a matching check constraint beforehand so that the attach doesn't scan under a heavy lock
 
 ClickHouse puts the same idea in a rule. A time to live expression can delete rows, aggregate them, or move them to another volume, for instance hot for the first 2 years, warm to 4 years, and cold after.
 
-The documentation notes that the effect isn't immediate: expired rows are handled during merges, and the related timeouts default to four hours. It also says that dropping whole partitions is much more efficient than deleting rows, so the partition key should match the time to live.
+The effect isn't immediate: expired rows are handled during merges, and the related timeouts default to four hours. Dropping whole partitions is much more efficient than deleting rows, so the partition key should match the time to live.
 
 ### Caches as the top tier
 

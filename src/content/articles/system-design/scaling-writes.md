@@ -40,7 +40,7 @@ The same rows went in 44 times faster at 1,000 for each commit. The absolute num
 
 A networked database with replication pays more for each commit, which makes the effect larger.
 
-The PostgreSQL documentation on populating a database gives the same advice for bulk loads.
+The same advice holds for bulk loads.
 
 Turn off autocommit and commit once at the end, use the COPY command, which is faster than inserts even when they are prepared and batched, create indexes after the load, and raise the log size limit temporarily so that checkpoints don't happen too often.
 
@@ -48,14 +48,14 @@ It also says to run ANALYZE after a bulk load so that the planner has current st
 
 For the steady stream of small writes, the same idea is **group commit**: let several transactions share one flush.
 
-PostgreSQL has a setting that delays a commit a few microseconds so other commits can join the flush, and its default is zero, so it is off until you choose to set it. The documentation suggests starting from half the average flush time measured for an 8 KB write.
+PostgreSQL has a setting that delays a commit a few microseconds so other commits can join the flush, and its default is zero, so it is off until you choose to set it. A good start is half the average flush time measured for an 8 KB write.
 
 ## Rung 2: Write Less, or Later
 
 Not each event needs its own row in the database at once. Two techniques:
 
 - **Aggregate before writing**: Each web server counts views in memory and flushes one increment for each listing at intervals of a few seconds. The counts are the same, and the writes shrink
-- **Acknowledge before the flush**: PostgreSQL's asynchronous commit returns success before the log is flushed. The documentation states the trade clearly: the risk is data loss and not data corruption, and the risk window is up to three times the log writer's delay. For view counts, losing the last fraction of a second on a crash is acceptable. For a payment, it isn't
+- **Acknowledge before the flush**: PostgreSQL's asynchronous commit returns success before the log is flushed. The trade is clear: the risk is data loss and not data corruption, and the risk window is up to three times the log writer's delay. For view counts, losing the last fraction of a second on a crash is acceptable. For a payment, it isn't
 
 We measured how much aggregation removes for the view counter. 2,700 views a second arrive over 6 servers, spread over 300,000 listings with skewed popularity, and each server flushes one increment for each distinct listing in its window:
 
@@ -76,13 +76,13 @@ The cost of waiting is a loss on a crash, the last window of counts held in memo
 
 ## Rung 3: A Storage Engine Made for Writes
 
-A traditional B tree database updates pages in place, which means random disk writes. Log structured merge trees, or **LSM trees**, turn the writes into sequential ones. The RocksDB and LevelDB documentation describe the path:
+A traditional B tree database updates pages in place, which means random disk writes. Log structured merge trees, or **LSM trees**, turn the writes into sequential ones. The path in RocksDB and LevelDB:
 
 - **The write path**: A write is appended to a log, a sequentially written file, and inserted into an in memory table. The log makes it durable. The in memory table serves reads
 - **Flush**: When the table is full, it is written out as a sorted file, in the background, and writes continue into a new table. LevelDB's notes say the log becomes a level 0 table at about 4 MB
 - **Compaction**: Sorted files are merged into larger ones in levels, using bulk reads and writes, and each level is about 10 times the size of the one above it
-- **The bill**: RocksDB's documentation says leveled compaction has a write amplification that is often larger than 10, since a byte is rewritten as it moves down the levels. Reads can touch a file at each level, and too many level 0 files hurt reads, which is why Bloom filters and compaction exist
-- **The ceiling**: The documentation says the write throughput of an LSM database directly depends on the speed at which compactions can occur, and when compaction falls behind, writes stall
+- **The bill**: In RocksDB leveled compaction has a write amplification that is often larger than 10, since a byte is rewritten as it moves down the levels. Reads can touch a file at each level, and too many level 0 files hurt reads, which is why Bloom filters and compaction exist
+- **The ceiling**: The write throughput of an LSM database directly depends on the speed at which compactions can occur, and when compaction falls behind, writes stall
 
 <figure class="diagram">
 <div class="flow">
@@ -115,7 +115,7 @@ A value of 1.00 would be perfect. The more shards, the worse the skew hurts: at 
 
 Splitting that one key into 16 parts helped some and didn't solve it, since the next hot keys remain. The lesson is that capacity added by shards is capacity for the average key. [Handling Hot Spots and Celebrity Users](/system-design/hot-spots) takes the problem on.
 
-DynamoDB documents the limit in concrete terms. A partition is designed for at most 1,000 write units a second and 3,000 read units, where a write unit is one write a second for an item up to 1 KB. Adaptive capacity moves capacity and isolates hot items, and a single hot item can use the partition maximum and no more.
+DynamoDB shows the limit in concrete terms. A partition is designed for at most 1,000 write units a second and 3,000 read units, where a write unit is one write a second for an item up to 1 KB. Adaptive capacity moves capacity and isolates hot items, and a single hot item can use the partition maximum and no more.
 
 The recommended technique for a key that is too hot is a suffix: append a random number to the key, from 1 to 200 in its example, so the writes spread over partitions, and read by querying each suffix and merging.
 

@@ -2,7 +2,7 @@
 
 [Single Leader Replication](/system-design/replication-one-leader) had a weak moment: when the leader dies, writes stop until someone notices and promotes another node, and two nodes that both claim to lead cause trouble.
 
-Amazon's engineers built the Dynamo store for services such as the shopping cart, where that pause was unacceptable, and the paper's answer was to have no leader.
+Amazon's engineers built the Dynamo store for services such as the shopping cart, where that pause was unacceptable, and the answer was to have no leader.
 
 For the textbook app, think of the "viewed" counters and the saved searches that must accept writes during failures. Cassandra and Riak followed the same design.
 
@@ -10,7 +10,7 @@ For the textbook app, think of the "viewed" counters and the saved searches that
 
 A key is stored on N replicas, usually 3. A write goes to each of the N replicas, and the writer treats it as done after W have acknowledged.
 
-A read goes to R replicas and returns the newest version among their answers. Cassandra's documentation states the first part clearly: writes go to the full set of replicas, and the consistency level just sets how many acknowledgments the coordinator waits for.
+A read goes to R replicas and returns the newest version among their answers. In Cassandra, writes go to the full set of replicas, and the consistency level just sets how many acknowledgments the coordinator waits for.
 
 <figure class="diagram">
 <p class="rowname">Write With W = 2</p>
@@ -37,13 +37,13 @@ A read goes to R replicas and returns the newest version among their answers. Ca
 <figcaption>Any two of three replicas share at least one that has the latest write</figcaption>
 </figure>
 
-With N = 3, W = 2 and R = 2, a read set of any 2 replicas shares at least one member with the write set. That is the point of the rule R plus W greater than N, which Dynamo's paper and Cassandra's documentation both state.
+With N = 3, W = 2 and R = 2, a read set of any 2 replicas shares at least one member with the write set. That is the point of the rule R plus W greater than N.
 
 How the reader knows which answer is newest is a separate question: Dynamo attaches a vector clock to each version, as in [Physical and Logical Clocks](/system-design/clocks), and Cassandra uses a timestamp on each write.
 
 ## Choosing R and W
 
-The numbers are knobs, and each setting trades latency, safety and availability. The Dynamo paper says that latency of a read or write is set by the slowest of the R or W replicas, so R and W are usually below N, and that its common configuration was (N, R, W) = (3, 2, 2).
+The numbers are knobs, and each setting trades latency, safety and availability. The latency of a read or write is set by the slowest of the R or W replicas, so R and W are usually below N, and Dynamo's common configuration was (N, R, W) = (3, 2, 2).
 
 | Setting for N = 3 | Reads See the Latest Write? | Cost |
 | --- | --- | --- |
@@ -67,7 +67,9 @@ A write reached each replica after about 5 ms on average, with 1 percent of deli
 
 Reading from 2 replicas instead of 1 raised the first read from 52 percent to 84 percent at almost no cost in write time. The overlapping setting did not miss, and its writes wait about twice as long.
 
-The PBS paper found the same pattern in production fits. For one environment, R = W = 1 gave fast operations and a 99.9 percent consistency window of 1,364 ms, while R = 2 and W = 1 cut the window to 202 ms and kept latency 81.1 percent below the fastest strict quorum.
+A study of probabilistically bounded staleness (PBS) found the same pattern in fits to production data.
+
+For one environment, R = W = 1 gave fast operations and a 99.9 percent consistency window of 1,364 ms, while R = 2 and W = 1 cut the window to 202 ms and kept latency 81.1 percent below the fastest strict quorum.
 
 It also found that switching a LinkedIn store from spinning disks to SSDs shrank the window from 45.5 ms to 1.85 ms, because the variance of write delay is what drives staleness.
 
@@ -81,7 +83,7 @@ Dynamo's answer is the **sloppy quorum**. It sends reads and writes to the first
 
 If node A is down, its replica goes to node D, with a hint saying that A was the intended owner. D keeps hinted replicas in a separate store, and when it sees that A is back, it delivers the data and deletes its copy.
 
-Cassandra's version is hinted handoff. The coordinator stores a hint on its disk for an unavailable replica and replays it when the replica returns, within a window called `max_hint_window` that defaults to 3 hours. The documentation calls hints best effort and no substitute for repair. A node that is down longer stays out of date until repair.
+Cassandra's version is hinted handoff. The coordinator stores a hint on its disk for an unavailable replica and replays it when the replica returns, within a window called `max_hint_window` that defaults to 3 hours. Hints are best effort and no substitute for repair. A node that is down longer stays out of date until repair.
 
 The price of a sloppy quorum is the overlap. The W replicas may be fallback nodes, so a reader that asks the owners can miss the write, and R plus W greater than N no longer guarantees anything.
 
@@ -89,7 +91,7 @@ Riak offers primary read and write counts, PR and PW, which count the real owner
 
 ## Keeping Replicas in Sync
 
-Without a leader's log, replicas have to fix each other. Cassandra describes three mechanisms:
+Without a leader's log, replicas have to fix each other. Cassandra uses three mechanisms:
 
 - **Read repair**: When a read finds replicas that disagree, the coordinator writes the newest version to the stale ones. The default option blocks the response until the repair satisfies the consistency level. It happens for levels above ONE
 - **Hinted handoff**: Writes that missed a replica are delivered when it returns, as above
@@ -101,7 +103,7 @@ The last is the subject of [Repairing Replicas with Hinted Handoff and Merkle Tr
 
 A quorum overlap says that a read touches a replica with the latest write. It doesn't say that two concurrent writes are ordered, and the systems resolve them with timestamps or vector clocks.
 
-Cassandra uses last write wins and notes that clock synchronization matters for correctness. Dynamo returns several versions to the application when its vector clocks show concurrent updates, and its paper describes merging two shopping carts.
+Cassandra uses last write wins, and its correctness depends on clock synchronization. Dynamo returns several versions to the application when its vector clocks show concurrent updates, and merging two shopping carts is the classic case.
 
 Kyle Kingsbury's Jepsen tests show what last write wins can cost. In one test of Cassandra, a lock service serialized updates to a single cell at the QUORUM level, and during a partition, 285 of the 1,009 acknowledged writes, 28.2 percent, were later missing.
 
@@ -109,7 +111,7 @@ In a test of Riak with last write wins and a healthy cluster, with no partition,
 
 The same test with a perfect lock lost no writes, and a version using a set that merges concurrent updates lost no writes either. The lesson is that a quorum protects against a failed node and doesn't protect concurrent writers from each other. That is the subject of [Detecting and Resolving Conflicts](/system-design/conflicts) and [CRDTs](/system-design/crdts).
 
-For true compare and set, Cassandra offers lightweight transactions, which its documentation describes as linearizable and built on Paxos. They cost more, and they are the exception. Its guarantees page states the choice: it favors availability and partition tolerance, and settles for eventual consistency in a single table.
+For true compare and set, Cassandra offers lightweight transactions, which are linearizable and built on Paxos. They cost more, and they are the exception. The overall choice: Cassandra favors availability and partition tolerance, and settles for eventual consistency in a single table.
 
 ## Leaderless or Leader
 

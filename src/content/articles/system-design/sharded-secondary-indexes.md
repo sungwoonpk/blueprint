@@ -39,7 +39,7 @@ Two problems grow with the number of shards. The slowest shard sets the pace, as
 | 6 | 5.9% | 5 ms |
 | 60 | 45.1% | 100 ms |
 
-The second problem is work. Elasticsearch's documentation says a search uses one thread for each shard, so many shards can exhaust the search thread pool.
+The second problem is work. In Elasticsearch a search uses one thread for each shard, so many shards can exhaust the search thread pool.
 
 It advises shards of 10 GB to 50 GB and under 200 million documents, and the number of concurrent shard requests defaults to 5 per node. Adding shards to hold more data makes each local index query more expensive.
 
@@ -52,8 +52,8 @@ The second answer splits the index itself by the indexed value. The entries for 
 Reads are cheap and targeted, and writes get harder, since a new listing touches the shard of the base row and the index shard of each indexed value. DynamoDB's global secondary index shows the details:
 
 - **Its own keys and capacity**: A global index has a partition key and sort key of its own, and its own read and write capacity
-- **Asynchronous updates**: A write to the base table updates the index later, typically within a fraction of a second, and the documentation says applications must handle stale results
-- **Back pressure**: A base table write succeeds when the table and each index have enough write capacity, so an under provisioned index throttles the table. AWS advises giving the index at least the table's write capacity
+- **Asynchronous updates**: A write to the base table updates the index later, typically within a fraction of a second, so applications must handle stale results
+- **Back pressure**: A base table write succeeds when the table and each index have enough write capacity, so an under provisioned index throttles the table. Give the index at least the table's write capacity
 - **A change costs two writes**: Changing an indexed value deletes the old entry and adds the new one
 - **Sparse by design**: An item is indexed when it has the index's key attributes
 - **Projections**: The attributes copied into the index are the ones that can be read from it, with the choice of keys alone, chosen attributes or the full item, and the full item roughly doubles storage and write cost
@@ -62,9 +62,9 @@ Reads are cheap and targeted, and writes get harder, since a new listing touches
 
 An index entry and its row are on different shards, and no single transaction covers both unless the system pays for one. The systems choose differently:
 
-- **Atomic with two phase commit**: Google Spanner's global index is stored as a separate table that can be split on its own, and its documentation says updates often span splits and need two phase commit, so a global index has a higher write cost than one stored with its parent row. An interleaved index, stored with the parent row, is usually written locally. The commit protocol is in [Two-Phase Commit](/system-design/two-phase-commit)
+- **Atomic with two phase commit**: Google Spanner's global index is stored as a separate table that can be split on its own, and updates often span splits and need two phase commit, so a global index has a higher write cost than one stored with its parent row. An interleaved index, stored with the parent row, is usually written locally. The commit protocol is in [Two-Phase Commit](/system-design/two-phase-commit)
 - **A careful protocol**: Vitess keeps a lookup table that maps a column value to a shard. A standard lookup is essentially a distributed transaction, and its consistent lookup variants use locks and a sequence of three sessions to avoid two phase commit, with the limit that an insert followed by an update of the same value in one transaction isn't supported. A lookup costs more than a computed shard in its planner: 10 for a unique lookup and 20 for a non unique one, against 1 for a hash
-- **Asynchronous with repair**: DynamoDB updates its indexes later. Facebook's TAO stores an association on the shard of its first object and the inverse on the shard of the second. The paper says there is no atomicity between the two writes, a failure can leave the forward edge without its inverse, and an asynchronous job repairs these hanging associations
+- **Asynchronous with repair**: DynamoDB updates its indexes later. Facebook's TAO stores an association on the shard of its first object and the inverse on the shard of the second. There is no atomicity between the two writes, a failure can leave the forward edge without its inverse, and an asynchronous job repairs these hanging associations
 
 We estimated what a lost update looks like. In 100,000 listing inserts with 3 indexes, where each remote index write fails 0.1 percent of the time, 309 listings, 0.31 percent, were missing from at least one index.
 
@@ -72,7 +72,7 @@ With asynchronous updates that take 50 ms on average, 86.5 percent of new entrie
 
 ## Uniqueness
 
-A unique constraint is an index with a rule, and it has the same problem. MongoDB's documentation explains that each shard can check just its own data, so a unique index on a sharded collection must start with the shard key, which puts the documents with the same key value on one shard.
+A unique constraint is an index with a rule, and it has the same problem. Each shard can check just its own data, so a unique index on a sharded collection must start with the shard key, which puts the documents with the same key value on one shard.
 
 A hashed index can't be unique, and `_id` is unique per shard unless it is the shard key.
 
@@ -80,7 +80,7 @@ To make an email address unique across shards when the collection is sharded by 
 
 ## Hot Index Entries
 
-An index can be a hotspot of its own. Spanner's documentation warns that using the commit timestamp as the leading column of an index can concentrate writes and reduce write performance.
+An index can be a hotspot of its own. In Spanner, using the commit timestamp as the leading column of an index can concentrate writes and reduce write performance.
 
 CockroachDB solves the same problem with hash sharded indexes: it adds a hidden shard column computed as a hash of the key modulo a bucket count, which becomes the index key prefix, so sequential writes spread over ranges.
 

@@ -8,15 +8,15 @@ Nobody knows what the others did, and when search recovers, nobody can say which
 
 ## Deciding That It Is an Incident
 
-The Google SRE book says to declare early, and not to start the framework hours into a problem. It gives three criteria, and any one is enough:
+Declare early, and don't start the framework hours into a problem. Three criteria help, and any one is enough:
 
 - **A second team is needed**: The problem can't be fixed by one group alone
 - **Customers can see it**: The outage is visible to them
 - **It is unsolved after an hour**: An hour of concentrated analysis hasn't found the answer
 
-PagerDuty's open incident guide adds a scale. Its severity levels run from SEV-1, a critical issue that warrants public notice and contact with executives, to SEV-5, a cosmetic problem. Anything above SEV-3 counts as a major incident and starts the full response.
+A scale helps. Severity levels run from SEV-1, a critical issue that warrants public notice and contact with executives, to SEV-5, a cosmetic problem. Anything above SEV-3 counts as a major incident and starts the full response.
 
-If it is unclear which of two levels applies, the guide says to treat it as the higher one, and to review the choice in the postmortem. The guide also recommends that a team's own definitions be specific and driven by metrics, often a percentage of users or accounts affected.
+If it is unclear which of two levels applies, treat it as the higher one, and review the choice in the postmortem. A team's own definitions should be specific and driven by metrics, often a percentage of users or accounts affected.
 
 For the textbook app, the levels follow the user's experience, with thresholds that are our assumptions:
 
@@ -31,7 +31,7 @@ The alerts from [Alerting and Dashboards](/system-design/alerting) and the burn 
 
 ## Who Does What
 
-The SRE book separates the work into roles so that people don't collide. Its four are incident command, operations, communication and planning. PagerDuty's guide names a similar set. Between them:
+Separate the work into roles so that people don't collide. The four: incident command, operations, communication and planning. Between them:
 
 | Role | Does | Doesn't |
 | --- | --- | --- |
@@ -41,18 +41,18 @@ The SRE book separates the work into roles so that people don't collide. Its fou
 | Scribe | Records actions and findings in the incident document | Wait for a request to write things down |
 | Subject Matter Experts | Investigate, report findings, suggest fixes | Act on a fix before the commander approves |
 
-- **Command**: The commander holds each position that hasn't been delegated, and can remove roadblocks for the operations lead. The most important duty, in the book's words, is keeping the live incident state document
-- **Operations**: The book says the operations team should be the sole group modifying the system during an incident, which solves the five engineers problem
-- **Communication**: The public face of the response, with periodic updates. PagerDuty's guide advises that if there is doubt about posting a public message, post it
+- **Command**: The commander holds each position that hasn't been delegated, and can remove roadblocks for the operations lead. The most important duty is keeping the live incident state document
+- **Operations**: The operations team should be the sole group modifying the system during an incident, which solves the five engineers problem
+- **Communication**: The public face of the response, with periodic updates. If there is doubt about posting a public message, post it
 - **Planning**: Longer term work, such as filing bugs, arranging handoffs and tracking how the system has drifted from normal
-- **Splitting**: The book describes recursive separation: when one person's load is too high, they ask for staff and delegate, possibly by creating subincidents
+- **Splitting**: Separation is recursive: when one person's load is too high, they ask for staff and delegate, possibly by creating subincidents
 
 ## Running It
 
 A few habits from the sources make a response steadier:
 
 - **A central place**: A war room or a chat channel, where the conversation is logged for the postmortem, since bots can record the traffic
-- **A live state document**: The SRE book says it can be messy but must be functional, editable by several people at once, with the most important facts at the top
+- **A live state document**: It can be messy but must be functional, editable by several people at once, with the most important facts at the top
 - **Explicit handoffs**: The outgoing commander says "you are now the incident commander", and doesn't leave until the new one acknowledges
 - **A rhythm of updates**: PagerDuty's guide has the internal liaison update executives at roughly 30 minute intervals, and the customer liaison post at set times
 - **Mitigate first**: Roll back a release, switch off a feature with a flag from [Feature Flags](/system-design/feature-flags), shed load, or move traffic, and find the root cause once users are safe
@@ -76,11 +76,11 @@ Times are UTC, and the elapsed figures are our arithmetic from the post:
 | Oct 22, 11:12 | The primaries are back on the East Coast | 12 hours 20 minutes |
 | 23:03 | Status turns green after the backlog drains | 24 hours 11 minutes |
 
-A 43 second fault led to 87,060 seconds of impact, about 2,025 times longer. The numbers in the post explain it. Restoring clusters of hundreds of gigabytes to nearly 5 terabytes from backups, taken at four hour intervals, took hours.
+A 43 second fault led to 87,060 seconds of impact, about 2,025 times longer. The numbers explain it. Restoring clusters of hundreds of gigabytes to nearly 5 terabytes from backups, taken at four hour intervals, took hours.
 
 Afterward, a backlog of more than five million webhook events and 80,000 site builds had to drain, and about 200,000 webhook payloads past an internal time limit were dropped, so the limit was raised.
 
-The post says that no user data was lost, after a manual reconciliation of the unreplicated writes. One busy cluster had 954 of them.
+No user data was lost, after a manual reconciliation of the unreplicated writes. One busy cluster had 954 of them.
 
 Two choices stand out. The team stated its priority early: data integrity over site usability and time to recovery. That's a decision a commander can make at minute 27 and a communicator can explain.
 
@@ -90,7 +90,7 @@ Its changes are a model of follow up work: configure the failover tool not to pr
 
 ## Writing the Postmortem
 
-The SRE book defines a postmortem as a written record of an incident, its impact, the actions taken to mitigate or resolve it, the root causes and the follow up actions. It lists common triggers, with room for teams to adapt them:
+A postmortem is a written record of an incident, its impact, the actions taken to mitigate or resolve it, the root causes and the follow up actions. It lists common triggers, with room for teams to adapt them:
 
 1. User visible downtime or degradation beyond a threshold
 2. Data loss of any kind
@@ -110,7 +110,7 @@ Lessons: what went well, what went poorly, where we got lucky
 Action items: type, priority, owner, tracking ticket
 ```
 
-The Google SRE workbook gives a case with a good and a bad example. The bad one had four owners, no owners on the action items, subjective language and was published four months late.
+Compare a good and a bad example. The bad one had four owners, no owners on the action items, subjective language and was published four months late.
 
 The good one had a single owner, action items with a priority, an owner and a tracking bug, quantified impact and circulation within a week. The workbook's advice is a single owner with several collaborators, and action items that are specific enough to be verified.
 
@@ -118,9 +118,9 @@ The action types it lists are useful because they push for a mix: investigate, p
 
 ## Blameless Doesn't Mean Pointless
 
-The SRE book calls blamelessness a tenet of its culture. A blameless postmortem names the contributing causes without blaming any person, and assumes that people had good intentions and did the right thing with the information they had.
+Blamelessness is a tenet of the culture. A blameless postmortem names the contributing causes without blaming any person, and assumes that people had good intentions and did the right thing with the information they had.
 
-In the book's words, you can't fix people, but you can fix systems and processes. The practical reason is that blame teaches people to hide incidents, and hidden incidents can't be learned from.
+You can't fix people, but you can fix systems and processes. The practical reason is that blame teaches people to hide incidents, and hidden incidents can't be learned from.
 
 Blameless doesn't mean avoiding the truth about what to improve. The book's example contrasts an action item that points fingers, to rewrite the backend, with one that names the cost for the next on call engineer. The first judges people, and the second describes the system.
 
@@ -130,7 +130,7 @@ A single root cause would have missed four of the five lessons.
 
 The workbook quotes a Google SRE leader on what makes it count: to users, a postmortem without subsequent action is indistinguishable from no postmortem.
 
-The SRE book adds that an unreviewed postmortem might as well not have existed, so drafts get reviewed for the quality of the data, the depth of the cause, the appropriateness of the action plan and the priority of its tickets.
+An unreviewed postmortem might as well not have existed, so drafts get reviewed for the quality of the data, the depth of the cause, the appropriateness of the action plan and the priority of its tickets.
 
 ## Closing the Loop
 
@@ -139,8 +139,8 @@ The postmortem is the start of the learning, and the follow up decides whether i
 - **Track the action items**: Each has an owner and a ticket, and an owner reports on them at a regular review
 - **Look for repeats**: The same cause twice means the actions were too weak or too slow
 - **Share widely**: The SRE book wants the widest audience that benefits, with no end user identifying data
-- **Practice**: The book describes Wheel of Misfortune role playing, where on call engineers respond to a simulated page, and game days like those of [Chaos Engineering](/system-design/chaos-engineering)
-- **Reward it**: The book suggests recognizing people who write good postmortems and run good responses, with senior leaders taking part
+- **Practice**: Wheel of Misfortune role playing, where on call engineers respond to a simulated page, and game days like those of [Chaos Engineering](/system-design/chaos-engineering)
+- **Reward it**: Recognize people who write good postmortems and run good responses, with senior leaders taking part
 
 The measurements come from the timeline: time to detect, to assemble a response, to mitigate and to resolve. In GitHub's case the first two were 2 and 19 minutes, and the long part was the restore. Each number points at a different investment, in alerting, in on call, in rollback or in backups.
 

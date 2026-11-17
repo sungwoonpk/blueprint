@@ -12,7 +12,7 @@ Each of these is an **anomaly**, a result that couldn't happen if transactions r
 - **Lost update**: Two transactions read a value, and both write a new one based on what they read, so one write vanishes. Two requests read a view counter of 120, and each stores 121, when it should be 122
 - **Write skew**: Two transactions each check a rule, then write different rows, and together they break it. A seller may have at most 3 open listings. Two requests each count 2, and each adds one, so the seller now has 4
 
-The first three are listed in the SQL standard. The last two are not, and databases treat them differently. PostgreSQL's documentation adds one more name for the general case, the **serialization anomaly**: a result that matches no order in which the transactions run one after another. Write skew is the most common example.
+The first three are listed in the SQL standard. The last two are not, and databases treat them differently. There is one more name for the general case, the **serialization anomaly**: a result that matches no order in which the transactions run one after another. Write skew is the most common example.
 
 ## The Four Levels
 
@@ -39,9 +39,9 @@ The standard also lists Read Uncommitted below Read Committed, which allows dirt
 
 The names come from the standard, but products build them differently, so the table is about PostgreSQL. In MySQL's InnoDB the default is Repeatable Read, with snapshots for plain reads and range locks for locking reads.
 
-The Jepsen project notes that some Repeatable Read implementations still allow lost updates. When you change databases, check the documentation and don't trust the name.
+The Jepsen project found that some Repeatable Read implementations still allow lost updates. When you change databases, check the documentation and don't trust the name.
 
-Two ideas sit behind the table. **Read Committed**, the default in PostgreSQL, gives each statement a fresh snapshot of the committed data. **Repeatable Read** takes one snapshot when the transaction starts its first statement, and every read after that sees the same data. PostgreSQL's documentation calls the second one snapshot isolation.
+Two ideas sit behind the table. **Read Committed**, the default in PostgreSQL, gives each statement a fresh snapshot of the committed data. **Repeatable Read** takes one snapshot when the transaction starts its first statement, and every read after that sees the same data. The second one is also called snapshot isolation.
 
 ## A Lost Update, Up Close
 
@@ -78,7 +78,7 @@ UPDATE listings SET views = 121 WHERE id = 17;
 UPDATE listings SET views = views + 1 WHERE id = 17;
 ```
 
-PostgreSQL's documentation explains why the second form is safe. If another transaction changed the row first, the `UPDATE` waits for it to finish, then checks the row's newest version again and applies its change to that one.
+Here is why the second form is safe. If another transaction changed the row first, the `UPDATE` waits for it to finish, then checks the row's newest version again and applies its change to that one.
 
 When the read has to be separate, because the app needs the value to decide something, there are two tools. `SELECT ... FOR UPDATE` locks the rows you read, so that others wait until your transaction ends. A stronger level fails instead of losing the update. At Repeatable Read, PostgreSQL stops the second writer with an error:
 
@@ -103,7 +103,7 @@ Two copies of this run at once. Each snapshot shows 2 listings, each check passe
 
 Jepsen describes the same pattern with two electricians who each see room for one more circuit on a panel and both add one.
 
-At **Serializable**, PostgreSQL watches for exactly this: transactions that read what another one writes, and write what another one read. It uses what its documentation calls Serializable Snapshot Isolation. When it finds a pattern that no order of running them one after another could produce, it aborts one of the transactions:
+At **Serializable**, PostgreSQL watches for exactly this: transactions that read what another one writes, and write what another one read. It uses a technique called Serializable Snapshot Isolation. When it finds a pattern that no order of running them one after another could produce, it aborts one of the transactions:
 
 ```text
 ERROR:  could not serialize access due to
@@ -112,7 +112,7 @@ ERROR:  could not serialize access due to
 
 The check doesn't add locks that make others wait. It adds some overhead, and it means some transactions fail, which leads to the main rule of the stronger levels: **the app must retry**.
 
-PostgreSQL's documentation says applications at Repeatable Read and Serializable have to be ready to run the whole transaction again, and that these failures carry the SQLSTATE code `40001`. A sketch:
+At Repeatable Read and Serializable, the application has to be ready to run the whole transaction again, and these failures carry the SQLSTATE code `40001`. A sketch:
 
 ```python
 for attempt in range(3):
@@ -136,7 +136,7 @@ No level is right for all queries, so the choice is made by what a transaction d
 
 - **Read Committed**: The default, and a sound one when each statement stands alone. Single row updates, simple reads and statements like `views = views + 1` are fine here. It is a poor fit for logic that reads several things and then writes
 - **Repeatable Read**: Use it when many reads must agree with each other, such as a report that adds up totals from several tables. Mark it `READ ONLY` if it doesn't write. Transactions that write need to be ready to retry
-- **Serializable**: Use it when a rule spans rows and a bug would be costly, such as limits, balances or stock, and you would rather have the database catch a mistake than a person. Expect some retries, and keep transactions short and few, as PostgreSQL's documentation advises
+- **Serializable**: Use it when a rule spans rows and a bug would be costly, such as limits, balances or stock, and you would rather have the database catch a mistake than a person. Expect some retries, and keep transactions short and few
 
 You set it per transaction with `BEGIN ISOLATION LEVEL ...`, or for a session or for the whole server through a setting. PostgreSQL's default is Read Committed, and InnoDB's is Repeatable Read, so an app that moves between them can behave differently with no code change.
 

@@ -10,7 +10,7 @@ This topic is about how to build one large job so that it finishes, survives fai
 
 The key property of a batch job is that its input has an end.
 
-Apache Beam's documentation draws the line: a bounded dataset, such as a file or a table, can be processed by a batch job that reads the data once and finishes, while an unbounded one, such as a feed of events that keeps arriving, needs a job that runs continuously. We come to that case in [Stream Processing](/system-design/stream-processing).
+The line is this: a bounded dataset, such as a file or a table, can be processed by a batch job that reads the data once and finishes, while an unbounded one, such as a feed of events that keeps arriving, needs a job that runs continuously. We come to that case in [Stream Processing](/system-design/stream-processing).
 
 Because the data is complete when the job starts, batch jobs can do things that are awkward on a live system: sort the full dataset, join two large datasets, count distinct values across a year.
 
@@ -63,20 +63,20 @@ Between the two, the framework does the **shuffle**: it moves each pair with the
 
 Each map task reads one slice of the input, called a split, and Hadoop's tutorial says the number of map tasks follows the number of input blocks: its example is 10 TB of input in 128 MB blocks, which makes about 82,000 maps.
 
-The paper says it often runs jobs with 200,000 map tasks and 5,000 reduce tasks on 2,000 machines, with each map task reading 16 to 64 MB of input.
+Google ran jobs with 200,000 map tasks and 5,000 reduce tasks on 2,000 machines, with each map task reading 16 to 64 MB of input.
 
 Two optimizations are worth knowing:
 
-- **Move the work to the data**: The paper and Hadoop's tutorial agree that the machines that store the data also run the tasks, so a task is placed on a machine that already holds its input, since the network is the scarce resource
-- **Combine early**: A combiner does a partial reduce on each map's own output before the shuffle. In the sales count, a map task that saw 1,000 sales of CS101 sends one pair, `(CS101, 1000)`, and not a thousand of them. It works because adding is associative and commutative, as the paper points out
+- **Move the work to the data**: The machines that store the data also run the tasks, so a task is placed on a machine that already holds its input, since the network is the scarce resource
+- **Combine early**: A combiner does a partial reduce on each map's own output before the shuffle. In the sales count, a map task that saw 1,000 sales of CS101 sends one pair, `(CS101, 1000)`, and not a thousand of them. It works because adding is associative and commutative
 
 ## The Shuffle Is the Expensive Part
 
-Map tasks read their own slice and reduce tasks read from each map, so the shuffle sends data across the whole cluster. Spark's documentation says a shuffle involves disk writes, serialization and network transfer, and lists the operations that cause one: grouping by key, joins, and repartitioning.
+Map tasks read their own slice and reduce tasks read from each map, so the shuffle sends data across the whole cluster. A shuffle involves disk writes, serialization and network transfer, and these operations cause one: grouping by key, joins, and repartitioning.
 
 Apache Spark, a later engine that keeps data in memory between steps, expresses a job as a chain of transformations, and its tuning guides give numbers for sizing the pieces:
 
-- **Tasks for each core**: The tuning guide advises 2 to 3 tasks for each CPU core in the cluster
+- **Tasks for each core**: A common rule is 2 to 3 tasks for each CPU core in the cluster
 - **Shuffle partitions**: Spark SQL splits the output of a shuffle into 200 partitions by default, and its adaptive execution merges small ones toward 64 MB
 - **Skewed keys**: A partition counts as skewed when it is 5 times the median and larger than 256 MB, and Spark can split it
 
@@ -84,11 +84,11 @@ Skew is the textbook app's problem too: if a few popular courses hold most of th
 
 ## Lazy Plans and Recovery
 
-Spark's documentation explains that its transformations are lazy: `map` and `filter` just record what to do, and no work runs until an action such as writing the output.
+Spark's transformations are lazy: `map` and `filter` just record what to do, and no work runs until an action such as writing the output.
 
 The recorded chain is the lineage, and when a partition is lost with a failed machine, Spark recomputes just that partition from its inputs and not the whole job. Hadoop does the same at the level of tasks: the framework monitors them and runs the failed ones again.
 
-The MapReduce paper shows how much of this matters. During one job, network maintenance made groups of 80 machines unreachable for several minutes at a time, and the job kept making progress by running their work again.
+Here is how much this matters. During one Google job, network maintenance made groups of 80 machines unreachable for several minutes at a time, and the job kept making progress by running their work again.
 
 ## Failures and Chunks
 
@@ -101,7 +101,7 @@ A job that does its work in one piece loses its progress when it fails. To see h
 
 With chunks, a crash costs at most 100 seconds of work, and a run takes about as long as it would without failures. Without chunks, a single bad night costs more than a day.
 
-This is the reason the paper and Hadoop split the work into thousands of tasks, and the reason [Job Schedulers](/system-design/job-schedulers) advised splitting a job that handles millions of rows.
+This is the reason MapReduce and Hadoop split the work into thousands of tasks, and the reason [Job Schedulers](/system-design/job-schedulers) advised splitting a job that handles millions of rows.
 
 ## Running It Twice
 
@@ -112,7 +112,7 @@ Retries mean a chunk can run twice, and a batch run can be started again by hand
 - **Keep the clock out**: A call to `now()` in the logic gives a different answer on each run
 - **Don't leave results on a local disk**: Tasks may run on different workers, so intermediate results belong in shared storage
 
-The paper's approach to output is the model: each task writes to a temporary file and renames it to the final name when it finishes, and the file system's atomic rename lets a single execution of a task win. For a table, the same idea is to replace a whole day in one transaction:
+MapReduce's approach to output is the model: each task writes to a temporary file and renames it to the final name when it finishes, and the file system's atomic rename lets a single execution of a task win. For a table, the same idea is to replace a whole day in one transaction:
 
 ```sql
 BEGIN;
@@ -126,9 +126,9 @@ A rerun of the same day produces the same table, not twice the rows.
 
 ## Stragglers
 
-The last few tasks decide when a job ends, and one slow machine can hold the whole run. The paper describes machines with a bad disk that read at 1 MB a second instead of 30, and a bug that slowed some by more than a factor of 100.
+The last few tasks decide when a job ends, and one slow machine can hold the whole run. Google saw machines with a bad disk that read at 1 MB a second instead of 30, and a bug that slowed some by more than a factor of 100.
 
-Its answer is backup tasks: near the end, the master starts a second copy of each task still running, and takes whichever finishes first. The paper says this adds no more than a few percent of extra work, and that its 1 terabyte sort took 44 percent longer with backups switched off.
+Its answer is backup tasks: near the end, the master starts a second copy of each task still running, and takes whichever finishes first. This adds no more than a few percent of extra work, and Google's 1 terabyte sort took 44 percent longer with backups switched off.
 
 We simulated 200 tasks of 100 seconds on 20 workers, one of them 10 times slower. Without backups the job took 2,000 seconds, since the slow worker held a task for 1,000 seconds and then took another.
 

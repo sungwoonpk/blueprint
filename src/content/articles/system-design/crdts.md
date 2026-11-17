@@ -21,7 +21,7 @@ With these laws, replicas can exchange updates in any order, with duplicates and
 | State Based | The full state, merged with a join | A merge with the three laws, and updates that move in one direction | Large messages, and simple gossip is enough |
 | Operation Based | Each operation, applied at the others | Operations that commute, and delivery that happens once and in causal order | Small messages, and stronger delivery guarantees |
 
-Wikipedia notes that the two are equivalent in power. A variant, the delta state CRDT, sends just the recent change. The guarantee both give is strong eventual consistency: replicas that have received the same updates are in the same state, without any further coordination.
+Either style can build the same data types. A variant, the delta state CRDT, sends just the recent change. Both give strong eventual consistency: replicas that have received the same updates are in the same state, without any further coordination.
 
 We tested the merge laws on an observed-remove set, described below. Three replicas took 60 random adds and removes with partial merges, and then merged in a random order. In 2,000 of 2,000 runs, the replicas agreed.
 
@@ -37,7 +37,7 @@ A **PN-Counter** uses two G-Counters, one for increments and one for decrements,
 
 How much does it matter? We ran 30,000 increments spread over 3 replicas, with a merge between two of them at about 1 step in 20. The G-Counter ended at exactly 30,000. The rule that keeps the newer total ended at 12,079, losing 59.7 percent of the increments.
 
-The loss depends on how often replicas merge, and it is large whenever updates are concurrent. Riak's counters are PN-Counters, and its documentation says the increments and decrements from each actor are applied.
+The loss depends on how often replicas merge, and it is large whenever updates are concurrent. Riak's counters are PN-Counters: the increments and decrements from each actor are applied.
 
 ## Sets
 
@@ -72,15 +72,15 @@ Removes need the causal context from an earlier read, since without it a remove 
 
 Editing text needs a sequence CRDT, in which each character has an identity that stays valid as others insert around it. Treedoc, RGA, WOOT, Logoot and LSEQ are published designs. Martin Kleppmann's talk on the hard parts notes that many published algorithms have anomalies, such as interleaved text from concurrent inserts, and that naive implementations perform badly.
 
-Two libraries are widely used. Yjs offers shared types, Y.Array, Y.Map, Y.Text and XML types, and is network agnostic, with providers for WebSocket, WebRTC and local storage. Its README describes merging adjacent items and dropping the content of deleted ones, and garbage collection of tombstones when their order no longer matters.
+Two libraries are widely used. Yjs offers shared types, Y.Array, Y.Map, Y.Text and XML types, and is network agnostic, with providers for WebSocket, WebRTC and local storage. It merges adjacent items, drops the content of deleted ones, and garbage collects tombstones when their order no longer matters.
 
-Automerge is a Rust core with bindings, a compact binary format and a sync protocol, and its README says version 3 cut memory use by about 10 times.
+Automerge is a Rust core with bindings, a compact binary format and a sync protocol, and its version 3 cut memory use by about 10 times.
 
 Kleppmann and Beresford's JSON CRDT extends the idea to nested maps and lists, with the aim that concurrent edits merge with no lost updates, and the replicas converge.
 
 ## Where They Are Used
 
-Wikipedia's list of uses shows the range. Riak's data types back League of Legends chat, which it describes with 7.5 million concurrent users and 11,000 messages a second, and bet365 stores hundreds of megabytes in an OR-Set.
+The uses range from shopping carts and counters to collaborative editing and chat presence, and Riak ships counters, sets and maps as built in data types for this reason.
 
 SoundCloud's Roshi is an LWW element set on Redis, and Redis Enterprise's Active-Active databases are built on CRDTs and offer strong eventual consistency. Apple Notes uses one for offline sync. Figma, though often named, doesn't use CRDTs in the pure sense: its server decides the order, with a last writer wins rule for each property.
 

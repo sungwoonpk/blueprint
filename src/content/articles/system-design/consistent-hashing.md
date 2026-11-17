@@ -59,7 +59,7 @@ In the picture, k1 belongs to B, k2 to C and k3 to A. Now add server D between B
 
 When a server leaves, its keys move on to its successor and nothing else changes.
 
-Wikipedia gives the average cost as about K divided by N keys moved, where K is the number of keys and N the number of servers. In our simulation, with a ring of 6 servers going to 7, 13.6 percent moved. That is close to the best possible, 1 in 7, or 14.3 percent.
+Adding a server moves about K divided by N keys, where K is the number of keys and N the number of servers. In our simulation, with a ring of 6 servers going to 7, 13.6 percent moved. That is close to the best possible, 1 in 7, or 14.3 percent.
 
 <figure class="chart">
 <div class="hbars" role="img" aria-label="Share of keys that move when a seventh server joins: 85.5 percent for hash mod N, 13.6 percent for a hash ring, and 14.3 percent as the smallest possible share">
@@ -72,7 +72,7 @@ Wikipedia gives the average cost as about K divided by N keys moved, where K is 
 
 ## Virtual Nodes
 
-A plain ring has a flaw. A server's position is random, so some servers get long stretches of the circle and others get short ones. The Dynamo paper says exactly this: random placement leads to uneven data and load, and the basic algorithm ignores that machines differ in power.
+A plain ring has a flaw. A server's position is random, so some servers get long stretches of the circle and others get short ones. Dynamo's designers hit exactly this: random placement leads to uneven data and load, and the basic algorithm ignores that machines differ in power.
 
 In our run with one point per server, the busiest of the 6 servers held 3.3 times the average load, and the quietest held 3 percent of it.
 
@@ -85,13 +85,13 @@ The fix, used by Dynamo and by Cassandra, is to give each server many points on 
 | 100 | 1.20 times | 0.88 times |
 | 200 | 1.07 times | 0.86 times |
 
-The numbers are from our simulation with 6 servers and 100,000 keys, and will differ on another run, but the trend holds. Libketama, a hashing library for memcached clients, uses somewhere between 100 and 200 points per server, according to its author's article.
+The numbers are from our simulation with 6 servers and 100,000 keys, and will differ on another run, but the trend holds. Libketama, a hashing library for memcached clients, uses somewhere between 100 and 200 points per server.
 
 Virtual nodes help in two more ways. A server that leaves has its slices scattered around the ring, so its load spreads over several neighbors instead of doubling one: in our run, a lost server's keys went to all five others.
 
 And the number of points can follow the server's size, so a machine with twice the memory takes twice as many points, which is how Dynamo handles servers of different power.
 
-They also cost something. Cassandra's documentation warns that each token adds neighbors, which raises the probability of an outage, and that repair work grows with the number of tokens.
+They also cost something. In Cassandra each extra token adds neighbors, which raises the probability of an outage, and that repair work grows with the number of tokens.
 
 ## Replicas and Beyond
 
@@ -99,11 +99,11 @@ Databases that use the ring for storage, such as Cassandra and Dynamo, also use 
 
 The basic ring has relatives:
 
-- **Bounded loads**: A 2017 Google Research post notes that plain consistent hashing can balance badly. Its fix gives each server a capacity of the average load times 1 plus a small number, and a key moves clockwise to the first server with room. Vimeo reported that using it in haproxy cut its cache bandwidth by a factor of almost 8
-- **Rendezvous hashing**: Each server gets a score for the key, and the highest score wins. Wikipedia describes it as simpler and more general, and says it is used in place of the ring in many systems
-- **Jump consistent hash**: A very small and fast algorithm for the case where servers are numbered, from a paper listed on Wikipedia
+- **Bounded loads**: Plain consistent hashing can balance badly, and Google researchers proposed a fix in 2017. It gives each server a capacity of the average load times 1 plus a small number, and a key moves clockwise to the first server with room. Vimeo used it in haproxy and cut its cache bandwidth by a factor of almost 8
+- **Rendezvous hashing**: Each server gets a score for the key, and the highest score wins. It needs no ring, and when a server joins or leaves it moves only the keys that belong to that server. It was published in 1996, a year before consistent hashing
+- **Jump consistent hash**: A very small and fast algorithm from Google, published in 2014, for the case where servers are numbered in order
 
-Wikipedia's list of users includes Dynamo, Cassandra, ScyllaDB, Riak, Couchbase, OpenStack Swift, Akamai and Discord. DynamoDB's partition key, from [Key-Value Stores](/system-design/key-value-stores), is hashed to pick a partition in the same spirit.
+The same idea places data in Dynamo and Cassandra. DynamoDB's partition key, from [Key-Value Stores](/system-design/key-value-stores), is hashed to pick a partition in the same spirit.
 
 ## Using It
 
@@ -126,7 +126,7 @@ class Ring:
         return self.ring[i % len(self.ring)][1]
 ```
 
-Each server is hashed at 100 points, and a key goes to the first point larger than its own hash, wrapping around at the end. The binary search makes a lookup cost O(log N), which Wikipedia lists too.
+Each server is hashed at 100 points, and a key goes to the first point larger than its own hash, wrapping around at the end. The binary search makes a lookup cost O(log N),.
 
 Two warnings from the memcached wiki apply to any client side scheme. All clients must see the same server list, in the same order, or two web servers will disagree about where a key lives.
 

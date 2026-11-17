@@ -6,7 +6,7 @@ At 3,000 events a second, one consumer can't keep up, so the events have to be s
 
 ## Splitting the Log
 
-A topic in a log based broker is divided into partitions, and each is its own log with its own offsets. Kafka's design document says the producer chooses the partition: at random, which spreads load evenly, or by a key that is hashed to pick one.
+A topic in a log based broker is divided into partitions, and each is its own log with its own offsets. In Kafka the producer chooses the partition: at random, which spreads load evenly, or by a key that is hashed to pick one.
 
 If the key is the listing id, all the events of one listing go to the same partition, and a partition is totally ordered, so they stay in the order they were written:
 
@@ -37,7 +37,7 @@ Nothing is promised between partitions. Whether listing 8's sale was handled bef
 
 ## Consumer Groups
 
-A **consumer group** is a set of consumers that together read a topic. Kafka's document states the rule: each partition is consumed by exactly one consumer within each subscribing group at any time.
+A **consumer group** is a set of consumers that together read a topic. The rule: each partition is consumed by exactly one consumer within each subscribing group at any time.
 
 So the group shares the partitions, and the number of partitions is the ceiling on how many consumers can work in parallel. For a topic with six partitions:
 
@@ -51,7 +51,7 @@ So the group shares the partitions, and the number of partitions is the ceiling 
 
 Different groups read independently, each with its own offsets: the search indexer and the email sender can both be groups on the same topic, as in the log design of the last topic.
 
-When a consumer joins, leaves or crashes, the group **rebalances**: partitions are handed out again. Kafka's documentation describes the cost of the default way, where member ids change when a consumer restarts, so a deploy can shuffle a large share of the work and, for applications that keep local state, leave them unavailable while they rebuild it.
+When a consumer joins, leaves or crashes, the group **rebalances**: partitions are handed out again. The default way has a cost: member ids change when a consumer restarts, so a deploy can shuffle a large share of the work and, for applications that keep local state, leave them unavailable while they rebuild it.
 
 Its fix is static membership, in which each instance has a persistent id and keeps its partitions through a restart.
 
@@ -97,13 +97,13 @@ Azure Service Bus does it with sessions: a receiver that accepts a session holds
 
 The price is head of line blocking, the same trouble as a lost packet holding up a TCP stream. A message that keeps failing blocks the rest of its partition or group, since later messages can't pass it.
 
-AWS's documentation says a backlog in one group can even hold up messages of other groups when it grows large, and recommends a dead letter queue after a number of failed attempts so the group moves on.
+A backlog in one group can even hold up messages of other groups when it grows large, so use a dead letter queue after a number of failed attempts so the group moves on.
 
 Service Bus moves a message to the dead letter queue after 10 deliveries by default and continues the session, and a message returned from that queue has lost its original place in the order. See [Dead Letter Queues](/system-design/redelivery-dlq).
 
 ## Choosing the Number of Partitions
 
-More partitions allow more consumers, but each partition has its own replicas and leader, which Kafka's document names as the unit of replication, so there is a cost.
+More partitions allow more consumers, but each partition has its own replicas and leader, which is the unit of replication, so there is a cost.
 
 A workable rule uses the arithmetic of [Message Queues and Pub/Sub](/system-design/message-queues): work out how many workers you need at the peak, and set the partitions to at least that, with headroom.
 

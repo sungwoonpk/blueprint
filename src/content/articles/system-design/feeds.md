@@ -8,9 +8,9 @@ A feed is a read heavy product with an awkward shape. Each user's feed is differ
 
 ## Why It Is Hard
 
-Three numbers frame the problem. Twitter's own engineers described its timeline service in 2012, and a 2013 write up reports about 300,000 requests a second spent reading timelines against about 6,000 a second on writes, which is about 50 reads for each write.
+Three numbers frame the problem. Twitter's engineers described its timeline service in 2012: about 300,000 requests a second spent reading timelines against about 6,000 a second on writes, which is about 50 reads for each write.
 
-That write up is a secondary source from a time long past, so the figures show the shape and not today's system. Meta's TAO, the store behind its social graph, handles over a billion reads and millions of writes each second, according to the engineering blog, which puts reads even further ahead.
+Those figures are from a time long past, so they show the shape and not today's system. Meta's TAO, the store behind its social graph, handles over a billion reads and millions of writes each second, which puts reads even further ahead.
 
 When reads dominate, work moved from the read to the write pays off: do it once, when the post arrives, and the 50 reads that follow find the answer ready.
 
@@ -107,9 +107,9 @@ A feed system is three stores with different needs:
 
 The usual timeline structure is a capped list. In Redis, `LPUSH` adds to the head in constant time, `LTRIM` cuts the list to a fixed length, and `LRANGE` reads a window.
 
-The Redis documentation lists the first two as constant time per element and the third as proportional to the distance from the head plus the elements returned. Older entries beyond the cap come from a slower store, which fits a feed where nobody scrolls to item 5,000.
+The first two are constant time per element and the third is proportional to the distance from the head plus the elements returned. Older entries beyond the cap come from a slower store, which fits a feed where nobody scrolls to item 5,000.
 
-TAO shows how to treat consistency, which the blog states: eventual consistency is the default, and the system tries hard to make users see their own updates with high probability, with strong consistency available at a higher cost and a risk to availability.
+TAO shows how to treat consistency: eventual consistency is the default, and the system tries hard to make users see their own updates with high probability, with strong consistency available at a higher cost and a risk to availability.
 
 A feed can take the same stance, since a post that appears a second late isn't wrong. It does need one guarantee: the author's own post shows in the author's feed at once, and the push for the author is done in the request.
 
@@ -117,7 +117,7 @@ A feed can take the same stance, since a post that appears a second late isn't w
 
 The user scrolls, and each page request must return the next items without repeats or gaps, while new posts keep arriving at the top. The obvious design, a page number or an offset, has two problems.
 
-The PostgreSQL documentation says that rows skipped by an `OFFSET` still have to be computed, so a large offset can be inefficient, and that without an ordering that makes the rows unique, the subset is unpredictable. And offsets drift: when a new post is inserted between two page requests, the second page shifts and shows a repeat.
+Rows skipped by an `OFFSET` still have to be computed, so a large offset can be inefficient, and without an ordering that makes the rows unique, the subset is unpredictable. And offsets drift: when a new post is inserted between two page requests, the second page shifts and shows a repeat.
 
 The fix is a **cursor**, also called keyset pagination: the client sends back the position of the last item it saw, and the server returns the items after it.
 

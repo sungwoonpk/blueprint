@@ -8,7 +8,7 @@ This topic covers how to run a test that tells the truth. The hardest part isn't
 
 ## Kinds of Tests
 
-The k6 documentation lists six kinds, which differ in load shape and in the question they ask:
+There are six kinds, which differ in load shape and in the question they ask:
 
 | Test | Load Shape | The Question |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ The k6 documentation lists six kinds, which differ in load shape and in the ques
 | Spike | Very high, for a few minutes | Can it take a sudden surge? |
 | Breakpoint | Rising until it breaks | Where is the upper limit? |
 
-The documentation gives three pieces of advice. Start with a smoke test, then move to the larger patterns. Keep the shape simple: ramp up, hold a plateau, and ramp down, since a rollercoaster pattern is hard to interpret.
+Three pieces of advice. Start with a smoke test, then move to the larger patterns. Keep the shape simple: ramp up, hold a plateau, and ramp down, since a rollercoaster pattern is hard to interpret.
 
 And remember that the names are relative: a stress test for one application is an average load test for another. It also says that no single type removes the whole risk.
 
@@ -27,20 +27,20 @@ The textbook app needs most of them. A load test at the usual daytime rate, a sp
 
 ## Who Sends the Requests
 
-A load generator can behave in two ways, and the choice changes the results. The k6 and Gatling documentation describe them:
+A load generator can behave in two ways, and the choice changes the results. They are:
 
 - **Closed model**: A fixed number of virtual users each send a request, wait for the response, and send the next. The speed of the system sets the rate of the test
 - **Open model**: New requests arrive at a set rate, whether or not earlier ones have finished. The test sets the rate, as real users do
 
 In k6, the constant virtual users executor is a closed model, and the arrival rate executors are the open ones. Gatling has the same split, with separate calls for injecting users at a rate, or keeping a constant number of concurrent users.
 
-The k6 documentation has an example with an endpoint that takes about 6 seconds: one closed virtual user completes about 10 iterations in a minute, while an open test at 1 a second starts 60, with the pool of virtual users growing to keep up.
+Take an endpoint that takes about 6 seconds: one closed virtual user completes about 10 iterations in a minute, while an open test at 1 a second starts 60, with the pool of virtual users growing to keep up.
 
 Real traffic is open. Students don't wait for one another's requests to finish before they open the app. A closed test has a built in brake: when the service slows down, the virtual users slow down with it, and the test sends less load exactly when the service is struggling.
 
 ## Coordinated Omission
 
-The effect has a name. Gil Tene, who studied it, described the problem as the measuring system inadvertently coordinating with the system being measured, and the ScyllaDB article adds that it misses sending requests.
+The effect has a name. Gil Tene, who studied it, described the problem as the measuring system inadvertently coordinating with the system being measured, and so it misses sending requests.
 
 A closed loop waits during a stall, so the slow period gets few samples, and the measured percentiles look far better than what real users would see.
 
@@ -61,7 +61,7 @@ The closed test saw the stall in 8 requests, the ones in flight, and reported a 
 
 The open test kept sending on schedule, so about 1,600 requests waited behind the stall, and it reported what a user would have felt. The slowest request is almost the same in both, which is why the maximum alone doesn't show the problem.
 
-The fix is in how latency is measured, and the ScyllaDB article gives the formula: the latency of a request is the time now minus the time it was meant to be sent, plus the service time.
+The fix is in how latency is measured, and the formula is: the latency of a request is the time now minus the time it was meant to be sent, plus the service time.
 
 Use a generator with a constant rate and measure from the intended send time, as wrk2 does, or use the arrival rate executors in k6. Red Hat suggests a quick check: pause the generator for a few seconds, resume, and see whether it sent the number of requests it should have.
 

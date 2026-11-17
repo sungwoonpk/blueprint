@@ -10,7 +10,7 @@ The question it asks is not whether a machine can fail, or a zone, which [Cellul
 
 ## What Happened, Step by Step
 
-AWS published the sequence, and the times show how one fault became several:
+The sequence of the AWS DynamoDB outage shows how one fault became several:
 
 | Period | What Failed | Duration |
 | --- | --- | --- |
@@ -20,8 +20,8 @@ AWS published the sequence, and the times show how one fault became several:
 
 The whole event ran about 14.5 hours, from 11:48 PM to 2:20 PM. The root cause was fixed in under three hours, and the rest was recovery of the systems that had fallen behind while it was broken:
 
-- **The trigger**: Two automation components raced. A delayed one applied an old plan over a newer one, and a cleanup step then deleted the old plan, which removed the addresses of the regional endpoint. The state blocked later automated updates, and AWS says it required manual operator intervention to correct
-- **The first knock on**: The EC2 system that manages the physical servers depended on DynamoDB for its state checks. Leases timed out, and when the database came back, the work of establishing them again congested the system, which AWS describes as a state of congestive collapse. The page says there was no established procedure for that recovery, and engineers throttled incoming work and restarted hosts by hand
+- **The trigger**: Two automation components raced. A delayed one applied an old plan over a newer one, and a cleanup step then deleted the old plan, which removed the addresses of the regional endpoint. The state blocked later automated updates, and it required manual operator intervention to correct
+- **The first knock on**: The EC2 system that manages the physical servers depended on DynamoDB for its state checks. Leases timed out, and when the database came back, the work of establishing them again congested the system, a state of congestive collapse. There was no established procedure for that recovery, and engineers throttled incoming work and restarted hosts by hand
 - **The second knock on**: New instances were added to load balancer health checks before their network state had spread. The checks flapped between pass and fail, and the health check system's automatic failover removed capacity from load balancers. AWS disabled the automatic failover at 9:36 AM, and the connection errors cleared
 - **The long tail**: Lambda, STS, the support center and other services each had a window of impairment, some into the next day
 
@@ -29,7 +29,7 @@ Instances that were already running were not affected. The damage fell on things
 
 ## What Each Boundary Protects
 
-Cloud providers build in layers, and each layer fails differently. AWS's article on static stability shows what the layers buy at the zone level: a service across three zones that overprovisions by 50 percent runs each zone at about 66 percent of its tested level, so the loss of a zone leaves the other two able to carry the load without launching anything.
+Cloud providers build in layers, and each layer fails differently. Static stability shows what the layers buy at the zone level: a service across three zones that overprovisions by 50 percent runs each zone at about 66 percent of its tested level, so the loss of a zone leaves the other two able to carry the load without launching anything.
 
 It also shows what a zone boundary doesn't do. If the zones share a dependency, such as the regional DNS in the event above, or a regional control plane, the zones fail together.
 
@@ -46,7 +46,7 @@ If each region must carry the whole load when another is lost, and we plan to ke
 
 These are our arithmetic from the 80 percent planning figure in [Capacity Planning](/system-design/capacity-planning). Two regions waste the most idle capacity, and more regions waste less and cost more to operate.
 
-Azure's guidance adds a warning: deploying resources to a region in a pair doesn't automatically make them more resilient, and the documentation says not to rely on the provider's own failover between paired regions as the primary disaster recovery approach.
+A warning: deploying resources to a region in a pair doesn't automatically make them more resilient, and the provider's own failover between paired regions shouldn't be the primary disaster recovery approach.
 
 A provider decides to fail over after repeated failed recovery attempts, in catastrophic cases, which is later than most businesses can wait.
 
@@ -56,7 +56,7 @@ A provider decides to fail over after repeated failed recovery attempts, in cata
 
 For the textbook app, we set a recovery point of 5 minutes and a recovery time of 1 hour in registration week, and 1 hour and 8 hours the rest of the year. Registration week needs a warm standby, and the quiet months can use backup and restore.
 
-AWS's whitepaper says a warm standby decreases the time to recovery because the workload is already running in the other region, and that active/active is the most complex and costly approach, with near zero recovery time for most disasters.
+A warm standby decreases the time to recovery because the workload is already running in the other region, and that active/active is the most complex and costly approach, with near zero recovery time for most disasters.
 
 For the data, it notes that asynchronous replication enables a near zero recovery point, and that corruption still needs backups, since corruption replicates.
 
@@ -104,9 +104,9 @@ A failover plan can fail on its own assumptions. Four traps stand out:
 | The Team Signs In to Fix It | Is identity, and the secret store, reachable from outside the region? |
 | The Deploy Pipeline Pushes the Fix | Does it run in the region that is down? |
 
-AWS's static stability article states the principle: separate the control plane, which makes changes, from the data plane, which keeps running, and design so that what worked before an impairment continues to work during it.
+The principle: separate the control plane, which makes changes, from the data plane, which keeps running, and design so that what worked before an impairment continues to work during it.
 
-A failover that needs a control plane to act is exposed to the same event it is meant to survive. The AWS summary also notes that the DNS automation was built with minimal dependencies so that it could recover in any scenario, and still got into a state that needed an operator.
+A failover that needs a control plane to act is exposed to the same event it is meant to survive. The DNS automation had been built with minimal dependencies so that it could recover in any scenario, and still got into a state that needed an operator.
 
 ## Practicing It
 

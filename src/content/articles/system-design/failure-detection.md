@@ -35,7 +35,7 @@ The detector keeps a sliding window of recent heartbeat intervals and fits a nor
 
 The effect is that the timeout adapts to the network. In our simulation, with a threshold of 8, the detector's effective timeout was about 1.06 seconds in the quiet network and 2.02 seconds in the noisy one, without anyone changing a setting.
 
-Apache Cassandra and Akka both use this detector. Cassandra's `phi_convict_threshold` defaults to 8, and its documentation says most users should leave it. Akka's default is also 8, and its documentation suggests 12 on cloud platforms such as Amazon EC2, where delays are less regular. Our noisy network shows why:
+Apache Cassandra and Akka both use this detector. Cassandra's `phi_convict_threshold` defaults to 8, and most users should leave it. Akka's default is also 8, and 12 is the usual advice on cloud platforms such as Amazon EC2, where delays are less regular. Our noisy network shows why:
 
 | Phi Threshold | False Suspicions Each Hour | Mean Timeout |
 | --- | --- | --- |
@@ -67,16 +67,16 @@ If no ack arrives in time, it asks k other members to ping the target for it, a 
 <figcaption>Other members probe the target, so a bad link between two nodes doesn't condemn a healthy one</figcaption>
 </figure>
 
-The paper makes several points that explain its popularity:
+Several points explain its popularity:
 
 - **Constant cost**: Each member sends a bounded number of messages in each period, whatever the group size, so with 1,000 members a period carries on the order of 2,000 messages, mostly pings and acks
-- **Expected detection time is a small constant**: The paper's analysis bounds it by e divided by e minus 1 protocol periods, about 1.6, for a crash anywhere in the group
+- **Expected detection time is a small constant**: Analysis bounds it by e divided by e minus 1 protocol periods, about 1.6, for a crash anywhere in the group
 - **News rides on probes**: Membership changes are piggybacked on the ping and ack messages, so there is no separate broadcast
 - **Suspicion before a verdict**: A suspected member is announced as suspected, and is declared failed after a timeout in which it can announce that it is alive
 
-The paper sets the timeout from the round trip time and advises a protocol period of at least three times its estimate.
+The timeout comes from the round trip time, and the protocol period should be at least three times its estimate.
 
-Consul and its Serf library use SWIM, and HashiCorp's documentation says they add a set of changes called Lifeguard so that a node that is itself overloaded doesn't wrongly accuse others. Akka takes a different shape: each node is watched by up to 5 others, picked along a hashed ring.
+Consul and its Serf library use SWIM, and they add a set of changes called Lifeguard so that a node that is itself overloaded doesn't wrongly accuse others. Akka takes a different shape: each node is watched by up to 5 others, picked along a hashed ring.
 
 ## Gossip: Spreading the News
 
@@ -93,7 +93,7 @@ We simulated it for clusters of different sizes, with one node starting a rumor 
 | 10,000 | 24.8 | 11.4 | 13.3 |
 | 100,000 | 29.8 | 14.0 | 16.6 |
 
-A cluster 1,000 times larger needs a few more rounds, and exchanging in both directions roughly halves the count. The Wikipedia page on gossip protocols gives a similar figure from the literature: about 15 rounds for 25,000 machines. Gossip also tolerates loss: a dropped message is made up by the many other paths the rumor takes.
+A cluster 1,000 times larger needs a few more rounds, and exchanging in both directions roughly halves the count. Gossip also tolerates loss: a dropped message is made up by the many other paths the rumor takes.
 
 Real systems tune this. In Cassandra, each node gossips once a second with one random node, sometimes with an unreachable one to learn when it returns, and with a seed node when the first pick wasn't one.
 
@@ -103,13 +103,13 @@ The state is versioned with a generation and a counter, so newer information win
 
 A new node has to find the cluster first. Dynamo, Amazon's key-value store, uses **seeds**, nodes that others can start from, to avoid a state where parts of the ring fail to learn about each other.
 
-Cassandra says any node can be a seed, that a non seed must reach one to join, and recommends several, often one for each rack or datacenter. Akka notes that the first seed in the list has to be up when the cluster is first formed.
+In Cassandra any node can be a seed, a non seed must reach one to join, and several is the usual advice, often one for each rack or datacenter. In Akka the first seed in the list has to be up when the cluster is first formed.
 
 Seeds are an entry point and not a coordinator. After a node has joined, it gossips with the rest, and a cluster keeps running with a seed down.
 
 ## Deciding Is Cheap, Acting Is Not
 
-A detector's verdict starts an action, and the costs differ a lot. In Dynamo's design, failure detection is local: each node keeps its own view, used to skip unreachable nodes, and the paper calls a purely local notion entirely sufficient for that purpose.
+A detector's verdict starts an action, and the costs differ a lot. In Dynamo's design, failure detection is local: each node keeps its own view, used to skip unreachable nodes, and a purely local notion is enough for that purpose.
 
 Writes meant for an unreachable node go to another node as hints and move back later, as in [Repairing Replicas with Hinted Handoff and Merkle Trees](/system-design/repairing-replicas).
 

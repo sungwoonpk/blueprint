@@ -20,7 +20,7 @@ Different uses want different properties, and no scheme gives the full set:
 
 ## A Counter in the Database
 
-The simplest source is a sequence or auto increment column. PostgreSQL's `nextval` is atomic and gives distinct values across sessions, and its documentation is clear about the catch: a value is not given back when a transaction aborts, and an insert that hits a conflict can still use one, so gaps appear.
+The simplest source is a sequence or auto increment column. PostgreSQL's `nextval` is atomic and gives distinct values across sessions, and there is a catch: a value is not given back when a transaction aborts, and an insert that hits a conflict can still use one, so gaps appear.
 
 MySQL's InnoDB likewise loses values on rollback and does not reuse them. Treat gaps as normal, and don't use IDs as an unbroken count.
 
@@ -44,13 +44,13 @@ The chance of two matching is small, and the birthday formula tells how small: w
 | 64 random bits | About 2.4 in 10 million |
 | 122 random bits | About 1 in a trillion trillion |
 
-For 122 bits, the same formula gives about one chance in a billion after 103 trillion IDs, which we calculated. Google's Spanner documentation states that a 50 percent chance takes about 2.7 quintillion UUIDs.
+For 122 bits, the same formula gives about one chance in a billion after 103 trillion IDs, which we calculated. A 50 percent chance of a collision takes about 2.7 quintillion UUIDs.
 
 The cost is in the database index. RFC 9562 observes that random UUIDs have poor locality in a B-tree: each insert lands in a random leaf, instead of next to the previous one, as in [Indexes and Query Optimization](/system-design/indexing).
 
-Percona's measurements on MySQL describe the result: page splits, pages left partly empty, and, once the table is larger than memory, roughly two I/O operations for each insert, one read and one write.
+On MySQL the result is page splits, pages left partly empty, and, once the table is larger than memory, roughly two I/O operations for each insert, one read and one write.
 
-The key is also copied into each secondary index. The MySQL manual says a long primary key makes secondary indexes larger, and Percona's example is a billion row table with a text UUID key and five secondary indexes, which stores the key six times for each row, about 216 GB.
+The key is also copied into each secondary index. In MySQL a long primary key makes secondary indexes larger. Take a billion row table with a text UUID key and five secondary indexes, which stores the key six times for each row, about 216 GB.
 
 We measured the locality effect in SQLite with a small 2 MB cache, inserting 400,000 rows with a random 16 byte key and with a 16 byte key that starts with a millisecond timestamp:
 
@@ -100,7 +100,7 @@ The worker field takes up to 1,024 machines, whose numbers are set in configurat
 
 No call is needed to make an ID, but each worker needs its own number, which is a small piece of coordination at start up. Two workers with the same number can produce the same ID.
 
-Clock handling is part of the design. The README says Snowflake refuses to generate IDs while the clock is behind the last timestamp it used, until the clock catches up, and recommends running NTP so that it doesn't step backwards.
+Clock handling is part of the design. Snowflake refuses to generate IDs while the clock is behind the last timestamp it used, until the clock catches up, and recommends running NTP so that it doesn't step backwards.
 
 We simulated 10 workers whose clocks were off by up to 5 ms each, producing 1 million IDs at about 20,000 a second. All IDs were unique.
 
@@ -123,7 +123,7 @@ A UUID version 7 is a simpler choice when there is no room for worker numbers. O
 
 Two cautions apply. Time ordered IDs reveal when a record was made, and sequential ones reveal how many exist, so use a random public identifier where that matters.
 
-And on a store that spreads keys by range, such as Spanner, increasing keys concentrate writes on one server, so its documentation recommends a random UUID version 4 or a bit reversed sequence.
+And on a store that spreads keys by range, such as Spanner, increasing keys concentrate writes on one server, so the advice is a random UUID version 4 or a bit reversed sequence.
 
 Finally, an ID can name a request as well as a record. Stripe's idempotency keys, up to 255 characters, are suggested to be random strings such as a version 4 UUID, and the server remembers the first result for a key, as in [Idempotency and Safe Retries](/system-design/idempotency).
 

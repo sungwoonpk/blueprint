@@ -1,6 +1,8 @@
 > **Serialization** turns data held in a program's memory into bytes that can be sent or stored, and **deserialization** turns the bytes back. The format you choose decides how big the data is, who can read it and how safely it can change.
 
-In [How HTTP Works](/system-design/http), a request carried a body like `{"title": "Calculus, Early Transcendentals", "price": 45}`, and the server's answer carried one too. That text is serialization at work. A program's objects live in memory, full of pointers that mean nothing on another machine, so before anything crosses a network or lands in a file it has to become a flat sequence of bytes. The receiver reads those bytes and rebuilds the object.
+In [How HTTP Works](/system-design/http), a request carried a body like `{"title": "Calculus, Early Transcendentals", "price": 45}`, and the server's answer carried one too. That text is serialization at work.
+
+A program's objects live in memory, full of pointers that mean nothing on another machine, so before anything crosses a network or lands in a file it has to become a flat sequence of bytes. The receiver reads those bytes and rebuilds the object.
 
 This choice shows up everywhere in the rest of the roadmap: API bodies, messages in a queue, rows in a cache, files in a data pipeline. So it pays to know the main options and, more importantly, how a format behaves when the data's shape changes.
 
@@ -30,13 +32,19 @@ To read the bytes you need the **schema**, a description such as "field 1 is the
 
 A few others are worth knowing by name: XML, which is older and wordier and still common in enterprise systems, MessagePack, a binary format shaped like JSON, and CSV, for flat tables.
 
-Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second. Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats.
+Binary formats are smaller and faster to read and write, which matters most when millions of messages move each second.
 
-JSON has its own quirks. It has one kind of number, and many programs, JavaScript among them, read it as a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) can lose digits. The JSON standard, RFC 8259, warns about this, and the JSON form of Protocol Buffers writes 64 bit integers as strings for that reason. APIs often send very large ids as strings too.
+Compression narrows the size gap, and for many systems the network and the database cost far more than the encoding, so the numbers from [Numbers Every Engineer Should Know](/system-design/numbers) are a better guide than a benchmark of formats.
+
+JSON has its own quirks. It has one kind of number, and many programs, JavaScript among them, read it as a 64 bit float, so integers above about 9 quadrillion (2 to the power of 53) can lose digits.
+
+The JSON standard, RFC 8259, warns about this, and the JSON form of Protocol Buffers writes 64 bit integers as strings for that reason. APIs often send very large ids as strings too.
 
 ## Why the Shape Changes
 
-Now the harder part. The listing will gain fields next month. Ask what happens during the update, and recall from [Scaling Up and Scaling Out](/system-design/scaling) that servers are replaced a few at a time, so for a while old and new code run side by side. Old phone apps stay installed for years. Messages sitting in a queue were written by whatever code was running yesterday. So two versions of the data meet each other, in two directions:
+Now the harder part. The listing will gain fields next month. Ask what happens during the update, and recall from [Scaling Up and Scaling Out](/system-design/scaling) that servers are replaced a few at a time, so for a while old and new code run side by side.
+
+Old phone apps stay installed for years. Messages sitting in a queue were written by whatever code was running yesterday. So two versions of the data meet each other, in two directions:
 
 <figure class="diagram">
 <p class="rowname">Backward Compatible</p>
@@ -71,7 +79,9 @@ Binary formats make the rules very concrete. Protocol Buffers identify each fiel
 | Reuse a removed field's number for something new | No | Old data is read as the wrong thing, without any error |
 | Make an optional field required | No | Old data and old code don't have it |
 
-The fifth row is the dangerous one, because no error appears. Suppose the listing's price was stored as whole dollars in field 3, and we decide cents are better. The tempting move is to keep field 3 and start writing cents. Then an old phone app reads 4500 from field 3 and shows a $4,500 textbook. The right move is to add a new field and retire the old one:
+The fifth row is the dangerous one, because no error appears. Suppose the listing's price was stored as whole dollars in field 3, and we decide cents are better.
+
+The tempting move is to keep field 3 and start writing cents. Then an old phone app reads 4500 from field 3 and shows a $4,500 textbook. The right move is to add a new field and retire the old one:
 
 ```proto
 message Listing {
@@ -84,7 +94,9 @@ message Listing {
 }
 ```
 
-The `reserved` lines tell the compiler to reject any future attempt to reuse that number or name, and the Protocol Buffers documentation is blunt about the rule: never reuse a field number. For a while the server writes both the old field and the new one, then drops the old one once no client reads it. This is the expand, migrate, contract path from [Designing for Maintainability](/system-design/maintainability), applied to a message.
+The `reserved` lines tell the compiler to reject any future attempt to reuse that number or name, and the rule is blunt: don't reuse a field number.
+
+For a while the server writes both the old field and the new one, then drops the old one once no client reads it. This is the expand, migrate, contract path from [Designing for Maintainability](/system-design/maintainability), applied to a message.
 
 Avro works differently, resolving the writer's schema against the reader's by field name and filling in declared defaults, but the idea is the same: each change needs a default or a retirement plan. JSON has no schema to enforce any of this, so the rules live in team habits and tests.
 
@@ -100,7 +112,9 @@ For public web APIs, the same care applies to JSON fields, as in [What Makes a G
 
 ## Don't Turn Untrusted Bytes Into Objects
 
-One more rule has nothing to do with size. Some formats can rebuild any object, including ones that run code while loading, such as Java's built in serialization and Python's pickle. Feeding them bytes from outside lets an attacker run code on your server. Use a plain data format for anything that crosses a trust boundary, and validate the fields after reading them, since the client is outside your control, as [How Clients and Servers Talk](/system-design/client-server) put it.
+One more rule has nothing to do with size. Some formats can rebuild any object, including ones that run code while loading, such as Java's built in serialization and Python's pickle. Feeding them bytes from outside lets an attacker run code on your server.
+
+Use a plain data format for anything that crosses a trust boundary, and validate the fields after reading them, since the client is outside your control, as [How Clients and Servers Talk](/system-design/client-server) put it.
 
 ## Choosing a Format
 

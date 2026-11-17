@@ -10,11 +10,11 @@ If the job's progress lives in a process's memory alone, each of those events lo
 
 ## Telling the Caller
 
-The interface comes first. The caller can't hold a connection for an hour, so the API accepts the work and answers later. The Azure Architecture Center describes the asynchronous request reply pattern:
+The interface comes first. The caller can't hold a connection for an hour, so the API accepts the work and answers later. The pattern is called asynchronous request reply:
 
 - **Accept**: The client sends the request, the API validates it, and returns 202 Accepted with a `Location` header for a status resource, and optionally `Retry-After` to say when to look. RFC 9110's 202 means the request was accepted for processing and the processing isn't complete
-- **Status**: A poll of the status resource returns 200 with a body that shows the state, while the work is pending. The page suggests fields: a status of pending, running, succeeded, failed or canceled, times of creation and last update, a percent complete, and an error in the problem details format
-- **Done**: When the work finishes, the status resource answers 303 See Other with the location of the result. The page warns against 302, since some clients replay the original method on a redirect, which could repeat a POST
+- **Status**: A poll of the status resource returns 200 with a body that shows the state, while the work is pending. Useful fields: a status of pending, running, succeeded, failed or canceled, times of creation and last update, a percent complete, and an error in the problem details format
+- **Done**: When the work finishes, the status resource answers 303 See Other with the location of the result. Avoid 302, since some clients replay the original method on a redirect, which could repeat a POST
 - **Cancel**: A DELETE on the status resource cancels the work
 - **Safe retries**: An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work)
 - **Cleanup**: A retention policy removes old status resources, with an `Expires` header as a hint
@@ -43,7 +43,7 @@ Task libraries use the same life cycle. Celery's task states are pending, starte
 
 An unknown task id also reads as pending, started isn't reported unless the tracking option is turned on, and an application can define its own state, such as progress with a current and total count.
 
-A result backend stores the states, and Celery's documentation warns that results must eventually be fetched or forgotten, or backend resources aren't released.
+A result backend stores the states, and results must eventually be fetched or forgotten, or backend resources aren't released.
 
 ## Surviving a Crash: Save Progress
 
@@ -88,12 +88,12 @@ After a crash the engine doesn't restore memory: it runs the workflow code again
 
 Anything non deterministic, such as the current time, random numbers and network calls, goes through replay safe interfaces or through activities.
 
-The activities do the work with side effects, and their results are recorded, so on a replay an activity that finished isn't run again. Timers are recorded events and don't wait again. The documentation says a workflow can keep running for years.
+The activities do the work with side effects, and their results are recorded, so on a replay an activity that finished isn't run again. Timers are recorded events and don't wait again. A workflow can keep running for years.
 
 The parts have documented defaults and limits:
 
-- **Activity retries**: An initial interval of 1 second, a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts by default, with the documentation recommending a limit on the total retry time over a limit on attempts
-- **Timeouts**: Each attempt has a start to close timeout, which the documentation strongly recommends setting, and a heartbeat timeout tells the server that a long activity is alive. A heartbeat can also carry progress details that the next attempt reads, which is a checkpoint
+- **Activity retries**: An initial interval of 1 second, a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts by default, and a limit on the total retry time is better than a limit on attempts
+- **Timeouts**: Each attempt has a start to close timeout, which should be set, and a heartbeat timeout tells the server that a long activity is alive. A heartbeat can also carry progress details that the next attempt reads, which is a checkpoint
 - **History size**: A hard limit of 51,200 events or 50 MB for an execution, with warnings after 10,240 events or 10 MB. A long workflow periodically continues as a new execution, with its state passed on, to stay under the limit
 
 AWS Step Functions offers a managed form, described as state machines. A standard workflow runs for up to a year, with exactly once execution, unless retries are specified, and is billed by state transitions.
@@ -113,7 +113,7 @@ When the workflow spans services, each with its own database, there is no transa
 | Choreography | No coordinator, simple for small flows | Hard to follow as steps are added, and cyclic dependencies |
 | Orchestration | One place that holds the flow | The coordinator is a component to run and keep available |
 
-Azure's saga description also names parts of the flow: compensable steps that can be undone, a pivot step that is the point of no return, and retryable steps after it, which have to be idempotent.
+A saga has named parts: compensable steps that can be undone, a pivot step that is the point of no return, and retryable steps after it, which have to be idempotent.
 
 Its pattern on compensating transactions adds a caution: compensations can fail, so record progress, make each compensation an idempotent command, alert with details when a person is needed, and consider that offering an alternative may be better than undoing the whole task.
 

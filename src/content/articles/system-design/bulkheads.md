@@ -8,7 +8,7 @@ The remedy is old and plain: give the payment calls their own pool, a small one.
 
 ## The Idea
 
-The Azure Architecture Center describes the pattern as partitioning an application's elements into pools, so that a failure in one doesn't cascade to the rest, and notes that it is also called cell-based architecture.
+The pattern partitions an application's elements into pools, so that a failure in one doesn't cascade to the rest, and it is related to cell-based architecture.
 
 The partition can follow the consumer, by load and availability needs, or the dependency, with one connection pool for each downstream service. Its examples are a pool for each downstream service, one service instance for each client, and separate queues for asynchronous services.
 
@@ -40,13 +40,13 @@ Two ways to build the limit are common in the libraries, and they trade overhead
 | Cost | A thread handoff on each call | Almost none |
 | Fits | Slow or unreliable network calls | Very fast, in memory calls |
 
-Netflix's Hystrix used a thread pool for each dependency. Its documentation says most of the Netflix API's 40 or more pools on each instance are set to 10 threads, in a range of 5 to 20, and when a pool is full, Hystrix rejects the call instead of queueing it.
+Netflix's Hystrix used a thread pool for each dependency. Most of the Netflix API's 40 or more pools on each instance were set to 10 threads, in a range of 5 to 20, and when a pool is full, Hystrix rejects the call instead of queueing it.
 
 The overhead was measured at 60 requests a second on one instance: none at the median, 3 ms at the 90th percentile and 9 ms at the 99th.
 
 It also notes that a call that can't be interrupted keeps running after a timeout and can still saturate the pool, so clients need their own connect and read timeouts.
 
-Semaphore isolation limits the number of concurrent callers and can't time out or walk away. The page says a fast in memory call can do well over 5,000 requests a second with a semaphore of 1 or 2.
+Semaphore isolation limits the number of concurrent callers and can't time out or walk away. A fast in memory call can do well over 5,000 requests a second with a semaphore of 1 or 2.
 
 Resilience4j offers both. Its semaphore bulkhead has `maxConcurrentCalls` at 25 by default and `maxWaitDuration` at 0, so a caller doesn't wait when the bulkhead is full. Its thread pool bulkhead defaults to the number of processors for its maximum size, one less for its core size, a queue of 100 and a keep alive of 20 ms.
 
@@ -70,8 +70,8 @@ The same idea works wherever resources are shared:
 
 - **Connection pools**: One for each downstream database or service, not one for the whole application
 - **Queues**: A separate queue for each kind of work, so a backlog of one doesn't delay another, as in [Message Queues and Pub/Sub](/system-design/message-queues)
-- **Instances**: A service instance for each large customer, as Azure suggests
-- **Quotas for each customer**: Google's SRE book describes a service that sets a limit for each customer from negotiated agreements, so one team's heavy use can't exhaust the capacity of the others
+- **Instances**: A service instance for each large customer, for example
+- **Quotas for each customer**: One approach is to set a limit for each customer from negotiated agreements, so one team's heavy use can't exhaust the capacity of the others
 - **The platform**: Kubernetes limits a container's CPU and memory
 
 The platform level has its own details. Kubernetes enforces limits through Linux cgroups. A container that goes over its CPU limit is throttled, and one that exceeds its memory limit is likely to be killed, which shows as `OOMKilled` with exit code 137.

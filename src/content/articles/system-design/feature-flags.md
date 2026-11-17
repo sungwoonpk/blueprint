@@ -4,7 +4,7 @@
 
 **Releasing** lets users see its behavior. With a flag, the code can arrive on Thursday, switched off, and the release can happen on Monday, to a few users, and be undone in seconds if it goes wrong.
 
-Google's SRE workbook recommends this separation, keeping feature launches apart from binary releases through flags or an experiment framework. The textbook app uses it for a new search ranking, for a new checkout page, and for a switch that turns off the recommendations when the servers are overloaded.
+Keep feature launches apart from binary releases through flags or an experiment framework. The textbook app uses it for a new search ranking, for a new checkout page, and for a switch that turns off the recommendations when the servers are overloaded.
 
 ## Four Kinds of Flags
 
@@ -17,7 +17,7 @@ Pete Hodgson's article on feature toggles, hosted on Martin Fowler's site, sorts
 | Ops | Control operating behavior, such as a kill switch | Short, with a few long lived |
 | Permission | Different experience for premium, beta or staff users | Years |
 
-- **Release flags**: Mostly static, since a given build either has the feature on or off. The article says they shouldn't stay much beyond a week or two, though a product led flag may stay longer
+- **Release flags**: Mostly static, since a given build either has the feature on or off. They shouldn't stay much beyond a week or two, though a product led flag may stay longer
 - **Experiment flags**: Highly dynamic. Each user is put in a cohort and stays there, and the decision is made on each request
 - **Ops flags**: They need to change quickly, since needing a new release to flip an ops flag is unlikely to make an operations person happy. A few long lived ones act as kill switches or manual circuit breakers
 - **Permission flags**: Very dynamic, decided on each request and kept for years
@@ -46,7 +46,7 @@ const useNewRanking = await client.getBooleanValue(
 );
 ```
 
-- **The default value**: Required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case, and the documentation says to give the default some thought. The safe default is the old behavior
+- **The default value**: Required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case, so give the default some thought. The safe default is the old behavior
 - **The evaluation context**: Facts about the request, such as the user and the region, that the flag system uses to target. The targeting key should uniquely identify the subject
 - **The provider**: The translation layer between the evaluation API and the flag system in use, so the application code doesn't depend on a vendor
 
@@ -56,7 +56,7 @@ When something goes wrong, the standard defines reasons and error codes, such as
 
 A staged rollout must treat a user the same way each time. A coin flip on each request at 10 percent would show a student the new search on one page and the old one on the next. We simulated it: with a coin flip, 65 percent of users saw both versions within 10 visits.
 
-The standard method is to hash. Flagsmith's documentation describes merging the identity with the segment's identifier and hashing it into a number between 0 and 1, which is then compared with the percentage. We tried the same idea with the flag name and the user id:
+The standard method is to hash. Flagsmith merges the identity with the segment's identifier and hashes it into a number between 0 and 1, which is then compared with the percentage. We tried the same idea with the flag name and the user id:
 
 | Property | Result in Our Test of 100,000 Users |
 | --- | --- |
@@ -96,7 +96,7 @@ An ops flag turns a feature off faster than any redeploy. If the recommendation 
 
 A flip that reaches the servers in tens of seconds compares well with a rollback that takes minutes, though both figures are assumptions and depend on the system.
 
-The switch has to be ready before it is needed. Decide who may flip it, test that flipping works, and tell the on call engineer where it is. A kill switch that nobody has tried is the same untested path that the SRE book warns about.
+The switch has to be ready before it is needed. Decide who may flip it, test that flipping works, and tell the on call engineer where it is. A kill switch that nobody has tried is the untested path that tends to fail when it is needed.
 
 ## The Cost of Flags
 
@@ -119,7 +119,7 @@ The cure for the cost is removal:
 - **A time bomb**: A test that fails, or an application that refuses to start, after the expiry
 - **A cap**: A limit on the number of flags, so adding one means removing one
 
-The article also advises exposing the current flag state through an endpoint, so that operators and tests can see what a running server believes.
+Expose the current flag state through an endpoint, so that operators and tests can see what a running server believes.
 
 ## A Dead Flag at Knight Capital
 

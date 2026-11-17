@@ -33,7 +33,7 @@ Each rule is a **normal form**, and each builds on the one before. They rest on 
 
 A common saying sums up the first three: each column depends on the key, the whole key, and nothing but the key.
 
-Wikipedia's article on database normalization says the forms beyond the fourth are mainly of academic interest, since the problems they solve rarely appear in practice. It also says that fixing a problem at one level often fixes the next, so a design is often normalized by thinking it through, not by checking each form in turn.
+The forms beyond these deal with rarer situations, and fixing a problem at one level often fixes the next. So in practice you normalize by thinking each fact into its own table, not by checking each form in turn.
 
 For most applications, third normal form is the place to stop. Now we can name what `listings`, `books` and `users` already were in the last topic: three tables, each about one thing, in 3NF.
 
@@ -108,7 +108,7 @@ UPDATE listings SET seller_campus = 'South' WHERE seller_id = 3;
 COMMIT;
 ```
 
-A materialized view moves the same bargain into the database. PostgreSQL's documentation describes it as a stored result of a query, like a table you can't edit directly. It is only as current as the last refresh, and the database does not refresh it for you. Here is the cheapest copy of each book per campus:
+A materialized view moves the same bargain into the database. It is a stored result of a query, like a table you can't edit directly. It is only as current as the last refresh, and the database does not refresh it for you. Here is the cheapest copy of each book per campus:
 
 ```sql
 CREATE MATERIALIZED VIEW cheapest_copy AS
@@ -133,7 +133,7 @@ A foreign key, as in [Data Modeling](/system-design/data-modeling), keeps a refe
 - **Refresh later**: Rebuild the copy on a schedule, as with the materialized view. Readers may see old data until the next refresh
 - **Follow events**: Publish a change when the source changes, and let other parts of the system update their own copies, as in [Event-Driven Architecture](/system-design/event-driven) and [The Transactional Outbox](/system-design/transactional-outbox). Copies in other databases, caches and search indexes often work this way, and they are a little behind
 
-The right choice depends on what the copied data is like. MongoDB's documentation sorts duplicated data by how it behaves, and the same sorting helps in any database:
+The right choice depends on what the copied data is like. Duplicated data can be sorted by how it behaves, and the same sorting helps in any database:
 
 | Kind | Example | Verdict |
 | --- | --- | --- |
@@ -145,7 +145,7 @@ The right choice depends on what the copied data is like. MongoDB's documentatio
 
 The second row is the surprise. Some copies are not a shortcut at all but the correct design: a receipt must show the price the buyer paid, even after the listing changes.
 
-Microsoft's documentation for Azure Cosmos DB adds two tests that agree with this table. Embed data that is queried together, changes rarely and stays small. Keep it separate when it changes often or can grow without a bound. For databases without joins it goes further, and says to denormalize by default and make the exceptions deliberate.
+Two tests agree with this table. Embed data that is queried together, changes rarely and stays small. Keep it separate when it changes often or can grow without a bound. For databases without joins, denormalize by default and make the exceptions deliberate.
 
 ## Deciding in Practice
 

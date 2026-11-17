@@ -26,9 +26,9 @@ Most public APIs use the path. It is the easiest for outsiders to understand and
 
 A version number can mean different amounts of change. Some APIs bump a single number for the whole API, `v1` to `v2`, and move everything at once. Some version each resource separately. Stripe's API, which is known for keeping old integrations working, uses dates instead.
 
-According to its engineering blog, an account is pinned to the newest version at its first request, and each later request uses that version unless the caller sets a `Stripe-Version` header. Its 2017 post says Stripe had stayed compatible with all its versions since 2011.
+Stripe pins each account to the newest version at its first request, and every later request uses that version unless the caller sets a `Stripe-Version` header. Since 2011 it has stayed compatible with all of its versions.
 
-How can one codebase serve hundreds of old versions? In the design that post describes, the code builds the newest response, then a chain of small steps, one for each breaking change, rewrites it back to the shape an older version expects:
+How can one codebase serve hundreds of old versions? In Stripe's design, the code builds the newest response, then a chain of small steps, one for each breaking change, rewrites it back to the shape an older version expects:
 
 <figure class="diagram">
 <div class="flow">
@@ -83,7 +83,9 @@ A version that nobody switches off can live forever. Retiring one is a schedule,
 4. **Chase the stragglers**: contact the biggest remaining callers directly
 5. **Switch it off**: on the announced date, or after short planned outages that flush out whoever hasn't moved
 
-The warning in step 3 can use headers made for this. `Sunset`, defined in RFC 8594, carries the date the version stops working. `Deprecation`, defined in RFC 9745, says when the version was or will be marked deprecated, written as `@` and a Unix timestamp. A `Link` header with the relation `sunset` points to a page that explains the plan:
+The warning in step 3 can use headers made for this. `Sunset`, defined in RFC 8594, carries the date the version stops working.
+
+`Deprecation`, defined in RFC 9745, says when the version was or will be marked deprecated, written as `@` and a Unix timestamp. A `Link` header with the relation `sunset` points to a page that explains the plan:
 
 ```http
 HTTP/1.1 200 OK
@@ -102,7 +104,9 @@ Every version kept alive is a cost that keeps growing:
 - **Fixes**: a security patch has to reach each version still running
 - **Mistakes**: a change that was meant for v2 can leak into v1
 
-So keep the number small, set a support window, such as 12 months after a replacement ships, and write it down. Versions are also less needed between your own services, since you control both sides and can use the expand, migrate and contract steps from [Designing for Maintainability](/system-design/maintainability) to change one without the other noticing. gRPC and Protocol Buffers favor compatible changes over new versions, and when a break can't be avoided, the usual route is a new package such as `listings.v2` next to the old one.
+So keep the number small, set a support window, such as 12 months after a replacement ships, and write it down.
+
+Versions are also less needed between your own services, since you control both sides and can use the expand, migrate and contract steps from [Designing for Maintainability](/system-design/maintainability) to change one without the other noticing. gRPC and Protocol Buffers favor compatible changes over new versions, and when a break can't be avoided, the usual route is a new package such as `listings.v2` next to the old one.
 
 ## Key Points
 

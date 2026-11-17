@@ -4,7 +4,7 @@ Suppose the textbook app wants a new feature: show Mina the books sold by her fr
 
 ## Things and Connections
 
-The most common model is the **property graph**, which Neo4j's documentation describes in three parts. A node is an entity, and it can carry labels such as `Student` or `Book`.
+The most common model is the **property graph**, which has three parts. A node is an entity, and it can carry labels such as `Student` or `Book`.
 
 A relationship connects two nodes, has one type such as `FRIEND`, and always has a direction. Both nodes and relationships can hold properties, which are key and value pairs. Here is a small piece of the app's world:
 
@@ -41,7 +41,7 @@ A relationship connects two nodes, has one type such as `FRIEND`, and always has
 <figcaption>Four nodes and five relationships, each with a type and a direction</figcaption>
 </figure>
 
-Neo4j's documentation stresses one difference from a relational database. In a relational database, a relationship exists only as a foreign key or a join table, and you rebuild it with a `JOIN` each time.
+One difference from a relational database matters most. In a relational database, a relationship exists only as a foreign key or a join table, and you rebuild it with a `JOIN` each time.
 
 In a graph database, relationships are stored with the nodes as first class data and can carry their own properties, such as the price on `SOLD`.
 
@@ -62,7 +62,7 @@ MATCH (me:Student {name: 'Mina'})-[:FRIEND]->{1,3}(other:Student)
 RETURN DISTINCT other.name
 ```
 
-Relational databases can do this too. PostgreSQL's documentation describes `WITH RECURSIVE`, which repeats a query step until nothing new comes back. Here is the same walk over a `friendships` table, with a depth limit because friendships form loops (Mina is Jun's friend and Jun is Mina's):
+Relational databases can do this too. PostgreSQL has `WITH RECURSIVE`, which repeats a query step until nothing new comes back. Here is the same walk over a `friendships` table, with a depth limit because friendships form loops (Mina is Jun's friend and Jun is Mina's):
 
 ```sql
 WITH RECURSIVE reach(student_id, depth) AS (
@@ -77,7 +77,7 @@ WITH RECURSIVE reach(student_id, depth) AS (
 SELECT DISTINCT student_id FROM reach;
 ```
 
-The documentation also describes a `CYCLE` clause that detects loops for you. So the question is not whether SQL can walk a graph, since it can. It is how natural the query is and how it behaves as the graph grows.
+PostgreSQL also has a `CYCLE` clause that detects loops for you. So the question is not whether SQL can walk a graph, since it can. It is how natural the query is and how it behaves as the graph grows.
 
 Each hop multiplies the work. If each student has 150 friends, the people reached grow like this, at most, since real friend groups overlap:
 
@@ -87,19 +87,19 @@ Each hop multiplies the work. If each student has 150 friends, the people reache
 | 2 | 22,500 |
 | 3 | 3,375,000 |
 
-That growth is why Neo4j's documentation advises giving every variable length pattern an upper bound, a label or a direction to keep the search small. It is also where graph databases claim their advantage.
+That growth is why each variable length pattern should get an upper bound, a label or a direction to keep the search small. It is also where graph databases claim their advantage.
 
-Wikipedia describes **index-free adjacency**: each node keeps direct references to its neighbors, so following an edge doesn't need a lookup in a global index, and a query's cost follows the part of the graph it touches, not the size of the whole.
+Native graph databases rely on **index-free adjacency**: each node keeps direct references to its neighbors, so following an edge doesn't need a lookup in a global index, and a query's cost follows the part of the graph it touches, not the size of the whole.
 
 A relational engine does an index lookup for each hop, as in [Indexes and Query Optimization](/system-design/indexing).
 
-The same Wikipedia article adds a caution: a graph model alone is not a reason to replace a relational database, unless measurements show large gains.
+One caution: a graph shaped problem alone is not a reason to replace a relational database, unless measurements show large gains.
 
 ## Where Graphs Fit
 
-Neo4j's documentation says a graph suits questions that are about the relationships between things, and not the things themselves, such as "how do I get from A to B?".
+A graph suits questions that are about the relationships between things, not the things themselves, such as "how do I get from A to B?".
 
-Amazon's Neptune documentation lists recommendation engines, fraud detection, knowledge graphs and network security. The thread is the same: the answer is a path or a neighborhood, and its length isn't known in advance.
+Typical uses are recommendation engines, fraud detection, knowledge graphs and network security. The thread is the same: the answer is a path or a neighborhood, and its length isn't known in advance.
 
 For the textbook app, that could be:
 
@@ -107,28 +107,28 @@ For the textbook app, that could be:
 - **Trust**: Is this seller connected to anyone I know?
 - **Fraud checks**: Do these ten accounts share a phone number, a device and a campus address?
 
-Facebook's engineering team shows a middle path. In its 2013 article on TAO, it describes storing social data as a graph of typed objects and associations (the edges, such as "likes" or "commented on").
+Facebook shows a middle path with TAO, its store for social data: a graph of typed objects and associations (the edges, such as "likes" or "commented on").
 
 Yet TAO is not a graph database in the sense above. It keeps the data in MySQL, with a large cache in front, and supports a few simple questions: is A connected to B, which 50 associations are newest, and how many are there.
 
-The post says there is no traversal on the server, by design, and that clients combine simple queries themselves. The lesson is that a graph shaped dataset doesn't force a graph database. When the questions are shallow and the volume is huge, tables and a cache can do the job.
+There is no traversal on the server, by design, and clients combine simple queries themselves. The lesson is that a graph shaped dataset doesn't force a graph database. When the questions are shallow and the volume is huge, tables and a cache can do the job.
 
 ## Two Models, Several Languages
 
-Not all graph databases agree on the model. Wikipedia and Neptune describe two:
+Not all graph databases agree on the model. Two are common:
 
 - **Property graph**: The model above, with labels and properties on nodes and relationships. It is queried with Cypher, Gremlin and, now, GQL, an ISO standard query language
 - **RDF**: A set of facts written as subject, predicate and object, such as "Jun, sold, Calculus". It is queried with SPARQL and is common in knowledge graphs and linked data
 
-Wikipedia notes that no single graph language has become as universal as SQL, so moving between products costs more than it does between relational ones. Some graph databases also sit on a relational, key-value or document engine underneath.
+There is no graph language as universal as SQL (Cypher, Gremlin and SPARQL live side by side), so moving between products costs more than it does between relational ones. Some graph databases also sit on a relational, key-value or document engine underneath.
 
 ## What You Give Up
 
-Graphs are harder to spread over machines. The TAO article lists this among the reasons the problem is hard: when a query follows connections, the connected data is unlikely to sit on the same machine, and each hop that crosses machines pays for a network trip.
+Graphs are harder to spread over machines. This is one reason the problem is hard: when a query follows connections, the connected data is unlikely to sit on the same machine, and each hop that crosses machines pays for a network trip.
 
 [Sharding Strategies](/system-design/sharding) covers how data is split, and a graph is a hard case for it. Neptune, for one, has a single primary instance for writes and up to 15 read replicas that share storage, so reads scale out more easily than writes.
 
-Wikipedia also says relational databases are better at bulk operations on flat data. Counting sales per campus is a scan and a sum, which a graph store gains nothing from.
+Relational databases are better at bulk operations on flat data. Counting sales per campus is a scan and a sum, which a graph store gains nothing from.
 
 A sensible path for the textbook app is to begin with a `friendships` table in PostgreSQL. When the deep, path shaped questions become the main workload, and measurements show the joins are the problem, a graph database is worth a try, often beside the main database and not in place of it.
 

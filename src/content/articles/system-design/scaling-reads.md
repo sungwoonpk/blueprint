@@ -48,9 +48,9 @@ The lesson is to look at the slow queries first, with the tools of [Logs, Metric
 
 [Where to Put a Cache](/system-design/where-to-cache) and [Caching Patterns for Reads and Writes](/system-design/caching-patterns) covered the mechanics. Here the question is how much a cache removes. Facebook's paper on its memcache deployment describes the pattern at very large scale: a demand filled look aside cache.
 
-A web server asks the cache for a key, goes to the database on a miss, and fills the cache. For writes, it updates the database and then deletes the cached value, and the paper says it chose delete over update because deletes are idempotent. The cache isn't the source of truth and is allowed to evict.
+A web server asks the cache for a key, goes to the database on a miss, and fills the cache. For writes, it updates the database and then deletes the cached value, and it chooses delete over update because deletes are idempotent. The cache isn't the source of truth and is allowed to evict.
 
-Its abstract says the system handles billions of requests a second and holds trillions of items. The paper's lesson for this topic is in what went wrong at scale, and how it was fixed with **leases**:
+Facebook's memcache handles billions of requests a second and holds trillions of items. The lesson for this topic is in what went wrong at scale, and how it was fixed with **leases**:
 
 - **Stale sets**: Two concurrent operations are reordered, and an old value ends up in the cache after a delete
 - **Thundering herds**: A key with heavy reads and writes is invalidated repeatedly, and many readers fall through to the database at once
@@ -91,7 +91,7 @@ Turn the hit ratio into servers. At skew 1.0, with 2,700 reads and 300 writes a 
 
 These are our arithmetic, with a spare server for failures not included. The gains shrink: from 1 to 10 percent the hit ratio goes up 21 points and the server count doesn't change, since the writes and the minimum of two servers set the floor.
 
-The AWS Builders' Library article on caching warns about what a cache adds. A service can become addicted to its cache: behavior differs between a cached and an uncached object, and a cache failure or a shift in the hit distribution can cause an outage, since the database wasn't sized for the miss traffic.
+A cache adds a risk of its own. A service can become addicted to its cache: behavior differs between a cached and an uncached object, and a cache failure or a shift in the hit distribution can cause an outage, since the database wasn't sized for the miss traffic.
 
 Cold starts have the same effect, with a new server's empty local cache flooding its dependency, and the article's remedies are request coalescing, a fallback, and testing with the cache switched off.
 
@@ -101,7 +101,7 @@ It also describes soft and hard time limits, serving cached data past the soft l
 
 A read replica takes the leader's changes and serves reads, as in [Single Leader Replication](/system-design/replication-one-leader). With the cache absorbing 69 percent at skew 1.0, 834 reads a second remain for the database, which a replica can share with the leader, and the leader also takes the 300 writes a second.
 
-The price is [Replication Lag](/system-design/replication-lag). The PostgreSQL documentation says streaming replication is asynchronous by default, with a typical delay of under one second if the standby can keep up, and it says that running the same query almost at the same moment on the primary and the standby might return different results.
+The price is [Replication Lag](/system-design/replication-lag). In PostgreSQL streaming replication is asynchronous by default, with a typical delay of under one second if the standby can keep up, so the same query run almost at the same moment on the primary and the standby might return different results.
 
 A student who edits a listing and reloads it may see the old price.
 
@@ -109,10 +109,10 @@ The options for read your writes, in order of effort:
 
 - **Read from the leader after a write**: For a short window, such as 5 seconds, a user's reads go to the leader
 - **A version token**: The write returns a position, and a replica serves the read after it has caught up to that position
-- **Synchronous replay**: PostgreSQL's documentation says that in simple cases a setting that makes a commit wait until a synchronous standby has replayed it allows load balancing with causal consistency, at the price of slower commits
+- **Synchronous replay**: In PostgreSQL, in simple cases, a setting that makes a commit wait until a synchronous standby has replayed it allows load balancing with causal consistency, at the price of slower commits
 - **Accept it**: For a page of search results, a few seconds of staleness is fine
 
-A second cost is conflict with the replica's own replay. The PostgreSQL documentation explains that replaying the leader's changes can conflict with a long running query on the standby, and a setting for the maximum delay decides whether the query is canceled or replay waits.
+A second cost is conflict with the replica's own replay. Replaying the leader's changes can conflict with a long running query on the standby, and a setting for the maximum delay decides whether the query is canceled or replay waits.
 
 Its guidance is a low value for a standby that exists for availability and a large one for a standby used for reports, so reports and user reads belong on different replicas.
 

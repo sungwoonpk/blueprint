@@ -19,7 +19,7 @@ A **producer** sends a message to a **broker**, the server that runs the queues.
 <figcaption>A message stays in the queue until its consumer confirms it</figcaption>
 </figure>
 
-The confirmation is the point. If the broker deleted a message as soon as it was handed out, a worker that crashed halfway would lose the job. RabbitMQ's documentation describes the two modes.
+The confirmation is the point. If the broker deleted a message as soon as it was handed out, a worker that crashed halfway would lose the job. Brokers offer two modes.
 
 With automatic acknowledgement, the message counts as handled once it is written to the connection, which it calls unsafe: a message that was sent but not yet processed is lost if the connection closes.
 
@@ -38,7 +38,7 @@ while True:
     queue.delete(msg)                      # confirm only after success
 ```
 
-The `wait_seconds` argument is long polling. SQS's documentation explains that a short poll returns at once, even with nothing to give, while a long poll of up to 20 seconds waits for a message, which means fewer empty replies and a lower bill.
+The `wait_seconds` argument is long polling. A short poll returns at once, even with nothing to give, while a long poll of up to 20 seconds waits for a message, which means fewer empty replies and a lower bill.
 
 Both brokers share a consequence. A job whose worker died after finishing the work but before confirming is delivered again, so a message may arrive more than once.
 
@@ -46,7 +46,7 @@ SQS's standard queues say this plainly: at least once delivery, best effort orde
 
 ## Adding Workers: Competing Consumers
 
-To handle more messages, run more consumers on the same queue. Azure's pattern page calls this **competing consumers**: each message goes to exactly one of them, so the pool shares the work and no coordination is needed.
+To handle more messages, run more consumers on the same queue. This is called **competing consumers**: each message goes to exactly one of them, so the pool shares the work and no coordination is needed.
 
 How many workers are enough follows from Little's law, which says the number of busy workers is the arrival rate times the time each job takes. Each photo takes about 400 ms to resize, and a post has 3 photos:
 
@@ -60,9 +60,9 @@ The same relation shows a danger that the AWS Builders' Library describes with i
 
 One RabbitMQ setting guards against uneven loads. The **prefetch** count limits how many unacknowledged messages a consumer holds at once. Without a limit, a slow consumer can be handed a huge pile and its fast neighbors sit idle.
 
-RabbitMQ's documentation says values of roughly 100 to 300 usually perform well, and that 1 is the most conservative and costs throughput.
+In RabbitMQ, values of roughly 100 to 300 usually perform well, and 1 is the most conservative and costs throughput.
 
-Competing consumers give up order. Two workers can finish two jobs in the opposite order from how they arrived, and RabbitMQ notes that a single consumer is what keeps strict order. [Partitions, Ordering and Consumer Groups](/system-design/ordering) shows how to keep order where it matters.
+Competing consumers give up order. Two workers can finish two jobs in the opposite order from how they arrived, and a single consumer is what keeps strict order. [Partitions, Ordering and Consumer Groups](/system-design/ordering) shows how to keep order where it matters.
 
 ## Pub/Sub: Everyone Gets a Copy
 
@@ -70,7 +70,7 @@ A queue answers "who will do this job?". A different question is "who needs to k
 
 When a listing is posted, the resizer, the search index and the email sender all need to hear about it, and each must get every post. Sending the event to one queue would give each post to only one of them.
 
-In pub/sub, a publisher sends the message to a **topic**, and each subscriber has its own subscription, and so its own copy. AWS's SNS describes a topic as a logical access point that copies a message to many subscribers in parallel. A common setup is to give each subscriber its own queue:
+In pub/sub, a publisher sends the message to a **topic**, and each subscriber has its own subscription, and so its own copy. A topic is a logical access point that copies a message to many subscribers in parallel. A common setup is to give each subscriber its own queue:
 
 <figure class="diagram">
 <div class="flow">
@@ -87,7 +87,7 @@ In pub/sub, a publisher sends the message to a **topic**, and each subscriber ha
 <figcaption>One event, copied into a queue for each interested part of the system</figcaption>
 </figure>
 
-AWS describes this as SNS fanout to SQS: SNS pushes the message into each queue, where it is kept until that subscriber's workers get to it.
+In AWS this is SNS fanout to SQS: SNS pushes the message into each queue, where it is kept until that subscriber's workers get to it.
 
 Each queue then has its own pool of competing consumers, so both ideas work together, and a slow email service doesn't hold up the search index. The two shapes differ in one thing:
 
@@ -98,7 +98,7 @@ Each queue then has its own pool of competing consumers, so both ideas work toge
 
 ## Routing
 
-Some brokers add a step before the queue. In RabbitMQ the publisher sends to an **exchange**, and the exchange copies the message into the queues whose bindings match. Its documentation describes four kinds. For events named like `listing.posted.north`:
+Some brokers add a step before the queue. In RabbitMQ the publisher sends to an **exchange**, and the exchange copies the message into the queues whose bindings match. There are four kinds. For events named like `listing.posted.north`:
 
 | Exchange | Routes By | Example |
 | --- | --- | --- |
@@ -111,7 +111,7 @@ This is a way to let consumers choose what they hear without the producer knowin
 
 ## Durability and Limits
 
-A broker that loses messages in a crash is little use. RabbitMQ's documentation says that surviving a restart takes both a durable queue and a persistent message: either alone isn't enough.
+A broker that loses messages in a crash is little use. In RabbitMQ, surviving a restart takes both a durable queue and a persistent message: either alone isn't enough.
 
 A publisher that wants to know a message is safe uses publisher confirms, which for a persistent message arrive only after it is written to disk. SQS stores each message redundantly across several Availability Zones before it replies, and keeps it for 4 days by default, up to 14 days.
 

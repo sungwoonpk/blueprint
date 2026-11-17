@@ -12,7 +12,7 @@ Three events trigger a move, and systems detect them differently:
 
 - **Capacity changes**: A node is added or removed. Cassandra's new node streams the ranges it will own from the current owners, and a decommissioned node streams its data to the new ones
 - **Imbalance in data**: MongoDB's balancer treats a collection as balanced when the data difference between shards is under three times the range size. With the default of 128 MB, a move needs at least a 384 MB difference
-- **Imbalance in load or space**: Elasticsearch relocates shards by disk use, with a low watermark at 85 percent, where new shards are not allocated to the node, a high one at 90 percent, where shards move off it, and a flood stage at 95 percent, where indices on it are blocked from writes. CockroachDB's documentation says a store above 92.5 percent full is not chosen as a target, and at 95 percent replicas are moved off it
+- **Imbalance in load or space**: Elasticsearch relocates shards by disk use, with a low watermark at 85 percent, where new shards are not allocated to the node, a high one at 90 percent, where shards move off it, and a flood stage at 95 percent, where indices on it are blocked from writes. CockroachDB doesn't choose a store above 92.5 percent full as a target, and at 95 percent replicas are moved off it
 
 ## Moving Little: Why Not Hash Modulo
 
@@ -29,7 +29,7 @@ The fix, used almost everywhere, is to separate the key from the node with a fix
 | Ring With 256 Tokens Per Node | 14.2% | 1.06 times |
 | 60 Logical Shards Moved Whole | 13.3% | From the sharding topic: 8 of 60 move |
 
-The ideal is one seventh, 14.3 percent. Cassandra's tokens are the ring rows: its documentation says the default of 256 tokens per node is reasonable, and notes the cost of many tokens, more neighbors for each token and slower repair.
+The ideal is one seventh, 14.3 percent. Cassandra's tokens are the ring rows: 256 tokens per node is a reasonable default, and many tokens have a cost: more neighbors for each token and slower repair.
 
 Redis Cluster uses fixed slots: 16,384 hash slots, with the slot of a key being CRC16 of the key modulo 16,384, and each node owning some slots. Resharding moves slots.
 
@@ -42,11 +42,11 @@ Systems differ in who decides:
 - **Fixed units, moved by the system**: Redis slots, Notion's logical shards, Elasticsearch shards
 - **Units that split and merge**: MongoDB cuts data into ranges that split as they grow and moves them. CockroachDB splits a range at its default size and merges small neighbors, and rebalances replicas across stores
 - **Tokens that follow the nodes**: Cassandra's token ranges change as nodes join and leave
-- **A plan made by a person**: Kafka's reassignment tool moves partitions between brokers, and its documentation says that it can't study the data distribution by itself, so the administrator must choose what to move. It generates a candidate plan, executes it, and verifies it
+- **A plan made by a person**: Kafka's reassignment tool moves partitions between brokers, but it can't study the data distribution by itself, so the administrator must choose what to move. It generates a candidate plan, executes it, and verifies it
 
 ## Moving Without Stopping
 
-All the systems follow one pattern: copy what exists, catch up the changes that arrived during the copy, switch the owner, and clean up. MongoDB documents the steps in detail:
+All the systems follow one pattern: copy what exists, catch up the changes that arrived during the copy, switch the owner, and clean up. MongoDB's steps show it in detail:
 
 <figure class="diagram">
 <div class="flow">
@@ -84,7 +84,7 @@ Moving data takes time, and a limit on the speed protects the foreground. Taking
 | Limit | Time to Move 386 GB |
 | --- | --- |
 | Elasticsearch default of 40 MiB a second for recovery | About 2.6 hours |
-| Kafka documentation's example throttle of 50 MB a second | About 2.1 hours |
+| An example throttle of 50 MB a second | About 2.1 hours |
 
 During the first, with 3,000 writes a second and one seventh of them landing in the moving data, about 4 million changes arrive that the catch up phase must replay. A replay rate far above the arrival rate drains them in minutes, which is why the switch can be short.
 
@@ -92,7 +92,7 @@ Limits protect the cluster from the move itself. Elasticsearch defaults to 2 con
 
 MongoDB lets a shard take part in one migration at a time, with at most half as many simultaneous migrations as there are shards, and offers a balancing window so moves run at night.
 
-Kafka's tool takes a throttle in bytes per second, and its documentation reminds administrators to clear the throttle after the move, which the verify step does.
+Kafka's tool takes a throttle in bytes per second, and the throttle must be cleared after the move, which the verify step does.
 
 ## What Can Go Wrong
 

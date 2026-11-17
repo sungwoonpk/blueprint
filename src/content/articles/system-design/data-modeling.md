@@ -1,6 +1,8 @@
 > **Data modeling** decides what the tables hold, how they relate, and which rules the database enforces. It starts from the real world and from the questions the application must answer, and the result is hard to change later.
 
-[The Relational Model](/system-design/relational-model) showed what tables, keys and joins are. This topic is about the step before writing them: deciding which tables to have in the first place. It matters because a data model is one of the decisions that hurts to undo. Each query, service and report is written against it, as the one way doors in [Thinking in Tradeoffs](/system-design/trade-offs) described.
+[The Relational Model](/system-design/relational-model) showed what tables, keys and joins are. This topic is about the step before writing them: deciding which tables to have in the first place.
+
+It matters because a data model is one of the decisions that hurts to undo. Each query, service and report is written against it, as the one way doors in [Thinking in Tradeoffs](/system-design/trade-offs) described.
 
 ## Start With the Nouns
 
@@ -56,7 +58,7 @@ How many of one thing can relate to how many of another is the **cardinality**, 
 | Many to Many | A course uses many books, and a book is used by many courses | A separate join table holding both keys |
 | One to One | A listing has at most one order | A foreign key marked `UNIQUE` |
 
-A many to many link can't be stored in either table, since each row would need a list of keys, so it gets a table of its own, a **join table**. PostgreSQL's documentation shows exactly this with orders, products and order items. For courses and books:
+A many to many link can't be stored in either table, since each row would need a list of keys, so it gets a table of its own, a **join table**. The classic example is orders, products and order items. For courses and books:
 
 ```sql
 CREATE TABLE course_books (
@@ -68,17 +70,19 @@ CREATE TABLE course_books (
 
 The two keys together form the primary key, so the same pair can't appear twice.
 
-The `ON DELETE` choices from PostgreSQL's documentation matter: here, deleting a course should remove its reading list, so it cascades, but deleting a book that listings still point to should be blocked, which is what `RESTRICT` does. The one to one case is a single line, and the database enforces it:
+The `ON DELETE` choices matter: here, deleting a course should remove its reading list, so it cascades, but deleting a book that listings still point to should be blocked, which is what `RESTRICT` does. The one to one case is a single line, and the database enforces it:
 
 ```sql
 listing_id  bigint NOT NULL UNIQUE REFERENCES listings (id)
 ```
 
-One detail the documentation points out: a foreign key doesn't create an index on the column that holds it. Joins and deletes on `seller_id` or `book_id` will be slow without one, so you add it yourself.
+One detail that surprises people: a foreign key doesn't create an index on the column that holds it. Joins and deletes on `seller_id` or `book_id` will be slow without one, so you add it yourself.
 
 ## Choosing Keys
 
-A **natural key** is a value that already identifies the thing, like an ISBN or an email address. A **surrogate key** is one the database invents, usually a number. Natural keys are tempting, and they let you down: emails change, an ISBN names an edition and not a title, and what looked unique turns out not to be.
+A **natural key** is a value that already identifies the thing, like an ISBN or an email address. A **surrogate key** is one the database invents, usually a number.
+
+Natural keys are tempting, and they let you down: emails change, an ISBN names an edition and not a title, and what looked unique turns out not to be.
 
 The usual answer is a surrogate id as the primary key, with `UNIQUE` on the natural one, as `books` does above.
 
@@ -91,7 +95,7 @@ For the surrogate, there are two common choices:
 | Guessable | Yes, `/listings/18` leads to `/listings/19` | No |
 | Order | Increasing | Random for version 4, time ordered for version 7 |
 
-PostgreSQL's documentation says an identity column comes from a sequence, which is unique only within one database, and that UUIDs are useful across distributed systems. That matters once data is split across machines, covered in [Unique ID Generation](/system-design/unique-ids).
+An identity column comes from a sequence, which is unique only within one database, while UUIDs stay unique across machines. That matters once data is split across machines, covered in [Unique ID Generation](/system-design/unique-ids).
 
 The order matters too: random version 4 UUIDs scatter new rows across the index, while version 7 starts with a timestamp, which keeps new rows together, the property that [B-Trees](/system-design/b-trees) reward. PostgreSQL 18 can generate both.
 
@@ -101,8 +105,8 @@ A guessable id isn't a security problem by itself, as long as the server checks 
 
 Types are part of the model, since they are rules the database enforces for free:
 
-- **Money**: whole cents in an integer, or `numeric`, not floating point, which PostgreSQL's documentation says is inexact
-- **Text**: `text` is fine for names and titles. The documentation says it performs the same as `varchar(n)`, and recommends it over an arbitrary length limit
+- **Money**: whole cents in an integer, or `numeric`, not floating point, which is inexact
+- **Text**: `text` is fine for names and titles. In PostgreSQL it performs the same as `varchar(n)`, so an arbitrary length limit buys nothing
 - **Time**: `timestamptz`, which stores UTC and converts for display
 - **Fixed choices**: a `CHECK` list, as for `condition` above, an `enum` type, or a small lookup table. An enum is ordered and type safe, and you can add values with `ALTER TYPE ... ADD VALUE` but not remove them. A `CHECK` is easier to change
 - **Flexible extras**: `jsonb`
@@ -116,7 +120,7 @@ CREATE INDEX listings_extras_idx ON listings USING GIN (extras);
 SELECT id FROM listings WHERE extras @> '{"highlighted": false}';
 ```
 
-PostgreSQL's documentation prefers `jsonb` over `json` for most uses, and says the JSON and relational approaches can coexist in one application. It also warns that updating a JSON document locks the whole row, so documents should stay small. The rule of thumb: anything you filter, sort or join on belongs in a real column, and `jsonb` is for the leftovers.
+In PostgreSQL, `jsonb` is preferred over `json` for most uses, and the JSON and relational approaches can coexist in one application. Updating a JSON document locks the whole row, so documents should stay small. The rule of thumb: anything you filter, sort or join on belongs in a real column, and `jsonb` is for the leftovers.
 
 ## Model for the Questions You Will Ask
 

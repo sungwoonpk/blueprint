@@ -57,7 +57,7 @@ These are the times to try the whole space on one core, so an attacker with many
 
 The table shows the relative cost, not a safe limit. A human chosen password sits in a far smaller space than a random one.
 
-The OWASP password storage guidance gives the order of preference and its settings:
+The order of preference and its settings:
 
 - **Argon2id**: The first choice, with at least 19 MiB of memory, 2 iterations and 1 degree of parallelism, or the equal options it lists such as 46 MiB with 1 iteration
 - **scrypt**: Next, with a CPU and memory cost of 2 to the 17th power, a block size of 8 and 1 degree of parallelism

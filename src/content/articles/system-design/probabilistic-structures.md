@@ -72,11 +72,11 @@ The figure uses 16 bits and 3 hash functions. After adding "calculus", bits 2, 7
 
 Asking about "algorithms" checks bits 2, 7 and 11, the same bits that "calculus" set, so the filter says "maybe". That is a **false positive**, since "algorithms" was never added. In a real filter the bits come from many items, so such coincidences are rare, and they are the price of the small size.
 
-Wikipedia's article states the guarantees plainly. There are no false negatives, and a standard filter can't delete an item, since clearing a bit could erase other items. A counting variant exists for that.
+The guarantees are plain. There are no false negatives, and a standard filter can't delete an item, since clearing a bit could erase other items. A counting variant exists for that.
 
 The error rate follows from the size. For `m` bits, `n` items and `k` hash functions it is about `(1 - e^(-kn/m))^k`, and the best `k` is `(m/n) * ln 2`.
 
-Wikipedia gives a rule of thumb: about 9.6 bits per item for a 1 percent error rate, and about 4.8 more bits for each tenfold drop. We built filters for 100,000 listing ids and measured the rate on 100,000 ids that were never added:
+The math gives a rule of thumb: about 9.6 bits per item for a 1 percent error rate, and about 4.8 more bits for each tenfold drop. We built filters for 100,000 listing ids and measured the rate on 100,000 ids that were never added:
 
 | Bits per Item | Hash Functions | Measured False Positives | Memory |
 | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ The measured values match the formula, and the memory is small: 100,000 ids stor
 
 The right place for a Bloom filter is in front of something costly, where a false positive only costs a wasted check.
 
-Wikipedia lists Bigtable, HBase, Cassandra, ScyllaDB and PostgreSQL as users, to cut disk lookups for rows and columns that don't exist, and Chrome uses one to screen web addresses against a list of malicious sites. Redis's documentation adds a username check before touching the main database. In Redis the commands are short:
+Databases such as Bigtable, HBase and Cassandra use them to cut disk lookups for rows that don't exist. Another use is a username check before touching the main database. In Redis the commands are short:
 
 ```text
 BF.RESERVE seen:student:8 0.01 10000
@@ -96,7 +96,7 @@ BF.ADD seen:student:8 listing:17
 BF.EXISTS seen:student:8 listing:17
 ```
 
-The first line asks for a 1 percent error rate for up to 10,000 items. Redis's documentation warns that going past the planned capacity makes the error rate grow, so size it for what you expect.
+The first line asks for a 1 percent error rate for up to 10,000 items. Going past the planned capacity makes the error rate grow, so size it for what you expect.
 
 ## Count-Min Sketch: How Often?
 
@@ -106,7 +106,7 @@ To record an item, you add 1 to one counter in each row, the one its hash picks.
 
 Collisions only ever add to a counter, so the smallest value is an overestimate, never an underestimate.
 
-Wikipedia gives the guarantee: the estimate is at most the true count plus `ε` times the total number of events, with probability `1 - δ`, when `w` is `e/ε` and `d` is `ln(1/δ)`, rounded up. Cormode and Muthukrishnan introduced it in 2003.
+The guarantee: the estimate is at most the true count plus `ε` times the total number of events, with probability `1 - δ`, when `w` is `e/ε` and `d` is `ln(1/δ)`, rounded up. Graham Cormode and S. Muthukrishnan introduced it.
 
 We recorded 300,000 listing views, with a few popular listings and a long tail, into sketches of three sizes, each 4 rows deep. The most viewed listing had 30,905 views:
 
@@ -118,7 +118,7 @@ We recorded 300,000 listing views, with a few popular listings and a long tail, 
 
 The popular listings are easy: even the smallest sketch is off by under 6 percent for them. The rare ones are another matter, since a count of 3 reported as 577 is useless.
 
-Redis's documentation says the same, advising that counts below the error times the total be treated as noise. A sketch finds heavy hitters well and small counts poorly, so it suits questions like "which listings are trending?".
+Counts below the error times the total should be treated as noise. A sketch finds heavy hitters well and small counts poorly, so it suits questions like "which listings are trending?".
 
 For that question there is a ready made combination, the top-K structure that Redis offers, based on an algorithm called HeavyKeeper, which tracks the K most frequent items with a small table and a heap.
 
@@ -132,7 +132,7 @@ Half of the hashes start with a 0, a quarter with 00, and so on, so seeing a has
 
 One run is a noisy guess, so the structure splits the ids into `m` groups by the first bits of the hash, remembers the longest run of leading zeros seen in each group, and combines the groups with an average.
 
-Wikipedia gives the typical error as `1.04 / √m`, and says about 1.5 kB is enough for 2 percent accuracy on counts beyond a billion. Flajolet and his colleagues published it in 2007.
+The typical error is `1.04 / √m`, and about 1.5 kB is enough for 2 percent accuracy on counts beyond a billion. Flajolet and his colleagues published it in 2007.
 
 We counted 200,000 distinct student ids, five times with different ids:
 
@@ -152,7 +152,7 @@ PFMERGE viewers:books viewers:listing:17 viewers:listing:18
 PFCOUNT viewers:books
 ```
 
-The last line prints 3, since student 8 appears in both. Redis's documentation also points out something useful for privacy: a sketch holds no ids, which matters where storing visitor identifiers is restricted.
+The last line prints 3, since student 8 appears in both. A sketch holds no ids, which helps with privacy where storing visitor identifiers is restricted.
 
 ## Choosing and Limits
 

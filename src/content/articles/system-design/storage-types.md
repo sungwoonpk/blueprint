@@ -8,9 +8,9 @@ Where should it go? Not in the database rows, and not on the web server's own di
 
 AWS's comparison of the three describes block storage as data split into blocks of a fixed size, each with a number, which can be read or written one at a time.
 
-The operating system puts a file system or a database on top. Amazon's EBS documentation says a volume is used the way you would use a local hard drive, even though it sits across a network.
+The operating system puts a file system or a database on top. A volume is used the way you would use a local hard drive, even though it sits across a network.
 
-That makes block storage the fast, low latency choice. AWS lists virtual machines and databases as its typical uses, and Microsoft's storage guide sends SQL Server, Oracle and NoSQL databases to its disk products for the same reason.
+That makes block storage the fast, low latency choice. Virtual machines and databases are the typical uses, for the same reason.
 
 It is also close to the machine: the volume usually belongs to one server's operating system, not to the whole fleet.
 
@@ -20,15 +20,15 @@ Two details from EBS are worth knowing. A volume's data is copied to several ser
 
 File storage keeps the familiar hierarchy of directories and paths, with permissions on each file.
 
-Its point is sharing: many machines see the same folders at the same time, over protocols such as NFS or SMB. Amazon's EFS documentation describes a file system that many compute instances use in parallel, with file locking and strong consistency, and POSIX permissions.
+Its point is sharing: many machines see the same folders at the same time, over protocols such as NFS or SMB. A managed file service lets many compute instances use the same file system in parallel, with file locking, strong consistency and POSIX permissions.
 
-It fits when several servers need to read and write the same files, or when existing software expects a folder. AWS calls it the least scalable of the three. A path like `/uploads/2026/11/17-a.jpg` is easy to understand, but a shared directory tree with locking is more to coordinate than a plain blob store.
+It fits when several servers need to read and write the same files, or when existing software expects a folder. It is the least scalable of the three. A path like `/uploads/2026/11/17-a.jpg` is easy to understand, but a shared directory tree with locking is more to coordinate than a plain blob store.
 
 ## Object: Named Blobs Over HTTP
 
 Object storage drops the directory tree. Each thing, called an object, is the data plus metadata, found by a bucket and a key.
 
-AWS describes a flat namespace in which the identifier is the address, and Google calls an object an immutable piece of data. You don't edit the middle of an object. You store a new version of the whole thing.
+It is a flat namespace in which the identifier is the address, and an object is an immutable piece of data. You don't edit the middle of an object. You store a new version of the whole thing.
 
 The interface is an HTTP API with a few verbs, which is why any client that speaks HTTP can use it:
 
@@ -38,11 +38,11 @@ GET    /photos/17-a.jpg     fetch it
 DELETE /photos/17-a.jpg     remove it
 ```
 
-The best known service is Amazon S3, and its documentation gives the numbers that make the model attractive. Standard storage is designed for 99.999999999 percent durability, eleven nines, by keeping copies on multiple devices across at least three Availability Zones, with 99.99 percent availability.
+The best known service is Amazon S3, and its numbers show why the model is attractive. Standard storage is designed for 99.999999999 percent durability, eleven nines, by keeping copies on multiple devices across at least three Availability Zones, with 99.99 percent availability.
 
 Reads after a write are strongly consistent, so a `GET` right after a successful `PUT` returns the new object. An update to one key is atomic, though there are no atomic updates across several keys.
 
-Wikipedia's article on object storage states the limit: it isn't intended for transactional data, since it lacks the locking and sharing needed to keep one correctly updated copy of a file. A database on object storage would be slow, and a counter in an object would be a lost update waiting to happen.
+Object storage has a limit: it isn't meant for transactional data, since it has no locking for concurrent writers, so when two requests write the same key at once, the later one simply wins. A database on object storage would be slow, and a counter in an object would be a lost update waiting to happen.
 
 ## Letting the Phone Upload Directly
 
@@ -70,7 +70,7 @@ A common answer uses the object store's own signing feature, a **presigned URL**
 
 The app server asks the store for a URL that permits one upload of one key, valid for, say, ten minutes. The phone uploads to it, and the server then stores the key in the database.
 
-S3's documentation describes such a URL as time limited and as a bearer token: anyone holding it can use it until it expires, so keep the expiry short and the permission narrow. Downloads can work the same way, or be served through a CDN placed in front of the bucket, as in [Content Delivery Networks (CDNs)](/system-design/cdn).
+Such a URL is time limited and acts as a bearer token: anyone holding it can use it until it expires, so keep the expiry short and the permission narrow. Downloads can work the same way, or be served through a CDN placed in front of the bucket, as in [Content Delivery Networks (CDNs)](/system-design/cdn).
 
 ## Side by Side
 

@@ -56,11 +56,11 @@ We crashed it right after the charge and started it again with the saved history
 
 Without a history, the buyer was charged twice. With one, each step ran once, and the restart only repeated the cheap part: reading the history.
 
-This design has a rule, which Temporal's documentation states. Since the workflow code is run again, it must make the same decisions given the same history, so it can't depend on things the history doesn't hold: the current time, a random number, or a network call made directly.
+This design has a rule. Since the workflow code is run again, it must make the same decisions given the same history, so it can't depend on things the history doesn't hold: the current time, a random number, or a network call made directly.
 
 Those would return a different value on replay and disagree with the record. Anything that touches the outside world goes into an **activity**, a separate function whose result is recorded. Workflows read time from the engine, and use the engine's timers.
 
-One gap remains, and it is the problem from [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees). If the process dies after the activity ran but before its result was recorded, the replay runs the activity again. Temporal recommends idempotent activities for this reason, so the charge should carry an idempotency key, as in [Idempotency and Safe Retries](/system-design/idempotency).
+One gap remains, and it is the problem from [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees). If the process dies after the activity ran but before its result was recorded, the replay runs the activity again. So activities should be idempotent: the charge should carry an idempotency key, as in [Idempotency and Safe Retries](/system-design/idempotency).
 
 ## Activities, Retries and Timeouts
 
@@ -74,7 +74,7 @@ The engine takes over the retry logic of each step. Temporal retries an activity
 | Attempts | Unlimited | 3 |
 | Jitter | Not stated | None, `FULL` on request |
 
-Retries are not the only protection. Temporal's activity timeouts are separate: a start to close timeout limits a single attempt, and its documentation strongly recommends setting it, since the server relies on it to notice a crashed worker and retry.
+Retries are not the only protection. Temporal's activity timeouts are separate: a start to close timeout limits a single attempt, and it should be set, since the server relies on it to notice a crashed worker and retry.
 
 A schedule to close timeout limits all the attempts together, and a heartbeat timeout watches long activities that report progress. In Step Functions, a `Catch` field sends a failure to another state, which is where a compensation path goes: refund the buyer if the credit to the seller fails.
 
@@ -84,7 +84,7 @@ The three day wait is where an engine pays off. Temporal records a timer as an e
 
 A process can also wait for a message from outside, such as the buyer's confirmation: Step Functions has a callback pattern with a task token, and Temporal has signals. Step Functions adds states for choosing a path, running branches in parallel and repeating a step for each item.
 
-When a later step fails, the earlier ones have to be undone by compensation, as in [Sagas](/system-design/sagas): a refund cancels a charge, since a committed change can't be rolled back. Microsoft's pattern pages name the two ways to coordinate a saga, and the engine is the orchestration one:
+When a later step fails, the earlier ones have to be undone by compensation, as in [Sagas](/system-design/sagas): a refund cancels a charge, since a committed change can't be rolled back. There are two ways to coordinate a saga, and the engine is the orchestration one:
 
 | Question | Orchestration | Choreography |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ Microsoft's guidance is to prefer choreography for simple workflows and few serv
 
 ## Limits and Costs
 
-An engine isn't free. Temporal's documentation lists limits on the history: a warning at 10,240 events, and termination of the execution beyond 51,200. For a process that runs for a long time, it suggests starting a fresh execution with a feature called Continue-As-New.
+An engine isn't free. Temporal limits the history: a warning at 10,240 events, and termination of the execution beyond 51,200. For a process that runs for a long time, the answer is to start a fresh execution with a feature called Continue-As-New.
 
 It also says long running workflows can run into versioning problems, because code that changes while an old execution is still replaying must stay compatible with its history.
 

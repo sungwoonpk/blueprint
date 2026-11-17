@@ -29,16 +29,16 @@ It halves the longitude range and the latitude range alternately, writing a 0 or
 <figcaption>How two coordinates become one key that an ordinary index can scan</figcaption>
 </figure>
 
-That gives the property the Wikipedia article states: the longer the shared prefix of two geohashes, the closer the places are. The reverse isn't guaranteed.
+That gives the useful property: the longer the shared prefix of two geohashes, the closer the places are. The reverse isn't guaranteed.
 
 Two points can be very close and share a short prefix or no prefix, because the cell boundary falls between them. Across the equator or the Greenwich meridian most bits flip, the 180th meridian splits neighbors, and cells get distorted near the poles.
 
 Two other systems fix some of the shape problems:
 
-- **S2**: Google's library puts the sphere on six faces and numbers cells along a Hilbert curve, so that cells with close identifiers are close in space. It has 30 levels of cells, the smallest about 1 cm across, and identifies each by a 64 bit number. A region is covered by a collection of cells of different sizes, with a default of at most 8, and the documentation's example approximates Hawaii with 22 cells
+- **S2**: Google's library puts the sphere on six faces and numbers cells along a Hilbert curve, so that cells with close identifiers are close in space. It has 30 levels of cells, the smallest about 1 cm across, and identifies each by a 64 bit number. A region is covered by a collection of cells of different sizes, with a default of at most 8, and one example approximates Hawaii with 22 cells
 - **H3**: Uber's library uses hexagons, with 16 resolutions from 0 to 15, and the number of cells at resolution r is 2 plus 120 times 7 to the power r. Each hexagon has seven children, called aperture 7, and there are exactly 12 pentagons at each resolution, needed to close the sphere. Resolution 7 averages 5.16 square kilometers with an edge of 1.41 km, and resolution 8 averages 0.74 square kilometers with an edge of 0.53 km
 
-Hexagons have one useful geometric property: each neighbor of a cell is at about the same distance, unlike a square grid where the diagonal neighbors are farther. We didn't find that claim on the H3 pages we read, so take it as the reasoning behind the design, not a documented figure.
+Hexagons have one useful geometric property: each neighbor of a cell is at about the same distance, unlike a square grid where the diagonal neighbors are farther. Take that as the reasoning behind the design, not a measured figure.
 
 ## What a Grid Query Costs
 
@@ -90,14 +90,14 @@ Redis builds this into one data type. Its geospatial commands store points in a 
 
 `GEOADD` adds members with a longitude first and a latitude second, and `GEOSEARCH` finds those within a radius or inside a box, optionally sorted by distance and limited in count.
 
-The documentation notes that latitudes beyond about 85.05 degrees can't be indexed, that distances use a spherical formula with an error of up to 0.5 percent in the worst case, and that a search checks the 1 plus 8 areas needed to cover the shape, the nine cells of our experiment.
+Latitudes beyond about 85.05 degrees can't be indexed, that distances use a spherical formula with an error of up to 0.5 percent in the worst case, and that a search checks the 1 plus 8 areas needed to cover the shape, the nine cells of our experiment.
 
-Relational databases use a tree. PostGIS builds spatial indexes on PostgreSQL's GiST framework, as an R tree: each node holds the bounding box of its children, a query descends into the boxes that overlap, and the leaves hold the geometries. The PostGIS documentation covers the following points:
+Relational databases use a tree. PostGIS builds spatial indexes on PostgreSQL's GiST framework, as an R tree: each node holds the bounding box of its children, a query descends into the boxes that overlap, and the leaves hold the geometries. Points to know:
 
 - **Index creation**: `CREATE INDEX ... USING GIST (location)` on a geometry or geography column
 - **Bounding boxes**: The index stores boxes, so it finds candidates quickly, and an exact test follows. Huge polygons are a problem, since their boxes cover so much that the index returns them for most queries
 - **Nearest neighbors**: The distance operator, `<->`, used in `ORDER BY ... LIMIT` lets the index return the closest items in order, with no cutoff radius needed. The reference says it kicks in when one of the geometries is a constant, and shows a hybrid pattern: take the nearest 100 by the index, then sort those exactly and keep 10
-- **Approximate then exact**: PostgreSQL's GiST documentation explains that the distance given by an index may be approximate, such as the distance to a bounding box, and the executor recomputes the exact distance and reorders
+- **Approximate then exact**: The distance given by a PostgreSQL GiST index may be approximate, such as the distance to a bounding box, and the executor recomputes the exact distance and reorders
 
 For the textbook app, a query for listings within 2 km of a point, sorted by distance, is a spatial index lookup in PostGIS or a few ring cells with the exact filter, and either returns in milliseconds at this size.
 

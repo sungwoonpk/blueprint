@@ -6,7 +6,7 @@ Then the app grows to 6 servers, and the questions begin: which server runs the 
 
 ## Reading a Cron Line
 
-A cron line has five fields: minute, hour, day of month, month and day of week. The `crontab(5)` manual page gives the rules. An asterisk means every value, `1-5` is a range, `1,15` is a list, and `*/2` is a step. The jobs of the textbook app look like this:
+A cron line has five fields: minute, hour, day of month, month and day of week. An asterisk means every value, `1-5` is a range, `1,15` is a list, and `*/2` is a step. The jobs of the textbook app look like this:
 
 ```text
 0 8 * * 1        # the weekly digest: Monday at 08:00
@@ -31,7 +31,7 @@ Take `30 4 1,15 * 5`, which a reader may take to mean "on the 1st and 15th when 
 
 If both had been required, it would have run on no day at all in that month.
 
-Time zones add their own risk. The manual page says that when clocks change for daylight saving, a time in the hour that is skipped doesn't match, so a job set for then doesn't run, and a time in the hour that happens twice runs twice.
+Time zones add their own risk. When clocks change for daylight saving, a time in the hour that is skipped doesn't match, so a job set for then doesn't run, and a time in the hour that happens twice runs twice.
 
 The usual protection is to schedule in UTC, or to keep jobs out of the hours between 1:00 and 3:00 local time. Kubernetes has a `timeZone` field that takes a name such as `Etc/UTC`, and without it uses the local time of its controller. BullMQ takes `tz: 'UTC'` for the same purpose.
 
@@ -45,11 +45,11 @@ If each of the 6 servers has the digest in its crontab, the students get 6 email
 | A Clustered Scheduler | Nodes share a database, and the first to lock a trigger fires it | Lock contention, and clocks that disagree |
 | A Platform Scheduler | The platform creates a job at each time, as a Kubernetes CronJob does | The semantics of missed and doubled runs |
 
-The first is the most common. BullMQ's job schedulers define a schedule with `upsertJobScheduler`, with a name and either an interval or a cron pattern. Because it is an upsert, creating the same scheduler on every server at startup doesn't create 6 schedules: the documentation says it updates or creates it without duplicates.
+The first is the most common. BullMQ's job schedulers define a schedule with `upsertJobScheduler`, with a name and either an interval or a cron pattern. Because it is an upsert, creating the same scheduler on every server at startup doesn't create 6 schedules: it updates or creates it without duplicates.
 
 It also notes that the next job is produced only when the previous one begins processing, so a busy queue can make jobs run less often than the interval says.
 
-The second is how Quartz, a Java scheduler, works. Its documentation describes nodes that share one database, where the first node to get the lock on a trigger fires it:
+The second is how Quartz, a Java scheduler, works. It uses nodes that share one database, where the first node to get the lock on a trigger fires it:
 
 <figure class="diagram">
 <div class="flow">
@@ -64,7 +64,7 @@ The second is how Quartz, a Java scheduler, works. Its documentation describes n
 <figcaption>All nodes see the trigger, and the database lock lets only one fire it</figcaption>
 </figure>
 
-If a node dies in the middle of a job, the others find the jobs it was running, and run again those marked as needing recovery. Quartz's documentation names two limits.
+If a node dies in the middle of a job, the others find the jobs it was running, and run again those marked as needing recovery. Quartz has two limits.
 
 The lock gets slower as nodes are added, beyond about three nodes depending on the database, and the clocks of the nodes must be kept within about a second of each other by a time sync service.
 
@@ -86,7 +86,7 @@ For a cleanup that sometimes takes longer than its interval, `Forbid` keeps two 
 
 ## Zero, One or Two Runs
 
-No scheduler promises exactly once. Kubernetes's documentation says a CronJob creates a job approximately once per scheduled time, and that the jobs you define should be idempotent.
+No scheduler promises exactly once. A Kubernetes CronJob creates a job approximately once per scheduled time, so the jobs you define should be idempotent.
 
 So the jobs have to cope with a rerun, using the techniques in [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees). A simple one is a key for each run, so that a second attempt at the same run is recognized:
 

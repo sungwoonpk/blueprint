@@ -14,7 +14,7 @@ Teams don't yet know what users want, a microservice setup carries a productivit
 
 He calls the evidence sparse and his advice tentative, and notes that the view is by no means unanimous.
 
-His trade-offs article lists what a split buys and costs:
+A split buys and costs these:
 
 | Benefit | Cost |
 | --- | --- |
@@ -76,7 +76,7 @@ Splitting off 6 modules chosen at random put 477 across on average, and even the
 
 A rewrite of the whole system in parallel tends to fail. Fowler's description of the strangler fig, taken from the vine that grows around a host tree, says wholesale replacement goes down in flames most of the time, since existing behavior is hard to specify and much of it isn't wanted.
 
-The pattern is to build new functionality around the old and move behavior across a piece at a time. The Azure description gives four phases:
+The pattern is to build new functionality around the old and move behavior across a piece at a time. There are four phases:
 
 1. **Put a facade in front**: A proxy or gateway, such as [API Gateways](/system-design/api-gateways), receives the requests. At first it sends nearly the whole load to the legacy code
 2. **Shift gradually**: Route one capability, then another, to the new service, with a way to switch back
@@ -94,11 +94,11 @@ The pattern is to build new functionality around the old and move behavior acros
 <figcaption>The strangler shape: the facade decides, request by request, which system answers</figcaption>
 </figure>
 
-The Azure page lists the problems: shared services and data stores have to be reachable from both systems while they coexist, the facade must keep pace and shouldn't become a bottleneck or a single point of failure, and the pattern doesn't fit when requests can't be intercepted or the system is small.
+The problems: shared services and data stores have to be reachable from both systems while they coexist, the facade must keep pace and shouldn't become a bottleneck or a single point of failure, and the pattern doesn't fit when requests can't be intercepted or the system is small.
 
 Two companion techniques help. **Branch by abstraction**, which Fowler describes, creates a layer that captures how the client code uses the old supplier, moves the clients to it, builds the new supplier behind the same layer, switches over gradually and removes the old one, with the system buildable and releasable throughout.
 
-An **anti-corruption layer** translates between the models of the old and the new, so the legacy design doesn't leak into the new service. The Azure page notes its costs, added latency and another component to run, and advises keeping it to translation with no business rules.
+An **anti-corruption layer** translates between the models of the old and the new, so the legacy design doesn't leak into the new service. It has costs, added latency and another component to run, so keep it to translation with no business rules.
 
 Dehghani's advice on order is practical:
 
@@ -115,7 +115,7 @@ Services that share a database are still coupled, and moving the data is the par
 
 The microservices.io pattern of database per service says each service's persistent data is private and reachable through its API alone.
 
-The private store can be tables, a schema or a server, and the page recommends separate database users and grants so that developers don't bypass the API. The benefits are loose coupling and the choice of a database that fits.
+The private store can be tables, a schema or a server, and separate database users and grants keep developers from bypassing the API. The benefits are loose coupling and the choice of a database that fits.
 
 The drawbacks are the ones from [Sagas](/system-design/sagas): no transaction across services, and queries across databases are hard, with remedies in the saga, in composing results in an API layer, and in the materialized views of [CQRS](/system-design/cqrs).
 

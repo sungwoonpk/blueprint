@@ -52,11 +52,11 @@ The student sees the reply after the first two steps instead of after all five, 
 
 ## Reasons to Go Asynchronous
 
-The patterns that Microsoft's Azure Architecture Center documents, and the guidance on loose coupling in AWS's Well-Architected Framework, give four reasons:
+There are four reasons:
 
 - **Slow work**: Some jobs take seconds or minutes, too long to hold an HTTP request open. Azure's asynchronous request-reply pattern is built for that case
-- **Spikes**: A queue between the callers and a shared service lets the service take work at its own pace. Azure calls this queue based load leveling, and notes that the service can be sized for the average load instead of the peak
-- **Independent failure and scaling**: AWS's guidance says an asynchronous call suits any request that doesn't need an immediate response, where an acknowledgment that the request was registered is enough, and that a durable layer in between lets each side scale and change on its own
+- **Spikes**: A queue between the callers and a shared service lets the service take work at its own pace. This is called queue based load leveling, and the service can be sized for the average load instead of the peak
+- **Independent failure and scaling**: An asynchronous call suits a request that doesn't need an immediate response, where an acknowledgment that the request was registered is enough, and a durable layer in between lets each side scale and change on its own
 - **Retries**: A queue keeps a job through an outage or a crash and offers it again. The AWS Builders' Library says this raises durability and availability, at the price of occasional extra latency from retries
 
 The next section shows the second reason in numbers.
@@ -94,7 +94,7 @@ The same arithmetic shows the danger. If jobs keep arriving faster than the work
 
 Azure's pattern page makes the point: when the average rate of producers exceeds the consumers' rate, the queue grows and latency rises, so watch the depth of the queue and add consumers or shed work.
 
-The AWS Builders' Library article on queue backlogs describes why this is worse than it looks.
+Here is why this is worse than it looks.
 
 A queue system has a fast mode with no backlog and a slow mode with one, and once in the slow mode it recovers slowly: by the time the backlog is worked off, much of the work may be too late to matter.
 
@@ -104,7 +104,7 @@ The article's advice is to measure the age of a message when it is picked up, an
 
 Moving work out of the request has costs, and each has a topic of its own later:
 
-- **No immediate result**: The caller must learn the outcome another way. The usual pattern is the response `202 Accepted`, which MDN describes as accepted for processing but not completed, and possibly never completed. MDN adds that HTTP can't send the final result later, so the client polls a status address or is told by another channel
+- **No immediate result**: The caller must learn the outcome another way. The usual pattern is the response `202 Accepted`, which means accepted for processing but not completed, and possibly never completed. HTTP can't send the final result later, so the client polls a status address or is told by another channel
 - **Duplicates**: Queues usually deliver at least once, so a job may run twice. Handlers must be safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency)
 - **Ordering**: With several workers taking jobs in parallel, jobs can finish out of order, so a design that depends on order needs more care, as in [Partitions, Ordering and Consumer Groups](/system-design/ordering)
 - **Bad jobs**: One job that always fails can be retried forever. A dead letter queue catches it, as in [Dead Letter Queues](/system-design/redelivery-dlq)
@@ -120,13 +120,13 @@ Retry-After: 5
 {"status": "processing", "photos_done": 0}
 ```
 
-The `Location` header and the polling interval follow the pattern in Azure's documentation. When the work finishes, the status address can send the client to the finished result.
+The `Location` header and the polling interval follow a standard pattern. When the work finishes, the status address can send the client to the finished result.
 
 ## Choosing
 
 Go asynchronous when the caller doesn't need the result to continue, when the work is slow or arrives in bursts, when a downstream service is fragile, or when each part should fail and be retried on its own.
 
-Stay synchronous when the next step depends on the answer. Azure's pages say the same from the other side: don't use a queue where the caller needs a low latency reply, or where the volume is low and steady, since the queue then adds machinery without a benefit.
+Stay synchronous when the next step depends on the answer. The other side of the same rule: don't use a queue where the caller needs a low latency reply, or where the volume is low and steady, since the queue then adds machinery without a benefit.
 
 A purchase shows both in one flow. Reserving the book has to be synchronous, because the buyer needs to know it is theirs. The receipt email, the update to the search index and the seller's notification can wait.
 

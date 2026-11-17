@@ -6,7 +6,7 @@ The two kinds of work pull a database in opposite directions, and this topic is 
 
 ## Two Kinds of Work
 
-AWS's comparison describes OLTP as storing and updating transactional data reliably in high volumes, for things like processing orders, updating inventory and managing accounts. OLAP combines and groups business data to answer questions about trends. The two look like this on the textbook app's data:
+OLTP means storing and updating transactional data reliably in high volumes, for things like processing orders, updating inventory and managing accounts. OLAP combines and groups business data to answer questions about trends. The two look like this on the textbook app's data:
 
 ```sql
 -- OLTP: one row, found by its key
@@ -28,14 +28,14 @@ GROUP BY u.campus, month;
 | Data Kept | Current state | History |
 | Layout | Normalized tables | Facts and dimensions |
 
-The response times and the data sizes in the AWS table are gigabytes and milliseconds for OLTP, and terabytes to petabytes and seconds or minutes for OLAP. Wikipedia describes OLTP by its central concerns, concurrency and atomicity, which are the subjects of [Transactions and ACID](/system-design/transactions-acid), and OLAP as a way to answer multidimensional analytical questions quickly.
+Typical response times and data sizes are milliseconds and gigabytes for OLTP, and seconds or minutes and terabytes to petabytes for OLAP. OLTP's central concerns are concurrency and atomicity, the subjects of [Transactions and ACID](/system-design/transactions-acid), while OLAP is about answering multidimensional analytical questions quickly.
 
 ## Why Keep Them Apart
 
 A report can run on the main database, and for a small app that is a fine start. The trouble grows with the data, for reasons the sources point to:
 
-- **Contention**: Wikipedia's article on data warehouses lists reduced lock contention from analysis queries on transaction systems among the reasons to have a warehouse. A scan of three million orders competes with the students' purchases for disk, memory and locks
-- **Opposite tuning**: Wikipedia notes that an OLTP designer avoids excessive indexes, to keep writes fast, while analysis wants other structures, and that a database designed for OLTP won't work well as an analytical store without careful design
+- **Contention**: Analysis queries on a transaction system cause lock contention, which is one reason to have a warehouse. A scan of three million orders competes with the students' purchases for disk, memory and locks
+- **Opposite tuning**: An OLTP designer avoids excessive indexes, to keep writes fast, while analysis wants other structures, so a database designed for OLTP won't work well as an analytical store without careful design
 - **History**: The production tables keep the current state, and a warehouse keeps the past, so a question about last year's sales still has an answer
 - **One view**: A warehouse can combine data from several systems, such as the app database, payments and support tickets, into one consistent model
 
@@ -56,7 +56,7 @@ So the data is copied out of the operational systems into a separate place. That
 
 ## Facts and Dimensions
 
-Warehouses commonly use a layout called a **star schema**, which Wikipedia describes as the simplest and most widely used style. At the center is a **fact table**, with one row for each event being measured and mostly numeric values, the **measures**. Around it sit **dimension tables**, which describe the context of an event: when, where, what, who.
+Warehouses commonly use a layout called a **star schema**, the simplest and most widely used style. At the center is a **fact table**, with one row for each event being measured and mostly numeric values, the **measures**. Around it sit **dimension tables**, which describe the context of an event: when, where, what, who.
 
 <figure class="diagram">
 <svg viewBox="0 0 320 220" role="img" aria-label="A star schema: the fact_sales table in the middle, with dim_date above, dim_buyer below, dim_campus to the left and dim_book to the right." style="width:100%;max-width:360px;height:auto;display:block;margin:0 auto">
@@ -96,9 +96,9 @@ WHERE d.year = 2026
 GROUP BY c.name, d.month;
 ```
 
-Wikipedia points out that the dimensions are deliberately denormalized, so each one repeats its attributes, in exchange for simpler queries and fast aggregation. This is the opposite choice to the one in [Choosing Between Normalization and Denormalization](/system-design/normalization), made for the same reason: a system that is mostly read pays for copies once, in the load, and saves on each query.
+The dimensions are deliberately denormalized, so each one repeats its attributes, in exchange for simpler queries and fast aggregation. This is the opposite choice to the one in [Choosing Between Normalization and Denormalization](/system-design/normalization), made for the same reason: a system that is mostly read pays for copies once, in the load, and saves on each query.
 
-A **snowflake schema** normalizes the dimensions back into linked tables, and the guidance Wikipedia cites from Kimball is to avoid it unless there is a clear need.
+A **snowflake schema** normalizes the dimensions back into linked tables, and the usual advice, from Ralph Kimball's dimensional modeling method, is to avoid it unless there is a clear need.
 
 The questions analysts ask have names. A **roll-up** adds up along a dimension, such as campuses into a region. A **drill-down** goes the other way, from a month into its days. A **slice** fixes one value, such as only the North campus, and a **dice** picks a smaller block, such as two campuses in two terms.
 
@@ -106,15 +106,15 @@ The questions analysts ask have names. A **roll-up** adds up along a dimension, 
 
 Copying is done in three steps, which gives the process its name, **ETL**: extract the data from the sources, transform it, and load it into the warehouse.
 
-Transforming means cleaning, mapping codes to one standard, deriving values such as the dollar price, and giving each dimension row its own surrogate key, as in [Data Modeling](/system-design/data-modeling). Wikipedia notes that the dimension rows must be loaded before the facts that point to them.
+Transforming means cleaning, mapping codes to one standard, deriving values such as the dollar price, and giving each dimension row its own surrogate key, as in [Data Modeling](/system-design/data-modeling). The dimension rows must be loaded before the facts that point to them.
 
 A variant, **ELT**, loads the raw data first and transforms it inside the warehouse. That suits modern warehouses with plenty of compute, and it can keep the raw copy for later reuse.
 
-Warehouses are usually loaded in batches. AWS says OLAP data is updated periodically, from daily to monthly, and Wikipedia gives a latency of a few hours for OLAP systems. A report that has to be fresh uses a change feed instead, such as the commit log reader from [Cache Invalidation](/system-design/cache-invalidation).
+Warehouses are usually loaded in batches. OLAP data is updated periodically, from daily to monthly in many systems, so it lags by hours at best. A report that has to be fresh uses a change feed instead, such as the commit log reader from [Cache Invalidation](/system-design/cache-invalidation).
 
 ## Why Warehouses Are Fast at Scans
 
-The warehouse isn't only a copy. It is built to read huge amounts quickly. Amazon's Redshift documentation names the ingredients. Columnar storage keeps each column together, which, in its words, drastically reduces disk I/O, and values of one kind compress well together.
+The warehouse isn't only a copy. It is built to read huge amounts quickly. The ingredients are known. Columnar storage keeps each column together, which drastically reduces disk I/O, and values of one kind compress well together.
 
 Massively parallel processing spreads a query over many compute nodes, each working on its share of the rows. And storage can be separated from compute, so each can grow independently.
 
@@ -126,7 +126,7 @@ At 2,000 campus users, the first step is smaller than a warehouse: run the repor
 
 A warehouse earns its cost when reports start to strain even the replica, when the history has to outlive the operational tables, or when several systems' data must be joined.
 
-Two neighbors are worth knowing. A **data mart** is a smaller warehouse for one department or subject. A **data lake** is a store of raw data in many formats that is processed when it is read. Both are described by Wikipedia as variations on the same need.
+Two neighbors are worth knowing. A **data mart** is a smaller warehouse for one department or subject. A **data lake** is a store of raw data in many formats that is processed when it is read. Both are variations on the same need.
 
 ## Key Points
 

@@ -6,7 +6,7 @@ Everything in this phase so far is a defense: [Timeouts, Retries and Backoff](/s
 
 ## An Experiment, Not a Prank
 
-The name suggests breaking things at random. The method is the opposite, and the Principles of Chaos Engineering, published at principlesofchaos.org, describe it as an empirical approach. Its steps, in our words:
+The name suggests breaking things at random. The method is the opposite: an empirical approach. Its steps:
 
 - **Define steady state**: Pick a measurable output that shows the system is behaving normally, such as orders a minute or error rate and latency percentiles, and not an internal detail like CPU
 - **Hypothesize**: Predict that the steady state holds in both a control group and an experimental group
@@ -17,15 +17,15 @@ Four more ideas shape how it is done. The principles prefer running in productio
 
 They ask to minimize the blast radius, so that the damage from an experiment is contained. And they allow some short term impact, as the price of the learning.
 
-The guidance from cloud providers is more cautious about the first idea. The AWS Fault Injection Service documentation advises against starting in production, and the Azure Well-Architected guidance notes that fault injection in production can be disruptive and can cause downtime.
+Cloud providers are more cautious about the first idea: start outside production, since fault injection in production can be disruptive and can cause downtime.
 
 These agree on a ladder, climbed in order: start in a test environment, then go to production with a small blast radius once the checks are in place.
 
-AWS gives a template for the hypothesis: if a fault injection action is performed, a business or technical metric should not exceed a value. For the textbook app: if one of the 6 servers is stopped, the share of failed requests stays under 0.5 percent and the 99th percentile stays under 300 ms.
+A template for the hypothesis: if a fault injection action is performed, a business or technical metric should not exceed a value. For the textbook app: if one of the 6 servers is stopped, the share of failed requests stays under 0.5 percent and the 99th percentile stays under 300 ms.
 
 ## What an Experiment Contains
 
-The AWS service shows the parts in its vocabulary. An experiment template holds the actions, the targets and the stop conditions:
+AWS's Fault Injection Service shows the parts in its vocabulary. An experiment template holds the actions, the targets and the stop conditions:
 
 | Part | What It Is | For the Textbook App |
 | --- | --- | --- |
@@ -82,13 +82,13 @@ Kubernetes gives a related safeguard: a PodDisruptionBudget limits how many pods
 
 Systems aren't the sole thing that fails: the people and the procedures do too. A **game day** is a planned session where a team handles a simulated or injected failure while the others watch.
 
-Google's SRE book describes two forms in its chapter on bringing new engineers on call. One is disaster role playing, where on-call engineers respond to a simulated page and work the problem without a real outage.
+Two forms help new engineers on call. One is disaster role playing, where on-call engineers respond to a simulated page and work the problem without a real outage.
 
 The other, under the heading Break Real Things, Fix Real Things, has the team break a real system on purpose, a search cluster in the book's example, and then fix it. Azure's guidance has a milder version, a tabletop exercise, in which the team talks through a scenario without touching anything.
 
-Disaster recovery needs its own tests. Azure advises a dedicated environment so the test can't hurt production, and measures the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
+Disaster recovery needs its own tests. Use a dedicated environment so the test can't hurt production, and measures the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
 
-Google's book also notes that a test that finds a bug before release gives it a time to repair of zero, which is the logic behind each experiment here.
+A test that finds a bug before release gives it a time to repair of zero, which is the logic behind each experiment here.
 
 ## Starting Small
 

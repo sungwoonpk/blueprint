@@ -6,7 +6,7 @@ Replication protects against a machine dying. It copies a mistake as faithfully 
 
 ## Three Ways to Copy a Database
 
-The PostgreSQL documentation describes three methods, and most databases have equivalents:
+There are three methods, and most databases have equivalents:
 
 | Method | What Is Copied | Restores |
 | --- | --- | --- |
@@ -15,10 +15,10 @@ The PostgreSQL documentation describes three methods, and most databases have eq
 | Continuous Archiving | A base copy plus the stream of write ahead log files | The whole cluster, at any moment since the base copy |
 
 - **Logical dump**: The dump represents the database as of the moment it began, and it doesn't block other work, apart from operations that need exclusive locks. Its output can usually be loaded into a newer version of the server, which file level copies can't. It is per database, and a restore can be partial
-- **File system copy**: The documentation says the server must be shut down for a usable copy, unless the file system can take a frozen snapshot that covers the volumes at the same instant. Individual tables can't be restored from it
-- **Continuous archiving**: A base backup plus the archived log segments lets a restore stop at any chosen moment since the base backup. The documentation notes that archiving happens when a log segment completes, so there can be a long delay between a commit and its safe storage, and it suggests a timeout of a minute or so to bound that delay. This method also restores the whole cluster and no subset
+- **File system copy**: The server must be shut down for a usable copy, unless the file system can take a frozen snapshot that covers the volumes at the same instant. Individual tables can't be restored from it
+- **Continuous archiving**: A base backup plus the archived log segments lets a restore stop at any chosen moment since the base backup. Archiving happens when a log segment completes, so there can be a long delay between a commit and its safe storage, and a timeout of a minute or so bounds that delay. This method also restores the whole cluster and no subset
 
-The documentation also tells readers to set up and test the archiving procedure before taking the first base backup, and, at the end of a restore, to inspect the contents of the database to make sure it recovered to the desired state.
+Set up and test the archiving procedure before taking the first base backup, and, at the end of a restore, inspect the contents of the database to make sure it recovered to the desired state.
 
 ## Recovering to Just Before the Mistake
 
@@ -49,7 +49,7 @@ The first number, the recovery point objective, follows from the schedule. If a 
 
 At 0.5 changes a second, the nightly case loses 21,600 changes on average and the minute case about 15. These are our arithmetic, and they assume the log shipping keeps up.
 
-The PostgreSQL documentation warns that if archiving falls behind, more data is lost in a disaster, so the lag of the archive is a metric with an alert, as in [Alerting and Dashboards](/system-design/alerting).
+If archiving falls behind, more data is lost in a disaster, so the lag of the archive is a metric with an alert, as in [Alerting and Dashboards](/system-design/alerting).
 
 ## How Long Will It Take
 
@@ -80,7 +80,7 @@ Backups need protecting too. They contain the same personal data as the database
 
 ## Four Disaster Recovery Strategies
 
-The AWS whitepaper on disaster recovery describes four strategies along a scale of cost and speed. The page gives no numeric recovery times, so the table keeps to its words:
+Four strategies lie along a scale of cost and speed. They come without fixed recovery times, so the table keeps to words:
 
 | Strategy | What Runs in the Recovery Region | Recovery |
 | --- | --- | --- |
@@ -89,12 +89,12 @@ The AWS whitepaper on disaster recovery describes four strategies along a scale 
 | Warm Standby | A scaled down but fully working copy | Faster, since it needs scaling up and no more |
 | Multi Site Active/Active | A full copy serving traffic | Near zero for most disasters |
 
-- **Backup and restore**: The page calls it low in cost and complexity, and warns that without infrastructure defined as code, recovery times may exceed the target
-- **Pilot light**: It minimizes the ongoing cost, and the page says that recovery time and recovery point are greater than zero
-- **Warm standby**: The page says it decreases the time to recovery because the workload is running in another region at any hour, and that, unlike a pilot light, it can serve requests without extra action first. It calls it more economical and operationally simpler than active/active
-- **Active/active**: The page calls it the most complex and costly approach. Asynchronous replication can give a near zero recovery point, and data corruption still needs backups, since the corruption replicates too
+- **Backup and restore**: It is low in cost and complexity, and without infrastructure defined as code, recovery times may exceed the target
+- **Pilot light**: It minimizes the ongoing cost, and recovery time and recovery point are greater than zero
+- **Warm standby**: It decreases the time to recovery because the workload is running in another region at any hour, and unlike a pilot light it can serve requests without extra action first. It is more economical and operationally simpler than active/active
+- **Active/active**: It is the most complex and costly approach. Asynchronous replication can give a near zero recovery point, and data corruption still needs backups, since the corruption replicates too
 
-The page gives two concrete figures for one database service: promoting a replica region takes less than a minute, and replication latency is under a second. The ordering of cost and recovery follows the options in [Balancing Cost and Performance](/system-design/cost-performance), and the multi region case is the next topic, [Surviving a Region Outage](/system-design/region-outage).
+A managed database service shows concrete figures: promoting a replica region takes less than a minute, and replication latency is under a second. The ordering of cost and recovery follows the options in [Balancing Cost and Performance](/system-design/cost-performance), and the multi region case is the next topic, [Surviving a Region Outage](/system-design/region-outage).
 
 ## Choosing for the Textbook App
 

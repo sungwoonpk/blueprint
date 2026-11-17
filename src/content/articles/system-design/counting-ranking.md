@@ -20,11 +20,11 @@ A rule helps at the start: money, stock and anything a person is charged for mus
 
 ## Counting Volume: Split the Counter
 
-A single counter that each request increments is a hot key, as in [Handling Hot Spots and Celebrity Users](/system-design/hot-spots). Firestore's documentation puts it plainly: you can't update a single document at an unlimited rate.
+A single counter that each request increments is a hot key, as in [Handling Hot Spots and Celebrity Users](/system-design/hot-spots). In Firestore, for example, you can't update a single document at an unlimited rate.
 
 Its remedy is the distributed counter: a counter made of shards, each a small document with its own count. A write picks a random shard and increments it, and a read adds up the shards.
 
-The documentation lists the trade. Write throughput rises linearly with the number of shards, so a counter with 10 shards handles about 10 times the writes. Too few shards leads to retries and slow writes, and too many makes reads slower and more expensive, since a read loads each shard.
+The trade: write throughput rises linearly with the number of shards, so a counter with 10 shards handles about 10 times the writes. Too few shards leads to retries and slow writes, and too many makes reads slower and more expensive, since a read loads each shard.
 
 A common mitigation is a roll up document, refreshed on a slower schedule, that readers use instead of summing the shards. The counters are the same idea as the aggregation in [Scaling Writes](/system-design/scaling-writes): spread the writes, and pay on the read.
 
@@ -49,7 +49,7 @@ To reduce the noise, the hash picks one of many registers, each register keeps t
 <figcaption>How HyperLogLog counts without storing the viewers: it keeps the rarest hash pattern for each register</figcaption>
 </figure>
 
-The Wikipedia description gives the steps: the first bits of the hash choose a register, the position of the first 1 in the rest is recorded if it beats the register's value, and the estimate is a constant times the number of registers squared divided by the sum of 2 to the minus register value. A correction handles small counts.
+The steps: the first bits of the hash choose a register, the position of the first 1 in the rest is recorded if it beats the register's value, and the estimate combines the registers with a harmonic mean, scaled by a constant. A correction handles small counts.
 
 Redis implements it with a documented footprint of up to 12 KB and a standard error of 0.81 percent, for sets of up to 2 to the 64th power members, and less memory when few elements have been seen. The commands are PFADD to add an item, PFCOUNT to read the estimate and PFMERGE to combine sketches.
 
@@ -96,7 +96,9 @@ An update adds one to a counter in each row, picked by that row's hash, and a qu
 <figcaption>Count-Min Sketch: a grid with one hash for each row, and the smallest counter as the answer</figcaption>
 </figure>
 
-The Wikipedia article gives the sizing: a width of the ceiling of e divided by the error ε, and a depth of the ceiling of the natural log of 1 over the failure probability δ. The count is within ε times the total stream length, with probability 1 minus δ. Redis's documentation phrases it as a threshold: counts below the error times the total count can't be trusted.
+The sizing follows from a short argument. Each row overcounts a key by at most N divided by the width on average, where N is the stream length, so with a width of e divided by ε a row overcounts by more than ε times N with probability at most 1 over e.
+
+The depth is the number of independent rows, and all of them overcount that much with probability e to the minus depth, which equals δ when the depth is the natural log of 1 over δ. The estimate is therefore within ε times the stream length with probability 1 minus δ, and counts below that threshold can't be trusted.
 
 Its example, an error of 0.001 and a probability of 0.002, gives a width of 2,000 and a depth of 9.
 
@@ -122,17 +124,17 @@ For a stream where even exact counts don't fit, the heavy hitters algorithms kee
 
 Redis offers a Top-K based on HeavyKeeper, which pairs a table of probabilistic counts, with exponential decay so that a light item loses ground against a heavy one, with a min-heap of the K leaders.
 
-Its documentation names trending hashtags and detecting denial of service as uses, and suggests sizing the width from K times its log and the depth from the log of K. The commands are reserve, add, query and list.
+Trending hashtags and detecting denial of service are typical uses, and the sizing is the width from K times its log and the depth from the log of K. The commands are reserve, add, query and list.
 
 For a trend that means the last hour, not the whole history, keep a sketch for each short bucket, say each minute, and merge the last 60 for the answer, dropping the oldest bucket as the window moves.
 
 ## Ranking
 
-A rank is harder than a count, since it depends on the other items. Redis's sorted sets are the standard tool. A sorted set holds unique members, each with a score, ordered by score, and the documentation says it is implemented with both a skip list and a hash table.
+A rank is harder than a count, since it depends on the other items. Redis's sorted sets are the standard tool. A sorted set holds unique members, each with a score, ordered by score, and it is implemented with both a skip list and a hash table.
 
 Adding or updating a member, ZADD or ZINCRBY, and finding its position, ZRANK, are O(log N), while reading a range from a position is O(log N plus the items returned). A leaderboard is one sorted set, with the seller as the member and the number of sales as the score.
 
-The Redis leaderboard guide adds the practice: keep a hash for the details of each member, use one key for each time window with an expiry, and combine windows with a union of sorted sets.
+The practice: keep a hash for the details of each member, use one key for each time window with an expiry, and combine windows with a union of sorted sets.
 
 It claims millions of ranked members in roughly 500 MB of memory and sub millisecond operations, claims which come from the page and not from our measurements, and it contrasts them with a relational database where an exact rank needs an ordering across the table.
 

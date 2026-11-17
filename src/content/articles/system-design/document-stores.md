@@ -1,6 +1,8 @@
-> A **document store** is a database that keeps each record as a complete document, usually JSON, and can look inside it to search, index and update individual fields. It sits between a [key-value store](/system-design/key-value-stores), which treats the value as opaque, and a relational database, which splits a record across tables.
+> A **document store** is a database that keeps each record as a complete document, usually JSON, and can look inside it to search, index and update individual fields. It sits between a [Key-Value Stores](/system-design/key-value-stores), which treats the value as opaque, and a relational database, which splits a record across tables.
 
-In the last topic we ended at a signal: when you start asking questions about what is inside the values, a plain key-value store stops being enough. A document store is the next step. It keeps the habit of looking things up by key, and adds the ability to ask "which listings from the North campus cost under 20 dollars?"
+In the last topic we ended at a signal: when you start asking questions about what is inside the values, a plain key-value store stops being enough.
+
+A document store is the next step. It keeps the habit of looking things up by key, and adds the ability to ask "which listings from the North campus cost under 20 dollars?"
 
 ## A Listing as a Document
 
@@ -22,9 +24,9 @@ A **document** is a set of named fields whose values can be numbers, strings, li
 
 MongoDB, a widely used store of this kind, saves documents in BSON, a binary form of JSON with more types, and limits a document to 16 MiB.
 
-Wikipedia's article on document databases points out the difference from a key-value store: a document store reads the structure inside the value, and that is how it can offer queries and indexes. Compared with the relational layout, one read returns the whole listing, with no joins.
+A document store differs from a key-value store in one way: it reads the structure inside the value, and that is how it can offer queries and indexes. Compared with the relational layout, one read returns the whole listing, with no joins.
 
-Documents in one collection don't have to look alike. A listing for a used laptop can carry `"extras": { "cpu": "8 cores", "ram_gb": 16 }` while a textbook carries an edition, and the database doesn't mind. MongoDB's documentation lists this as a feature: you can add a field without rewriting old documents or running a migration.
+Documents in one collection don't have to look alike. A listing for a used laptop can carry `"extras": { "cpu": "8 cores", "ram_gb": 16 }` while a textbook carries an edition, and the database doesn't mind. That is a feature: you can add a field without rewriting old documents or running a migration.
 
 ## Asking Questions Inside Documents
 
@@ -46,15 +48,15 @@ db.listings.updateOne(
 
 The first line builds an index on two fields, one of them inside the nested `seller`. The second is a query with a filter, a projection that names the fields to return, a sort and a limit.
 
-The third changes one field in place. MongoDB's documentation notes that a write to one document is atomic, so a reader never sees half of an update.
+The third changes one field in place. In MongoDB a write to one document is atomic, so a reader never sees half of an update.
 
-This should look familiar. In [Data Modeling](/system-design/data-modeling) we put flexible extras in a PostgreSQL `jsonb` column and searched it with `@>` and a GIN index. PostgreSQL's documentation says the JSON and relational approaches can coexist in one application. A document store takes the same idea and builds the whole database around it.
+This should look familiar. In [Data Modeling](/system-design/data-modeling) we put flexible extras in a PostgreSQL `jsonb` column and searched it with `@>` and a GIN index. JSON and relational approaches can coexist in one application. A document store takes the same idea and builds the whole database around it.
 
 ## Embed or Reference
 
 The main design question in a document store is what goes inside a document and what lives in its own. **Embedding** copies related data into the document, as `seller` and `photos` are above. **Referencing** stores only an id, as in the relational case, and the app or the database follows it.
 
-Both MongoDB's and Microsoft's Azure Cosmos DB documentation give the same advice, which comes down to three questions:
+The advice comes down to three questions:
 
 | Question | Embed When | Reference When |
 | --- | --- | --- |
@@ -82,11 +84,11 @@ Here is how the textbook app answers them:
 
 Photos are bounded and shown with the listing, so they are embedded. Messages about a listing can pile up, and each one is read and written alone, so they get their own collection with a `listing_id`.
 
-Azure Cosmos DB's documentation uses the same reasoning for blog comments: an array that can grow without a limit makes the parent bigger to read and slower to update.
+The same reasoning applies to blog comments: an array that can grow without a limit makes the parent bigger to read and slower to update.
 
 The seller is the middle case, and the common answer is a **hybrid**: embed a small copy, the name and campus, and keep the full profile in `users`. This is the copy on purpose from [Choosing Between Normalization and Denormalization](/system-design/normalization), and it comes with the same bill.
 
-When Mina changes her campus, each of her listings holds an old copy. MongoDB's documentation sorts duplicated data by how it changes, and data that rarely changes, like a campus, is a good fit for copying.
+When Mina changes her campus, each of her listings holds an old copy. Duplicated data can be sorted by how it changes, and data that rarely changes, like a campus, is a good fit for copying.
 
 ## Flexible, Not Schemaless
 
@@ -123,7 +125,7 @@ db.listings.updateMany(
 )
 ```
 
-MongoDB offers transactions that span several documents, in the sense of [Transactions and ACID](/system-design/transactions-acid), but its documentation is blunt about them.
+MongoDB offers transactions that span several documents, in the sense of [Transactions and ACID](/system-design/transactions-acid), but they come with caveats.
 
 They usually cost more than writes to one document, they run under a time limit that is one minute by default, and they should not replace good schema design. A model that needs one for each routine operation may be a sign that the data wants tables.
 
