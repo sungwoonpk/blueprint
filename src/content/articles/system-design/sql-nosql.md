@@ -6,7 +6,7 @@ In the last four topics we met key-value, document, wide-column and graph stores
 
 The name is read as "not only SQL" or as "non-relational", and either reading is fine. The two words also don't compare like with like: SQL is a query language, and NoSQL is an approach to databases.
 
-The name took off in the late 2000s, when systems inspired by Google's Bigtable and Amazon's Dynamo, described in papers in 2006 and 2007, spread as open source projects.
+The name took off in the late 2000s, when open source systems inspired by Google's Bigtable and Amazon's Dynamo, published in 2006 and 2007, spread.
 
 They appeared for three reasons: a simple design without a fixed schema, scaling out over clusters of machines, and control over availability. Each one is built for a purpose, designed around one data model. The four families from this group:
 
@@ -31,7 +31,7 @@ So the question is no longer which kind of database can do the job. It is which 
 
 ## Questions That Decide
 
-Microsoft's guidance starts from the same place: list the access patterns first, then match them to a model. Here are the questions that matter most, in the order that tends to decide the answer:
+Start from the access patterns: list them first, then match them to a model. These are the questions that matter most, in the order that tends to decide the answer:
 
 | Question | Leans Relational | Leans NoSQL |
 | --- | --- | --- |
@@ -59,17 +59,17 @@ The app has several kinds of data, and they don't need to share an answer:
 | Search Over Titles | A search index | Searching inside text, as in [Full Text Search with Inverted Indexes](/system-design/search-engines) |
 | Photos | Object storage | Large files, as in [Choosing Between Block, Object and File Storage](/system-design/storage-types) |
 
-Using several stores like this is called **polyglot persistence**, and AWS's advice is that you don't always have to choose one. But each extra store has a price.
+Using several stores like this is called **polyglot persistence**, and one store doesn't have to serve the whole app. But each extra store has a price.
 
 It is another system to run, back up and watch, and the same facts may now live in two places that must be kept in step, with the techniques from [Choosing Between Normalization and Denormalization](/system-design/normalization) and [The Transactional Outbox](/system-design/transactional-outbox).
 
-The usual mistakes are adding a data model before the team can monitor and back it up, and making a search index the only copy of the data. When one service meets the requirements, use it.
+The usual mistakes are adding a data model before the team can monitor and back it up, and making a search index the sole copy of the data. When one service meets the requirements, use it.
 
 With 2,000 campus users and a peak of 3,000 requests a second, a single well indexed PostgreSQL server is often enough for most of this table. The other rows are the answers for when a measured problem appears.
 
 ## Mistakes to Avoid
 
-- **Choosing for scale you don't have**: Many products never reach the load that justifies a distributed store. Estimate first, as in [Estimating Capacity](/system-design/estimation)
+- **Choosing for scale you don't have**: Many products don't reach the load that justifies a distributed store. Estimate first, as in [Estimating Capacity](/system-design/estimation)
 - **Choosing NoSQL to skip the schema**: The schema moves into your code, where it is harder to see and enforce
 - **Keeping two sources of truth**: Decide which store owns each fact, and treat the others as copies that can be rebuilt
 - **Following the logo**: A database that works well for a famous company's workload may be wrong for yours
