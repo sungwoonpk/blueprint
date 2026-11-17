@@ -49,22 +49,23 @@ The fan out can be avoided when the query contains a routing value. In Elasticse
 
 The second answer splits the index itself by the indexed value. The entries for course CS101 live on one index shard, wherever the listings are. A search by course asks that one shard, gets the listing ids and fetches the rows. This is a term partitioned or **global** index.
 
-Reads are cheap and targeted, and writes get harder, since a new listing touches the shard of the base row and the index shard of each indexed value. DynamoDB's global secondary index shows the details:
+Reads are cheap and targeted, and writes get harder, since a new listing touches the shard of the base row and the index shard of each indexed value. DynamoDB's global secondary index shows the details.
 
-- **Its own keys and capacity**: A global index has a partition key and sort key of its own, and its own read and write capacity
-- **Asynchronous updates**: A write to the base table updates the index later, typically within a fraction of a second, so applications must handle stale results
-- **Back pressure**: A base table write succeeds when the table and each index have enough write capacity, so an under provisioned index throttles the table. Give the index at least the table's write capacity
-- **A change costs two writes**: Changing an indexed value deletes the old entry and adds the new one
-- **Sparse by design**: An item is indexed when it has the index's key attributes
-- **Projections**: The attributes copied into the index are the ones that can be read from it, with the choice of keys alone, chosen attributes or the full item, and the full item roughly doubles storage and write cost
+A global index is almost a table of its own, with a partition key and sort key and its own read and write capacity. It is updated asynchronously, typically within a fraction of a second, so applications must handle stale results.
+
+That coupling has a catch. A base table write succeeds when the table and each index have enough write capacity, so an under provisioned index throttles the table, and the index should get at least the table's write capacity. A change also costs two writes, since changing an indexed value deletes the old entry and adds the new one.
+
+Indexes are sparse by design: an item is indexed when it has the index's key attributes. The attributes copied into the index, called projections, are the ones that can be read from it. The choice is the keys alone, chosen attributes or the full item, and the full item roughly doubles storage and write cost.
 
 ## Keeping a Global Index Right
 
-An index entry and its row are on different shards, and no single transaction covers both unless the system pays for one. The systems choose differently:
+An index entry and its row are on different shards, and no single transaction covers both unless the system pays for one. The systems choose differently.
 
-- **Atomic with two phase commit**: Google Spanner's global index is stored as a separate table that can be split on its own, and updates often span splits and need two phase commit, so a global index has a higher write cost than one stored with its parent row. An interleaved index, stored with the parent row, is usually written locally. The commit protocol is in [Two-Phase Commit](/system-design/two-phase-commit)
-- **A careful protocol**: Vitess keeps a lookup table that maps a column value to a shard. A standard lookup is essentially a distributed transaction, and its consistent lookup variants use locks and a sequence of three sessions to avoid two phase commit, with the limit that an insert followed by an update of the same value in one transaction isn't supported. A lookup costs more than a computed shard in its planner: 10 for a unique lookup and 20 for a non unique one, against 1 for a hash
-- **Asynchronous with repair**: DynamoDB updates its indexes later. Facebook's TAO stores an association on the shard of its first object and the inverse on the shard of the second. There is no atomicity between the two writes, a failure can leave the forward edge without its inverse, and an asynchronous job repairs these hanging associations
+Spanner keeps a global index atomic with two phase commit. The index is stored as a separate table that can be split on its own, and updates often span splits, so a global index costs more to write than one stored with its parent row. An interleaved index, stored with the parent row, is usually written locally. The commit protocol is in [Two-Phase Commit](/system-design/two-phase-commit).
+
+Vitess takes a careful protocol instead. It keeps a lookup table that maps a column value to a shard. A standard lookup is essentially a distributed transaction, and its consistent lookup variants use locks and a sequence of three sessions to avoid two phase commit, with the limit that an insert followed by an update of the same value in one transaction isn't supported. A lookup also costs more than a computed shard in its planner: 10 for a unique lookup and 20 for a non unique one, against 1 for a hash.
+
+DynamoDB goes asynchronous and repairs. It updates its indexes later. Facebook's TAO stores an association on the shard of its first object and the inverse on the shard of the second, with no atomicity between the two writes. A failure can leave the forward edge without its inverse, and an asynchronous job repairs these hanging associations.
 
 We estimated what a lost update looks like. In 100,000 listing inserts with 3 indexes, where each remote index write fails 0.1 percent of the time, 309 listings, 0.31 percent, were missing from at least one index.
 

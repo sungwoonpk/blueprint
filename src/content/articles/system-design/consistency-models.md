@@ -8,7 +8,7 @@ This topic gives each level a precise meaning, so that a database's promise can 
 
 ## Two Families
 
-Kyle Kingsbury's Jepsen project maps the models, and the first thing it shows is two families. One is about a single object, such as one key: how its reads and writes line up in time. The other is about transactions that touch several objects, and how they interleave. The strongest model unifies both.
+The models fall into two families. One is about a single object, such as one key: how its reads and writes line up in time. The other is about transactions that touch several objects, and how they interleave. The strongest model unifies both.
 
 <figure class="diagram">
 <p class="rowname">Single Object Models</p>
@@ -32,7 +32,7 @@ Kyle Kingsbury's Jepsen project maps the models, and the first thing it shows is
 <figcaption>Each model implies the ones after it, and strict serializable is also linearizable</figcaption>
 </figure>
 
-An arrow means that a system with the first guarantee also has the second. Repeatable read sits beside snapshot isolation, and Jepsen's map adds that the two are incomparable, since neither is strictly stronger than the other. Read committed lies below both, and it comes up again below.
+An arrow means that a system with the first guarantee also has the second. Repeatable read sits beside snapshot isolation, and the two are incomparable, since neither is strictly stronger than the other. Read committed lies below both, and it comes up again below.
 
 ## Linearizability: The Strongest Single Object Model
 
@@ -42,32 +42,31 @@ For the textbook app, suppose Ana's purchase of a book completes at 9:00:01. Ben
 
 This rules out stale reads, and a read that returns a new value and a later read that returns an older one. It also allows compare and set, so a mutex or a unique stock count can be built on top.
 
-The scope matters. Jepsen notes that "an object" depends on the system: a key, a table or a database, and not several tables or separate databases. The cost is that it can't stay available during a partition: some nodes can't make progress.
+The scope matters. What counts as "an object" depends on the system: a key, a table or a database, and not several tables or separate databases. The cost is that it can't stay available during a partition: some nodes can't make progress.
 
 ## Serializability: The Strongest Transaction Model
 
 **Serializability** says that transactions behave as if they ran one at a time, in some order, with no interleaving of their steps. It covers many objects, including queries over a set of rows.
 
-It says little about time. Jepsen points out that a read after a completed write may not see it, and a process may miss its own earlier writes, because the legal order can place a transaction anywhere.
+It says little about time. A read after a completed write may not see it, and a process may miss its own earlier writes, because the legal order can place a transaction anywhere.
 
-Kingsbury's earlier essay gives a small example: with `x = 1; x = x + 1; puts x` running as transactions, serializability allows printing nil, 1 or 2. He also warns that the word SERIALIZABLE in SQL often means something weaker, such as snapshot isolation, which is the territory of [Isolation Levels](/system-design/isolation-levels).
+A small example: with `x = 1; x = x + 1; puts x` running as transactions, serializability allows printing nil, 1 or 2. Beware too that the word SERIALIZABLE in SQL often means something weaker, such as snapshot isolation, which is the territory of [Isolation Levels](/system-design/isolation-levels).
 
 **Strict serializability** adds linearizability's real time rule to serializability. It is the model of a database that behaves like one machine running one transaction at a time, and the strongest one on the map.
 
 ## Sequential and Causal
 
-Two models sit between the strong ones and the session guarantees:
+Two models sit between the strong ones and the session guarantees.
 
-- **Sequential consistency**: Operations appear in one order, and each process's operations appear in its own order. There is no real time rule, so a process can be behind, but once it has seen something it doesn't see older data. Kingsbury's example is an upload: the uploader sees the video go from missing to processing to ready, and others may see it go from missing to ready. If the uploader refreshed and saw no video, that would break the model
-- **Causal consistency**: Operations that are causally related appear in the same order to each process, and unrelated ones may appear in different orders. Jepsen's example is a chat in which Attiya asks "lunch?" and two people answer yes and no. Each person sees the question first, and the answers can arrive in either order. The causal chains are the happened-before relation from [Physical and Logical Clocks](/system-design/clocks)
+**Sequential consistency** means operations appear in one order, and each process's operations appear in its own order. There is no real time rule, so a process can be behind, but once it has seen something it doesn't see older data. Take an upload: the uploader sees the video go from missing to processing to ready, and others may see it go from missing to ready. If the uploader refreshed and saw no video, that would break the model.
+
+**Causal consistency** means operations that are causally related appear in the same order to each process, and unrelated ones may appear in different orders. Take a chat in which Attiya asks "lunch?" and two people answer yes and no. Each person sees the question first, and the answers can arrive in either order. The causal chains are the happened-before relation from [Physical and Logical Clocks](/system-design/clocks).
 
 ## Session Guarantees
 
 Below causal consistency are the small promises that fix the strangest effects of [Replication Lag](/system-design/replication-lag):
 
-- **Read your writes**: A process that wrote a value sees it, or newer, in its later reads
-- **Monotonic reads**: A process's later reads don't show an older state than an earlier read
-- **PRAM**: A process's writes are seen everywhere in the order it made them. Jepsen states it is equivalent to read your writes, monotonic reads and monotonic writes together
+**Read your writes** means a process that wrote a value sees it, or newer, in its later reads. **Monotonic reads** means a process's later reads don't show an older state than an earlier read. **PRAM** means a process's writes are seen everywhere in the order it made them, and it is equivalent to read your writes, monotonic reads and monotonic writes together.
 
 We checked what read policies give. In a simulation of one key written at 500 ms intervals with 3 followers, each normally 20 ms behind and 3 seconds behind for 2 percent of the time, 50 clients read at 50 reads a second in total. The leader's reads were the reference:
 
@@ -83,7 +82,7 @@ Pinning each client to one follower removed the backwards reads, which is monoto
 
 ## What Each Model Costs
 
-Jepsen's map groups the models by what they can do during a partition on an asynchronous network:
+The models group by what they can do during a partition on an asynchronous network:
 
 | Group | Models | During a Partition |
 | --- | --- | --- |
@@ -97,14 +96,17 @@ With several regions, strong writes take about twice the round trip between the 
 
 ## Models in Real Systems
 
-Here is a way to compare:
+Here is a way to compare.
 
-- **etcd**: Reads are linearizable by default. A serializable read is an opt in that can be stale, and that avoids waiting on consensus, which trades freshness for speed
-- **Google Spanner**: Its default gives external consistency, behavior as if transactions ran serially in the order commits can be seen, which is what strict serializability means. Reads are strong by default, and a stale read at a chosen age is available, with 15 seconds called a reasonable value for performance
-- **Amazon S3**: It gives strong read after write for puts and deletes of objects. A key is updated atomically, and there is no atomic update across keys. Concurrent puts to one key are settled by last writer wins
-- **Azure Cosmos DB**: Five levels, strong, bounded staleness, session, consistent prefix and eventual, from the strongest to the weakest, which let each request pick
+etcd makes reads linearizable by default. A serializable read is an opt in that can be stale and avoids waiting on consensus, which trades freshness for speed.
 
-Claims need checking, since a database can say more than it does. Jepsen's 2020 analysis of MongoDB 4.2.6 found that operations in a transaction ignored the collection level read concern and used the default `local`, and that the default write concern was one node.
+Google Spanner's default gives external consistency, behavior as if transactions ran serially in the order commits can be seen, which is what strict serializability means. Reads are strong by default, and a stale read at a chosen age is available, with 15 seconds a reasonable value for performance.
+
+Amazon S3 gives strong read after write for puts and deletes of objects. A key is updated atomically, and there is no atomic update across keys. Concurrent puts to one key are settled by last writer wins.
+
+Azure Cosmos DB offers five levels, strong, bounded staleness, session, consistent prefix and eventual, from the strongest to the weakest, and each request can pick.
+
+Claims need checking, since a database can say more than it does. Independent testing of MongoDB 4.2.6 in 2020 found that operations in a transaction ignored the collection level read concern and used the default `local`, and that the default write concern was one node.
 
 In a run with partitions, updates to 8 documents were acknowledged and later disappeared.
 
@@ -130,4 +132,4 @@ Pay for strength where wrong answers cost money, and use the weaker models for t
 - <u>Linearizability adds real time to single object operations</u>, serializability gives a serial order of transactions with no real time, and strict serializability has both
 - Sequential and causal consistency sit lower, and session guarantees such as read your writes and monotonic reads fix specific lag effects
 - In our simulation, leader reads were not stale, random follower reads were stale 7.15 percent of the time, and pinning a client removed backwards reads but not stale ones
-- Stronger models cost availability and latency, so pick them per operation, and test the promise, as Jepsen's MongoDB results show
+- Stronger models cost availability and latency, so pick them per operation, and test the promise, as the MongoDB test results show

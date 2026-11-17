@@ -52,12 +52,13 @@ The student sees the reply after the first two steps instead of after all five, 
 
 ## Reasons to Go Asynchronous
 
-There are four reasons:
+There are four reasons. The first is slow work: some jobs take seconds or minutes, too long to hold an HTTP request open, so the caller gets a receipt and checks back.
 
-- **Slow work**: Some jobs take seconds or minutes, too long to hold an HTTP request open. Azure's asynchronous request-reply pattern is built for that case
-- **Spikes**: A queue between the callers and a shared service lets the service take work at its own pace. This is called queue based load leveling, and the service can be sized for the average load instead of the peak
-- **Independent failure and scaling**: An asynchronous call suits a request that doesn't need an immediate response, where an acknowledgment that the request was registered is enough, and a durable layer in between lets each side scale and change on its own
-- **Retries**: A queue keeps a job through an outage or a crash and offers it again. The AWS Builders' Library says this raises durability and availability, at the price of occasional extra latency from retries
+The second is spikes. A queue between the callers and a shared service lets the service take work at its own pace, a technique called queue based load leveling, and the service can be sized for the average load instead of the peak.
+
+The third is independent failure and scaling. A request that doesn't need an immediate response is happy with an acknowledgment that it was registered, and a durable layer in between lets each side scale and change on its own.
+
+The fourth is retries. A queue keeps a job through an outage or a crash and offers it again, which raises durability and availability at the price of occasional extra latency.
 
 The next section shows the second reason in numbers.
 
@@ -92,23 +93,27 @@ For a thumbnail or an email, that is fine. For a button the student is waiting o
 
 The same arithmetic shows the danger. If jobs keep arriving faster than the workers finish them, the queue doesn't drain, and the wait keeps growing.
 
-Azure's pattern page makes the point: when the average rate of producers exceeds the consumers' rate, the queue grows and latency rises, so watch the depth of the queue and add consumers or shed work.
+When the average rate of producers exceeds the consumers' rate, the queue grows and latency rises, so watch the depth of the queue and add consumers or shed work.
 
 Here is why this is worse than it looks.
 
 A queue system has a fast mode with no backlog and a slow mode with one, and once in the slow mode it recovers slowly: by the time the backlog is worked off, much of the work may be too late to matter.
 
-The article's advice is to measure the age of a message when it is picked up, and not only the depth.
+So measure the age of a message when it is picked up, and not just the depth of the queue.
 
 ## What You Give Up
 
-Moving work out of the request has costs, and each has a topic of its own later:
+Moving work out of the request has costs, and each has a topic of its own later.
 
-- **No immediate result**: The caller must learn the outcome another way. The usual pattern is the response `202 Accepted`, which means accepted for processing but not completed, and possibly never completed. HTTP can't send the final result later, so the client polls a status address or is told by another channel
-- **Duplicates**: Queues usually deliver at least once, so a job may run twice. Handlers must be safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency)
-- **Ordering**: With several workers taking jobs in parallel, jobs can finish out of order, so a design that depends on order needs more care, as in [Partitions, Ordering and Consumer Groups](/system-design/ordering)
-- **Bad jobs**: One job that always fails can be retried forever. A dead letter queue catches it, as in [Dead Letter Queues](/system-design/redelivery-dlq)
-- **Harder debugging**: A request's work is now spread over time and over machines, which is why the request id in [Logs, Metrics and Traces](/system-design/observability) matters
+The first is that there is no immediate result, so the caller must learn the outcome another way. The usual pattern is the response `202 Accepted`, which means accepted for processing but not completed, and possibly never completed. HTTP can't send the final result later, so the client polls a status address or is told through another channel.
+
+The second is duplicates. Queues usually deliver at least once, so a job may run twice, and handlers must be safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency).
+
+Ordering suffers too. With several workers taking jobs in parallel, jobs can finish out of order, so a design that depends on order needs more care, as in [Partitions, Ordering and Consumer Groups](/system-design/ordering).
+
+A bad job is the fourth cost: one that fails each time can be retried forever, and a dead letter queue catches it, as in [Dead Letter Queues](/system-design/redelivery-dlq).
+
+Last comes harder debugging. A request's work is now spread over time and over machines, which is why the request id in [Logs, Metrics and Traces](/system-design/observability) matters.
 
 Here is how the post could answer, with the address a client polls for progress:
 
