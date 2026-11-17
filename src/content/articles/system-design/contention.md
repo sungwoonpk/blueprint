@@ -42,7 +42,7 @@ UPDATE book SET stock = stock - 1 WHERE id = 1 AND stock > 0;
 
 The database applies the condition and the change as one step on the current value, so there is no gap to race through. The application reads the number of rows changed to learn the outcome. In our test it sold exactly 100 copies with no retries, and it was the fastest of the correct methods.
 
-DynamoDB has the same idea in its conditional writes: a condition expression such as `attribute_not_exists(Id)` makes a put succeed when no item with that key exists, and a conditional update can include a comparison on the current price or count. The failed condition is reported to the caller.
+DynamoDB has the same idea in conditional writes: a condition expression such as `attribute_not_exists(Id)` makes a put succeed when no item with that key exists, and a conditional update can include a comparison on the current price or count. The failed condition is reported to the caller.
 
 The method works when the rule is a condition on one row that the database can evaluate. It stops working when the rule spans rows, such as a student can hold at most 5 books, or when other systems are involved.
 
@@ -67,11 +67,11 @@ In our test, 283 retries were needed for 600 requests, and the total time was as
 
 The cost of a conflict is the wasted work of one attempt, so the method suits low contention and long operations where holding a lock would hurt, and it degrades under heavy contention, when most attempts fail.
 
-The same pattern appears in the interfaces of other systems:
+The same pattern appears in the interfaces of other systems. In HTTP, a client sends the entity tag it last saw in `If-Match`, and the server answers 412 Precondition Failed if the resource has changed, which exists to prevent the lost update problem.
 
-- **HTTP**: A client sends the entity tag it last saw in `If-Match`, and the server answers 412 Precondition Failed if the resource has changed. RFC 9110 names the purpose as preventing the lost update problem
-- **DynamoDB's mapper**: A version attribute is incremented on each save, and a save with an old version throws `ConditionalCheckFailedException`
-- **A caveat**: Global tables reconcile concurrent updates with last writer wins, so this locking strategy doesn't work as expected there
+DynamoDB's mapper increments a version attribute on each save, and a save with an old version throws `ConditionalCheckFailedException`.
+
+One caveat: global tables reconcile concurrent updates with last writer wins, so this locking strategy doesn't work as expected there.
 
 ## Tool Three: Pessimistic Locks
 
@@ -79,12 +79,15 @@ When conflicts are common or the rule spans rows, take a lock first. In PostgreS
 
 There are four row lock modes, from the strongest, `FOR UPDATE`, through `FOR NO KEY UPDATE` and `FOR SHARE` to the weakest, `FOR KEY SHARE`. Row locks block writers and other lockers of the same row, and plain reads pass through.
 
-The lock serialized our test, and the run took 0.40 seconds, five times longer than the atomic update, since each buyer had to wait for the one before. That is the price: correctness through a queue. Locks bring their own hazards:
+The lock serialized our test, and the run took 0.40 seconds, five times longer than the atomic update, since each buyer had to wait for the one before. That is the price: correctness through a queue. Locks bring their own hazards.
 
-- **Deadlocks**: Two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The advice: acquire locks on multiple objects in a consistent order, and retry aborted transactions
-- **Long holds**: A lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it. Don't keep transactions open during user input
-- **Queue tables**: The `SKIP LOCKED` option skips rows that are locked, which suits several workers taking jobs from one table, at the cost of an inconsistent view of the data
-- **Advisory locks**: Locks on an application defined key, such as a seller's id, at session level, held until released and surviving a rollback, or at transaction level, released at the end. A lock function in a query with `LIMIT` may run on more rows than the limit suggests
+The first is the deadlock. Two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The cure is to acquire locks on multiple objects in a consistent order, and to retry aborted transactions.
+
+The second is the long hold. A lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it, so don't keep transactions open during user input.
+
+Two options help in special cases. `SKIP LOCKED` skips rows that are locked, which suits several workers taking jobs from one table, at the cost of an inconsistent view of the data.
+
+Advisory locks lock an application defined key, such as a seller's id, either at session level, held until released and surviving a rollback, or at transaction level, released at the end. A lock function in a query with `LIMIT` may run on more rows than the limit suggests.
 
 ## Locks Across Machines
 
@@ -94,11 +97,11 @@ The single instance version: set a key when it doesn't exist, with an expiry, us
 
 Redlock extends it across several independent instances and counts the lock as held when a majority agree within the validity time.
 
-Martin Kleppmann's analysis, which the Redis page itself cites, separates two uses. A lock for **efficiency**, to avoid duplicate work, can tolerate an occasional failure. A lock for **correctness**, where two holders corrupt data, can't. His argument against using Redlock for correctness is about time.
+Two uses of a lock need to be told apart. A lock for **efficiency**, to avoid duplicate work, can tolerate an occasional failure. A lock for **correctness**, where two holders corrupt data, can't. The strongest argument against using Redlock for correctness is about time.
 
 A client can pause, for garbage collection or a delayed network packet, after its lease has expired and then write anyway, and checking the expiry just before the write doesn't close the gap, since the pause can fall between the check and the write.
 
-The remedy is a **fencing token**: the lock service hands out a number that grows with each acquisition, the client sends it with each write, and the storage rejects a write with a lower number than one it has seen. His complaint is that Redlock has no facility for generating such tokens.
+The remedy is a **fencing token**: the lock service hands out a number that grows with each acquisition, the client sends it with each write, and the storage rejects a write with a lower number than one it has seen. Redlock has no facility for generating such tokens.
 
 <figure class="diagram">
 <p class="rowname">Current Holder</p>
@@ -118,17 +121,21 @@ The remedy is a **fencing token**: the lock service hands out a number that grow
 <figcaption>A fencing token: the storage refuses a late writer holding an older number</figcaption>
 </figure>
 
-Redis's own guidance agrees that tokens should be implemented. The topic of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks) and [Consensus and Leader Election](/system-design/consensus-leader-election) goes into the mechanics. The practical rule: for correctness, put the protection into the system that owns the data, with a conditional write or a fencing token, and treat a lock as an optimization.
+[Distributed Locks and Fencing Tokens](/system-design/distributed-locks) and [Consensus and Leader Election](/system-design/consensus-leader-election) go into the mechanics. The practical rule: for correctness, put the protection into the system that owns the data, with a conditional write or a fencing token, and treat a lock as an optimization.
 
 ## Holds, Retries and Hot Rows
 
-Scarce resources have a shape of their own:
+Scarce resources have a shape of their own, and the first piece is the hold. A buyer who clicks reserve gets the copy held for 10 minutes while paying, and the hold expires if payment doesn't finish.
 
-- **A hold with an expiry**: A buyer who clicks reserve gets the copy held for 10 minutes while paying, and the hold expires if payment doesn't finish. The hold is a row with an expiry time, and a sweeper or a condition on the read frees it. The payment itself stays outside the hold's transaction
-- **Idempotency keys**: A retried reservation must not take a second copy. Stripe's API shows the usual design: the client sends an `Idempotency-Key` header, up to 255 characters, and a retry with the same key returns the saved response, with keys pruned after at least 24 hours. [Idempotency and Safe Retries](/system-design/idempotency) has the pattern
-- **Pre split inventory**: A hot item can be divided into buckets, say 10 of 10 copies each, so that buyers hit different rows. The price is that a bucket can run out while another has stock, so a buyer whose bucket is empty tries the next
-- **Serialize through a queue**: Send the purchases for one item to one consumer, for instance by using the item as the partition key, and the consumer applies them one at a time with no locking, at the cost of a delay, as in [Absorbing Traffic Spikes](/system-design/traffic-spikes)
-- **Keep the hot transaction short**: Do the slow work, such as a payment call or a confirmation email, before or after the lock, and not inside it
+The hold is a row with an expiry time, and a sweeper or a condition on the read frees it. The payment itself stays outside the hold's transaction.
+
+A retried reservation must not take a second copy, which is what idempotency keys are for. The client sends a key, up to 255 characters in a typical payment API, and a retry with the same key returns the saved response, with keys pruned after at least 24 hours. [Idempotency and Safe Retries](/system-design/idempotency) has the pattern.
+
+A hot item can also be split. Divide it into buckets, say 10 of 10 copies each, so that buyers hit different rows. The price is that a bucket can run out while another has stock, so a buyer whose bucket is empty tries the next.
+
+Or serialize through a queue: send the purchases for one item to one consumer, for instance by using the item as the partition key, and the consumer applies them one at a time with no locking, at the cost of a delay, as in [Absorbing Traffic Spikes](/system-design/traffic-spikes).
+
+Whatever the design, keep the hot transaction short. Do the slow work, such as a payment call or a confirmation email, before or after the lock, and not inside it.
 
 A single row is updated by one transaction at a time, so a hot row is a throughput ceiling however many servers there are, the problem of [Handling Hot Spots and Celebrity Users](/system-design/hot-spots).
 
