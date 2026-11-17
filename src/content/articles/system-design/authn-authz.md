@@ -6,7 +6,7 @@ Both can go wrong at once. Someone guesses passwords until one works, or a stude
 
 ## Proving Who You Are
 
-An authenticator is something the user knows, has or is. NIST's digital identity guidelines, SP 800-63B, rank the combinations in three authenticator assurance levels:
+An authenticator is something the user knows, has or is. The combinations rank in three authenticator assurance levels:
 
 | Level | What It Requires | Phishing Resistance |
 | --- | --- | --- |
@@ -14,23 +14,19 @@ An authenticator is something the user knows, has or is. NIST's digital identity
 | AAL2 | Two distinct factors | Must be offered |
 | AAL3 | A cryptographic device whose key can't be exported | Required |
 
-NIST also keeps identity proofing, which establishes that a person is who they claim to be, separate from authentication, which establishes that the person controls the authenticator. A site that lets anyone register with any name has no proofing, and it can still authenticate returning users well.
+Identity proofing, which establishes that a person is who they claim to be, is separate from authentication, which establishes that the person controls the authenticator. A site that lets anyone register with any name has no proofing, and it can still authenticate returning users well.
 
-Passwords remain the first factor for most systems, and the guidance has changed a lot from the old habits. NIST and the OWASP cheat sheets agree on these:
+Passwords remain the first factor for most systems, and the current practice is very different from the old habits. Length beats complexity: a minimum of 15 characters when the password is the sole factor and 8 when it is part of multifactor authentication, and a maximum of at least 64 so that passphrases fit.
 
-- **Length over complexity**: A minimum of 15 characters when the password is the sole factor and 8 when it is part of multifactor authentication, and a maximum of at least 64 so that passphrases fit
-- **No composition rules**: Don't require a mix of capitals, digits and symbols
-- **No periodic changes**: Force a change when there is evidence of compromise, not on a calendar
-- **Check against a blocklist**: Compare new passwords with lists of breached and common passwords, and explain a rejection
-- **Allow managers**: Accept paste and autofill, and don't truncate what the user typed
+Don't require a mix of capitals, digits and symbols, and don't force a change on a calendar, but when there is evidence of compromise.
 
-NIST adds a warning that matters for the second factor: passwords, one time codes sent by text and codes typed from an authenticator app are not phishing resistant, since a fake site can collect them.
+Do check new passwords against lists of breached and common passwords, and explain a rejection. Accept paste and autofill so that password managers work, and don't truncate what the user typed.
 
-Phishing resistance needs a cryptographic authenticator, such as a security key or a passkey, which signs a challenge for the real site alone.
+One warning matters for the second factor: passwords, one time codes sent by text and codes typed from an authenticator app are not phishing resistant, since a fake site can collect them. Phishing resistance needs a cryptographic authenticator, such as a security key or a passkey, which signs a challenge for the real site alone.
 
-The sign in page itself leaks information if it isn't careful. The OWASP cheat sheet asks for the same generic answer whether the user is unknown, the password is wrong or the account is locked, such as "Login failed; Invalid user ID or password", and the same for password reset: "If that email address is in our database, we will send you an email." It also asks for equal response times, since a missing user that returns faster than a wrong password gives the secret away.
+The sign in page itself leaks information if it isn't careful. Give the same generic answer whether the user is unknown, the password is wrong or the account is locked, such as "Login failed; Invalid user ID or password", and the same for password reset: "If that email address is in our database, we will send you an email." Keep response times equal too, since a missing user that returns faster than a wrong password gives the secret away.
 
-Rate limits on attempts, covered in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), slow the guessing, and NIST requires a mechanism that effectively limits failed attempts.
+Rate limits on attempts, covered in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), slow the guessing, and a mechanism that effectively limits failed attempts is a standard requirement.
 
 ## Storing Passwords
 
@@ -57,38 +53,41 @@ These are the times to try the whole space on one core, so an attacker with many
 
 The table shows the relative cost, not a safe limit. A human chosen password sits in a far smaller space than a random one.
 
-The order of preference and its settings:
+The order of preference is short. Argon2id comes first, with at least 19 MiB of memory, 2 iterations and 1 degree of parallelism, or equal options such as 46 MiB with 1 iteration.
 
-- **Argon2id**: The first choice, with at least 19 MiB of memory, 2 iterations and 1 degree of parallelism, or the equal options it lists such as 46 MiB with 1 iteration
-- **scrypt**: Next, with a CPU and memory cost of 2 to the 17th power, a block size of 8 and 1 degree of parallelism
-- **bcrypt**: For older systems, with a work factor of at least 10 and a limit of 72 bytes on the password
-- **PBKDF2**: When a standard such as FIPS 140 is required, with 600,000 iterations of HMAC SHA-256
+Next is scrypt, with a CPU and memory cost of 2 to the 17th power, a block size of 8 and 1 degree of parallelism.
+
+For older systems, bcrypt works with a work factor of at least 10 and a limit of 72 bytes on the password. And when a standard such as FIPS 140 is required, PBKDF2 with 600,000 iterations of HMAC SHA-256 is the option.
 
 Each password gets a unique random salt, which most libraries generate, so that two users with the same password have different hashes and a precomputed table is useless.
 
-A pepper is a secret shared across passwords and kept outside the database, in a vault or a hardware module, as an extra layer. OWASP aims for under a second per hash, and recommends raising the work factor over time and rehashing at the next login.
+A pepper is a secret shared across passwords and kept outside the database, in a vault or a hardware module, as an extra layer. Aim for under a second per hash, raise the work factor over time, and rehash at the next login.
 
 ## Staying Signed In
 
-After a successful login, the server hands the browser a **session** identifier and recognizes it on later requests. That identifier is now as good as the password, so it gets care:
+After a successful login, the server hands the browser a **session** identifier and recognizes it on later requests. That identifier is now as good as the password, so it gets care.
 
-- **Unguessable**: At least 64 bits of entropy from a secure random generator, with no personal data inside. OWASP's estimate is about 585 years at 10,000 guesses a second to hit one of 100,000 active sessions, which we confirmed with the arithmetic
-- **A guarded cookie**: Marked Secure so that it travels over HTTPS alone, HttpOnly so that scripts can't read it, and SameSite so that other sites can't trigger requests with it
-- **Renewed at login**: A new identifier after any change of privilege, which defeats fixation, where an attacker plants a known identifier before the victim signs in
-- **Time limited**: NIST suggests an overall limit of no more than 24 hours at AAL2 and an inactivity limit of 1 hour, and at AAL3, 12 hours and 15 minutes
-- **Ended on the server**: Logging out deletes the session on the server, since clearing the cookie in the browser leaves a copy that still works
+It must be unguessable: at least 64 bits of entropy from a secure random generator, with no personal data inside. At 10,000 guesses a second, it takes about 585 years to hit one of 100,000 active sessions, which we confirmed with the arithmetic.
+
+The cookie that carries it needs guards. Mark it Secure so that it travels over HTTPS alone, HttpOnly so that scripts can't read it, and SameSite so that other sites can't trigger requests with it.
+
+Issue a new identifier at login and after any change of privilege, which defeats fixation, where an attacker plants a known identifier before the victim signs in.
+
+Limit its life. A reasonable overall limit is no more than 24 hours at the middle assurance level with an inactivity limit of 1 hour, and at the highest level, 12 hours and 15 minutes.
+
+And end it on the server: logging out deletes the session there, since clearing the cookie in the browser leaves a copy that still works.
 
 A server side session is easy to end. Tokens that carry their own claims, covered in [OAuth and JWT](/system-design/oauth-jwt), are harder, because the server holds no record to delete, and the guidance keeps them short lived for that reason.
 
 ## Deciding What You May Do
 
-Authentication says who. Authorization is a separate check, and it has to run on each request. The OWASP authorization cheat sheet is blunt about it: an attacker needs to find one way in, developers shouldn't rely on client side checks, and validating permissions correctly on just most requests is insufficient.
+Authentication says who. Authorization is a separate check, and it has to run on each request. An attacker needs to find one way in, client side checks can't be relied on, and validating permissions correctly on just most requests is insufficient.
 
-Three rules shape a design:
+Three rules shape a design. The first is least privilege: give each user the minimum needed for the job, and look again after launch for privilege creep, since granting more later is easier than taking it back.
 
-- **Least privilege**: Give each user the minimum needed for the job, and look again after launch for privilege creep, since granting more later is easier than taking it back
-- **Deny by default**: The application decides to permit or deny on each request, even when no rule matches, and except for public resources the default is no
-- **On the server, in one place**: Use a global mechanism such as a filter or middleware, so a new endpoint is protected without anyone remembering
+The second is deny by default. The application decides to permit or deny on each request, even when no rule matches, and except for public resources the default is no.
+
+The third is to check on the server, in one place, with a global mechanism such as a filter or middleware, so a new endpoint is protected without anyone remembering.
 
 Models for the rules differ in what they can express:
 
@@ -98,13 +97,13 @@ Models for the rules differ in what they can express:
 | ABAC | Attributes of the user, the object and the setting | Time, device, location, tenant |
 | ReBAC | A relationship between user and object | The owner may edit, others may not |
 
-NIST describes RBAC as identifying permitted actions with roles and not with individual identities. The OWASP cheat sheet cautions that RBAC struggles with decisions about a single object and can suffer role explosion, and it prefers ABAC or ReBAC for application code, with the caveat that RBAC is simpler to start.
+RBAC identifies permitted actions with roles and not with individual identities. It struggles with decisions about a single object and can suffer role explosion, so ABAC or ReBAC is the better fit for application code, with the caveat that RBAC is simpler to start.
 
 ## The Most Common Flaw
 
-The OWASP Top 10 for 2021 puts broken access control first, up from fifth place, and reports that 94 percent of applications were tested for some form of it.
+Broken access control topped the OWASP Top 10 for 2021, up from fifth place, and 94 percent of the applications tested had some form of it.
 
-The API version of the list names its most common form, broken object level authorization, rated easy to exploit and widespread. An endpoint takes an object identifier from the client and acts on it without checking that this user may. The student who changes 5521 to 5522 is the example.
+The API version of that list names its most common form, broken object level authorization, which is easy to exploit and widespread. An endpoint takes an object identifier from the client and acts on it without checking that this user may. The student who changes 5521 to 5522 is the example.
 
 The code looks right and isn't:
 
@@ -124,7 +123,7 @@ The version with the check:
         abort(403)                              # authorization: may this user edit this one?
 ```
 
-OWASP adds that comparing the session user with an identifier in the request isn't enough in general, and that random identifiers help but don't replace the check.
+Comparing the session user with an identifier in the request isn't enough in general, and random identifiers help but don't replace the check.
 
 The mitigations are a check in each function that takes an identifier, access rules in one reusable place, tests that fail the build when a check is missing, and logging of refused attempts with an alert on repeats.
 
