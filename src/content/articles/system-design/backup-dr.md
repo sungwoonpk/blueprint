@@ -6,7 +6,7 @@ Replication protects against a machine dying. It copies a mistake as faithfully 
 
 ## Three Ways to Copy a Database
 
-There are three methods, and most databases have equivalents:
+The first question is what kind of copy to take. There are three, and most databases have an equivalent of each:
 
 | Method | What Is Copied | Restores |
 | --- | --- | --- |
@@ -14,11 +14,17 @@ There are three methods, and most databases have equivalents:
 | File System Copy | The data directory | The whole cluster, from a stopped server or a frozen snapshot |
 | Continuous Archiving | A base copy plus the stream of write ahead log files | The whole cluster, at any moment since the base copy |
 
-- **Logical dump**: The dump represents the database as of the moment it began, and it doesn't block other work, apart from operations that need exclusive locks. Its output can usually be loaded into a newer version of the server, which file level copies can't. It is per database, and a restore can be partial
-- **File system copy**: The server must be shut down for a usable copy, unless the file system can take a frozen snapshot that covers the volumes at the same instant. Individual tables can't be restored from it
-- **Continuous archiving**: A base backup plus the archived log segments lets a restore stop at any chosen moment since the base backup. Archiving happens when a log segment completes, so there can be a long delay between a commit and its safe storage, and a timeout of a minute or so bounds that delay. This method also restores the whole cluster and no subset
+The logical dump is the gentlest. It writes the database out as SQL or an archive, as of the moment it began, and it doesn't block other work apart from operations that need exclusive locks.
 
-Set up and test the archiving procedure before taking the first base backup, and, at the end of a restore, inspect the contents of the database to make sure it recovered to the desired state.
+Because it describes the data and doesn't copy files, its output can usually be loaded into a newer version of the server, and a restore can be partial.
+
+The file system copy takes the data directory itself. A usable copy needs the server shut down, unless the file system can take a frozen snapshot that covers the volumes at the same instant. It brings back the whole cluster, and it can't give back a single table.
+
+Continuous archiving starts from a base copy and keeps the log files that follow. A restore can stop at any chosen moment since the base copy, which is its great strength.
+
+Its weakness is timing: a log segment is archived when it completes, so a long delay can open between a commit and its safe storage, and a timeout of a minute or so bounds that delay. Like the file copy, it restores the whole cluster and no subset.
+
+Whichever one you pick, set up and test the archiving procedure before taking the first base backup. At the end of a restore, inspect the contents of the database to make sure it recovered to the state you wanted.
 
 ## Recovering to Just Before the Mistake
 
@@ -65,12 +71,11 @@ Replaying the log adds more, and so does the rest of the runbook: finding the ba
 
 ## A Backup Nobody Restored
 
-A copy that nobody has restored is a hope. Backups fail quietly: the job reports success while it writes an empty file, the credentials expired, the log has a gap, or the dump can't be loaded into the current version. The checks to put in place:
+A copy that nobody has restored is a hope. Backups fail quietly: the job reports success while it writes an empty file, the credentials expired, the log has a gap, or the dump can't be loaded into the current version.
 
-- **A routine drill**: Restore the latest backup into a scratch environment each night or week, and record how long it took
-- **Content checks**: Compare row counts and checksums with production, and run a smoke test of the application against the restored copy
-- **An alarm**: A failed or slow drill pages someone, and so does a backup that didn't run
-- **Timing**: The measured restore time is the real recovery time objective, so compare it with the target
+The cure is to restore on a schedule. Each night or week, restore the latest backup into a scratch environment and record how long it took. Compare row counts and checksums with production, and run a smoke test of the application against the restored copy.
+
+Then wire an alarm to it, so that a failed or slow drill pages someone, and so does a backup that didn't run. The measured restore time is the real recovery time objective, so compare it with the target.
 
 The rule of thumb for where the copies live is 3-2-1: three copies of the data, on two kinds of storage, with one kept off site. The reasoning is to make no single event, whether a failed disk, a lost account or a building, take the whole set of copies.
 
@@ -89,10 +94,13 @@ Four strategies lie along a scale of cost and speed. They come without fixed rec
 | Warm Standby | A scaled down but fully working copy | Faster, since it needs scaling up and no more |
 | Multi Site Active/Active | A full copy serving traffic | Near zero for most disasters |
 
-- **Backup and restore**: It is low in cost and complexity, and without infrastructure defined as code, recovery times may exceed the target
-- **Pilot light**: It minimizes the ongoing cost, and recovery time and recovery point are greater than zero
-- **Warm standby**: It decreases the time to recovery because the workload is running in another region at any hour, and unlike a pilot light it can serve requests without extra action first. It is more economical and operationally simpler than active/active
-- **Active/active**: It is the most complex and costly approach. Asynchronous replication can give a near zero recovery point, and data corruption still needs backups, since the corruption replicates too
+Backup and restore is the cheapest and the simplest, and without infrastructure defined as code, recovery may overshoot the target.
+
+A pilot light keeps the data replicated and the core infrastructure switched off, which holds the running cost down, but the recovery time and the recovery point are above zero because servers must start and scale up first.
+
+A warm standby runs a scaled down, working copy in another region at any hour. Unlike a pilot light it can serve requests with no extra action first, and it is cheaper and simpler to run than active/active.
+
+Active/active is the most complex and costly approach. Asynchronous replication can give a near zero recovery point, and corruption still needs backups, since the corruption replicates too.
 
 A managed database service shows concrete figures: promoting a replica region takes less than a minute, and replication latency is under a second. The ordering of cost and recovery follows the options in [Balancing Cost and Performance](/system-design/cost-performance), and the multi region case is the next topic, [Surviving a Region Outage](/system-design/region-outage).
 
@@ -111,13 +119,11 @@ The last two rows differ because the cost of an hour of downtime differs. An hou
 
 ## The Parts Beyond Data
 
-A restored database isn't a restored service. The recovery also needs:
+A restored database isn't a restored service. The servers, networks and settings must be created from a repository, so infrastructure as code comes first. The keys from [Secrets and Key Management](/system-design/secrets) need copies stored where a disaster in the main region can't take them.
 
-- **Infrastructure as code**: Servers, networks and settings that can be created from a repository
-- **Keys and secrets**: Copies of the keys from [Secrets and Key Management](/system-design/secrets), stored where a disaster in the main region doesn't take them
-- **Names and traffic**: A way to move DNS and traffic, tested
-- **A runbook**: Steps written for a tired person at night, with the decision of when to declare a disaster
-- **Practice**: The AWS testing guidance is to test the plan to ensure the objectives are met, as in a game day from [Chaos Engineering](/system-design/chaos-engineering)
+Traffic needs a tested way to move, with DNS included. And someone has to follow a runbook written for a tired person at night, including the decision of when to declare a disaster.
+
+Then practice the whole plan to see that it meets the objectives, as in a game day from [Chaos Engineering](/system-design/chaos-engineering).
 
 ## Pitfalls
 
