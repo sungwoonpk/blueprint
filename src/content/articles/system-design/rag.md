@@ -14,10 +14,9 @@ Its abstract names two open problems for language models alone, providing proven
 
 The reasons carry over to an application:
 
-- **Fresh data**: Updating a document updates the answers, with no retraining
-- **Sources**: The answer can point to the passage it used, so a student or a reviewer can check it
-- **Permissions**: Retrieval can return just what the asking user may see
-- **Size**: The prompt holds a few passages and not the whole collection
+Fresh data comes first: updating a document updates the answers, with no retraining. The answer can point to the passage it used, so a student or a reviewer can check it.
+
+Retrieval can return just what the asking user may see, which handles permissions. And the prompt holds a few passages and not the whole collection, which keeps its size in check.
 
 The costs are as real. Retrieval can miss the right passage, and then the model answers without it. The model can ignore a passage it was given. And each passage is tokens that you pay for and wait for.
 
@@ -70,11 +69,7 @@ RAG has an offline part, which prepares the collection, and an online part, whic
 <figcaption>RAG in two parts: prepare the collection ahead of time, and look up passages when a question arrives</figcaption>
 </figure>
 
-The offline stages are:
-
-- **Chunking**: Split each document into pieces, each ideally holding a single idea
-- **Enrichment**: Clean the chunks and attach metadata such as the title, the course, the semester and the access scope
-- **Embedding and indexing**: Store the vectors and the text, in the index of [Vector Databases](/system-design/vector-databases)
+The offline stages prepare the collection. Chunking splits each document into pieces, each ideally holding a single idea. Enrichment cleans the chunks and attaches metadata such as the title, the course, the semester and the access scope. Then embedding and indexing store the vectors and the text, in the index of [Vector Databases](/system-design/vector-databases).
 
 The online stages are retrieval, which for most text should be a hybrid of keywords and vectors with a re-ranker, as in the last two topics, then packing the best chunks into the prompt with the question, and generating the answer.
 
@@ -135,14 +130,13 @@ The practical rules follow. Chunk by structure, such as a section or a policy, s
 
 ## Packing the Prompt
 
-The prompt has to carry the instructions, the passages and the question. A few practices come from the sources:
+The prompt has to carry the instructions, the passages and the question, and a few practices make it work. Order matters: because of the position effect, put the best passages at the start or end of the context and not the middle, and keep the number modest.
 
-- **Order matters**: Because of the position effect, put the best passages at the start or end of the context and not the middle, and keep the number modest
-- **Mark the sources**: Give each passage an id and a title, and ask the model to answer from the passages and to say when they don't contain the answer
-- **Fewer, better passages**: Tune the count on your own questions, and let a re-ranker choose, since each passage costs tokens and can distract
-- **Cite**: Ask for the ids of the passages used, so the answer can be checked
+Mark the sources by giving each passage an id and a title, and ask the model to answer from the passages and to say when they don't contain the answer.
 
-Claude's citations feature is one way to do the last. Each document block can enable citations, and the API returns the answer in pieces, each with pointers to the cited text.
+Prefer fewer, better passages: tune the count on your own questions, and let a re-ranker choose, since each passage costs tokens and can distract. And ask for citations, the ids of the passages used, so the answer can be checked.
+
+Some model APIs have a citations feature for the last. Each document block can enable citations, and the API returns the answer in pieces, each with pointers to the cited text.
 
 Where a model API has a citations feature, put each RAG chunk into a plain text document. The cited text isn't counted toward output tokens, and the pointers are guaranteed to refer to the documents provided. There is no promise of a citation for each claim, and the feature can't be combined with structured outputs.
 
@@ -152,19 +146,17 @@ Retrieval is also where access control belongs. A model can't keep a secret that
 
 Apply the user's permissions as a filter in the search, as in [Vector Databases](/system-design/vector-databases), and keep tenants apart as in [Isolating Tenants in a Shared System](/system-design/multi-tenancy). Enforce strict access controls during both retrieval and generation, so private text stays with the readers who may see it.
 
-Two more points on the data:
+Two more points on the data. A changed page has to reach the index, and a deleted one has to leave it, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync).
 
-- **Freshness**: A changed page has to reach the index, and a deleted one has to leave it, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
-- **Untrusted text**: A retrieved page is input from outside, and a page can contain instructions aimed at the model. Test adversarially and sanitize documents against indirect prompt injection, and [Guardrails](/system-design/guardrails) goes further
+And a retrieved page is untrusted text: it is input from outside, and a page can contain instructions aimed at the model. Test adversarially and sanitize documents against indirect prompt injection, and [Guardrails](/system-design/guardrails) goes further.
 
 ## Evaluate Each Stage
 
 A wrong answer can come from the search or from the writing, and the repair differs. Measures exist for each side:
 
-- **Context recall**: How many of the reference claims are found in the retrieved text, which needs a reference answer
-- **Context precision**: Whether the relevant chunks are ranked above the irrelevant ones, which depends on the order
-- **Faithfulness**: The share of the answer's claims that the retrieved context supports, so 1 supported claim out of 2 scores 0.5
-- **Response relevancy**: How closely the answer addresses the question, with no check on whether it is true
+Context recall asks how many of the reference claims are found in the retrieved text, which needs a reference answer. Context precision asks whether the relevant chunks are ranked above the irrelevant ones, which depends on the order.
+
+On the writing side, faithfulness is the share of the answer's claims that the retrieved context supports, so 1 supported claim out of 2 scores 0.5. Response relevancy measures how closely the answer addresses the question, with no check on whether it is true.
 
 Groundedness, which is similar to faithfulness, joins completeness, utilization, relevance and correctness. An example is useful: a groundedness of 0.9 with a correctness of 0.4 means an answer that follows its sources and is still wrong, which points at the sources.
 
