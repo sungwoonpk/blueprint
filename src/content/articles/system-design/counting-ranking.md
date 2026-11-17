@@ -124,7 +124,7 @@ For a stream where even exact counts don't fit, the heavy hitters algorithms kee
 
 Redis offers a Top-K based on HeavyKeeper, which pairs a table of probabilistic counts, with exponential decay so that a light item loses ground against a heavy one, with a min-heap of the K leaders.
 
-Trending hashtags and detecting denial of service are typical uses, and the sizing is the width from K times its log and the depth from the log of K. The commands are reserve, add, query and list.
+Trending hashtags and detecting denial of service are typical uses. The width is sized from K times its log and the depth from the log of K. The commands are reserve, add, query and list.
 
 For a trend that means the last hour, not the whole history, keep a sketch for each short bucket, say each minute, and merge the last 60 for the answer, dropping the oldest bucket as the window moves.
 

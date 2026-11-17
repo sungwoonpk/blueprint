@@ -82,7 +82,7 @@ An open breaker needs a plan for the callers. Fowler suggests a fallback: queue 
 
 Operations need to see it. Log each state change, expose the state in metrics, alert when a breaker trips, and give operators a way to force it open or closed.
 
-The half open check can be a health probe and not a real request, so no user's request is spent on the test, and that rejected requests can be journaled and replayed later.
+The half open check can be a health probe and not a real request, so no user's request is spent on the test, and rejected requests can be journaled and replayed later.
 
 ## At the Edge of the Cluster
 

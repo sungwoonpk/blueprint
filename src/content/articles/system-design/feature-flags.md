@@ -46,7 +46,7 @@ const useNewRanking = await client.getBooleanValue(
 );
 ```
 
-- **The default value**: Required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case, so give the default some thought. The safe default is the old behavior
+- **The default value**: Required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case. Give the default some thought: the safe default is the old behavior
 - **The evaluation context**: Facts about the request, such as the user and the region, that the flag system uses to target. The targeting key should uniquely identify the subject
 - **The provider**: The translation layer between the evaluation API and the flag system in use, so the application code doesn't depend on a vendor
 

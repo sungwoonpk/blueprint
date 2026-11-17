@@ -93,7 +93,7 @@ A **Lamport clock** is a counter that respects this order. Each process incremen
 
 If a happened before b, then a's timestamp is lower than b's. The reverse doesn't hold: the email service's digest has timestamp 1 and the web send has timestamp 2, yet neither caused the other.
 
-A lower number doesn't prove a cause, and equal numbers can occur on different processes. Breaking ties by process id gives the events one total order, Lamport's own point: the order is arbitrary where events are concurrent. It agrees with causality and invents order between concurrent events.
+A lower number doesn't prove a cause, and equal numbers can occur on different processes. Breaking ties by process id gives the events one total order. It agrees with causality, and between concurrent events it invents an order, which Lamport pointed out is arbitrary.
 
 ## Spotting Concurrency: Vector Clocks
 

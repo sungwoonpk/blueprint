@@ -12,7 +12,7 @@ Their remedy was to break the long transaction into a sequence of shorter ones t
 
 ## Steps and Their Undo Steps
 
-For each step in the saga, someone writes an undo step. Some steps can't be undone, and There are three kinds:
+For each step in the saga, someone writes an undo step. Some steps can't be undone, and the steps come in three kinds:
 
 | Step | Undo Step | Kind |
 | --- | --- | --- |

@@ -12,7 +12,7 @@ Capacity planning covers two kinds of demand. **Organic growth** comes from natu
 - **Inorganic demand included**: The launches, campaigns and business events that the trend line doesn't show
 - **Regular load testing**: A test that connects raw capacity, such as servers and disks, to the service capacity users receive
 
-Provisioning has to be done quickly and just when it is needed, since capacity is expensive, and that it has to be done correctly, or the capacity isn't there when it is needed.
+Provisioning has to be done quickly and just when it is needed, since capacity is expensive, and it has to be done correctly, or the capacity isn't there when it is needed.
 
 Both sides cost something: too little breaks the service, and too much wastes money, which is the subject of [Balancing Cost and Performance](/system-design/cost-performance).
 

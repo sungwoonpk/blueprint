@@ -68,7 +68,7 @@ When the leader fails, a follower has to take over. The steps are the same every
 - **Noticing**: Detection is a guess, as in [Failure Detection and Gossip](/system-design/failure-detection). Patroni, a PostgreSQL manager, keeps a leader key in a store such as etcd with a lifetime of 30 seconds by default and a 10 second loop. MongoDB's election timeout defaults to 10 seconds, and the median time to elect a new primary is no more than 12 seconds. Google's Cloud SQL checks the primary once a second and reports about 60 seconds of unavailability during a failover
 - **Choosing**: The new leader should be the follower with the most data. Patroni refuses to promote a follower more than 1,048,576 bytes behind by default, which bounds the data that an asynchronous failover can lose. Patroni's synchronous mode will not promote a follower unless it is certain to have the acknowledged transactions, and it prefers unavailable writes to lost ones
 - **Switching**: Clients and proxies have to find the new leader. Cloud SQL keeps a shared IP address so that clients reconnect with the same connection string
-- **The old leader**: When it returns, it may hold writes that no one else saw. Something must tell it that it is no longer the primary, a practice called STONITH, and notes that without it both nodes can believe they are the primary and data is lost
+- **The old leader**: When it returns, it may hold writes that no one else saw. Something must tell it that it is no longer the primary, a practice called STONITH, and without it both nodes can believe they are the primary and data is lost
 
 ## Two Leaders
 

@@ -86,7 +86,7 @@ Two forms help new engineers on call. One is disaster role playing, where on-cal
 
 The other, under the heading Break Real Things, Fix Real Things, has the team break a real system on purpose, a search cluster in the book's example, and then fix it. Azure's guidance has a milder version, a tabletop exercise, in which the team talks through a scenario without touching anything.
 
-Disaster recovery needs its own tests. Use a dedicated environment so the test can't hurt production, and measures the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
+Disaster recovery needs its own tests. Use a dedicated environment so the test can't hurt production, and measure the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
 
 A test that finds a bug before release gives it a time to repair of zero, which is the logic behind each experiment here.
 

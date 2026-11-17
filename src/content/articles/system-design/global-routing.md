@@ -29,7 +29,7 @@ There are three reasons, and each one connects to something earlier:
 <figcaption>Each user goes to a nearby region that works, and a failed region is skipped</figcaption>
 </figure>
 
-Two tools do this routing. One answers with different [How DNS Works](/system-design/dns) addresses for different users. The other gives all the regions the same address and lets the network's own routing pick.
+Two tools do this routing. One answers with different addresses for different users, as in [How DNS Works](/system-design/dns). The other gives all the regions the same address and lets the network's own routing pick.
 
 ## Routing With DNS
 

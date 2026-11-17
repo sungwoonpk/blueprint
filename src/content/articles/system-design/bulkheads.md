@@ -70,7 +70,7 @@ The same idea works wherever resources are shared:
 
 - **Connection pools**: One for each downstream database or service, not one for the whole application
 - **Queues**: A separate queue for each kind of work, so a backlog of one doesn't delay another, as in [Message Queues and Pub/Sub](/system-design/message-queues)
-- **Instances**: A service instance for each large customer, for example
+- **Instances**: A service instance for each large customer
 - **Quotas for each customer**: One approach is to set a limit for each customer from negotiated agreements, so one team's heavy use can't exhaust the capacity of the others
 - **The platform**: Kubernetes limits a container's CPU and memory
 

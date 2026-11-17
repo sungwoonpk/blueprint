@@ -91,7 +91,7 @@ Virtual nodes help in two more ways. A server that leaves has its slices scatter
 
 And the number of points can follow the server's size, so a machine with twice the memory takes twice as many points, which is how Dynamo handles servers of different power.
 
-They also cost something. In Cassandra each extra token adds neighbors, which raises the probability of an outage, and that repair work grows with the number of tokens.
+They also cost something. In Cassandra each extra token adds neighbors, which raises the probability of an outage, and repair work grows with the number of tokens.
 
 ## Replicas and Beyond
 
@@ -126,7 +126,7 @@ class Ring:
         return self.ring[i % len(self.ring)][1]
 ```
 
-Each server is hashed at 100 points, and a key goes to the first point larger than its own hash, wrapping around at the end. The binary search makes a lookup cost O(log N),.
+Each server is hashed at 100 points, and a key goes to the first point larger than its own hash, wrapping around at the end. The binary search makes a lookup cost O(log N).
 
 Two warnings from the memcached wiki apply to any client side scheme. All clients must see the same server list, in the same order, or two web servers will disagree about where a key lives.
 

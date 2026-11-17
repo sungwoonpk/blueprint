@@ -100,7 +100,7 @@ The attack peaked at 1.35 Tbit a second and 126.9 million packets a second, from
 
 ## Defense in Layers
 
-Cloud providers draw the same line: network layer attacks are handled at the provider's edge, automatically or always on, and that the application layer needs rules you set up yourself.
+Cloud providers draw the same line: network layer attacks are handled at the provider's edge, automatically or always on, and the application layer needs rules you set up yourself.
 
 <figure class="diagram">
 <div class="flow">

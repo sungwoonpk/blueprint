@@ -92,7 +92,7 @@ The last line carries a caution. Once a Redis instance holds data you can't rebu
 
 A cache can disappear at any time, so the real source of truth should live elsewhere. For a session store, that means accepting that a failure logs people out, or backing it with a database.
 
-One more factor is the license. Redis OSS 7.2 was the last version under its older open source license, that Redis 8.0 Community Edition uses AGPLv3, which some organizations forbid, and that Valkey, a fork, is a more permissive option. Memcached is under the BSD license. Check what your organization allows before choosing.
+One more factor is the license. Redis OSS 7.2 was the last version under its older open source license, Redis 8.0 Community Edition uses AGPLv3, which some organizations forbid, and Valkey, a fork, is a more permissive option. Memcached is under the BSD license. Check what your organization allows before choosing.
 
 ## Key Points
 

@@ -14,7 +14,7 @@ Teams don't yet know what users want, a microservice setup carries a productivit
 
 He calls the evidence sparse and his advice tentative, and notes that the view is by no means unanimous.
 
-A split buys and costs these:
+Here is what a split buys and what it costs:
 
 | Benefit | Cost |
 | --- | --- |

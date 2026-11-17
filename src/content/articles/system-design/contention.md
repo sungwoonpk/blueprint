@@ -29,7 +29,7 @@ At Read Committed, a single `UPDATE ... WHERE stock > 0` is safe, because after 
 
 At the stricter levels, applications must be prepared to retry transactions because of serialization failures: a conflicting writer gets `could not serialize access due to concurrent update`, and a serializable transaction can fail with SQLSTATE 40001. The retry has to repeat the whole transaction, not just the failed statement.
 
-Under Serializable, unique constraint violations can appear where a serial run wouldn't produce them, unless the inserters check for the key first, and it advises short transactions.
+Under Serializable, unique constraint violations can appear where a serial run wouldn't produce them, unless the inserters check for the key first, and transactions should stay short.
 
 ## Tool One: Make the Check Part of the Write
 

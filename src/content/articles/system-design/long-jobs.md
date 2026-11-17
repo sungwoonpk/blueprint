@@ -92,7 +92,7 @@ The activities do the work with side effects, and their results are recorded, so
 
 The parts have documented defaults and limits:
 
-- **Activity retries**: An initial interval of 1 second, a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts by default, and a limit on the total retry time is better than a limit on attempts
+- **Activity retries**: An initial interval of 1 second, a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts by default; a limit on the total retry time is better than a limit on attempts
 - **Timeouts**: Each attempt has a start to close timeout, which should be set, and a heartbeat timeout tells the server that a long activity is alive. A heartbeat can also carry progress details that the next attempt reads, which is a checkpoint
 - **History size**: A hard limit of 51,200 events or 50 MB for an execution, with warnings after 10,240 events or 10 MB. A long workflow periodically continues as a new execution, with its state passed on, to stay under the limit
 

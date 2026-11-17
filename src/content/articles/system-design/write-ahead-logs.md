@@ -8,7 +8,7 @@ The textbook app's purchase from that topic changes four places: a listing, an o
 
 The database keeps its tables and indexes in files made of pages, and edits the pages in memory first. Writing each edited page to its place on disk at each commit would be slow, since the pages are scattered. And a crash halfway through would leave some pages new and others old.
 
-The answer is the **write-ahead rule**, a change may reach the data files only once the log entry that describes it is safe on disk. The log is a single file that is only ever appended to. Here is what the purchase writes to it, in a simplified form:
+The answer is the **write-ahead rule**: a change may reach the data files only once the log entry that describes it is safe on disk. The log is a single file that is only ever appended to. Here is what the purchase writes to it, in a simplified form:
 
 ```text
 LSN 101  T42  update listings page 17    status open -> sold

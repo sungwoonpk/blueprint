@@ -114,7 +114,7 @@ Warehouses are usually loaded in batches. OLAP data is updated periodically, fro
 
 ## Why Warehouses Are Fast at Scans
 
-The warehouse isn't only a copy. It is built to read huge amounts quickly. The ingredients are known. Columnar storage keeps each column together, which drastically reduces disk I/O, and values of one kind compress well together.
+The warehouse isn't only a copy. It is built to read huge amounts quickly. A few ingredients do it. Columnar storage keeps each column together, which drastically reduces disk I/O, and values of one kind compress well together.
 
 Massively parallel processing spreads a query over many compute nodes, each working on its share of the rows. And storage can be separated from compute, so each can grow independently.
 
