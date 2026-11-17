@@ -10,7 +10,7 @@ This topic covers what to measure, how to build the questions, how to score the 
 
 ## Start With the Criteria
 
-Anthropic's guidance on testing says to begin with success criteria, and that they should be specific, measurable, achievable and relevant. Its examples are concrete: an F1 score of at least 0.85 on a held out set of 10,000 posts, or fewer than 0.1 percent of outputs flagged as toxic in 10,000 trials.
+Begin with success criteria, and make them specific, measurable, achievable and relevant. Concrete examples: an F1 score of at least 0.85 on a held out set of 10,000 posts, or fewer than 0.1 percent of outputs flagged as toxic in 10,000 trials.
 
 It lists common dimensions, and says the list isn't complete: task fidelity, consistency, relevance and coherence, tone and style, privacy preservation, context utilization, latency and price.
 
@@ -32,7 +32,7 @@ Anthropic's design principles for the questions are short. Be specific to the ta
 
 - **Real traffic**: Questions from logs, with personal data removed, which show what students really ask
 - **Written by experts**: Cases that matter and are rare, such as a policy with an exception
-- **Generated**: The Ragas documentation describes building a knowledge graph of the documents and making single hop and multi hop questions, each in a specific and an abstract form, with a reference answer and its source passages
+- **Generated**: Build a knowledge graph of the documents and make single hop and multi hop questions, each in a specific and an abstract form, with a reference answer and its source passages
 - **Adversarial**: Attempts to extract another user's data or to make the model ignore its rules
 - **Unanswerable**: Questions the documents don't cover, to test that the helper says so
 
@@ -48,7 +48,7 @@ The Claude documentation sorts graders by speed and nuance. Code based grading, 
 
 A model as grader is fast and flexible and has to be tested for reliability first. Its tips include a detailed rubric, a constrained output such as a score from 1 to 5, and a different model as the judge than the one that wrote the answer.
 
-The research on model judges is encouraging and specific about the limits. The MT-Bench paper found that strong judges such as GPT-4 reach over 80 percent agreement with human preferences, the level at which humans agree with each other.
+Research on model judges is encouraging and specific about the limits. In the MT-Bench study, strong judges such as GPT-4 reached over 80 percent agreement with human preferences, the level at which humans agree with each other.
 
 It also names the biases: position, verbosity and self-enhancement, and limited reasoning ability. In practice that means swapping the order of the two answers, controlling for length, and checking the judge against labels from a person.
 
@@ -134,7 +134,7 @@ At 100 questions, B scored below A in 20 percent of runs although it is truly be
 Two more points from the paper:
 
 - **Grouped questions**: When several questions come from the same document, they aren't independent, and standard errors that account for the groups can be over 3 times larger. Its example on one reading benchmark was 1.34 points against 0.44 for the naive figure
-- **Repeated sampling**: Asking the same question several times and averaging reduces the noise from the model, and the paper advises against lowering the temperature as a way to do it
+- **Repeated sampling**: Asking the same question several times and averaging reduces the noise from the model, and lowering the temperature is not a good way to do it
 
 When the effect you care about is small, plan the set size before building it, with the power formula of the paper, and when you can't afford the size, say that differences under the half width are not established.
 

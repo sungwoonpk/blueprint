@@ -10,9 +10,9 @@ That freedom is what makes agents useful, and what makes them costly, slow and r
 
 Anthropic's article on building effective agents draws the line. In a **workflow**, language models and tools are orchestrated through predefined code paths. In an **agent**, the model dynamically directs its own process and tool use.
 
-Its advice is to find the simplest solution possible, and to increase complexity just when needed. Agentic systems often trade latency and cost for better results on a task, and the article notes that optimizing a single call with retrieval and examples is often enough.
+The advice is to find the simplest solution possible, and to increase complexity just when needed. Agentic systems often trade latency and cost for better results on a task, and optimizing a single call with retrieval and examples is often enough.
 
-The article lists patterns between a single call and a free agent, which are workflows:
+Between a single call and a free agent sit patterns called workflows:
 
 | Pattern | The Idea | In the Textbook App |
 | --- | --- | --- |
@@ -22,11 +22,11 @@ The article lists patterns between a single call and a free agent, which are wor
 | Orchestrator Workers | A model splits the task as it goes and delegates | Compare many books across sellers |
 | Evaluator Optimizer | One call generates, another critiques, in a loop | Draft a seller message and check it against the rules |
 
-Routing here is the idea of [Caching and Model Routing](/system-design/llm-cost-latency), and the first pattern needs no loop. Prefer these when the steps are known. An agent is for the cases where they aren't, and the article recommends sandboxed testing and guardrails for it, with a stopping condition such as a maximum number of iterations.
+Routing here is the idea of [Caching and Model Routing](/system-design/llm-cost-latency), and the first pattern needs no loop. Prefer these when the steps are known. An agent is for the cases where they aren't, and it needs sandboxed testing and guardrails, with a stopping condition such as a maximum number of iterations.
 
 ## The Loop
 
-The Claude documentation describes how tool use works. You give the model tool definitions, each with a name, a description and an input schema. When the model wants a tool, its response ends with a stop reason of `tool_use` and one or more tool call blocks.
+Tool use works like this. You give the model tool definitions, each with a name, a description and an input schema. When the model wants a tool, its response ends with a stop reason of `tool_use` and one or more tool call blocks.
 
 For tools that run in your application, your code runs the call and sends the output back in a result block inside the next user message. The model then continues. When it answers in plain text, the loop is over. Some tools, such as web search, run on the provider's servers and need no code from you.
 
@@ -76,7 +76,7 @@ Without a cache, doubling the steps from 20 to 40 multiplied the cost by 3.6. Wi
 
 The time grows in a straight line, about 1.1 seconds a step, and a user watching a 40 step task waits 44 seconds. Keep the start of the prompt stable for the cache, and use the trimming of [Managing Context Windows and Memory](/system-design/context-memory) for long runs, since old tool results are most of the tokens.
 
-Independent calls should run together. The documentation says the model may call several tools in one response by default, that independent calls that read data suit parallel execution, and that each call needs its own result in the next message.
+Independent calls should run together. The model may call several tools in one response, independent calls that read data suit parallel execution, and each call needs its own result in the next message.
 
 For comparing three books, three lookups in sequence took 3.3 seconds in our arithmetic and a single round of three took 1.3 seconds. A setting in the tool choice turns parallel calls off when ordering matters.
 
@@ -105,7 +105,7 @@ The last row assumes that a failed step gets two retries, each succeeding 70 per
 
 The Claude documentation points the same way: return a tool error with `is_error` set, write instructive error messages, and the model retries two or three times with corrections before giving up. A message such as "Rate limit exceeded. Retry after 60 seconds" teaches the model what to do, and a bare "failed" teaches it little.
 
-The tau-bench paper measured agents on this. It simulates a conversation between a user, played by a language model, and an agent with tools and policy rules, and checks the final state of a database against the intended one. Its metric, pass^k, asks whether the agent succeeds on the same task in each of k trials.
+The tau-bench benchmark measures this. It simulates a conversation between a user, played by a language model, and an agent with tools and policy rules, and checks the final state of a database against the intended one. Its metric, pass^k, asks whether the agent succeeds on the same task in each of k trials.
 
 The abstract reports that function calling agents of 2024 succeeded on fewer than half of the tasks, and that pass^8 was under 25 percent in the retail domain.
 
@@ -117,7 +117,7 @@ Anthropic's article spends most of its appendix on tools, and says its team spen
 
 The idea is to design the interface so mistakes are hard to make, which it calls poka-yoke, from the Japanese term for mistake proofing.
 
-The Claude documentation adds specifics:
+Some specifics help:
 
 - **Describe each tool at length**: It calls the description by far the most important factor in tool performance, and advises at least three or four sentences covering what the tool does, when to use it and not, what each parameter means, and caveats
 - **Fewer, broader tools**: Combine related actions into one tool with an action parameter, and prefix names with the service
@@ -131,7 +131,7 @@ A shared tool is also a shared attack surface, so the points below apply to it a
 
 ## Limiting What an Agent Can Do
 
-An agent acts on outputs it can't fully control. OWASP names the risk excessive agency: damaging actions taken in response to unexpected, ambiguous or manipulated model output, whether from a hallucination or from a prompt injection.
+An agent acts on outputs it can't fully control. The risk is called excessive agency: damaging actions taken in response to unexpected, ambiguous or manipulated model output, whether from a hallucination or from a prompt injection.
 
 It traces it to excessive functionality, such as a tool that can delete when the task needs a read, excessive permissions, such as a database identity with write rights, and excessive autonomy, such as deleting without asking the user.
 
@@ -142,9 +142,9 @@ Its mitigations are the familiar ones of access control:
 - **The user's own context**: Run tools with the user's identity and the least scope, as in [Authentication and Authorization](/system-design/authn-authz)
 - **Approval for high impact actions**: A person confirms before the action
 - **Authorize downstream**: The system behind the tool checks the permission, not the model
-- **Sanitize inputs and outputs**: Treat tool results as untrusted text, since the Claude documentation says to keep them inside result blocks and out of system prompts
+- **Sanitize inputs and outputs**: Treat tool results as untrusted text, so keep them inside result blocks and out of system prompts
 
-OWASP adds that logging and rate limiting limit the damage and don't prevent it. [Guardrails](/system-design/guardrails) goes further.
+Logging and rate limiting limit the damage and don't prevent it. [Guardrails](/system-design/guardrails) goes further.
 
 For the helper, the tools sort by what they can change:
 

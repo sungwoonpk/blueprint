@@ -10,9 +10,9 @@ The way to do that is to organize the vectors so that a query can skip most of t
 
 The simplest index is no index. A scan compares the query with each vector and is exact.
 
-The FAISS guidance says that with a few searches, in its example 1,000 to 10,000, the time to build an index isn't repaid, so direct computation is best, and it lists the flat index as the one choice that guarantees exact results.
+With a few searches, say 1,000 to 10,000, the time to build an index isn't repaid, so direct computation is best, and the flat index is the one choice that guarantees exact results.
 
-The pgvector extension for PostgreSQL does the same by default: its README says the search is exact, with perfect recall, until you add an approximate index.
+The pgvector extension for PostgreSQL does the same by default: the search is exact, with perfect recall, until you add an approximate index.
 
 Memory speed sets the cost. With the pgvector storage of 4 bytes for each number plus 8 bytes for the vector, a 1,024 dimension vector takes 4,104 bytes. We assumed 50 GB a second of memory bandwidth, as in the last topic:
 
@@ -60,7 +60,7 @@ We used 64 lists. The knob is the number of lists probed:
 
 Probing 2 lists found 98.7 percent of the true neighbors with 4.5 percent of the work. Probing more bought little, and probing each list is a scan.
 
-The pgvector README gives the sizing rule: a number of lists equal to the rows divided by 1,000 up to a million rows, and the square root of the rows beyond that, with the probes near the square root of the lists.
+A sizing rule for pgvector: a number of lists equal to the rows divided by 1,000 up to a million rows, and the square root of the rows beyond that, with the probes near the square root of the lists.
 
 Its default is 1 probe, which our table shows is the least accurate setting. Two operational facts: the index is trained, so it should be built after the table holds data, and the FAISS guidance asks for training sets of 30 to 256 times the number of lists.
 
@@ -93,7 +93,7 @@ Both families got above 93 percent recall for around 5 percent of a scan. Two ca
 
 And clustered data favors lists. Don't read the tables as a ranking of the families. They show that each has a knob that trades work for recall, and that you have to pick the setting from measured recall.
 
-The documentation gives the practical differences. FAISS calls HNSW the best option with a lot of memory or a small dataset, needs no training, and stores for each vector the vector plus 8 times M bytes for the links, and it doesn't support removing vectors. pgvector's defaults are 16 links, a build candidate list of 64 and a search list of 40, and its README says HNSW has a better speed and recall tradeoff than IVFFlat, with slower builds and more memory. Both can be tuned by the same logic as our tables.
+The practical differences are these. HNSW suits a lot of memory or a small dataset, needs no training, and stores for each vector the vector plus 8 times M bytes for the links, and some libraries don't support removing vectors. pgvector's defaults are 16 links, a build candidate list of 64 and a search list of 40, and HNSW has a better speed and recall tradeoff than IVFFlat, with slower builds and more memory. Both can be tuned by the same logic as our tables.
 
 ## Memory Is the Vectors
 
@@ -111,9 +111,9 @@ The graph is cheap and the vectors are not. At 1,024 dimensions a vector takes 4
 
 pgvector offers half precision vectors at 2 bytes a number, and bit vectors at one bit a dimension. FAISS lists product quantization, which stores a short code for each vector, and RaBitQ at about one bit a dimension plus 8 bytes.
 
-Milvus's documentation reports that its 8 bit scalar quantization with lists cuts disk and memory by 70 to 75 percent.
+Scalar quantization to 8 bits, combined with lists, cuts disk and memory by 70 to 75 percent in Milvus.
 
-Compression loses accuracy, so the pattern is to search the compressed index for a larger set of candidates and then re-rank them with the full vectors, which pgvector's README suggests for scale and FAISS supports with a refine step.
+Compression loses accuracy, so the pattern is to search the compressed index for a larger set of candidates and then re-rank them with the full vectors, which pgvector suggests at scale and FAISS supports with a refine step.
 
 For data beyond memory, DiskANN, a NeurIPS 2019 paper, keeps the graph on a solid state drive.
 
@@ -121,7 +121,7 @@ Its abstract reports indexing a billion points on a single workstation with 64 G
 
 ## Filters Change the Problem
 
-Real queries carry conditions: a course, a price range, a status. The vector index doesn't know about them. The pgvector README says that a `WHERE` clause is applied after the index scan, and gives an example: if 10 percent of the rows match and the search list holds 40, about 4 rows come back on average.
+Real queries carry conditions: a course, a price range, a status. The vector index doesn't know about them. In pgvector a `WHERE` clause is applied after the index scan. For example, if 10 percent of the rows match and the search list holds 40, about 4 rows come back on average.
 
 We tested that. The graph search with a candidate list of 40 returned the nearest 40, then the filter removed the rows that didn't match. We varied the share of rows that match, and compared it with checking the filter while walking the graph and with an exact scan of the matching rows alone:
 
@@ -135,11 +135,11 @@ Filtering afterward matched the documentation, 3.7 rows against its 4, and colla
 
 Filtering during the walk returned the full 10 rows in each case, at a cost that grew as the filter tightened, and at 1 percent it cost 69 times as much as scanning the matching rows directly.
 
-That points to a planner: estimate how many rows match, scan the matches when there are few, and walk the graph when there are many. The pgvector README recommends a B-tree index on the filter column for selective filters, which gives exact search, partial indexes for a few values, and partitioning for many.
+That points to a planner: estimate how many rows match, scan the matches when there are few, and walk the graph when there are many. For selective filters, a B-tree index on the filter column gives exact search, partial indexes cover a few values, and partitioning covers many.
 
 Since version 0.8.0 it has iterative scans that keep going until enough rows pass the filter, bounded by a maximum number of scanned tuples, default 20,000.
 
-Qdrant's documentation says payload indexes speed up filtering and advises creating them before ingesting data, and its description of the planner, as we read it, falls back to a scan when few points match.
+Qdrant builds payload indexes to speed up filtering, best created before ingesting data, and its planner falls back to a scan when few points match.
 
 <figure class="diagram">
 <div class="flow">
@@ -152,7 +152,7 @@ Qdrant's documentation says payload indexes speed up filtering and advises creat
 <figcaption>A filter planner: scan the matches when they are few, walk the graph when they are many</figcaption>
 </figure>
 
-Tenants are the same problem in disguise. A shared approximate index lets one tenant's vectors affect the recall of another's, and the README suggests list partitioning for isolation, the choice of [Isolating Tenants in a Shared System](/system-design/multi-tenancy).
+Tenants are the same problem in disguise. A shared approximate index lets one tenant's vectors affect the recall of another's, and list partitioning gives isolation, the choice of [Isolating Tenants in a Shared System](/system-design/multi-tenancy).
 
 Pinecone's filters support operators such as equality, ranges and membership in a list of up to 10,000 values, so the filter language is rarely the limit. The cost of selective filters is.
 
@@ -165,7 +165,7 @@ An index is a derived copy of the data, and it has the problems of any other:
 - **Freshness**: A new listing has to be embedded and added, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
 - **A new model**: Vectors from two models don't mix, so build the new index beside the old and switch, as in [Migrating Between Datastores Without Downtime](/system-design/migrating-datastores)
 - **Recall in production**: Compare the index against an exact scan on a sample of queries, which pgvector shows how to do by disabling the index scan for one query, and graph the recall like any other metric
-- **Different results after indexing**: The README warns that results change after an approximate index is added, so tests that expect exact order break
+- **Different results after indexing**: Results change after an approximate index is added, so tests that expect exact order break
 
 ## Choosing
 
@@ -178,7 +178,7 @@ An index is a derived copy of the data, and it has the problems of any other:
 | Billions of vectors | An IVF index with compression, or a disk based graph |
 | Strict tenant isolation | Partitions or a collection for each tenant |
 
-The dedicated engines, such as Qdrant, Milvus and Pinecone, add managed scaling, richer filters and several index types. Milvus's documentation notes that the flat index is the one that guarantees exact results, and lists graph, list and quantized variants for the rest.
+The dedicated engines, such as Qdrant, Milvus and Pinecone, add managed scaling, richer filters and several index types. The flat index is the one that guarantees exact results, and graph, list and quantized variants cover the rest.
 
 A separate service also adds a network hop and a second copy to keep in sync, so a database you already run is a fair first step.
 

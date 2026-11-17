@@ -21,15 +21,15 @@ Two ideas follow. If the model provider can keep the work done for the prefix, t
 
 ## Reuse the Prefix
 
-**Prompt caching** keeps the processed form of the start of a prompt, so a later request that begins the same way skips the work. The three provider pages we read agree on the shape and differ in the details:
+**Prompt caching** keeps the processed form of the start of a prompt, so a later request that begins the same way skips the work. The major providers agree on the shape and differ in the details:
 
-- **Anthropic**: The prefix is built in the order tools, then system, then messages, and a breakpoint marks the end of what to cache. A hit needs prompt segments that are identical, and the documentation says caching has no effect on the output. The default lifetime is 5 minutes and each use refreshes it at no extra cost, with a 1 hour option. It prices a 5 minute write at 1.25 times the base input price, a 1 hour write at 2 times and a read at 0.1 times, with lower read prices on some models. A prompt shorter than the minimum, which is 512 tokens on the current models listed and larger on older ones, isn't cached and returns no error
-- **OpenAI**: Caching is on by default for supported models, with a discount of up to 95 percent on cached input tokens, and the stored data is the model's internal key and value tensors, not the text. Minimums and retention depend on the model, with 1,024 tokens and a default of 30 minutes on the newest. The documentation notes that the cache lives on individual machines, so heavy traffic can cause misses
+- **Anthropic**: The prefix is built in the order tools, then system, then messages, and a breakpoint marks the end of what to cache. A hit needs prompt segments that are identical, and caching has no effect on the output. The default lifetime is 5 minutes and each use refreshes it at no extra cost, with a 1 hour option. It prices a 5 minute write at 1.25 times the base input price, a 1 hour write at 2 times and a read at 0.1 times, with lower read prices on some models. A prompt shorter than the minimum, which is 512 tokens on the current models listed and larger on older ones, isn't cached and returns no error
+- **OpenAI**: Caching is on by default for supported models, with a discount of up to 95 percent on cached input tokens, and the stored data is the model's internal key and value tensors, not the text. Minimums and retention depend on the model, with 1,024 tokens and a default of 30 minutes on the newest. The cache lives on individual machines, so heavy traffic can cause misses
 - **Gemini**: Implicit caching is on by default for 2.5 and newer models, with minimums of 2,048 to 4,096 tokens depending on the model. Its advice is to put large common content first and to send requests with a similar start close together in time
 
 The rules are the same everywhere. Put what is stable first and what changes last.
 
-Anything that changes the text before the breakpoint breaks the match: Anthropic's documentation lists changes to tool definitions, adding images, and an unstable order of keys in JSON as causes. A timestamp at the top of the prompt turns each request into a miss.
+Anything that changes the text before the breakpoint breaks the match: Changes to tool definitions, added images, and an unstable order of keys in JSON are common causes. A timestamp at the top of the prompt turns each request into a miss.
 
 <figure class="diagram">
 <div class="flow">
@@ -70,7 +70,7 @@ At the helper's registration day rate of tens of requests a second, the prefix i
 
 If the saved work covers the prefix, the time for the first token fell too: our estimate went from about 360 ms to about 80 ms for the 850 tokens that remain.
 
-Some practices come from the documentation. An entry becomes available after the first response begins, so a burst of parallel first requests misses, and Anthropic describes a warm up request with `max_tokens` set to zero to prepare the cache.
+Two practices help. An entry becomes available after the first response begins, so a burst of parallel first requests misses, and a warm up request with `max_tokens` set to zero can prepare the cache.
 
 Read the usage fields that report tokens written and read, since the hit rate is a number to watch. A cache that is shared by a heavy tenant is a reason to look at [Isolating Tenants in a Shared System](/system-design/multi-tenancy).
 
@@ -88,11 +88,11 @@ Exact matching misses paraphrases: "is this the 9th edition" and "which edition 
 
 The tools we read describe the same design. GPTCache states that it uses a vector store for similarity search and warns that false positives on hits and false negatives on misses occur.
 
-Redis's LangCache service has a similarity threshold, the minimum score to count as a match, and a time to live, both editable, and its documentation says that a response served from cache costs no output tokens.
+A semantic cache has a similarity threshold, the minimum score to count as a match, and a time to live, both editable. A response served from the cache costs no output tokens.
 
 A Redis article, which is vendor material without sources, gives starting points: a threshold between 0.85 and 0.95 on cosine similarity, a start at 0.90 to 0.95 while watching false positives, and the remark that if false positives exceed 3 to 5 percent, tuning the threshold alone won't fix it.
 
-It suggests lifetimes of 5 to 15 minutes for prices and stock, 1 to 4 hours for product descriptions and 24 hours for stable text, and an extra 5 to 20 ms for the vector search. An AWS database article adds jitter to the lifetimes, so entries don't expire at once and cause a burst of calls.
+Reasonable lifetimes are 5 to 15 minutes for prices and stock, 1 to 4 hours for product descriptions and 24 hours for stable text, and the vector search adds 5 to 20 ms. Add jitter to the lifetimes, so entries don't expire at once and cause a burst of calls.
 
 The threshold is a trade between two errors, and we simulated it. The similarity scores are invented: paraphrases of one question score around 0.90 and different questions around 0.60, with the best of five near misses taken for each lookup. In the stream, 60 percent of the questions had an equivalent earlier one:
 
@@ -121,11 +121,11 @@ The distributions are our assumptions, so the shape carries over and the numbers
 
 ## Route to the Right Model
 
-Models in one family differ in speed and price. Anthropic's model overview marks its smallest tier as the fastest and suggests it for high volume, latency sensitive work such as classification, extraction and routing.
+Models in one family differ in speed and price. The smallest tier is the fastest and suits high volume, latency sensitive work such as classification, extraction and routing.
 
 The list prices it showed when we read it were 0.10 dollars for each million input tokens and 0.50 for output on the smallest tier, and 2 and 10 on the next, a ratio of 20 times. Prices move, so take the ratio as an illustration.
 
-Two research papers study how to use that gap. FrugalGPT, from 2023, names three strategies: adapt the prompt, approximate the model, and cascade through models.
+Research has studied how to use that gap. FrugalGPT names three strategies: adapt the prompt, approximate the model, and cascade through models.
 
 Its abstract says fees differ by two orders of magnitude and claims up to 98 percent lower cost for the quality of the best single model, or 4 percent better accuracy at the same cost.
 
@@ -203,7 +203,7 @@ The layers fit in an order, cheapest first:
 
 A request first tries the answer caches, then goes to the model chosen by the router, and the prompt cache works inside that call. The providers also offer discounts for batch work.
 
-Anthropic's overview lists 50 percent off for its batch interface, which fits the overnight jobs of [Model Serving](/system-design/model-serving). When capacity runs short, the same switch that routes by difficulty can route by load, the graceful degradation of [Load Shedding and Graceful Degradation](/system-design/load-shedding).
+Batch interfaces are often priced at about half, which fits the overnight jobs of [Model Serving](/system-design/model-serving). When capacity runs short, the same switch that routes by difficulty can route by load, the graceful degradation of [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
 ## What to Measure
 

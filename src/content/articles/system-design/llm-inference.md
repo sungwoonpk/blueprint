@@ -12,7 +12,7 @@ A model reads and writes **tokens**, pieces of text that are often a word or par
 
 One token is chosen, appended to the text, and the process repeats until the model emits a stop token or hits a limit. Prices, limits and speeds are stated in tokens for this reason.
 
-The model behind this is the Transformer, introduced in a 2017 paper. It dropped recurrence and relied on attention alone, which made training easier to spread over many processors. For serving, attention has a consequence: to write the next token, the model looks back at each earlier token.
+The model behind this is the Transformer. It dropped recurrence and relied on attention alone, which made training easier to spread over many processors. For serving, attention has a consequence: to write the next token, the model looks back at each earlier token.
 
 <figure class="diagram">
 <div class="flow">
@@ -27,15 +27,15 @@ The model behind this is the Transformer, introduced in a 2017 paper. It dropped
 <figcaption>The two phases of one request: read the prompt once, then write one token for each step</figcaption>
 </figure>
 
-NVIDIA's inference guide describes the two phases. In prefill, the model processes the input tokens to produce the keys and values that the first new token needs. The guide calls this a matrix by matrix operation that is highly parallel and uses the GPU fully.
+The two phases behave differently. In prefill, the model processes the input tokens to produce the keys and values that the first new token needs. It is a matrix by matrix operation, highly parallel, and it uses the GPU fully.
 
-In decode, tokens come out one at a time, each step needs the keys and values of the earlier tokens, and the guide calls it a matrix by vector operation that leaves the GPU's compute underused.
+In decode, tokens come out one at a time, each step needs the keys and values of the earlier tokens, and it is a matrix by vector operation that leaves the GPU's compute underused.
 
-Anthropic's streaming documentation shows how an application sees this: with streaming on, the response arrives as server sent events, a start event, a series of small text deltas, and a stop event. The first words can reach the student while later ones are still being computed, which fits how decode works.
+An application sees this through streaming: with streaming on, the response arrives as server sent events, a start event, a series of small text deltas, and a stop event. The first words can reach the student while later ones are still being computed, which fits how decode works.
 
 ## Two Phases, Two Bottlenecks
 
-Why does the second phase matter more? The NVIDIA guide says decode is memory bound: the speed of moving weights, keys and values from memory, and not the arithmetic, sets the latency. Each step reads the whole model to produce one token.
+Why does the second phase matter more? The reason is that decode is memory bound: the speed of moving weights, keys and values from memory, and not the arithmetic, sets the latency. Each step reads the whole model to produce one token.
 
 We put numbers on it with a roofline estimate. A step takes as long as the larger of two times: the time to read the bytes from memory, and the time to do the arithmetic.
 
@@ -82,31 +82,31 @@ For a short prompt, decode is nearly the whole wait. A long prompt moves the bal
 
 Without a memory of earlier work, each new token would redo the attention over the whole text. The **KV cache** keeps the keys and values already computed for each token, so a decode step adds one entry and reads the rest.
 
-The Hugging Face documentation describes it as storing these calculations so they can be reused without recomputing them.
+It stores these calculations so they can be reused without recomputing them.
 
-The cache is large. NVIDIA gives its size for a token as 2, for the key and the value, times the number of layers, times the hidden size, times the bytes for each number.
+The cache is large. Its size for one token is 2, for the key and the value, times the number of layers, times the hidden size, times the bytes for each number.
 
-For Llama 2 7B in 16 bit form at 4,096 tokens, the guide reports about 2 GB for one sequence, against about 14 GB for the weights. That is 512 KiB for each token by our arithmetic from the same formula.
+For a model like Llama 2 7B in 16 bit form at 4,096 tokens, one sequence takes about 2 GB, against about 14 GB for the weights. That is 512 KiB for each token by our arithmetic from the same formula.
 
-The PagedAttention paper, from the vLLM authors, works an example for a 13 billion parameter model: 800 KB for one token, and as much as 1.6 GB for a request of 2,048 tokens. On a 40 GB GPU it reports about 65 percent of memory going to the weights and close to 30 percent to the cache.
+A 13 billion parameter model makes the same point at a larger size: 800 KB for one token, and as much as 1.6 GB for a request of 2,048 tokens. On a 40 GB GPU, about 65 percent of memory goes to the weights and close to 30 percent to the cache.
 
 The cache has three consequences:
 
 - **It grows with each request**: Each token adds to it, and it stays until the answer ends
-- **It limits the batch**: The paper says the throughput of serving is memory bound, and just a few tens of requests fit when the cache is large
+- **It limits the batch**: The throughput of serving is memory bound, and just a few tens of requests fit when the cache is large
 - **It makes long contexts costly**: Memory and the read time at each step grow with the length of the prompt
 
 Several techniques shrink the pieces:
 
-- **Fewer key and value heads**: Multi query attention shares one set of keys and values among the heads, and grouped query attention shares among groups. NVIDIA names Llama 2 70B as a user of the second. Hugging Face reports that multi query attention cut one model's cache from 15 GB to under 400 MB at 16,000 tokens
-- **Smaller numbers**: Hugging Face gives a rule of thumb of about 2 GB of memory for each billion parameters in 16 bit form. In its test of a 15.5 billion parameter model, peak memory was about 29 GB at 16 bits, 15.2 GB at 8 bits and 9.54 GB at 4 bits. It also warns that inference time is often not reduced, and may rise
-- **Attention that moves less data**: FlashAttention computes exact attention in tiles, so less data moves between the GPU's main memory and its fast on chip memory. Its authors report about 3 times the speed for GPT-2 at 1,000 tokens
+- **Fewer key and value heads**: Multi query attention shares one set of keys and values among the heads, and grouped query attention shares among groups. Llama 2 70B uses the second. In one measured model, multi query attention cut the cache from 15 GB to under 400 MB at 16,000 tokens
+- **Smaller numbers**: A rule of thumb is about 2 GB of memory for each billion parameters in 16 bit form. For a 15.5 billion parameter model, peak memory was about 29 GB at 16 bits, 15.2 GB at 8 bits and 9.54 GB at 4 bits. Inference time is often not reduced, and may rise
+- **Attention that moves less data**: FlashAttention computes exact attention in tiles, so less data moves between the GPU's main memory and its fast on chip memory. It ran about 3 times faster for GPT-2 at 1,000 tokens
 
 ## Memory Decides the Batch
 
 The cache fills the memory left after the weights, and how it is allocated decides how many requests fit. Older serving systems reserved a block of the maximum length for each request, since the answer length isn't known in advance.
 
-The PagedAttention paper profiled such systems and found that 20.4 to 38.2 percent of the cache memory held real token states. The rest was reserved space, internal fragmentation and external fragmentation.
+Profiles of such systems found that just 20.4 to 38.2 percent of the cache memory held real token states. The rest was reserved space, internal fragmentation and external fragmentation.
 
 We simulated the same question with our assumed machine. After 14 GB of weights, 66 GB is free, room for about 125,900 tokens of cache. Request lengths, prompt plus answer, followed a skewed distribution with a median of 597 tokens and a mean of 812, capped at 4,096:
 
@@ -115,13 +115,13 @@ We simulated the same question with our assumed machine. After 14 GB of weights,
 | Reserve 4,096 Tokens for Each | 30 | 19.8% |
 | Blocks of 16 Tokens, as Needed | 153 | 99.0% |
 
-The reserved design used a fifth of its memory on tokens, in the range the paper measured. The second design fits five times as many requests. That is a bound from memory alone, and the step time at that batch size would be longer, as the batch table showed.
+The reserved design used a fifth of its memory on tokens, in the range measured for earlier serving systems. The second design fits five times as many requests. That is a bound from memory alone, and the step time at that batch size would be longer, as the batch table showed.
 
 The second design is **PagedAttention**. It borrows from the paging of an operating system: the cache of a request is split into fixed size blocks, a table maps the request's logical blocks to physical ones, and the blocks need not sit next to each other.
 
 A new block is handed out when the last one fills, so the waste of a request is at most part of one block.
 
-The paper reports that vLLM, built on it, gets near zero waste, shares cache blocks within and across requests, and improves throughput by 2 to 4 times over FasterTransformer and Orca at the same level of latency, with the gain larger for longer sequences and more complex decoding.
+vLLM, built on it, gets near zero waste, shares cache blocks within and across requests, and improves throughput by 2 to 4 times over FasterTransformer and Orca at the same level of latency, with the gain larger for longer sequences and more complex decoding.
 
 It reports memory savings of up to 55 percent from sharing in more complex decoding methods.
 
@@ -138,11 +138,11 @@ It reports memory savings of up to 55 percent from sharing in more complex decod
 
 ## Batching Without Waiting
 
-The batch has to be formed from requests that arrive at random times and finish at different times. The paper's background section names two problems with a simple method: early requests wait for later ones, or new requests wait for the current batch to end, and padding to equalize lengths wastes computation.
+The batch has to be formed from requests that arrive at random times and finish at different times. A simple method has two problems: early requests wait for later ones, or new requests wait for the current batch to end, and padding to equalize lengths wastes computation.
 
-The Orca paper, from OSDI 2022, proposed the fix, called iteration level scheduling: the scheduler decides the batch again after each step, so a finished request leaves at once and a waiting one joins after one iteration.
+The fix, first shown in the Orca system, is called iteration level scheduling: the scheduler decides the batch again after each step, so a finished request leaves at once and a waiting one joins after one iteration.
 
-NVIDIA calls the result in flight batching, and the vLLM documentation calls it continuous batching. The Orca authors report 36.9 times the throughput of FasterTransformer on a 175 billion parameter model at the same level of latency.
+The result is called continuous batching, or in flight batching. Orca reached 36.9 times the throughput of FasterTransformer on a 175 billion parameter model at the same level of latency.
 
 We simulated the difference. A server has 16 slots and a 10 ms step. Answer lengths are skewed, with a mean of 212 tokens and a cap of 1,000. Requests arrive at random, and the static policy takes up to 16 waiting requests, runs them until the longest one finishes, and returns the whole batch together:
 
@@ -170,11 +170,11 @@ Past 4 a second the static server is saturated at about 485 tokens a second, 30 
 
 The continuous server kept refilling slots, so latency stayed near the time of one answer, and throughput rose with the load.
 
-The same ideas appear in the feature list of vLLM's documentation, with chunked prefill, which handles a long prompt in pieces, prefix caching, which reuses the cache of a repeated prompt start, and the option to run prefill and decode on separate machines, which acknowledges that the two phases have different needs.
+The same ideas keep appearing in serving engines: chunked prefill, which handles a long prompt in pieces, prefix caching, which reuses the cache of a repeated prompt start, and the option to run prefill and decode on separate machines, which acknowledges that the two phases have different needs.
 
 ## Fewer Steps Per Answer
 
-Decode takes one step for each token, so another route is to take fewer steps of the large model. **Speculative decoding**, from a 2022 paper, has a small, fast model draft several tokens and the large model check them in a single pass, keeping the ones that agree.
+Decode takes one step for each token, so another route is to take fewer steps of the large model. **Speculative decoding** has a small, fast model draft several tokens and the large model check them in a single pass, keeping the ones that agree.
 
 The authors report 2 to 3 times faster output on T5-XXL with identical results, no retraining, and no change to the model's output distribution.
 
@@ -232,13 +232,13 @@ Set targets for the first two in the way of [SLIs, SLOs and Error Budgets](/syst
 - **Reserving the maximum length for each request**: Most of the memory holds no tokens
 - **Static batches for mixed answer lengths**: Short answers wait for long ones
 - **Judging speed by one user**: A busy server streams more slowly for each user
-- **Assuming smaller numbers speed things up**: Hugging Face measured slower inference in its test
+- **Assuming smaller numbers speed things up**: In some measured cases inference got slower, so measure the speed too
 - **No limit on the answer length**: One long answer holds a slot and cache for a long time
 
 ## Key Points
 
 - A model writes text one token at a time: prefill reads the prompt in parallel, and decode takes one step for each new token, reading the weights and the cache
 - Decode is limited by memory, not arithmetic: in our estimate, 7.26 ms of memory time against 0.09 ms of compute for one user, so batching raised throughput 19.5 times at a cost to each user's speed
-- The KV cache sets the batch: 512 KiB for each token in a 7B model, and reserving the maximum length wasted four fifths of memory in our simulation, in line with the 20.4 to 38.2 percent use the PagedAttention paper measured
+- The KV cache sets the batch: 512 KiB for each token in a 7B model, and reserving the maximum length wasted four fifths of memory in our simulation, in line with the 20.4 to 38.2 percent use measured in earlier serving systems
 - <u>Refill the batch at each step</u>: in our simulation, continuous batching kept latency near 2 seconds where a static batch took minutes under the same load
 - Measure time to first token, time per output token and throughput, and stream the answer so the first words arrive early

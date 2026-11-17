@@ -10,13 +10,13 @@ Most of these have familiar answers from earlier phases: queues, autoscaling, ca
 
 A web server handles a request with a function. A **model server** is a program built around a model held in accelerator memory. It owns the batching and the queue that [How LLM Inference Works](/system-design/llm-inference) showed were the main lever, and it exposes the model through an API.
 
-vLLM is one example. Its documentation describes an HTTP server started with `vllm serve` and a model name, compatible with several interfaces, including the OpenAI style routes for chat, completions and embeddings, plus a health route and a metrics route.
+vLLM is one example. One command, `vllm serve` with a model name, starts an HTTP server that speaks several interfaces, including the OpenAI style routes for chat, completions and embeddings, plus a health route and a metrics route.
 
-The chat route needs a chat template, and the documentation says that without one the server can't process chat requests and they return errors.
+The chat route needs a chat template, and without one the server can't process chat requests and they return errors.
 
 NVIDIA's Triton Inference Server is a more general model server that handles many kinds of models, and it makes the batching explicit. A model's configuration enables the dynamic batcher with one line. By default, per its documentation, the batcher forms batches as large as it can up to the model's maximum batch size, without waiting.
 
-An optional queue delay lets it wait a short time for a fuller batch. A list of preferred batch sizes also exists, which the documentation says is mainly for TensorRT, and its recommended process is to start with the plain setting, measure, and then add a delay or raise the maximum.
+An optional queue delay lets it wait a short time for a fuller batch. A list of preferred batch sizes also exists, mainly useful for TensorRT. The sound process is to start with the plain setting, measure, and then add a delay or raise the maximum.
 
 <figure class="diagram">
 <div class="flow">
@@ -35,9 +35,9 @@ The pieces around the model server are ordinary: a gateway for authentication an
 
 ## Three Ways to Call a Model
 
-Not each use needs an answer in seconds. The cloud providers draw the same line. Google's Vertex AI documentation says online inferences are synchronous requests to a model deployed to an endpoint, for requests made in response to application input, and that batch inferences are for cases where an immediate response isn't needed.
+Not each use needs an answer in seconds. The cloud providers draw the same line. An online inference is a synchronous request to a model deployed behind an endpoint, made in response to what a user just did. A batch inference is for cases where an immediate response isn't needed.
 
-Amazon SageMaker adds an asynchronous option: the caller stores the request, receives an identifier, and collects the result later, with payloads documented up to 1 GB and processing times up to one hour, and the ability to scale the instance count to zero when the queue is empty.
+Amazon SageMaker adds an asynchronous option: the caller stores the request, receives an identifier, and collects the result later, with payloads up to 1 GB and processing times up to one hour, and the ability to scale the instance count to zero when the queue is empty.
 
 | Mode | Fits | In the Textbook App |
 | --- | --- | --- |
@@ -58,11 +58,11 @@ Keeping the two workloads on separate replicas, each tuned for its goal, is usua
 
 ## GPUs Are Whole and Slow to Start
 
-Kubernetes treats a GPU as a named resource that a vendor's device plugin advertises, such as `nvidia.com/gpu`. Its documentation says to put GPUs in the `limits` section of a container, that a request is set equal to the limit by default, and that if both are given they must be equal.
+Kubernetes treats a GPU as a named resource that a vendor's device plugin advertises, such as `nvidia.com/gpu`. A container asks for GPUs in its `limits` section, the request is set equal to the limit by default, and if both are given they must be equal.
 
 The page doesn't describe sharing a GPU between pods, so check the vendor's plugin documentation if you need it. The practical consequence is that capacity comes in whole units, and an idle GPU is expensive.
 
-The other consequence is the start. Before a new replica takes a request, it has to pull the container image, load the weights into GPU memory, and warm up. SageMaker's serverless documentation names the parts of a cold start: the model size, the time to download it, and the container's startup time.
+The other consequence is the start. Before a new replica takes a request, it has to pull the container image, load the weights into GPU memory, and warm up. A cold start has three parts: the model size, the time to download it, and the container's startup time.
 
 We computed the middle step alone, for the 14 GB of weights of a 7B model in 16 bit form, at four assumed read speeds:
 
@@ -78,7 +78,7 @@ We computed the middle step alone, for the 14 GB of weights of a 7B model in 16 
 
 The image pull and the warm up are on top. A new replica from a slow store needs minutes, and larger models take proportionally longer, which is why the next section matters.
 
-vLLM's documentation also describes what happens when the cache runs out. Preempted requests are recomputed once enough cache is free again, and in the current version the default mode is recompute and not a swap to the host's memory.
+The engine also has a rule for when the cache runs out. Preempted requests are recomputed once enough cache is free again, and in the current version the default mode is recompute and not a swap to the host's memory.
 
 It warns that this can hurt end to end performance, and it lists remedies: more memory for the cache, a lower limit on sequences or on tokens per batch, or more parallelism.
 
@@ -88,11 +88,11 @@ It also says that chunked prefill is on by default whenever possible, and gives 
 
 Autoscaling on processor use doesn't suit a server that is limited by GPU memory and queue length.
 
-The signals that fit are the ones the model server reports. vLLM's metrics page lists, among others, the time to first token, the delay between tokens, the time a request spent waiting, the number of requests waiting and running, the use of the cache as a fraction, and a count of preemptions.
+The signals that fit are the ones the model server reports. vLLM exposes, among others, the time to first token, the delay between tokens, the time a request spent waiting, the number of requests waiting and running, the use of the cache as a fraction, and a count of preemptions.
 
-KServe, a model serving platform on Kubernetes, lists request based autoscaling in its description, and canary rollouts. Its README adds a caveat: a standard Kubernetes install doesn't support canary deployment and scale to zero, which need the Knative installation.
+KServe, a model serving platform on Kubernetes, offers request based autoscaling and canary rollouts. A caveat: a standard Kubernetes install doesn't support canary deployment and scale to zero, which need the Knative installation.
 
-Knative's documentation shows what a request based scaler looks like: a target number of concurrent requests for each replica, with a default of 100 and a hard limit that defaults to no limit, and a requests a second target defaulting to 200.
+Knative shows what a request based scaler looks like: a target number of concurrent requests for each replica, with a default of 100 and a hard limit that defaults to no limit, and a requests a second target defaulting to 200.
 
 Those defaults describe web services. One of our replicas handles about 6 requests a second in the simulation below, so the target has to come from measurement, as in [Autoscaling](/system-design/autoscaling) and [Capacity Planning](/system-design/capacity-planning).
 

@@ -8,7 +8,7 @@ This topic follows a question through that pipeline and tests the parts we can. 
 
 ## Why Retrieve
 
-The term comes from a 2020 paper by Patrick Lewis and colleagues. It combined a pretrained text generator, the parametric memory, with a dense vector index of Wikipedia that a retriever searches, the non parametric memory.
+The term comes from a 2020 research paper. It combined a pretrained text generator, the parametric memory, with a dense vector index of a large text collection that a retriever searches, the non parametric memory.
 
 Its abstract names two open problems for language models alone, providing provenance for their decisions and updating their knowledge, and presents the retrieval side as a route to both.
 
@@ -23,7 +23,7 @@ The costs are as real. Retrieval can miss the right passage, and then the model 
 
 ## Do You Need Retrieval
 
-Anthropic's contextual retrieval post makes a point that is easy to skip: if the knowledge base is smaller than about 200,000 tokens, roughly 500 pages, the post says you can put the whole thing in the prompt, which is sometimes the simplest solution.
+One point is easy to skip: if the knowledge base is smaller than about 200,000 tokens, roughly 500 pages, the whole thing fits in the prompt, which is sometimes the simplest solution.
 
 It frames the figure as a rough guide, from 2024, so check the limits of today's models.
 
@@ -38,7 +38,7 @@ We worked it out for the textbook app. 200 course pages of 12 sentences at about
 
 Stuffing the pages is simple, and a prompt cache from [Caching and Model Routing](/system-design/llm-cost-latency) cuts the price tenfold. Uncached it costs 39 to 430 times as much as retrieval for each question, and with the cache 4 to 43 times as much, and the cost grows with the collection. There is also a quality issue.
 
-The Lost in the Middle paper tested multi document question answering and found that performance is often highest when the relevant information is at the beginning or end of the input, and degrades when it is in the middle, even for models built for long inputs.
+Tests on multi document question answering found that performance is often highest when the relevant information is at the beginning or end of the input, and degrades when it is in the middle, even for models built for long inputs.
 
 The tests were on models from 2023, and newer ones may do better, so measure yours.
 
@@ -46,7 +46,7 @@ For a collection that is small and rarely changes, start by stuffing. Move to re
 
 ## The Pipeline
 
-RAG has an offline part, which prepares the collection, and an online part, which answers a question. The Azure Architecture Center lists the phases: chunking, enrichment, embedding, retrieval, and an end to end evaluation.
+RAG has an offline part, which prepares the collection, and an online part, which answers a question. It has these phases: chunking, enrichment, embedding, retrieval, and an end to end evaluation.
 
 <figure class="diagram">
 <p class="rowname">Offline</p>
@@ -72,23 +72,23 @@ RAG has an offline part, which prepares the collection, and an online part, whic
 
 The offline stages are:
 
-- **Chunking**: Split each document into pieces, each ideally holding a single idea, in the Azure guide's words
+- **Chunking**: Split each document into pieces, each ideally holding a single idea
 - **Enrichment**: Clean the chunks and attach metadata such as the title, the course, the semester and the access scope
 - **Embedding and indexing**: Store the vectors and the text, in the index of [Vector Databases](/system-design/vector-databases)
 
 The online stages are retrieval, which for most text should be a hybrid of keywords and vectors with a re-ranker, as in the last two topics, then packing the best chunks into the prompt with the question, and generating the answer.
 
-The Azure guide notes that standard RAG works well for queries that map to a single search against a single index, and lists query rewriting and decomposition for the harder ones.
+Standard RAG works well for queries that map to a single search against a single index, and query rewriting and decomposition help with the harder ones.
 
 ## Chunks Lose Their Context
 
 Chunking causes the most common failure. A chunk is cut from a page, and the sentence that says what it is about may sit in another chunk.
 
-Anthropic's post gives the example of a chunk that says revenue grew by 3 percent over the previous quarter and names neither the company nor the period. Searching for that company's revenue can't find it.
+Take a chunk that says revenue grew by 3 percent over the previous quarter and names neither the company nor the period. Searching for that company's revenue can't find it.
 
 Its remedy is contextual retrieval: before indexing, generate a short note of 50 to 100 tokens for each chunk saying where it comes from, and put it in front of the chunk for both the embeddings and the keyword index.
 
-Anthropic measured the share of failed retrievals, one minus the recall at 20, averaged across their test domains:
+A published measurement gives the share of failed retrievals, one minus the recall at 20, averaged across their test domains:
 
 <figure class="chart">
 <div class="hbars" role="img" aria-label="Share of failed retrievals for four setups">
@@ -102,7 +102,7 @@ Anthropic measured the share of failed retrievals, one minus the recall at 20, a
 
 Contextual embeddings cut the failures by 35 percent, adding contextual keywords brought it to 49 percent, and re-ranking the top 150 down to 20 brought it to 67 percent. These are the vendor's numbers on its own test sets.
 
-They show that the effect is large and which direction the pieces push, and your data decides the rest. The post also reports that 20 chunks worked better than 5 or 10 in its tests, with the caution that more text can distract, so the count is a tuning choice.
+They show that the effect is large and which direction the pieces push, and your data decides the rest. In the same tests 20 chunks worked better than 5 or 10, though more text can distract, so the count is a tuning choice.
 
 We rebuilt the failure in miniature. The corpus has 200 course pages of 12 sentences. The first sentence names the course, and a later sentence says, for example, "the required edition is" a value, with no course name in it, the way real pages continue under a heading.
 
@@ -131,7 +131,7 @@ Small plain chunks rarely found the answer, since each looked like the same sent
 
 Adding the title let the smallest chunks match, with 100 tokens in the prompt and not 1,080. The corpus is built to have this problem, so the numbers are an extreme case, and the direction matches the reports from Anthropic.
 
-The practical rules follow. Chunk by structure, such as a section or a policy, so that a chunk holds one idea. Carry the title and headings into the text that is indexed. And after a hit, a neighbor or the whole section can be added to the prompt, the chunk expansion that Pinecone's guide describes.
+The practical rules follow. Chunk by structure, such as a section or a policy, so that a chunk holds one idea. Carry the title and headings into the text that is indexed. And after a hit, a neighbor or the whole section can be added to the prompt, a step called chunk expansion.
 
 ## Packing the Prompt
 
@@ -144,29 +144,29 @@ The prompt has to carry the instructions, the passages and the question. A few p
 
 Claude's citations feature is one way to do the last. Each document block can enable citations, and the API returns the answer in pieces, each with pointers to the cited text.
 
-The documentation recommends putting each RAG chunk into a plain text document, says the cited text isn't counted toward output tokens, and says the pointers are guaranteed to refer to the documents provided. It makes no promise of a citation for each claim, and it can't be combined with structured outputs.
+Where a model API has a citations feature, put each RAG chunk into a plain text document. The cited text isn't counted toward output tokens, and the pointers are guaranteed to refer to the documents provided. There is no promise of a citation for each claim, and the feature can't be combined with structured outputs.
 
 ## Permissions and Freshness
 
 Retrieval is also where access control belongs. A model can't keep a secret that is in its prompt, so a passage the user may not see must not be retrieved.
 
-Apply the user's permissions as a filter in the search, as in [Vector Databases](/system-design/vector-databases), and keep tenants apart as in [Isolating Tenants in a Shared System](/system-design/multi-tenancy). The Azure guide says to enforce strict access controls to prevent privacy violations during retrieval and generation.
+Apply the user's permissions as a filter in the search, as in [Vector Databases](/system-design/vector-databases), and keep tenants apart as in [Isolating Tenants in a Shared System](/system-design/multi-tenancy). Enforce strict access controls during both retrieval and generation, so private text stays with the readers who may see it.
 
 Two more points on the data:
 
 - **Freshness**: A changed page has to reach the index, and a deleted one has to leave it, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
-- **Untrusted text**: A retrieved page is input from outside, and a page can contain instructions aimed at the model. The Azure guidance lists adversarial testing and sanitizing documents against indirect prompt injection, and [Guardrails](/system-design/guardrails) goes further
+- **Untrusted text**: A retrieved page is input from outside, and a page can contain instructions aimed at the model. Test adversarially and sanitize documents against indirect prompt injection, and [Guardrails](/system-design/guardrails) goes further
 
 ## Evaluate Each Stage
 
-A wrong answer can come from the search or from the writing, and the repair differs. The Ragas documentation defines measures for each side:
+A wrong answer can come from the search or from the writing, and the repair differs. Measures exist for each side:
 
 - **Context recall**: How many of the reference claims are found in the retrieved text, which needs a reference answer
 - **Context precision**: Whether the relevant chunks are ranked above the irrelevant ones, which depends on the order
 - **Faithfulness**: The share of the answer's claims that the retrieved context supports, so 1 supported claim out of 2 scores 0.5
 - **Response relevancy**: How closely the answer addresses the question, with no check on whether it is true
 
-The Azure evaluation guide adds groundedness, which is similar to faithfulness, along with completeness, utilization, relevance and correctness. Its example is useful: a groundedness of 0.9 with a correctness of 0.4 means an answer that follows its sources and is still wrong, which points at the sources.
+Groundedness, which is similar to faithfulness, joins completeness, utilization, relevance and correctness. An example is useful: a groundedness of 0.9 with a correctness of 0.4 means an answer that follows its sources and is still wrong, which points at the sources.
 
 Since model output varies, it advises a target range and not a single value. [Evaluation](/system-design/ai-evaluation) covers building the test set.
 
@@ -205,6 +205,6 @@ Since model output varies, it advises a target range and not a single value. [Ev
 
 - RAG retrieves passages and puts them in the prompt, so the model answers from current, checkable text, and the quality of the answer depends first on the retrieval
 - For a small collection, skip it: in our arithmetic, 43,200 tokens of pages cost $0.086 for each question uncached, against $0.0002 for five small chunks
-- <u>Chunks have to name their subject</u>: in our experiment, one sentence chunks found the answer 2 percent of the time plain and 100 percent with the page title, and Anthropic reports 35 to 67 percent fewer failed retrievals from adding context and re-ranking
+- <u>Chunks have to name their subject</u>: in our experiment, one sentence chunks found the answer 2 percent of the time plain and 100 percent with the page title, and published tests report 35 to 67 percent fewer failed retrievals from adding context and re-ranking
 - Pack a few good passages with ids, mind their order, and cite the sources, and apply permissions in the search, not in the prompt
 - Evaluate retrieval and generation separately, with recall, precision, faithfulness and correctness, since the fix depends on the stage that failed

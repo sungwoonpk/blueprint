@@ -8,11 +8,11 @@ That was the problem GFS solved, and the answers it gave shaped the next two dec
 
 ## The Assumptions Behind the Design
 
-GFS's authors began from the workload, not from the usual file system. Their paper lists observations that look unusual and turned out to be common: component failures are normal, files are huge, most files change by appending and rarely by overwriting, and applications read large streams more often than small random pieces.
+GFS began from the workload, not from the usual file system. Its designers saw things that look unusual and turned out to be common: component failures are normal, files are huge, most files change by appending and rarely by overwriting, and applications read large streams more often than small random pieces.
 
-The paper says that it co designed the file system with the applications, which allowed it to relax the interface, including its consistency rules.
+The file system was designed together with the applications, which allowed the interface to relax, including its consistency rules.
 
-HDFS's design page states the same ideas in its own words. Hardware failure is the norm and not the exception. Applications need a write once, read many access model.
+HDFS, the open source descendant, rests on the same ideas. Hardware failure is the norm and not the exception. Applications need a write once, read many access model.
 
 Streaming throughput matters more than latency, and files run from gigabytes to terabytes. It adds a principle that shaped what came next: moving the computation to the data is cheaper than moving the data to the computation.
 
@@ -22,7 +22,7 @@ The consequences are choices that would be wrong for a laptop's file system: ver
 
 A GFS cluster has one **master** and many **chunkservers**. A file is cut into fixed size **chunks** of 64 MB, each stored as an ordinary file on a chunkserver, and each chunk is copied to three chunkservers by default. The master holds the namespace, the map from files to chunks, and where each chunk's replicas are.
 
-It doesn't carry the data. A client asks the master where a chunk is, caches the answer, and then reads from a chunkserver directly. HDFS names the parts the **NameNode** and **DataNodes**, uses blocks of typically 128 MB and, as its design page puts it, user data doesn't flow through the NameNode.
+It doesn't carry the data. A client asks the master where a chunk is, caches the answer, and then reads from a chunkserver directly. HDFS names the parts the **NameNode** and **DataNodes**, uses blocks of typically 128 MB, and user data doesn't flow through the NameNode.
 
 <figure class="diagram">
 <p class="rowname">Metadata</p>
@@ -44,13 +44,13 @@ It doesn't carry the data. A client asks the master where a chunk is, caches the
 <figcaption>Control goes to the master, and the data goes straight to the chunkservers, which copy it along a chain</figcaption>
 </figure>
 
-The master keeps its metadata in memory, which makes it quick and lets it scan its whole state in the background to find chunks that need repair or moving. The GFS paper says it needs less than 64 bytes of metadata for each 64 MB chunk.
+The master keeps its metadata in memory, which makes it quick and lets it scan its whole state in the background to find chunks that need repair or moving. GFS needs less than 64 bytes of metadata for each 64 MB chunk.
 
 Changes to the namespace are recorded in an operation log on the master's disk and on remote machines, and the master takes checkpoints so that recovery replays a short log. HDFS uses the same pair under the names FsImage and EditLog.
 
-The big chunk is the key choice, and the paper gives its reasons. A client needs fewer trips to the master, since reads and writes within one chunk need one lookup. It can keep a connection to a chunkserver open over a long time.
+The big chunk is the key choice, for three reasons. A client needs fewer trips to the master, since reads and writes within one chunk need one lookup. It can keep a connection to a chunkserver open over a long time.
 
-And the metadata stays small enough for memory. The price is hot spots: a small file is one chunk, and many clients reading it hit the same three servers. The paper reports that this happened when an executable was written to GFS and hundreds of machines started it at once.
+And the metadata stays small enough for memory. The price is hot spots: a small file is one chunk, and many clients reading it hit the same three servers. This happened in GFS when an executable was written to it and hundreds of machines started it at once.
 
 Small files cost far more than their size, since each file takes at least one chunk entry. We computed it with the paper's 64 bytes for the textbook app's photos, 9 million of them at 300 KB, about 2.7 TB:
 
@@ -74,11 +74,11 @@ The primary assigns a serial order to the mutations, and the other replicas foll
 
 HDFS has the same pipeline, with the client sending to the first DataNode, which forwards to the second, and so on.
 
-The paper's measurements show where the limit comes from. With 16 chunkservers each taking 12.5 MB/s, the ceiling for aggregate writes was 67 MB/s, since each byte is written to 3 servers, and the clients achieved about half of it.
+Measurements show where the limit comes from. With 16 chunkservers each taking 12.5 MB/s, the ceiling for aggregate writes was 67 MB/s, since each byte is written to 3 servers, and the clients achieved about half of it.
 
 A single client wrote at 6.3 MB/s. The authors call writes slower than they would like and note that the aggregate rate across many clients was what mattered for their workloads.
 
-GFS also offers **record append**, where many clients add to one file and the system picks the offset. Each append is atomic and happens at least once, so a reader may see padding and duplicates and must handle them: the paper has writers add checksums and unique identifiers to records so that readers can skip the junk.
+GFS also offers **record append**, where many clients add to one file and the system picks the offset. Each append is atomic and happens at least once, so a reader may see padding and duplicates and must handle them: writers add checksums and unique identifiers to records so that readers can skip the junk.
 
 That is the pattern of [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work) applied inside a file system.
 
@@ -90,7 +90,7 @@ Placement decides what a failure costs. HDFS's default for three replicas puts t
 
 The design page's reasoning is that a rack failure is far less likely than a node failure, and the policy cuts the network traffic between racks for writes, at the price of storing a block in two racks and not three. GFS spreads replicas across racks too, and prefers chunkservers with less disk used.
 
-Failures are found by heartbeats. The HDFS paper gives a default interval of three seconds and declares a DataNode out of service after ten minutes without one, a delay the design page calls conservatively long, to avoid a storm of copying after a brief outage.
+Failures are found by heartbeats. HDFS defaults to an interval of three seconds and declares a DataNode out of service after ten minutes without one, a deliberately long delay that avoids a storm of copying after a brief outage.
 
 GFS detects stale replicas, ones that missed writes while down, with a version number for each chunk, and it detects corruption with a 32 bit checksum for each 64 KB block. [Failure Detection and Gossip](/system-design/failure-detection) covers the general problem.
 
@@ -98,7 +98,7 @@ When a node is declared dead, the system must make new copies, and the GFS maste
 
 To keep the copying from overwhelming clients, it limits the active clone operations for the cluster and for each server, and each clone's bandwidth.
 
-The paper reports two experiments. After killing a chunkserver with 15,000 chunks and 600 GB, with the limits set at 91 concurrent clones and 6.25 MB/s each, the whole set was restored in 23.2 minutes, at 440 MB/s.
+Two experiments show the pace. After killing a chunkserver with 15,000 chunks and 600 GB, with the limits set at 91 concurrent clones and 6.25 MB/s each, the whole set was restored in 23.2 minutes, at 440 MB/s.
 
 After killing two chunkservers of about 16,000 chunks each, the 266 chunks left with a single replica were back to at least two within 2 minutes, because they were copied first.
 
@@ -134,9 +134,9 @@ A system that copies fast and a placement that limits which nodes share chunks b
 
 One master is simple, and a risk. GFS keeps it small and fast: the operation log and checkpoints let a new master start quickly, and shadow masters can serve reads from a replica of the log, slightly behind the primary. HDFS clusters grew to a size where the NameNode was a real limit.
 
-The HDFS paper describes a Yahoo cluster of 3,500 nodes with about 60 million files and 63 million blocks, so each DataNode hosted about 54,000 block replicas, and it describes 25,000 servers holding 25 PB across their clusters. It also notes that GFS was evolving to many namespace servers, with a target of 100 million files each.
+One Yahoo cluster had 3,500 nodes with about 60 million files and 63 million blocks, so each DataNode hosted about 54,000 block replicas, and across its clusters 25,000 servers held 25 PB. GFS was evolving the same way, toward many namespace servers with a target of 100 million files each.
 
-The HDFS answer for availability, later than the paper, is a standby. The current documentation describes an active NameNode and a hot standby sharing an edit log kept on a group of JournalNodes.
+The HDFS answer for availability, later than the paper, is a standby. It runs an active NameNode and a hot standby that share an edit log kept on a group of JournalNodes.
 
 The active writes each change to a majority of at least 3 of them, the standby reads and applies it, and the journal accepts a single writer at a time, which prevents two active NameNodes.
 
@@ -144,14 +144,14 @@ Fencing, killing or cutting off the old active, is still advised. It is the majo
 
 ## Erasure Coding
 
-Three copies cost 200 percent extra. HDFS's erasure coding documentation says typical erasure coding costs no more than 50 percent.
+Three copies cost 200 percent extra. Typical erasure coding costs no more than 50 percent.
 
 With the default policy, called RS-6-3-1024k, each stripe has 6 data blocks and 3 parity blocks, so a file of 6 blocks takes 9 blocks of disk, where 3 copies take 18. Any 3 of the 9 can be lost.
 
-For 1 PB of data, that is 3 PB with replicas and 1.5 PB with the 6 and 3 code, a saving of 1.5 PB. The documentation lists the costs:
+For 1 PB of data, that is 3 PB with replicas and 1.5 PB with the 6 and 3 code, a saving of 1.5 PB. The costs are real:
 
 - **CPU**: Encoding and decoding take work on clients and DataNodes
-- **Network**: A striped file is spread over racks, so most reads and writes cross racks, and the documentation says network bisection bandwidth is very important. Rebuilding one lost block reads several of the others, at least 6 for this code by our arithmetic, where a replica copy reads one
+- **Network**: A striped file is spread over racks, so most reads and writes cross racks, and network bisection bandwidth becomes very important. Rebuilding one lost block reads several of the others, at least 6 for this code by our arithmetic, where a replica copy reads one
 - **Machines**: The 6 and 3 policy needs at least 9 DataNodes, and at least 3 racks to survive a rack, ideally more
 - **Features**: Append, truncate and the flush calls aren't supported on erasure coded files, and changing a file's policy means rewriting it
 

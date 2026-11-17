@@ -12,7 +12,7 @@ OpenAI's guide on optimizing accuracy lays the choices on two axes. One axis is 
 
 A failed test is one or the other. Missing knowledge is an in context problem, which retrieval or a fixed block of context fixes. A habit the model hasn't learned is a learned memory problem, which examples in the prompt or fine-tuning fix.
 
-Anthropic's prompt engineering overview puts a step before any of them. It lists two prerequisites: a clear definition of the success criteria for the use case, and some ways to test against those criteria empirically.
+A step comes before any of them, with two prerequisites: a clear definition of the success criteria for the use case, and some way to test against those criteria empirically.
 
 It adds that not each success criterion or failing test is best solved by prompt engineering, and that you can sometimes improve latency and cost more easily by choosing a different model.
 
@@ -34,13 +34,13 @@ It adds that not each success criterion or failing test is best solved by prompt
 <figcaption>Evaluate the prompt first, find which kind of failure remains, then pick the lever that matches</figcaption>
 </figure>
 
-The evaluation set is what makes the table usable. OpenAI calls a good prompt with an evaluation set of questions and ground truth answers the key output of the first stage, and suggests starting with about 20 or more pairs.
+The evaluation set is what makes the table usable. A good prompt plus an evaluation set of questions and ground truth answers is the key output of the first stage, and about 20 or more pairs is a fair start.
 
 Without it, each lever looks like it helps, and no lever can be shown to. [Evaluation](/system-design/ai-evaluation) covers building one.
 
 ## Start With the Prompt
 
-Prompt changes cost minutes and no training. OpenAI's guide says prompt engineering is typically the best place to start, and recommends squeezing as much accuracy out of the basic methods as you can before reaching for retrieval or fine-tuning. Some tasks, it notes, such as summarization, translation and code generation, may need no more.
+Prompt changes cost minutes and no training. Prompt engineering is typically the best place to start, and it pays to squeeze as much accuracy out of the basic methods as you can before reaching for retrieval or fine-tuning. Some tasks, such as summarization, translation and code generation, may need no more.
 
 The prompt has three parts to work on:
 
@@ -66,7 +66,7 @@ Both are single domain studies with their own models, so use them as direction a
 
 **Fine-tuning** continues training a model on examples of the input and the output you want. It is the lever for behavior: a style, a fixed format, a reliable reply to a hard instruction, or the same quality from a smaller model with a shorter prompt.
 
-OpenAI's guide suggests starting with at least 50 examples, favors quality over quantity, and advises making the examples look like production inputs, including the retrieved context if the system uses retrieval, and keeping a hold out set to test on.
+Start with at least 50 examples, favor quality over quantity, and make the examples look like production inputs, including the retrieved context if the system uses retrieval, and keeping a hold out set to test on.
 
 Full fine-tuning updates each weight, which is expensive. **LoRA**, the low rank adaptation method from 2021, freezes the pretrained weights and adds small trainable matrices to each layer.
 
@@ -74,7 +74,7 @@ Its abstract reports that, compared with fine-tuning a 175 billion parameter mod
 
 We worked out the size for a model shaped like the 7B one of [How LLM Inference Works](/system-design/llm-inference): 32 layers and a hidden size of 4,096. Adapting the query and value matrices of each layer at rank 8 trains 4.2 million parameters, 0.06 percent of 7 billion.
 
-The adapter file is about 8.4 MB, against 14 GB for the weights, so 100 adapters take under 1 GB. That is why a server can hold one base model and many adapters, a feature that vLLM's documentation lists as multi LoRA.
+The adapter file is about 8.4 MB, against 14 GB for the weights, so 100 adapters take under 1 GB. That is why a server can hold one base model and many adapters, a feature that serving engines call multi LoRA.
 
 The costs are elsewhere. Someone has to produce and check the examples, and someone has to rerun the evaluation each time. We estimated it with round numbers of our own.
 
@@ -105,7 +105,7 @@ Facts show the same pattern. If 10 facts change each week and each change meant 
 
 ## Combine Them With Care
 
-OpenAI's guide says the two kinds of optimization are additive, not exclusive, and that RAG and fine-tuning are often combined: retrieval for what the model should know, tuning for how it should answer. It also shows the other side.
+The two kinds of optimization add up and don't exclude each other, and RAG and fine-tuning are often combined: retrieval for what the model should know, tuning for how it should answer. The other side also holds.
 
 In its case study, adding retrieval to a fine-tuned model lowered the score from 87 to 83 on a language task measured with BLEU, since the problem was behavioral and the extra context didn't address it. A lever helps when it matches the failure.
 

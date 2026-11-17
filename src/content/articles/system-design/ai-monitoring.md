@@ -6,7 +6,7 @@ An AI system needs the signals of [Logs, Metrics and Traces](/system-design/obse
 
 ## The Usual Signals First
 
-Google's SRE book names four golden signals: latency, traffic, errors and saturation. They apply here, with some additions. The book's warnings carry over as well. Errors include the implicit kind, wrong content returned with a 200, and the kind defined by policy, such as a response over a time limit.
+Four golden signals apply here, with some additions: latency, traffic, errors and saturation. The old warnings carry over as well. Errors include the implicit kind, wrong content returned with a 200, and the kind defined by policy, such as a response over a time limit.
 
 Averages hide the tail: its example is a service averaging 100 ms at 1,000 requests a second where 1 percent of the requests still take about 5 seconds. In our simulation of [How LLM Inference Works](/system-design/llm-inference), the continuous batching server had a mean latency of 2.1 seconds and a 95th percentile of 6.3.
 
@@ -21,7 +21,7 @@ Averages hide the tail: its example is a service averaging 100 ms at 1,000 reque
 | Inputs | Topic mix and length of requests | Shows the world changing |
 | Safety | Blocks, flags, and refused actions | Shows attacks and false blocks |
 
-The model API gives some of this for free. The response reports the tokens read, written and cached. It also reports why generation stopped, with values for a natural end, hitting the token limit, a tool call, a refusal and an overflowing context window, according to the Claude documentation.
+The model API gives some of this for free. The response reports the tokens read, written and cached. It also reports why generation stopped, with values for a natural end, hitting the token limit, a tool call, a refusal and an overflowing context window.
 
 Counting the stop reasons gives three cheap error signals: the share of answers cut off by the token limit, the share of refusals, and the share that overflowed the window. A rise in any of them says something changed.
 
@@ -44,7 +44,7 @@ With these records, a bad answer can be replayed, traced to the passage or the t
 
 ## Watch the Inputs Drift
 
-The world the system sees changes, and the system may not. Evidently's guide defines **data drift** as a change in the distribution of the inputs a model receives in production.
+The world the system sees changes, and the system may not. **Data drift** is a change in the distribution of the inputs a model receives in production.
 
 It lists ways to measure it: summary statistics, statistical tests such as Kolmogorov-Smirnov for numbers and chi-square for categories, distance measures such as the Wasserstein distance, Jensen-Shannon divergence and the population stability index, and simple rules, such as an alert when a new category appears.
 

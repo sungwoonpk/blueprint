@@ -8,11 +8,11 @@ A larger window postpones the problem and costs money while it does. This topic 
 
 ## What Fills the Window
 
-Anthropic's documentation lists what counts: the system prompt, each message including tool results, images and documents, the tool definitions, and the model's output, including its thinking. Newer models listed there have windows of 1 million tokens and the older ones 200,000.
+Everything counts: the system prompt, each message including tool results, images and documents, the tool definitions, and the model's output, including its thinking. Newer models have windows of 1 million tokens and older ones 200,000.
 
 A request whose input alone exceeds the window gets an error, and one whose output runs out of room stops with a reason that says so. A token counting call lets you measure before sending, and the usage fields report what each response consumed, including cached tokens.
 
-A bigger window doesn't mean the model uses it evenly. The documentation names **context rot**: accuracy and recall degrade as the token count grows. Two papers measured pieces of this:
+A bigger window doesn't mean the model uses it evenly. This is called **context rot**: accuracy and recall degrade as the token count grows. Two research results measured pieces of it:
 
 - **Lost in the Middle**: Performance is often highest when the relevant information is at the beginning or end of the input, and degrades when it is in the middle, even for models built for long contexts
 - **RULER**: Models that score near perfectly on the simple needle in a haystack test show large drops as the length grows on harder tasks. Of 17 models claiming 32,000 tokens or more, about half kept satisfactory performance at 32,000
@@ -72,17 +72,17 @@ The student's budget from turn 2 is gone at turn 12, and the model will suggest 
 
 Tool results are bulky and age quickly. Anthropic's context editing, a beta feature at the time of writing, clears the oldest tool results on the server once the input passes a trigger, replaces each with a placeholder, and keeps the most recent few. The client keeps the full history, and an option clears the tool inputs too.
 
-The documentation warns that clearing invalidates cached prefixes, and recommends a setting for the least amount to clear so that the saving is worth the cache write. For the helper this is the natural first step, since the 800 token listing lookups are most of the history and the answers that used them stay.
+Clearing invalidates cached prefixes, so set a minimum amount to clear, so that the saving is worth the cache write. For the helper this is the natural first step, since the 800 token listing lookups are most of the history and the answers that used them stay.
 
 ### Summarize and compact
 
 A **summary** replaces older turns with a short text, written by the model. Anthropic's compaction runs in three ways: on demand from your code, by a threshold on the server, or with a summarizer you write.
 
-For the threshold form, the documentation gives a default trigger of 150,000 input tokens with a minimum of 50,000, and a default summary prompt that asks for the state, the next steps and the learnings.
+For the threshold form, a typical default trigger is 150,000 input tokens with a minimum of 50,000, and the summary prompt asks for the state, the next steps and the learnings.
 
 A custom prompt replaces that default, so it can ask for what matters to your task, such as the student's budget and the books being compared.
 
-Summaries have costs. The model that summarizes is the one you pay for, the documentation describes images and documents in the summarized range as lost, and a system message inside that range is summarized too, so check that the instructions you need stay in the prompt after compaction. A summary also drops detail you didn't think to ask for.
+Summaries have costs. The model that summarizes is the one you pay for, images and documents in the summarized range are lost, and a system message inside that range is summarized too, so check that the instructions you need stay in the prompt after compaction. A summary also drops detail you didn't think to ask for.
 
 ### Start a new window with notes
 
@@ -104,7 +104,7 @@ MemGPT, a 2023 paper, described the same idea as an operating system would: virt
 
 Anthropic's memory tool is a concrete form. It is client side and file based: the model asks to view, create, replace, insert, delete or rename files under a `/memories` directory, and your code carries out each request against storage you control.
 
-When the tool is present the API adds an instruction to look in the directory first, and warns the model that its context might be reset at any moment, which is the right mindset for a long task. The documentation lists what the developer owns:
+When the tool is present the API adds an instruction to look in the directory first, and warns the model that its context might be reset at any moment, which is the right mindset for a long task. The developer owns the rest:
 
 - **Path safety**: Check that each path stays inside the memory directory, and reject traversal tricks
 - **Size limits**: Cap file sizes and the text returned from a view

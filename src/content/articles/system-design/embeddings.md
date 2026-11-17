@@ -16,7 +16,7 @@ The MTEB benchmark, which covers 8 task types, 58 datasets and 112 languages for
 
 ## From Words to Vectors
 
-The idea of representing words as vectors learned from text goes back to word2vec, a 2013 paper that described two model designs for computing continuous vector representations of words from very large data sets, trained on 1.6 billion words in under a day. The same idea was extended to whole sentences.
+The idea of representing words as vectors learned from text goes back to word2vec in 2013, which computed such vectors from very large data sets, 1.6 billion words in under a day. The same idea was extended to whole sentences.
 
 The Sentence-BERT paper of 2019 explains why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which the authors put at about 65 hours.
 
@@ -102,7 +102,7 @@ Dimensions matter because of storage and speed. For 3 million listings with 1,02
 <figcaption>Storage for 3 million listings of 1,024 numbers, by format, from our arithmetic</figcaption>
 </figure>
 
-Voyage's documentation describes the options: 8 bit integers cut storage to a quarter, binary vectors to a thirty second, and models trained for it, called Matryoshka, allow keeping the leading dimensions, for instance 256 of 1,024, and normalizing again.
+There are options: 8 bit integers cut storage to a quarter, binary vectors to a thirty second, and models trained for it, called Matryoshka, allow keeping the leading dimensions, for instance 256 of 1,024, and normalizing again.
 
 Each choice trades some accuracy for space, and the trade has to be measured on your own data, as in our dimensions table.
 
@@ -116,7 +116,7 @@ A new listing must be embedded and added, which is the freshness problem of [Kee
 
 ## Combine With Keywords
 
-A hybrid search runs both and merges the results. Elastic's documentation describes it as running full text and vector search in one request and returning one ranked list, and it recommends **reciprocal rank fusion**.
+A hybrid search runs both and merges the results. It runs full text and vector search in one request and returns one ranked list, and a common way to merge is **reciprocal rank fusion**.
 
 For each list that contains a document, the document earns 1 divided by a constant plus its rank in that list, and the scores add up.
 
@@ -130,7 +130,7 @@ Filters belong in the same request. A student who wants calculus books under 20,
 
 The vectors are computed ahead of time, which makes them fast and approximate. A **cross-encoder** reads the query and a candidate together, which is slower and more precise.
 
-The Sentence Transformers documentation describes the standard two stage design: a bi-encoder retrieves a list of candidates by cosine similarity, and a cross-encoder re-ranks them. BEIR found re-ranking models best on average, at high cost, which is why they run on a short list.
+The standard design has two stages: a bi-encoder retrieves a list of candidates by cosine similarity, and a cross-encoder re-ranks them. BEIR found re-ranking models best on average, at high cost, which is why they run on a short list.
 
 <figure class="diagram">
 <div class="flow">
@@ -149,7 +149,7 @@ The Sentence Transformers documentation describes the standard two stage design:
 
 A model produces one vector for a text, and a long text blurs into an average. A syllabus with 40 topics becomes a vector that matches each of them poorly. The usual answer is to split the text into **chunks** and embed each one.
 
-Pinecone's guide calls fixed size chunking the most common and simple approach, and recommends starting there. Its suggestion is to test smaller chunks of 128 or 256 tokens, which capture finer meaning, against larger ones of 512 or 1,024, which keep more context.
+Fixed size chunking is the most common and simple approach, and a good place to start. Then test smaller chunks of 128 or 256 tokens, which capture finer meaning, against larger ones of 512 or 1,024, which keep more context.
 
 Its test for a good chunk is a human one: if the text makes sense without the text around it, it will make sense to the model. After a hit, fetching the neighboring chunks restores context.
 
