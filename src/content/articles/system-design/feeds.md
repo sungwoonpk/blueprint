@@ -8,7 +8,7 @@ A feed is a read heavy product with an awkward shape. Each user's feed is differ
 
 ## Why It Is Hard
 
-Three numbers frame the problem. Twitter's engineers described its timeline service in 2012: about 300,000 requests a second spent reading timelines against about 6,000 a second on writes, which is about 50 reads for each write.
+Three numbers frame the problem. Twitter's timeline service in 2012 spent about 300,000 requests a second reading timelines against about 6,000 a second on writes, which is about 50 reads for each write.
 
 Those figures are from a time long past, so they show the shape and not today's system. Meta's TAO, the store behind its social graph, handles over a billion reads and millions of writes each second, which puts reads even further ahead.
 
@@ -48,21 +48,19 @@ When reads dominate, work moved from the read to the write pays off: do it once,
 <figcaption>Where the work happens: at read time for pull, at post time for push</figcaption>
 </figure>
 
-Twitter's description of its push design is a useful example:
+Twitter's push design is a useful example. A timeline is a list of ids: a Redis list of 800 entries for each user, holding tweet ids and a few flag bits, not the text. The text is fetched by id when the page is built, a step called hydration.
 
-- **A timeline is a list of ids**: A Redis list of 800 entries for each user, holding tweet ids and a few flag bits, not the text. The text is fetched by id when the page is built, a step called hydration
-- **Active users get one**: Those who logged in within about 30 days. The others have no stored timeline, which saves memory, the limiting resource
-- **Copies**: Each timeline is held on three machines
-- **Rebuilding**: A lost timeline is reconstructed from the social graph and the stored tweets of the accounts followed
-- **Asynchronous delivery**: The tweet request returns quickly, and the fan-out happens behind a queue
+Only active users get a stored timeline, those who logged in within about 30 days, which saves memory, the limiting resource.
+
+Each timeline is held on three machines, and a lost one is reconstructed from the social graph and the stored tweets of the accounts followed. Delivery is asynchronous: the tweet request returns quickly, and the fan-out happens behind a queue.
 
 The costs of push show up with large accounts. A tweet from an account with 20,000 followers causes up to 20,000 inserts.
 
-The write up notes that a tweet by a million follower account takes seconds to fan out, with 3.5 seconds at the median to reach 1 million followers and up to 5 minutes at the 99th percentile, against a goal of 5 seconds.
+A tweet by a million follower account takes seconds to fan out, 3.5 seconds at the median to reach 1 million followers and up to 5 minutes at the 99th percentile, against a goal of 5 seconds.
 
-It also describes the compromises: a celebrity's reply can arrive before the original, and some followers see a post minutes before others.
+The compromises are visible: a celebrity's reply can arrive before the original, and some followers see a post minutes before others.
 
-The remedy it points to is a hybrid: for the few accounts with huge audiences, skip the fan-out and merge their recent posts into the timeline at read time. The text says Twitter was moving toward doing more of the work on reads for those users.
+The remedy is a hybrid. For the few accounts with huge audiences, skip the fan-out and merge their recent posts into the timeline at read time, which means doing more of the work on reads for those users.
 
 ## What the Hybrid Buys
 
@@ -78,12 +76,11 @@ Each account posts once a day and each user opens the feed 25 times a day. A poo
 | Hybrid, Pull Above 2,000 Followers | 8,028,759 | 54,281,025 | 0.2 s |
 | Hybrid, Pull Above 500 Followers | 6,777,367 | 85,565,825 | 0.1 s |
 
-Each row is a position on a trade:
+Each row is a position on a trade. Pure pull moved 250 million lookups to the read side, 50 for each feed open. Pure push did 10 million inserts, 50 times fewer operations, and the biggest account took 12.4 seconds to fan out.
 
-- **Pure pull** moved 250 million lookups to the read side, 50 for each feed open
-- **Pure push** did 10 million inserts, 50 times fewer operations, and the biggest account took 12.4 seconds to fan out
-- **The hybrid at 10,000 followers** treated 38 accounts as pulled, and each user merged on average 4.9 of them at read time. It cut the slowest fan-out to 1.0 second, and raised the lookups from 5 million to 29.6 million
-- **Lower thresholds** pushed more of the work to reads: each step lowered the inserts and the worst delay, and raised the lookups
+The hybrid at 10,000 followers treated 38 accounts as pulled, and each user merged on average 4.9 of them at read time.
+
+It cut the slowest fan-out to 1.0 second, and raised the lookups from 5 million to 29.6 million. Lower thresholds pushed more of the work to reads: each step lowered the inserts and the worst delay, and raised the lookups.
 
 <figure class="chart">
 <div class="hbars" role="img" aria-label="Slowest fan-out in seconds for four designs">
@@ -99,11 +96,11 @@ The right threshold depends on which is scarce: read capacity, write capacity, o
 
 ## Storing a Feed
 
-A feed system is three stores with different needs:
+A feed system is three stores with different needs. The post store holds the posts themselves, by id, written once and read by id many times, a natural fit for the caches of [Scaling Reads](/system-design/scaling-reads).
 
-- **The post store**: The posts themselves, by id, written once and read by id many times, a natural fit for the caches of [Scaling Reads](/system-design/scaling-reads)
-- **The social graph**: Who follows whom, read in both directions: the accounts a user follows, and the followers of an account. Meta's TAO is built for this. It models objects and typed, time stamped associations, offers point and range queries, has no server side traversals, and is sharded across hundreds of thousands of shards, each in one MySQL database and one set of cache servers
-- **The timelines**: A per user list of ids, in memory, capped in length
+The social graph holds who follows whom, read in both directions: the accounts a user follows, and the followers of an account. Meta's TAO is built for this.
+
+It models objects and typed, time stamped associations, offers point and range queries, has no server side traversals, and is sharded across hundreds of thousands of shards, each in one MySQL database and one set of cache servers. The timelines are the third store: a per user list of ids, in memory, capped in length.
 
 The usual timeline structure is a capped list. In Redis, `LPUSH` adds to the head in constant time, `LTRIM` cuts the list to a fixed length, and `LRANGE` reads a window.
 
@@ -121,7 +118,7 @@ Rows skipped by an `OFFSET` still have to be computed, so a large offset can be 
 
 The fix is a **cursor**, also called keyset pagination: the client sends back the position of the last item it saw, and the server returns the items after it.
 
-Slack's API shows a typical form: the client sends an opaque `cursor` and a `limit`, the server returns `next_cursor`, empty at the end, and the query is `WHERE id <= cursor ORDER BY id DESC LIMIT limit`, asking for one more than the limit to know whether another page exists.
+A typical API form: the client sends an opaque `cursor` and a `limit`, the server returns `next_cursor`, empty at the end, and the query is `WHERE id <= cursor ORDER BY id DESC LIMIT limit`, asking for one more than the limit to know whether another page exists.
 
 The cursor is an encoded value, so clients treat it as opaque and the server can change its contents. Two costs: the cursor needs a unique, ordered column, and the client can't jump to page 500. For a feed that is an acceptable price.
 
@@ -135,11 +132,13 @@ Keep ranking out of the storage layer: the timeline holds candidates, and scorin
 
 ## Edge Cases That Bite
 
-- **A new follow**: The new account's old posts aren't in the follower's timeline, so copy its last few posts in, or merge them at read time
-- **An unfollow, a block or a deletion**: Filter at hydration, which is cheap, and clean the stored lists in the background
-- **A cold timeline**: A user who returns after months has no stored list, so rebuild from the graph, and limit concurrent rebuilds so a wave of returning users doesn't become a stampede
-- **A backlog**: A big account's fan-out queue delays the small ones behind it, so use separate queues for big and small accounts, as in [Bulkheads](/system-design/bulkheads)
-- **New posts while reading**: Show a prompt that new items are available and don't shift the list under the user, with live delivery from [Pushing Live Updates to Clients](/system-design/push-updates)
+A few edge cases bite. A new follow has no old posts in the follower's timeline, so copy the account's last few posts in, or merge them at read time. An unfollow, a block or a deletion is filtered at hydration, which is cheap, and the stored lists are cleaned in the background.
+
+A cold timeline, for a user who returns after months, has no stored list, so rebuild it from the graph, and limit concurrent rebuilds so a wave of returning users doesn't become a stampede.
+
+A backlog in a big account's fan-out queue delays the small ones behind it, so use separate queues for big and small accounts, as in [Bulkheads](/system-design/bulkheads).
+
+And new posts that arrive while reading should show a prompt that new items are available and not shift the list under the user, with live delivery from [Pushing Live Updates to Clients](/system-design/push-updates).
 
 ## A Plan for the Textbook App
 
