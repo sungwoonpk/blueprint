@@ -10,22 +10,17 @@ The laws set rules for both, and the rules turn into design requirements. The be
 
 ## The Rules in Brief
 
-Three regimes matter for an app with students in several places, and each has its own text:
+Three regimes matter for an app with students in several places, and each has its own text. The GDPR, the European Union's General Data Protection Regulation, covers the personal data of people in the Union. The CCPA, California's Consumer Privacy Act, has its own rights and enforcement and applies to businesses above thresholds.
 
-- **GDPR**: The European Union's General Data Protection Regulation covers the personal data of people in the Union
-- **CCPA**: California's Consumer Privacy Act, with its own rights and enforcement, applies to businesses above thresholds
-- **PIPA**: South Korea's Personal Information Protection Act, enforced by the Personal Information Protection Commission, which publishes its fines. We couldn't retrieve the statute text, so this topic doesn't describe it. Check the local law for the users you serve
+The third is South Korea's Personal Information Protection Act, enforced by the Personal Information Protection Commission, which publishes its fines. We couldn't retrieve the statute text, so this topic doesn't describe it. Check the local law for the users you serve.
 
-The GDPR's definitions set the vocabulary:
+The GDPR's definitions set the vocabulary. **Personal data** is any information relating to an identified or identifiable natural person, directly or indirectly, such as a name, an identification number, location data or an online identifier. **Processing** is any operation on personal data, and storing it counts.
 
-- **Personal data**: Any information relating to an identified or identifiable natural person, directly or indirectly, such as a name, an identification number, location data or an online identifier
-- **Processing**: Any operation on personal data, and storing it counts
-- **Controller**: The party that determines the purposes and means of processing, which is the textbook app
-- **Processor**: A party that processes data on behalf of the controller, such as the email provider, which needs a contract that says so
+The **controller** is the party that determines the purposes and means of processing, which is the textbook app. A **processor** is a party that processes data on behalf of the controller, such as the email provider, which needs a contract that says so.
 
 ## Principles as Requirements
 
-Article 5 of the GDPR lists principles that read like design requirements:
+The GDPR's Article 5 lists principles that read like design requirements:
 
 | Principle | What It Asks of the System |
 | --- | --- |
@@ -57,12 +52,13 @@ Minimization pays here. Each field not collected is a field that doesn't need pr
 
 ## Rights as Features
 
-The laws give people rights that the system has to support:
+The laws give people rights that the system has to support, and each right becomes a feature.
 
-- **Access**: Under Article 15 of the GDPR, a person can ask whether data about them is processed and receive a copy, with information about purposes, recipients, storage period and rights
-- **Portability**: Article 20 gives the data a person provided back in a structured, commonly used and machine readable format, where the processing is based on consent or a contract and is automated
-- **Erasure**: Article 17 requires erasure without undue delay on grounds such as data no longer being necessary or consent being withdrawn, and it has exceptions, including a legal obligation and the defence of legal claims
-- **Correction and objection**: Fixing wrong data, and stopping some kinds of processing
+Access is the first. Under Article 15 of the GDPR, a person can ask whether data about them is processed and receive a copy, with information about purposes, recipients, storage period and rights.
+
+Portability, in Article 20, gives back the data a person provided in a structured, commonly used and machine readable format, where the processing is based on consent or a contract and is automated.
+
+Erasure, in Article 17, requires deletion without undue delay on grounds such as data no longer being necessary or consent being withdrawn, and it has exceptions, including a legal obligation and the defence of legal claims. Correction and objection complete the set: fixing wrong data, and stopping some kinds of processing.
 
 The two main regimes compare like this:
 
@@ -132,18 +128,15 @@ Article 33 sets the clock for breaches. The controller notifies the supervisory 
 
 A processor tells the controller without undue delay. The notice describes the nature of the breach, a contact point, the likely consequences and the measures taken, and the controller documents each breach so the authority can check.
 
-For engineers, the 72 hours begin at awareness, and the team can meet it just with some preparation:
+For engineers, the 72 hours begin at awareness, and the team can meet them with some preparation. Detection comes first: alerts on odd access, as in [Alerting and Dashboards](/system-design/alerting), and logs that say who read what.
 
-- **Detection**: Alerts on odd access, as in [Alerting and Dashboards](/system-design/alerting), and logs that say who read what
-- **A data map**: To say whose data was exposed
-- **A runbook**: Who decides that something is a reportable breach, and who writes the notice
-- **Processor contracts**: Duties for vendors to tell the team quickly
+A data map says whose data was exposed. A runbook says who decides that something is a reportable breach, and who writes the notice. And processor contracts put duties on vendors to tell the team quickly.
 
 ## The Size of the Stakes
 
 GDPR fines come in two tiers. The lower tier, for obligations such as security and breach notification, is up to 10 million euros or 2 percent of worldwide annual turnover, whichever is higher.
 
-The higher tier, for the basic principles, the rights of data subjects and transfers abroad, is up to 20 million euros or 4 percent. The article also lists Article 25 in the lower tier, the one on data protection by design and by default.
+The higher tier, for the basic principles, the rights of data subjects and transfers abroad, is up to 20 million euros or 4 percent. Article 25, on data protection by design and by default, sits in the lower tier.
 
 Fines aren't the sole cost: a breach is a failure of trust with the students, and the incident process of [Incidents and Postmortems](/system-design/postmortems) applies.
 

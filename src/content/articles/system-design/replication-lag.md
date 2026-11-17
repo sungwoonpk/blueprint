@@ -21,18 +21,17 @@ Typical lag depends on the design. Amazon Aurora replicas read the same storage 
 
 ## Why It Grows
 
-A follower falls behind for ordinary reasons:
+A follower falls behind for ordinary reasons. The first is a burst of writes: the leader writes in parallel, and a follower may replay in a single thread. MySQL can run several applier threads, with a coordinator handing out transactions that don't conflict.
 
-- **A burst of writes**: The leader writes in parallel, and a follower may replay in a single thread. MySQL can run several applier threads, with a coordinator handing out transactions that don't conflict
-- **Long queries on the follower**: A PostgreSQL hot standby can't skip log records, so when replay would remove rows that a query still needs, it either pauses replay or cancels the query. It waits up to `max_standby_streaming_delay`, 30 seconds by default, and a long running query can hold back the changes that other sessions see
-- **Network and distance**: A cross region follower is behind by the transit time at the least
-- **A slow or overloaded follower**: It is the same as any other lagging consumer
+The second is a long query on the follower. A PostgreSQL hot standby can't skip log records, so when replay would remove rows that a query still needs, it either pauses replay or cancels the query.
 
-There is a trade: `hot_standby_feedback` tells the primary which rows the standby still needs, which prevents most cancellations and can cause bloat on the primary.
+It waits up to `max_standby_streaming_delay`, 30 seconds by default, and a long running query can hold back the changes that other sessions see. There is a trade here: `hot_standby_feedback` tells the primary which rows the standby still needs, which prevents most cancellations and can cause bloat on the primary.
+
+Distance adds its own share, since a cross region follower is behind by the transit time at the least. And a slow or overloaded follower lags for the same reason as any other slow consumer.
 
 ## Three Strange Things a Reader Can See
 
-Werner Vogels, in his essay on eventual consistency, called the delay the inconsistency window and listed what a client can and can't count on. Three anomalies matter most.
+The delay is called the inconsistency window, and what a client can count on inside it is the whole question. Three anomalies matter most.
 
 We simulated 3 followers that are normally 20 ms behind and fall 3 seconds behind for 2 percent of the time, in episodes of about 5 seconds. These numbers are our assumptions.
 
@@ -48,12 +47,21 @@ The third comes from sharding: if the question and the reply are stored in diffe
 
 ## Fixing Your Own Writes
 
-Several fixes are in use, and they trade complexity or load for correctness:
+Several fixes are in use, and they trade complexity or load for correctness.
 
-- **Read from the leader for a while after a write**: GitLab's load balancer sends a user's reads to the primary for up to 30 seconds after the user writes, and goes back to replicas as soon as they have caught up. We calculated the cost for users who write once in 50 reads: with 5 seconds of stickiness, 9.5 percent of reads go to the leader, and with 30 seconds, 45.7 percent. The stickiness is a dial between safety and leader load
-- **Remember what the user has written**: Cosmos DB's session consistency gives each write a session token, which the client sends with reads. A replica serves the read if it has at least that version, and the client otherwise tries another. Aurora Global Database has a session mode in write forwarding in which reads wait until the session's own forwarded writes have reached the local region
-- **Use causal sessions**: MongoDB's sessions return times for each operation, and with majority read and write concerns they give four guarantees: read your writes, monotonic reads, monotonic writes and writes follow reads. With weaker settings, such as local reads and a write acknowledged by the primary alone, none of the four holds
-- **Mark the data as stale**: Facebook's memcache uses a remote marker for a key. A server that writes sets the marker in its region, writes to the master region, and deletes the cached key. A later read that finds no cache entry checks the marker, and if it exists, it goes to the master region instead of the possibly stale local database. It trades extra latency on a cache miss for a lower chance of stale reads, and it is best effort
+The simplest is to read from the leader for a while after a write. GitLab's load balancer sends a user's reads to the primary for up to 30 seconds after the user writes, and goes back to replicas as soon as they have caught up.
+
+We calculated the cost for users who write once in 50 reads: with 5 seconds of stickiness, 9.5 percent of reads go to the leader, and with 30 seconds, 45.7 percent. The stickiness is a dial between safety and leader load.
+
+A finer fix is to remember what the user has written. Cosmos DB's session consistency gives each write a session token, which the client sends with reads.
+
+A replica serves the read if it has at least that version, and the client otherwise tries another. Aurora Global Database has a session mode in write forwarding in which reads wait until the session's own forwarded writes have reached the local region.
+
+Causal sessions go further. MongoDB's sessions return times for each operation, and with majority read and write concerns they give four guarantees: read your writes, monotonic reads, monotonic writes and writes follow reads. With weaker settings, such as local reads and a write acknowledged by the primary alone, none of the four holds.
+
+A last fix is to mark the data as stale. Facebook's memcache uses a remote marker for a key: a server that writes sets the marker in its region, writes to the master region, and deletes the cached key.
+
+A later read that finds no cache entry checks the marker, and if it exists, it goes to the master region instead of the possibly stale local database. It trades extra latency on a cache miss for a lower chance of stale reads, and it is best effort.
 
 ## Fixing Time Going Backwards
 
@@ -61,7 +69,7 @@ For monotonic reads, the common fix is to send a user to the same follower each 
 
 A single follower applies the log in order, so its view moves forward. In our simulation, 1.4 percent of refreshes went back in time with a random follower each time, and 0 with the same follower.
 
-The weak point is a failure: if that follower is replaced, the user moves to another that may be behind. Vogels notes that read your writes and monotonic reads rely on the client sticking to a server, or on version numbers that let the client discard older answers.
+The weak point is a failure: if that follower is replaced, the user moves to another that may be behind. Both guarantees rely on the client sticking to a server, or on version numbers that let the client discard older answers.
 
 ## Not Reading Lagging Followers
 
@@ -69,7 +77,7 @@ A router can also stop using a follower that is too far behind.
 
 GitLab checks a replica's status before sending it reads, and skips it when it lags by more than a limit: its defaults are 8 MB of log difference, 60 seconds of lag time, and a check interval of 60 seconds. If no replica qualifies, reads fall back to the primary.
 
-Azure Cosmos DB turns the idea into a promise called bounded staleness: reads lag the writes by at most K versions or T time, whichever comes first.
+Cosmos DB turns the idea into a promise called bounded staleness: reads lag the writes by at most K versions or T time, whichever comes first.
 
 For a single region account, the smallest allowed bounds are 10 write operations or 5 seconds, and for a multi region account 100,000 operations or 300 seconds. If a partition exceeds the bound, writes to it are throttled.
 

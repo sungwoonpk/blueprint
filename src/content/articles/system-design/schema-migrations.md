@@ -10,7 +10,9 @@ A schema that suits just the new code breaks the old servers, and one that suits
 
 ## The Order of Steps
 
-Martin Fowler's pattern of parallel change names the order: **expand**, **migrate** and **contract**. First add the new structure beside the old, so both work. Then move the users of the old structure over, step by step. Last, remove the old one when no code uses it. The migrate phase is the transition, when the database supports both.
+The pattern is called parallel change, and it has three phases in a fixed order: **expand**, **migrate** and **contract**. First add the new structure beside the old, so both work.
+
+Then move the users of the old structure over, step by step. Last, remove the old one when no code uses it. The migrate phase is the transition, when the database supports both.
 
 For the price column, it takes six steps, each its own release:
 
@@ -23,13 +25,11 @@ For the price column, it takes six steps, each its own release:
 | 5. Write New | The app stops writing price | Yes, while price still exists |
 | 6. Contract | Drop the column price | No, so wait and back up first |
 
-Stripe followed the same shape in its online migrations, with four steps: write to the old and new stores, move the reads to the new one, move the writes to the new one alone, and remove the old data.
+Large companies follow the same shape. Stripe's online migrations used four steps: write to the old and new stores, move the reads to the new one, move the writes to the new one alone, and remove the old data.
 
-The team moved hundreds of millions of subscription objects while the services stayed up, and it states the arithmetic of why a plan like this is needed: at one second per object, copying 100 million objects one by one would take over three years.
+It moved hundreds of millions of subscription objects while the services stayed up, and the arithmetic shows why a plan like this is needed: at one second per object, copying 100 million objects one by one would take over three years.
 
-Two details from Stripe's account are worth copying. For step 4, it used GitHub's Scientist library to run both reads and raise an error when they disagree, and it switched after the results matched.
-
-And it kept each code change small, attempting no more than a few hundred lines at once, since the old structure was used in thousands of places.
+Two details are worth copying. For step 4, run both reads and raise an error when they disagree, as a library like Scientist does, and switch after the results match. And keep each code change small, a few hundred lines at once, since the old structure may be used in thousands of places.
 
 The steps don't have to be separate releases when the traffic is low, but each must be compatible with the one before it. A flag can control step 4, so the read switches without a deploy, as in [Feature Flags](/system-design/feature-flags).
 
@@ -41,7 +41,7 @@ That mode alone blocks a plain read, so while it is held, the table can't be rea
 
 The real danger comes from the queue, not the lock itself. In MySQL a pending exclusive metadata lock requested by an online DDL operation blocks subsequent transactions on the table.
 
-Its example has one session that read the table inside a transaction and stays open, a second session that runs an ALTER and waits, and a third that runs a simple SELECT and waits too. PostgreSQL's conflict rules lead to the same shape.
+Picture three sessions. One read the table inside a transaction and stays open. A second runs an ALTER and waits. A third runs a simple SELECT and waits too, behind the ALTER. PostgreSQL's conflict rules lead to the same shape.
 
 An ALTER that needs 0.1 seconds can therefore hold up the traffic for as long as the oldest open transaction. Suppose a 60 second report holds a read lock and the ALTER arrives at 10 seconds.
 
@@ -63,21 +63,27 @@ The details differ by database and version, so check yours:
 | Rename a Column | RENAME, which breaks the old code | Expand and contract with a new column |
 | Change a Column Type | An ALTER that rewrites the table | A new column, a backfill and a switch |
 
-- **Concurrent index builds**: PostgreSQL's CREATE INDEX CONCURRENTLY builds without blocking inserts, updates and deletes. It scans the table twice, waits for older transactions, cannot run inside a transaction block, and on failure leaves an invalid index that still costs write overhead and must be dropped and rebuilt
-- **NOT NULL without a long lock**: The scan is skipped when a valid CHECK constraint already proves there are no nulls. Adding the CHECK as NOT VALID is quick, and VALIDATE CONSTRAINT takes a SHARE UPDATE EXCLUSIVE lock, which lets reads and writes continue
-- **Foreign keys**: ADD FOREIGN KEY takes a SHARE ROW EXCLUSIVE lock on both tables, so the same NOT VALID and VALIDATE route avoids the long scan under the lock
-- **MySQL**: Version 8.4 adds a column instantly by default, drops a column and renames one without changing its type as metadata changes, and adds a secondary index in place with concurrent writes. Changing a column type needs a table copy. The LOCK option sets what is allowed during the change, from the least strict to the most strict, and the statement fails if the request is stricter than the operation permits
-- **Instant has limits**: MySQL counts each instant add or drop as a row version and allows 64 before it requires a rebuild
+The details behind the table matter. PostgreSQL's CREATE INDEX CONCURRENTLY builds without blocking inserts, updates and deletes. It scans the table twice, waits for older transactions, can't run inside a transaction block, and on failure leaves an invalid index that still costs write overhead and must be dropped and rebuilt.
+
+NOT NULL needs no long lock when a valid CHECK constraint already proves there are no nulls, because the scan is skipped. Adding the CHECK as NOT VALID is quick, and VALIDATE CONSTRAINT takes a SHARE UPDATE EXCLUSIVE lock, which lets reads and writes continue.
+
+Foreign keys follow the same logic: ADD FOREIGN KEY takes a SHARE ROW EXCLUSIVE lock on both tables, so the NOT VALID and VALIDATE route avoids the long scan under the lock.
+
+MySQL 8.4 is friendlier. It adds a column instantly by default, drops a column and renames one without changing its type as metadata changes, and adds a secondary index in place with concurrent writes.
+
+Changing a column type needs a table copy. The LOCK option sets what is allowed during the change, and the statement fails if the request is stricter than the operation permits.
+
+Instant has limits. MySQL counts each instant add or drop as a row version and allows 64 before it requires a rebuild.
 
 ## Big Tables and Ghost Copies
 
-For a table too large for an in place change, the approach is a copy: build a new table with the new shape, copy rows in small pieces, apply the live changes to it, and swap the names. GitHub's gh-ost does this for MySQL, and its notes explain a design choice.
+For a table too large for an in place change, the approach is a copy: build a new table with the new shape, copy rows in small pieces, apply the live changes to it, and swap the names. GitHub's gh-ost does this for MySQL, and one design choice is instructive.
 
-Older tools use triggers, which run inside each write on the original table. Triggers add work to each write, compete for locks and can't be paused without losing data, since a throttled copy still has the triggers firing, and gh-ost's authors saw lockups from them in production.
+Older tools use triggers, which run inside each write on the original table. Triggers add work to each write, compete for locks and can't be paused without losing data, since a throttled copy still has the triggers firing. Their authors saw lockups from them in production.
 
 gh-ost instead reads the database's binary log and applies the changes to the new table asynchronously. That lets it suspend the migration for real, with no writes to the main database while throttled.
 
-It can also postpone the final swap until you choose the moment, and a test mode on a replica leaves two tables for comparison. Its advice is a dry run first, and then the real run.
+It can also postpone the final swap until you choose the moment, and a test mode on a replica leaves two tables for comparison. A dry run first, and then the real run, is the sound order.
 
 ## Backfilling Safely
 
@@ -92,24 +98,23 @@ Step 3 touches each row, and one statement that updates 3 million rows holds its
 
 The total stayed the same, and the longest lock shrank in proportion to the batch. A production database does far more work for each row, with indexes, a write ahead log and replicas, so the real numbers are much larger, and the ratio is what carries over.
 
-A good backfill job is:
+A good backfill job has five habits. It is keyed: it walks the primary key in ranges, so each batch is an index lookup and not a scan from the start. It is resumable: it records where it stopped, so a failure or a pause loses no work.
 
-- **Keyed**: It walks the primary key in ranges, so each batch is an index lookup and not a scan from the start
-- **Resumable**: It records where it stopped, so a failure or a pause loses no work
-- **Safe to repeat**: A batch that runs twice gives the same result, as in [Idempotency and Safe Retries](/system-design/idempotency)
-- **Throttled**: It pauses between batches and slows down when the replicas fall behind, since a fast backfill creates the [Replication Lag](/system-design/replication-lag) that users then read stale data through
-- **Checked**: A final count of rows that still need conversion should be zero before step 4
+It is safe to repeat, so a batch that runs twice gives the same result, as in [Idempotency and Safe Retries](/system-design/idempotency).
 
-Stripe found that even finding the rows was the costliest part on a live database, and ran that work offline over snapshots. The same idea applies at a smaller scale: scan from a replica when possible.
+It is throttled: it pauses between batches and slows down when the replicas fall behind, since a fast backfill creates the [Replication Lag](/system-design/replication-lag) that users then read stale data through. And it is checked: a final count of rows that still need conversion should be zero before step 4.
+
+Even finding the rows can be the costliest part on a live database, and Stripe ran that work offline over snapshots. The same idea applies at a smaller scale: scan from a replica when possible.
 
 ## Making It Routine
 
-Practices that keep migrations from being an event:
+A few practices keep migrations from being an event. Keep migrations as code: versioned files in the repository, reviewed like any change, and run by the pipeline.
 
-- **Migrations as code**: Versioned files in the repository, reviewed like any change, and run by the pipeline
-- **Separate from the app deploy**: The expand step ships before the code that needs it, and the contract step ships well after the code stopped using the column
-- **Tested on realistic data**: Run on a copy of production size, since a change that takes seconds on a test table can take hours on the real one. MySQL's guidance is the same: check whether rows were copied, and try on a sample first
-- **Contract with care**: Dropping a column can't be undone from the application, so confirm that no code reads it, keep a [Backups and Disaster Recovery](/system-design/backup-dr), and wait one or two release cycles
+Keep them separate from the app deploy, so the expand step ships before the code that needs it, and the contract step ships well after the code stopped using the column.
+
+Test on realistic data, on a copy of production size, since a change that takes seconds on a test table can take hours on the real one. And contract with care.
+
+Dropping a column can't be undone from the application, so confirm that no code reads it, take a backup as in [Backups and Disaster Recovery](/system-design/backup-dr), and wait one or two release cycles.
 
 ## Pitfalls
 
