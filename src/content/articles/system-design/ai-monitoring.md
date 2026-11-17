@@ -27,7 +27,7 @@ Counting the stop reasons gives three cheap error signals: the share of answers 
 
 For self hosted models, the server reports its own signals. vLLM exposes the time to first token, the delay between tokens, the queue wait, the requests waiting and running, the use of the cache and a count of preemptions, as in [Model Serving](/system-design/model-serving).
 
-Names for these signals are being standardized in OpenTelemetry's conventions for generative AI, which its documentation now points to a separate repository for.
+Names for these signals are being standardized in OpenTelemetry's conventions for generative AI.
 
 ## Trace What Happened
 
@@ -83,49 +83,31 @@ The system behind an API can change without a change in your code. Chen, Zaharia
 
 On one test of telling prime from composite numbers, GPT-4 went from 84 percent in March to 51 percent in June. It became less willing to answer sensitive questions, did better on multi step questions, and made more formatting mistakes in generated code, and the authors call for continuous monitoring.
 
-Three habits follow:
+Three habits follow. Pin the version: call a dated model, not an alias that moves, and record it in the trace. Plan for retirement: providers publish end of life dates for model versions, so a model switch belongs on a calendar.
 
-- **Pin the version**: Call a dated model, not an alias that moves, and record it in the trace
-- **Plan for retirement**: Providers publish end of life dates for model versions, such as the one in the Claude API documentation, so a model switch is on a calendar
-- **Test before switching**: Run the evaluation set against a new version, then send a share of traffic to it as a canary, with the practices of [Canary Releases and Other Deployment Strategies](/system-design/deployments) and [Feature Flags](/system-design/feature-flags)
+And test before switching. Run the evaluation set against a new version, then send a share of traffic to it as a canary, with the practices of [Canary Releases and Other Deployment Strategies](/system-design/deployments) and [Feature Flags](/system-design/feature-flags).
 
 Watch the formatting failures in particular. A change that moves a model from valid JSON to almost valid JSON breaks the code behind it with no sign in the quality metrics.
 
 ## Measure Quality on Live Traffic
 
-Quality needs its own measurement, since no error code reports a wrong answer. Several signals help:
+Quality needs its own measurement, since no error code reports a wrong answer. Several signals help.
 
-- **Sampled grading**: Take a random sample of real conversations each day and grade them with a model judge and, for a smaller subset, with a person, using the graders of [Evaluation](/system-design/ai-evaluation)
-- **User feedback**: Thumbs, reports and edits, which are sparse and biased toward the unhappy
-- **Behavior**: Rephrasing the same question, abandoning the chat, or asking for a person
-- **Checks on grounding**: The share of answers whose claims the retrieved text supports
+Sampled grading is the backbone: take a random sample of real conversations each day and grade them with a model judge and, for a smaller subset, with a person, using the graders of [Evaluation](/system-design/ai-evaluation). User feedback adds thumbs, reports and edits, which are sparse and biased toward the unhappy.
 
-Sampling brings a statistical choice, and we simulated it. The share of answers graded good is 92 percent, then drops to 87 percent on day 20. An alert fires when the 3 day pooled rate falls below 92 percent by a chosen number of standard errors.
-
-With a bar of 2.3, which looks reasonable, about one 20 day stretch in five raised a false alarm at each volume we tried, since checking each day gives many chances for noise to cross the bar. A higher bar fixes that and slows the detection:
-
-| Graded a Day | False Alarms in 20 Days | Median Days to Detect | Missed in 40 Days |
-| --- | --- | --- | --- |
-| 50 | 4.0% | 6 | 0.6% |
-| 100 | 2.8% | 2 | 0% |
-| 200 | 1.6% | 2 | 0% |
-| 500 | 1.6% | 1 | 0% |
-
-This table uses a bar of 3.1. With a bar of 3.7 the false alarms fell to about 1 percent or less, and at 50 graded answers a day the median detection took 9 days and 7 percent of runs missed the drop within 40 days.
-
-Grading 100 answers a day caught a 5 point drop in 2 days with 2.8 percent false alarms. The tradeoff is the usual one, now with numbers: more graded samples buy speed and fewer false alarms, and a stricter bar trades speed for quiet.
+Behavior speaks too: rephrasing the same question, abandoning the chat, or asking for a person. And checks on grounding give the share of answers whose claims the retrieved text supports.
 
 Turn it into an objective, as in [SLIs, SLOs and Error Budgets](/system-design/slo): the share of sampled answers graded good stays at or above 90 percent over 7 days, and alerts follow the rules of [Alerting and Dashboards](/system-design/alerting).
 
 ## Close the Loop
 
-A monitor that nobody acts on is a cost. Wire it to the work:
+A monitor that nobody acts on is a cost, so wire it to the work. A bad answer found in production is added to the evaluation set the same day.
 
-- **Failures become tests**: A bad answer found in production is added to the evaluation set the same day
-- **Cost anomalies page someone**: A sudden rise in tokens for each request can be a prompt that grew, an agent in a loop, or an attack, so alert on tokens for each request and dollars an hour, and set budgets for each user, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
-- **Incidents get reviews**: A bad answer that reaches many students is an incident, with the process of [Incidents and Postmortems](/system-design/postmortems)
-- **Dashboards for different readers**: Operations looks at latency and saturation, the product team at quality and cost, and support at the traces
-- **A regular review**: A person reads a sample of conversations each week, since patterns appear that metrics miss
+A sudden rise in tokens for each request can be a prompt that grew, an agent in a loop, or an attack, so alert on tokens for each request and dollars an hour, and set budgets for each user, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
+
+A bad answer that reaches many students is an incident, with the process of [Incidents and Postmortems](/system-design/postmortems).
+
+Give dashboards to different readers: operations looks at latency and saturation, the product team at quality and cost, and support at the traces. And have a person read a sample of conversations each week, since patterns appear that metrics miss.
 
 ## A Plan for the Textbook App
 
