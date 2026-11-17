@@ -2,11 +2,11 @@
 
 [Polling and Long Polling](/system-design/polling) worked by asking again: each answer ended the request, and the client had to send a new one with its full set of headers. That is fine for occasional news and wasteful for a busy stream.
 
-SSE flips the arrangement. The client asks once, and the server doesn't finish its answer. It keeps writing new events onto the same open response, using the HTTP connection from [How HTTP Works](/system-design/http), with nothing new underneath.
+SSE flips the arrangement. The client asks once, and the server doesn't finish its answer. It keeps writing new events onto the same open response, using the HTTP connection from [How HTTP Works](/system-design/http), with no new machinery underneath.
 
 ## One Request, Many Events
 
-In the textbook app, a student watches a listing page, and the page should show "someone just offered $40" as it happens. The browser opens one request, and every event after that travels down the same connection:
+In the textbook app, a student watches a listing page, and the page should show "someone just offered $40" as it happens. The browser opens one request, and each event after that travels down the same connection:
 
 <figure class="diagram">
 <p class="rowname">Once</p>
@@ -25,7 +25,7 @@ In the textbook app, a student watches a listing page, and the page should show 
 <figcaption>The request is sent once and the response keeps going</figcaption>
 </figure>
 
-The difference shows up when events are frequent. Take a stream of one event every second for a minute, and count the requests each approach sends:
+The difference shows up when events are frequent. Take a stream of one event a second for a minute, and count the requests each approach sends:
 
 <figure class="chart">
 <div class="hbars">
@@ -51,7 +51,7 @@ events.addEventListener("offer", (e) => {
 });
 ```
 
-The response is plain text with a few rules from the web's standards body, the WHATWG, in the HTML specification. The server sets `Content-Type: text/event-stream`, and then writes events:
+The response is plain text with a few simple rules. The server sets `Content-Type: text/event-stream`, and then writes events:
 
 ```http
 HTTP/1.1 200 OK
@@ -119,25 +119,25 @@ Connections drop. A phone moves from Wi-Fi to cellular, or a server restarts. Wi
 <div class="node">44</div>
 <div class="node">45</div>
 </div>
-<figcaption>The server replays everything after the id it was given</figcaption>
+<figcaption>The server replays the events after the id it was given</figcaption>
 </figure>
 
 It is the same cursor idea as the `after=` parameter in [Polling and Long Polling](/system-design/polling) and in [Pagination](/system-design/pagination), built into the protocol. The catch is on the server: to replay, it has to keep recent events somewhere, such as a database table or a short list in a cache.
 
 How far back to keep them is a decision, and a client that was gone longer than that has to reload the page's data from scratch.
 
-Two more details are worth knowing. Browsers also fire the `error` event on each reconnect attempt, not only when something is permanently wrong, so check the object's `readyState` to tell the two apart.
+Two more details are worth knowing. Browsers also fire the `error` event on each reconnect attempt, not just when something is permanently wrong, so check the object's `readyState` to tell the two apart.
 
-And a server can tell the browser to stop reconnecting by answering with HTTP 204. That is how an endpoint says "nothing more will come, stop asking".
+And a server can tell the browser to stop reconnecting by answering with HTTP 204. That is how an endpoint says "no more will come, stop asking".
 
 ## What SSE Can't Do
 
 SSE is deliberately simple, and that comes with limits:
 
 - **One way**: data flows from server to browser. If the browser needs to send something, it makes a normal request, such as a POST. For lots of two way chatter, [WebSockets](/system-design/websockets) fit better
-- **Text only**: events are UTF-8 text. Binary data has to be encoded first, usually as base64 inside JSON
-- **A simple request**: the `EventSource` constructor takes only a URL and a flag for sending cookies across sites. You can't choose the method or add an `Authorization` header, so login usually rides on cookies. Putting a token in the URL works, but URLs end up in logs, so keep such tokens short lived
-- **Few connections per browser**: over HTTP/1.1, browsers allow about 6 SSE connections per domain, shared across the tabs. With HTTP/2 the number of simultaneous streams is negotiated and defaults to 100. One `EventSource` per page, shared by everything on it, avoids the problem
+- **Text, not binary**: events are UTF-8 text. Binary data has to be encoded first, usually as base64 inside JSON
+- **A simple request**: the `EventSource` constructor takes just a URL and a flag for sending cookies across sites. You can't choose the method or add an `Authorization` header, so login usually rides on cookies. Putting a token in the URL works, but URLs end up in logs, so keep such tokens short lived
+- **Few connections per browser**: over HTTP/1.1, browsers allow about 6 SSE connections per domain, shared across the tabs. With HTTP/2 the number of simultaneous streams is negotiated and defaults to 100. One `EventSource` per page, shared by the whole page, avoids the problem
 
 ## What Sits Between the Server and the Browser
 
@@ -157,8 +157,8 @@ An open response that trickles data behaves differently from the quick answers p
 </figure>
 
 - **Buffering**: a proxy may collect the response and pass it on in chunks, so events show up late and in bunches. nginx does this by default, and the usual fix is to turn buffering off for the stream, either in its config or with an `X-Accel-Buffering: no` response header
-- **Idle timeouts**: a load balancer closes connections that go quiet. AWS's Application Load Balancer, for example, defaults to 60 seconds. The WHATWG specification suggests sending a comment line about every 15 seconds to keep the stream alive, which the server code above does. Keep the application's own idle timeout longer than the load balancer's, or the load balancer can hit a closed connection and return a 502, as in [How HTTP Works](/system-design/http)
-- **Reconnect storms**: when a server restarts for a deploy, all the clients it held reconnect at once. A random delay on each client, or closing connections gradually, spreads the load. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries)
+- **Idle timeouts**: a load balancer closes connections that go quiet. AWS's Application Load Balancer, for example, defaults to 60 seconds. A comment line sent at about 15 second intervals keeps the stream alive, which the server code above does. Keep the application's own idle timeout longer than the load balancer's, or the load balancer can hit a closed connection and return a 502, as in [How HTTP Works](/system-design/http)
+- **Reconnect storms**: when a server restarts for a deploy, the clients it held reconnect at once. A random delay on each client, or closing connections gradually, spreads the load. See [Timeouts, Retries and Backoff](/system-design/timeouts-retries)
 
 Every connected user also holds an open connection on a server, so at 100,000 users that is 100,000 connections. As with long polling, this calls for servers built to hold many idle connections, and it belongs in the estimate from [Estimating Capacity](/system-design/estimation).
 
@@ -181,6 +181,6 @@ When the browser also has to send often and quickly, as in chat or a shared whit
 - SSE keeps one HTTP response open and streams events down it, one way from server to browser
 - The format is plain text: `data`, `event`, `id` and `retry` fields, with a blank line ending each event
 - <u>`EventSource` reconnects on its own</u> and sends `Last-Event-ID`, so the server can replay what was missed, as long as it keeps recent events
-- It is text only and can't set headers, so login usually rides on cookies, and browsers limit connections per domain on HTTP/1.1
+- It carries text, not binary, and can't set headers, so login usually rides on cookies, and browsers limit connections per domain on HTTP/1.1
 - Turn off proxy buffering, send a keep alive comment before idle timeouts, and spread reconnects after a deploy
 - Choose SSE when the server pushes and the client listens, and WebSockets when both talk freely

@@ -8,11 +8,11 @@ A split looks like the cure. Whether it is depends on what hurts, how the pieces
 
 ## First Ask Whether
 
-Martin Fowler's writing on the subject is cautious. His MonolithFirst note makes two claims: most of the successful microservice stories started with a monolith that grew too big and was broken up, and systems built as microservices from scratch have mostly ended in serious trouble. He gives three reasons.
+The experience of the industry is cautious. Most of the successful microservice stories started with a monolith that grew too big and was broken up, and systems built as microservices from scratch have mostly ended in serious trouble. Three reasons explain it.
 
-Teams don't yet know what users want, a microservice setup carries a productivity cost that he calls the microservice premium, and boundaries are hard to get right early, while moving code across a service boundary is far harder than across a module boundary.
+Teams don't yet know what users want. A microservice setup carries a productivity cost, sometimes called the microservice premium.
 
-He calls the evidence sparse and his advice tentative, and notes that the view is by no means unanimous.
+And boundaries are hard to get right early, while moving code across a service boundary is far harder than across a module boundary. The evidence is sparse and the advice tentative, and the view is by no means unanimous.
 
 Here is what a split buys and what it costs:
 
@@ -22,15 +22,15 @@ Here is what a split buys and what it costs:
 | Independent Deployment | Eventual Consistency: no transaction across services |
 | Technology Diversity | Operational Complexity: many things to run and watch |
 
-The first benefit is less clear than it looks. A monolith can keep strong boundaries with discipline, and Fowler says that a service boundary makes the workaround harder to sneak in, which is a matter of habit and not of physics.
+The first benefit is less clear than it looks. A monolith can keep strong boundaries with discipline, and a service boundary just makes the workaround harder to sneak in, which is a matter of habit and not of physics.
 
-The second benefit is real, with a condition he states in a footnote: a set of services that must be deployed in coordination isn't a microservice architecture. The third matters most as the freedom to use different versions of a library in each part.
+The second benefit is real, with a condition: a set of services that must be deployed in coordination isn't a microservice architecture. The third matters most as the freedom to use different versions of a library in each part.
 
-He also lists prerequisites: a new server in hours, basic monitoring of technical and business signals with quick rollback, and a deployment pipeline that finishes in a couple of hours. A team without them will pay the premium and get little. His rule is that a monolith that can manage its own complexity should stay a monolith.
+There are prerequisites too: a new server in hours, basic monitoring of technical and business signals with quick rollback, and a deployment pipeline that finishes in a couple of hours. A team without them will pay the premium and get little. The rule is that a monolith that can manage its own complexity should stay a monolith.
 
 An intermediate step exists and is often the right one: a **modular monolith**, one deployable with enforced module boundaries, which gains most of the clarity with no network cost, and keeps the option of splitting later.
 
-Fowler's note on sacrificial architecture adds the mindset: the best design now may be one you replace in a few years, and a modular start makes that cheaper.
+There is a mindset to add: the best design now may be one you replace in a few years, and a modular start makes that cheaper.
 
 ## What the Network Costs
 
@@ -46,15 +46,19 @@ We put numbers on the distribution cost. A request makes k sequential calls to o
 
 The same ten steps inside one process take about 0.01 ms and share the availability of that process.
 
-The table is the reason Fowler lists distribution among the costs: remote calls are slow and can fail, and he says most microservice stories he has heard needed asynchrony to get acceptable performance. A boundary should be placed where few calls cross it.
+The table is the reason distribution heads the list of costs: remote calls are slow and can fail, and most microservice stories needed asynchrony to get acceptable performance. A boundary should be placed where few calls cross it.
 
 ## Find the Seams
 
-A **seam** is a place where the code can be separated with little damage. Three sources of boundaries are in common use:
+A **seam** is a place where the code can be separated with little damage. Three sources of boundaries are in common use.
 
-- **Business capabilities**: What the business does to create value, such as catalog management, order management and delivery. The microservices.io pattern lists benefits: a stable architecture, since capabilities change slowly, autonomous teams, and services that are cohesive and loosely coupled
-- **Subdomains**: The domain driven design view, with core subdomains that differentiate the business, supporting ones that you could outsource, and generic ones that you should buy. Eric Evans's bounded context is the unit: a model with one consistent meaning of its words, since, as he put it, a single unified model for a large system isn't feasible or cost effective. Fowler's example is a utility where the word meter means three different things to three groups
-- **Evidence from the code**: Zhamak Dehghani's guide to breaking up a monolith suggests analyzing code churn, which parts change most, and overlaying it with the product roadmap, so the first services are the ones that change often. Scaling needs matter too: search with ten times the memory is a candidate by itself
+Business capabilities come first: what the business does to create value, such as catalog management, order management and delivery. They give a stable architecture, since capabilities change slowly, autonomous teams, and services that are cohesive and loosely coupled.
+
+Subdomains come from the domain driven design view, with core subdomains that differentiate the business, supporting ones that you could outsource, and generic ones that you should buy.
+
+The unit is the bounded context: a model with one consistent meaning of its words, since a single unified model for a large system isn't feasible or cost effective. A utility company shows why, where the word meter means three different things to three groups.
+
+The third source is evidence from the code. Analyze code churn, which parts change most, and overlay it with the product roadmap, so the first services are the ones that change often. Scaling needs matter too: search with ten times the memory is a candidate by itself.
 
 The cost of a seam shows in the number of calls across it. We built a made up dependency graph of 30 modules in 5 groups of 6, where modules in a group call each other much more than the rest, 1,440 calls between modules for each 100 requests.
 
@@ -74,7 +78,7 @@ Splitting off 6 modules chosen at random put 477 across on average, and even the
 
 ## Move Gradually
 
-A rewrite of the whole system in parallel tends to fail. Fowler's description of the strangler fig, taken from the vine that grows around a host tree, says wholesale replacement goes down in flames most of the time, since existing behavior is hard to specify and much of it isn't wanted.
+A rewrite of the whole system in parallel tends to fail: existing behavior is hard to specify, and much of it isn't wanted. The alternative is the strangler fig, named for the vine that grows around a host tree.
 
 The pattern is to build new functionality around the old and move behavior across a piece at a time. There are four phases:
 
@@ -96,41 +100,37 @@ The pattern is to build new functionality around the old and move behavior acros
 
 The problems: shared services and data stores have to be reachable from both systems while they coexist, the facade must keep pace and shouldn't become a bottleneck or a single point of failure, and the pattern doesn't fit when requests can't be intercepted or the system is small.
 
-Two companion techniques help. **Branch by abstraction**, which Fowler describes, creates a layer that captures how the client code uses the old supplier, moves the clients to it, builds the new supplier behind the same layer, switches over gradually and removes the old one, with the system buildable and releasable throughout.
+Two companion techniques help. **Branch by abstraction** creates a layer that captures how the client code uses the old supplier, moves the clients to it, builds the new supplier behind the same layer, switches over gradually and removes the old one, with the system buildable and releasable throughout.
 
 An **anti-corruption layer** translates between the models of the old and the new, so the legacy design doesn't leak into the new service. It has costs, added latency and another component to run, so keep it to translation with no business rules.
 
-Dehghani's advice on order is practical:
+The order of the moves is practical. Start with an edge, a simple capability with few dependencies, such as authentication or a profile facade, to learn to run services before touching the core.
 
-- **Start with an edge**: A simple capability with few dependencies, such as authentication or a profile facade, to learn to run services before touching the core
-- **Minimize calls back into the monolith**: Pick capabilities whose logic doesn't depend on the code still in the monolith, and expose a monolith API through an anti-corruption layer when a call back can't be avoided
-- **Split the sticky parts early**: The web session is her example, broken into domain concepts, not turned into a session service
-- **Release the data**: Decoupling the facade alone or the backend alone, and leaving the data coupled, is the anti-pattern
-- **Go macro, then micro**: Start with larger services around a logical concept, and avoid anemic services that wrap one table
-- **Finish each step**: Decouple the new service, send the consumers to it and retire the old path. The anti-pattern is to use the new service for new consumers and leave the old one in place
+Minimize calls back into the monolith: pick capabilities whose logic doesn't depend on the code still in the monolith, and expose a monolith API through an anti-corruption layer when a call back can't be avoided.
+
+Split the sticky parts early. The web session is the example, broken into domain concepts and not turned into a session service. Release the data too: decoupling the facade alone or the backend alone, and leaving the data coupled, is the anti-pattern.
+
+Go macro, then micro, starting with larger services around a logical concept and avoiding anemic services that wrap one table. And finish each step: decouple the new service, send the consumers to it and retire the old path. The anti-pattern is to use the new service for new consumers and leave the old one in place.
 
 ## The Hard Part Is the Data
 
 Services that share a database are still coupled, and moving the data is the part that takes longest.
 
-The microservices.io pattern of database per service says each service's persistent data is private and reachable through its API alone.
-
-The private store can be tables, a schema or a server, and separate database users and grants keep developers from bypassing the API. The benefits are loose coupling and the choice of a database that fits.
+The pattern for this is a database per service: each service's persistent data is private and reachable through its API alone. The private store can be tables, a schema or a server, and separate database users and grants keep developers from bypassing the API. The benefits are loose coupling and the choice of a database that fits.
 
 The drawbacks are the ones from [Sagas](/system-design/sagas): no transaction across services, and queries across databases are hard, with remedies in the saga, in composing results in an API layer, and in the materialized views of [CQRS](/system-design/cqrs).
 
-The migration itself uses tools from earlier topics:
+The migration itself uses tools from earlier topics. The steps of [Schema Migrations Without Downtime](/system-design/schema-migrations) apply, since old and new run together.
 
-- **Expand and contract**: The steps of [Schema Migrations Without Downtime](/system-design/schema-migrations) apply, since old and new run together
-- **Change data capture**: The Azure page's database example extracts the domain's tables with a bulk copy and change data capture, validates consistency, and cuts over, and a rollback stays possible until the legacy objects are removed, which is a deliberate last step. [Change Data Capture](/system-design/cdc) covers the mechanism
-- **Avoid dual writes**: [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync) explains why, and the outbox is the safer path
-- **Flags for the switch**: A flag, as in [Feature Flags](/system-design/feature-flags), moves reads and then writes to the new store a step at a time
+[Change Data Capture](/system-design/cdc) does the data move: extract the domain's tables with a bulk copy and change data capture, validate consistency, and cut over, with a rollback possible until the legacy objects are removed, which is a deliberate last step.
+
+Avoid dual writes, and see [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync) for why: the outbox is the safer path. And use a flag, as in [Feature Flags](/system-design/feature-flags), to move reads and then writes to the new store a step at a time.
 
 ## Living With the Result
 
 A system of services needs the practices of Phase 6, which a monolith could postpone: timeouts and retries with budgets, circuit breakers and bulkheads, observability that follows a request across services, versioned APIs with tests of the contracts between them, and releases of each service on its own schedule.
 
-Teams need to own services end to end, and Conway's law, which Fowler's strangler article cites, means the organization has to change along with the code, or the new system takes on the old mess.
+Teams need to own services end to end, and Conway's law means the organization has to change along with the code, or the new system takes on the old mess.
 
 ## A Plan for the Textbook App
 
