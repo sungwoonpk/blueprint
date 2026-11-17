@@ -110,7 +110,7 @@ The states multiply, as our arithmetic shows:
 | 10 | 1,024 |
 | 20 | 1,048,576 |
 
-The article's answer is that most flags don't interact, so a team doesn't test each combination. It tests the configuration expected in production, and the fallback, and some teams add one with each flag on. That works if a convention holds, with the old behavior as off and the new behavior as on.
+The answer is that most flags don't interact, so a team doesn't test each combination. It tests the configuration expected in production, and the fallback, and some teams add one with each flag on. That works if a convention holds, with the old behavior as off and the new behavior as on.
 
 The cure for the cost is removal:
 

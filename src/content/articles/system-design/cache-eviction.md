@@ -6,11 +6,9 @@ Once it is full, each new entry means an old one must go. Which one goes decides
 
 ## Three Ways an Entry Leaves
 
-Entries leave a cache for three different reasons, and it helps to keep them apart:
+Entries leave a cache for three different reasons, and it helps to keep them apart.
 
-- **Expiry**: The entry's time to live ran out, as in the TTL from [Caching Patterns for Reads and Writes](/system-design/caching-patterns)
-- **Invalidation**: The data changed, and the entry was removed or replaced because it is wrong. See [Cache Invalidation](/system-design/cache-invalidation)
-- **Eviction**: The cache is full, and a correct entry is removed to make room
+**Expiry** means the entry's time to live ran out, as in the TTL from [Caching Patterns for Reads and Writes](/system-design/caching-patterns). **Invalidation** means the data changed, and the entry was removed or replaced because it is wrong, as in [Cache Invalidation](/system-design/cache-invalidation). **Eviction** means the cache is full, and a correct entry is removed to make room.
 
 Eviction is the one that has to choose among entries that are still good, so it is the one with a policy. In Redis, the cache is bounded by a `maxmemory` setting.
 
@@ -61,11 +59,13 @@ The numbers are hit ratios in percent, and for the last row only the second half
 
 It pushes LRU's useful entries out, and LFU barely notices, since the scanned entries have only been used once. The last row is the opposite. Once popularity moves, LFU holds on to listings whose counts were high yesterday, and its hit ratio collapses. LRU adapts within minutes.
 
-So each simple policy has a blind spot, and real caches combine the two ideas:
+So each simple policy has a blind spot, and real caches combine the two ideas.
 
-- **Segmented LRU**: New entries wait in a probationary part and move to a protected part only after a second hit, so a scan does not reach the protected part. Memcached's optional segmented LRU has hot, warm and cold queues, and evicts only from the cold one
-- **LFU with aging**: Redis keeps a small counter for each entry that decays over time, so yesterday's hits fade. The decay time is a setting, one minute by default
-- **Adaptive policies**: ARC balances recency and frequency as it runs. In its authors' tests it beat LRU on 23 real traces. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and it reports hit rates close to optimal on its test traces
+Segmented LRU keeps new entries in a probationary part and moves them to a protected part only after a second hit, so a scan doesn't reach the protected part. Memcached's optional segmented LRU has hot, warm and cold queues, and evicts just from the cold one.
+
+LFU with aging keeps a small counter for each entry that decays over time, so yesterday's hits fade. Redis does this, with the decay time a setting, one minute by default.
+
+Adaptive policies tune themselves. ARC balances recency and frequency as it runs, and beat LRU on 23 real traces in its authors' tests. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and reaches hit rates close to optimal on its test traces.
 
 You rarely implement these yourself. You choose among the policies your cache offers, and that is easier when you know what each is betting on.
 
@@ -81,12 +81,9 @@ maxmemory-policy allkeys-lru
 maxmemory-samples 10
 ```
 
-The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. In short:
+The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. In short, the choices are these.
 
-- **`allkeys-lru`**: The default choice when some entries get most of the requests
-- **`allkeys-random`**: When all entries are about equally popular
-- **`volatile-ttl`**: When your code gives short TTLs to the entries that are best to drop
-- **`volatile-*` in general**: Mainly for one instance that holds both cached and permanent keys, though two separate instances are cleaner
+Use `allkeys-lru` as the default choice when some entries get most of the requests, and `allkeys-random` when the entries are about equally popular. Use `volatile-ttl` when your code gives short TTLs to the entries that are best to drop. The `volatile-*` policies in general suit one instance that holds both cached and permanent keys, though two separate instances are cleaner.
 
 Telling whether the policy works is simple. The hit ratio is hits divided by hits plus misses. A low hit ratio together with many evicted keys suggests that the cache is evicting the wrong entries or is too small. Few evictions but many expired keys suggests the TTLs are too short.
 

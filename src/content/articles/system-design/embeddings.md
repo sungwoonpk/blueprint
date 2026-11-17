@@ -8,7 +8,7 @@ The students aren't wrong. Words are one of several ways to say a thing, and the
 
 A keyword engine, as in [Full Text Search with Inverted Indexes](/system-design/search-engines), scores a document by the words it shares with the query. It is fast, cheap and exact about what it matches. It has no idea that two different words mean one thing, and that gap is the **vocabulary mismatch**.
 
-It would be a mistake to think vectors replace keywords. The BEIR benchmark tested 10 retrieval systems on 18 public datasets, and its authors found that BM25, the classic keyword scoring function, is a dependable baseline, and that re-ranking and late interaction models do best on average at a high computational cost.
+It would be a mistake to think vectors replace keywords. The BEIR benchmark tested 10 retrieval systems on 18 public datasets, and the results showed that BM25, the classic keyword scoring function, is a dependable baseline, and that re-ranking and late interaction models do best on average at a high computational cost.
 
 Dense retrieval, the vector approach, often did worse than that on data it hadn't been trained on.
 
@@ -18,7 +18,7 @@ The MTEB benchmark, which covers 8 task types, 58 datasets and 112 languages for
 
 The idea of representing words as vectors learned from text goes back to word2vec in 2013, which computed such vectors from very large data sets, 1.6 billion words in under a day. The same idea was extended to whole sentences.
 
-The Sentence-BERT paper of 2019 explains why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which the authors put at about 65 hours.
+Sentence-BERT, in 2019, showed why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which takes about 65 hours.
 
 If each sentence is embedded once and the vectors are compared with cosine similarity, the same task took about 5 seconds, with accuracy maintained in their tests.
 

@@ -98,7 +98,7 @@ A test is a model, and the model has to match the traffic:
 - **Connections and think time**: Real users keep connections open, pause and leave, and new clients bring the cost of a new connection
 - **The environment**: The same configuration, instance types and settings as production, since a smaller copy can mislead
 
-Google's SRE book makes a related point about environments: testing is often said to belong in a hermetic environment, and production usually isn't hermetic. A test environment can't reproduce each detail, which is one reason the experiments in [Chaos Engineering](/system-design/chaos-engineering) also happen in production.
+Environments matter too: testing is often said to belong in a hermetic environment, and production usually isn't hermetic. A test environment can't reproduce each detail, which is one reason the experiments in [Chaos Engineering](/system-design/chaos-engineering) also happen in production.
 
 The generator itself can be the weak point. A single machine may run out of CPU or connections before the service does, and then the test measures the generator. Watch its resource use, and spread the load over several machines.
 

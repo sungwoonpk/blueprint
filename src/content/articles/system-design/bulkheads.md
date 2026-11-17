@@ -86,7 +86,7 @@ It suggests tracking use for each tenant, then limiting it, with quotas, throttl
 
 ## Shuffle Sharding
 
-A bulkhead protects one kind of work from another. **Shuffle sharding**, described in the AWS Builders' Library, protects each customer from the others. Instead of putting a customer on one fixed group of workers, give each customer a random small subset.
+A bulkhead protects one kind of work from another. **Shuffle sharding** protects each customer from the others. Instead of putting a customer on one fixed group of workers, give each customer a random small subset.
 
 With 8 workers and 2 for each customer, there are 28 possible pairs, so a customer who sends a poisonous request, or a flood, hurts at most 1 of the 28 groups.
 

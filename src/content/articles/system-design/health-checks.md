@@ -59,7 +59,7 @@ Each request that lands on the dead server fails, which is why the 55 second fai
 
 ## What Should the Endpoint Check?
 
-The loop is simple. The hard part is deciding what `/health` actually tests. The AWS Builders' Library article on health checks separates three levels:
+The loop is simple. The hard part is deciding what `/health` actually tests. It helps to separate three levels.
 
 | Level | What It Tests | Example |
 | --- | --- | --- |

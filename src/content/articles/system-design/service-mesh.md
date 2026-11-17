@@ -4,12 +4,9 @@ An [API Gateways](/system-design/api-gateways) handles traffic coming in from ou
 
 ## Every Service Needs the Same Plumbing
 
-Think of what the payments service needs when it calls the listings service:
+Think of what the payments service needs when it calls the listings service.
 
-- **Encryption and identity**: the call should be encrypted, and each side should know who the other is, as in [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity)
-- **Timeouts and retries**: give up after a sensible time, and try again when it is safe, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries)
-- **Load balancing**: pick a healthy instance, using ideas from [Load Balancing Algorithms](/system-design/load-balancing-algorithms)
-- **Metrics and traces**: record each call, so slow ones can be found, as in [Logs, Metrics and Traces](/system-design/observability)
+The call should be encrypted, and each side should know who the other is, as in [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity). It needs timeouts and retries: give up after a sensible time, and try again when it is safe, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries). It needs load balancing, picking a healthy instance with the ideas from [Load Balancing Algorithms](/system-design/load-balancing-algorithms). And it needs metrics and traces, recording each call so slow ones can be found, as in [Logs, Metrics and Traces](/system-design/observability).
 
 One way is to build all of this into a library, and each service uses it. That works until the services use different languages, which needs one library per language, or until different services run different library versions.
 
@@ -77,12 +74,11 @@ Retrying every failed charge would be a bug, and retries layered on retries can 
 
 ## What It Costs
 
-The extra proxies are not free. Several costs add up:
+The extra proxies are not free. Several costs add up.
 
-- **Resources**: Istio's published measurements for version 1.24 put a sidecar at about 0.20 of a CPU core and 60 MB of memory when handling 1,000 requests a second with mutual TLS. If 50 pods each did that, the proxies alone would use about 10 cores and 3 GB
-- **Latency**: each call passes through two proxies, one on each side, so sidecars add overhead, especially latency
-- **Operations**: the mesh is another system to install, upgrade, secure and debug, and a failure in it affects every service
-- **Lifecycle friction**: in Istio's sidecar mode, adding a workload means labeling its namespace and restarting its pods
+Resources come first. Istio's measurements for version 1.24 put a sidecar at about 0.20 of a CPU core and 60 MB of memory when handling 1,000 requests a second with mutual TLS. If 50 pods each did that, the proxies alone would use about 10 cores and 3 GB.
+
+Latency follows: each call passes through two proxies, one on each side, so sidecars add overhead, especially latency. Then operations: the mesh is another system to install, upgrade, secure and debug, and a failure in it affects every service. Last is lifecycle friction, since in Istio's sidecar mode, adding a workload means labeling its namespace and restarting its pods.
 
 Those costs are why Istio built a second mode. In **ambient mode**, there is no sidecar in each pod. A small proxy on each machine, called ztunnel, handles encryption and basic rules for each pod on that machine, and heavier request level features go to optional shared proxies named waypoints.
 

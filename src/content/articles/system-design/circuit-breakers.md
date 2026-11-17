@@ -102,7 +102,7 @@ Envoy also has settings it calls circuit breakers that are limits on connections
 
 ## The Case Against
 
-Not everyone likes them. The Amazon Builders' Library notes that circuit breakers are widely promoted and add modal behavior, a system that acts one way when closed and another when open, which is hard to test and can slow recovery.
+Not everyone likes them. Circuit breakers are widely promoted, and they add modal behavior, a system that acts one way when closed and another when open, which is hard to test and can slow recovery.
 
 It prefers a local token bucket for retries, which throttles retries without a state machine. Our simulation's 5.6 seconds of delay is the cost it means.
 

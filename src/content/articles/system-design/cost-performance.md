@@ -39,7 +39,7 @@ The reason a slow tail matters at scale shows in simple arithmetic of our own: i
 
 ## What Reliability Costs
 
-The SRE book's chapter on embracing risk is direct about price. An incremental improvement in reliability may cost 100 times more than the previous one, and each additional nine is an order of magnitude closer to 100 percent. The chapter's own figure is that 99.99 percent allows up to 52.56 minutes of downtime in a year.
+Reliability has a steep price. An incremental improvement may cost 100 times more than the previous one, and each additional nine is an order of magnitude closer to 100 percent. At 99.99 percent, the allowance is up to 52.56 minutes of downtime in a year.
 
 | Availability | Downtime in a Year |
 | --- | --- |
@@ -127,6 +127,6 @@ Then pick the point where the next step costs more than it returns, and revisit 
 
 - Balancing cost and performance means meeting written targets at the lowest price and pricing each step beyond them
 - In our simulation, going from 6 to 7 servers cut the 99th percentile from 47.8 ms to 27.9 ms for 17 percent more cost, while 10 to 12 servers cut 2.3 ms for 20 percent more
-- <u>Each extra nine of availability costs about ten times more</u>, and the SRE book's rule is to buy it when the revenue it protects is larger than the cost
+- <u>Each extra nine of availability costs about ten times more</u>, and the rule is to buy it when the revenue it protects is larger than the cost
 - Some spending saves money: a cache that cut database servers from 3 to 1 in our arithmetic, and usage savings such as right sizing and autoscaling come before rate discounts
 - Measure with unit economics, such as cost per 1,000 requests, and allocate cost to the teams that cause it

@@ -10,7 +10,7 @@ This topic names what those problems have in common, so the rest of the phase ca
 
 A single computer fails as a unit. A group of computers fails in pieces: one server is down while five work, one network link is slow while the others are fine, one disk is full.
 
-The Amazon Builders' Library notes that systems usually don't fail as a single unit, and defines partial failure as a share of requests that succeed.
+Systems usually don't fail as a single unit, and partial failure means a share of requests succeed.
 
 Pieces that depend on each other multiply their failure rates. If each of 10 services in a chain is up 99.9 percent of the time, a request that needs each of them succeeds 99.0 percent of the time, which we calculated as 0.999 to the power of 10.
 
@@ -113,7 +113,7 @@ In one benchmark of reading 1,000 keys from a table spread over 100 servers, a h
 
 ## Retries Can Make It Worse
 
-The natural reaction to a timeout is to retry, and retries carry a risk. Marc Brooker's article in the Amazon Builders' Library calls retries selfish, since each one asks for more of a service that may already be struggling.
+The natural reaction to a timeout is to retry, and retries carry a risk. Retries are selfish, since each one asks for more of a service that may already be struggling.
 
 His example is a stack five layers deep in which each layer retries three times. A failure at the bottom then multiplies into 243 times the load on the database, just when it can least take it.
 

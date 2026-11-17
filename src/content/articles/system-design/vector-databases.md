@@ -117,7 +117,7 @@ Compression loses accuracy, so the pattern is to search the compressed index for
 
 For data beyond memory, DiskANN, a NeurIPS 2019 paper, keeps the graph on a solid state drive.
 
-Its abstract reports indexing a billion points on a single workstation with 64 GB of memory, serving more than 5,000 queries a second with under 3 ms mean latency and 95 percent or better 1-recall@1 on a 16 core machine, where two FAISS methods held in memory at a similar memory footprint plateaued around 50 percent. The figures are for one benchmark, SIFT1B, on the authors' hardware.
+It indexed a billion points on a single workstation with 64 GB of memory, serving more than 5,000 queries a second with under 3 ms mean latency and 95 percent or better 1-recall@1 on a 16 core machine, where two FAISS methods held in memory at a similar memory footprint plateaued around 50 percent. The figures are for one benchmark, SIFT1B, on the authors' hardware.
 
 ## Filters Change the Problem
 

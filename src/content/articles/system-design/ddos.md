@@ -87,7 +87,7 @@ Two attacks show the range. In October 2016, a botnet called Mirai, made of hack
 
 Dyn's customers could not be reached for hours even though their own servers were fine, because nobody could look up their names. That is the single point of failure from [How DNS Works](/system-design/dns). At its peak, Mirai had infected about 600,000 devices.
 
-In February 2018, GitHub was hit by a memcached amplification attack. Its incident report gives the numbers and the timeline:
+In February 2018, GitHub was hit by a memcached amplification attack. The numbers and the timeline:
 
 | Time, UTC | What Happened |
 | --- | --- |

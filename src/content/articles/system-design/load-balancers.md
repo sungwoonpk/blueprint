@@ -140,7 +140,7 @@ A load balancer has settings that can surprise you. A few come up often:
 
 - **Idle timeouts**: connections that go quiet are closed, 60 seconds by default on AWS's Application Load Balancer. Keep the server's own timeout longer, or you get the random 502s from [How HTTP Works](/system-design/http)
 - **Size limits**: the same balancer rejects requests with a request line or any single header over 16 KB, or request headers over 64 KB in total. Cookies and tokens that keep growing can reach it
-- **Queues under overload**: an AWS engineer's article in the Builders' Library argues that a balancer that queues excess requests can turn a spike into slow responses for all users, and that failing fast is often better. That is the idea behind [Load Shedding and Graceful Degradation](/system-design/load-shedding)
+- **Queues under overload**: a balancer that queues excess requests can turn a spike into slow responses for all users, and failing fast is often better. That is the idea behind [Load Shedding and Graceful Degradation](/system-design/load-shedding)
 - **Retries**: a balancer may retry a failed request on another server, which is only safe when repeating it is harmless, as in [Idempotency and Safe Retries](/system-design/idempotency)
 
 ## Choosing One

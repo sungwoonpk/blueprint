@@ -10,7 +10,7 @@ The previous topics set the stage: [Cascading Failures](/system-design/cascading
 
 ## Why Waiting Is the Worst Choice
 
-The AWS Builders' Library separates two numbers. **Throughput** is the requests a second that arrive. **Goodput** is the part of them answered without error and fast enough for the client to use the answer.
+Two numbers matter. **Throughput** is the requests a second that arrive. **Goodput** is the part of them answered without error and fast enough for the client to use the answer.
 
 A server that does not shed sees its goodput fall once the load passes its capacity, because each request waits in line behind the others, and the client has often given up before its turn comes.
 

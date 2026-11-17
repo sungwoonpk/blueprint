@@ -64,7 +64,7 @@ There is no universal number. Set the limit high enough that a short hiccup, suc
 
 Retries should wait. Use exponential backoff with jitter for background work, with delays like 2, 4 and 8 seconds, capped by a maximum number of tries, and a pause of at least the `Retry-After` value when a service gives one. Without a delay, a struggling dependency gets the retries at its worst moment.
 
-Retries also multiply across layers. The AWS Builders' Library gives an example of five layers of calls, each retrying three times: when the database at the bottom fails, it receives 3 to the power of 5, or 243 times the normal load.
+Retries also multiply across layers. Take five layers of calls, each retrying three times: when the database at the bottom fails, it receives 3 to the power of 5, or 243 times the normal load.
 
 Retry in one place, and cap the total with a budget, such as a limit on retries per minute.
 

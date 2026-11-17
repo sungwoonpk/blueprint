@@ -34,16 +34,13 @@ When a consumer can't keep up, there are four options:
 | Drop or Sample | Skip stale or low value work | Some results are lost |
 | Add Capacity | More consumers, as in [Autoscaling](/system-design/autoscaling) | Costs money, and fails if the bottleneck is downstream |
 
-- **Slow the producer**: This is the true backpressure. The Reactive Streams standard builds it into an interface: the subscriber asks for `n` items with `request(n)`, and the publisher may send no more than it has been asked for.
+The first option is the true backpressure: slow the producer. The Reactive Streams standard builds it into an interface. The subscriber asks for `n` items with `request(n)`, and the publisher may send no more than it has been asked for. Nothing blocks, and a receiver isn't made to buffer arbitrary amounts, so the queues between parts can be bounded.
 
-Nothing blocks, and a receiver isn't made to buffer arbitrary amounts, so the queues between parts can be bounded.
+Bounding the buffer is the second. A queue in front of a thread pool should be no larger than about half the pool for steady traffic, so that the server rejects early when it can't keep up. A rejection is cheap and fast, while a long queue turns into slow failures. Bound the age of a queued item as well as the size, and throw away items that have waited too long.
 
-- **Bound the buffer**: A queue in front of a thread pool should be no larger than about half the pool for steady traffic, so that the server rejects early when it can't keep up.
+The third is to drop or sample, for sources that can't be slowed, such as clock ticks and mouse movement. The publisher has to buffer or drop. Under overload, serving the newest requests first can help, since a user whose request has waited 10 seconds has probably refreshed.
 
-A rejection is cheap and fast, while a long queue turns into slow failures. The AWS Builders' Library adds a second limit: bound the age of a queued item as well as the size, and throw away items that have waited too long.
-
-- **Drop or sample**: For sources that can't be slowed, clock ticks and mouse movement are examples. The publisher has to buffer or drop. Under overload, serving the newest requests first can help, since a user whose request has waited 10 seconds has probably refreshed.
-- **Add capacity**: More workers help when the limit is concurrency or CPU, and don't help when a downstream service is the bottleneck: extra workers only push the overload onto it.
+The fourth is to add capacity. More workers help when the limit is concurrency or CPU, and don't help when a downstream service is the bottleneck: extra workers just push the overload onto it.
 
 ## Backpressure in Code
 
@@ -64,12 +61,11 @@ A practical note: asking for one item at a time is a slow stop and wait protocol
 
 ## Between Services and Queues
 
-The same signal appears in the pieces from the earlier topics:
+The same signal appears in the pieces from the earlier topics.
 
-- **Pull based consumers**: A Kafka consumer fetches at its own pace, and the design document says a push system overwhelms a slow consumer because the broker sets the rate. A consumer that falls behind just has more lag, as in [Logs as Message Brokers](/system-design/log-based-brokers)
-- **A limit on unconfirmed messages**: RabbitMQ's prefetch caps how many messages a consumer holds, as in [Message Queues and Pub/Sub](/system-design/message-queues)
-- **Queue depth and age**: These are the signals that something upstream should slow down, or that consumers should scale out
-- **HTTP status codes**: A `429` or `503` with a `Retry-After` header tells the caller to wait, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
+Pull based consumers carry the signal naturally. A Kafka consumer fetches at its own pace, whereas in a push system the broker sets the rate and a slow consumer is overwhelmed. A consumer that falls behind just has more lag, as in [Logs as Message Brokers](/system-design/log-based-brokers). A limit on unconfirmed messages does the same job: RabbitMQ's prefetch caps how many messages a consumer holds, as in [Message Queues and Pub/Sub](/system-design/message-queues).
+
+Queue depth and age are the signals that something upstream should slow down, or that consumers should scale out. And at the edge, HTTP status codes say it to callers: a `429` or `503` with a `Retry-After` header tells the caller to wait, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
 
 Callers have to obey the signal, and many don't. Take a backend with a limit of 10,000 requests a second that is offered 10,100: naive retries push it to 10,200 and then higher, and cutting the load to 9,000 may not bring it back.
 
@@ -81,7 +77,7 @@ Otherwise retries multiply: 4 attempts at each of 3 layers is 64 attempts at the
 
 When a service is nearly overloaded, **load shedding** drops a share of the traffic cheaply, so the rest is served well. It should drop the right things. Give requests a criticality: the most critical ones are shed last, ordinary production traffic next, and batch work, which can retry later, first.
 
-The AWS Builders' Library ranks by request type, with health checks from the load balancer first, and a request that finishes a piece of work ahead of one that starts it.
+Rank by request type, with health checks from the load balancer first, and a request that finishes a piece of work ahead of one that starts it.
 
 For the textbook app the order is clear: buying a book is critical, searching is important, and generating thumbnails can wait. Graceful degradation is the companion: serve a cheaper answer, such as searching a smaller set of data, instead of failing.
 

@@ -107,7 +107,7 @@ A job that processes millions of rows should be split into smaller pieces, as in
 
 One more habit matters at scale. If all the nightly jobs run at midnight, they all start together and their load arrives in one spike.
 
-The AWS Builders' Library advises adding a little jitter to timers and periodic work, and choosing it in a consistent way for each host, so that a failure shows up in a repeatable pattern that is easier to debug.
+Add a little jitter to timers and periodic work, and choose it in a consistent way for each host, so that a failure shows up in a repeatable pattern that is easier to debug.
 
 The cron implementation `cronie` has built in versions: a `~` in a range picks a random value when the crontab is read, and `RANDOM_DELAY` delays a start by up to a number of minutes.
 
