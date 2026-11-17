@@ -34,16 +34,19 @@ Both stop duplicates at one hop, within one system, for a limited time. The char
 
 ## The Idempotency Key
 
-The design in common use is the idempotency key. The client generates a unique key for each logical operation, sends it with the request, and sends the same key on each retry. The server stores the key with the result and, on a repeat, returns the stored result without doing the work again.
+The design in common use is the **idempotency key**. The client makes up a unique key for each logical operation, sends it with the request, and sends the same key on each retry. The server stores the key with the result and, on a repeat, returns the stored result without doing the work again.
 
-The pieces are consistent across the sources:
+Where does the key travel? In a header, and each big API has its own name for it: Stripe uses `Idempotency-Key` with keys up to 255 characters, PayPal uses `PayPal-Request-Id` with a limit of 38, and Adyen uses `idempotency-key` with a limit of 64.
 
-- **A header**: Stripe uses `Idempotency-Key` with keys up to 255 characters, PayPal uses `PayPal-Request-Id` with a limit of 38 characters, and Adyen uses `idempotency-key` with a limit of 64. An IETF draft, still unfinished, standardizes `Idempotency-Key` as a structured header whose value is a string, and recommends a UUID
-- **The same key means the same request**: A key must not be reused with a different payload: store the original parameters with the identifier and return a validation error when a retry differs
-- **A replay is the first answer**: The AWS Builders' Library calls the goal semantic equivalence: the caller gets a response with the same meaning as the first success, and it rejects returning an error such as the resource already exists, since the caller can't tell whether its own earlier request created it. Stripe's API returns the saved response on a retry, including a saved server error
-- **A request in progress**: The draft says to answer 409 Conflict while the original is still running. Adyen returns an error with the text request already processed or in progress
-- **A reuse with a different payload**: Both 422 and 409 are in use for this status, so pick one and document it
-- **An expiry**: Keys can't be kept forever. Stripe prunes after at least 24 hours, Adyen keeps them 7 to 14 days, and the draft asks resources to publish their expiry policy
+An IETF draft, still unfinished, would standardize `Idempotency-Key` as a structured header with a string value, and recommends a UUID.
+
+A key stands for one request, so a second request that reuses the key with a different payload is a bug in the client. Store the original parameters with the key and return a validation error when a retry differs. Both 422 and 409 are in use for that error, so pick one and document it.
+
+A retry should get the first answer back. Returning an error such as "the resource already exists" leaves the caller guessing, since it can't tell whether its own earlier request created the resource. The goal is **semantic equivalence**: the caller gets a response with the same meaning as the first success.
+
+Stripe goes as far as replaying a saved server error. If the original is still running when the retry arrives, the answer is 409 Conflict, and Adyen returns an error saying the request is already processed or in progress.
+
+Finally, keys can't be kept forever. Stripe prunes them after at least 24 hours, Adyen keeps them 7 to 14 days, and a good API publishes its expiry policy.
 
 <figure class="diagram">
 <p class="rowname">First Request</p>
@@ -88,10 +91,17 @@ In 5 percent of first attempts the process crashes after the charge and before s
 <figcaption>Orders charged more than once out of 500, by design, from our simulation</figcaption>
 </figure>
 
-- **No protection**: Each duplicate request charged again, and the final retry of each order did too
-- **Check, then insert**: Two requests that arrive together both find no key and both proceed. The gap is small, 4 orders here, and it is certain to be hit at scale. The fix is to let the database decide: insert the key first, relying on a unique constraint, so that exactly one request wins
-- **Insert first**: The race is closed and a new hole appears. The winner charges the card, crashes before saving, and leaves the key marked as started. A later retry sees a started key that doesn't finish and does the work again, with a fresh call to the provider, which charges a second time. That was 40 orders
-- **Insert first, with the key sent on**: The same key goes to the provider, so the provider recognizes the repeat and returns its first answer. No order was charged twice
+Walk down the table to see why each row fails. With no protection, each duplicate request charged again, and the final retry of each order did too.
+
+The first fix is to check for the key and insert it if it is missing. That leaves a gap: two requests that arrive together both find no key, and both proceed.
+
+The gap is small, 4 orders here, and it is certain to be hit at scale. The cure is to let the database decide. Insert the key first and rely on a unique constraint, so that exactly one request wins.
+
+That closes the race and opens a new hole. The winner charges the card, crashes before saving the result, and leaves the key marked as started.
+
+A later retry sees a key that started and didn't finish, does the work again, and makes a fresh call to the provider, which charges a second time. That was 40 orders.
+
+The last row closes it. The same key goes on to the provider, which recognizes the repeat and returns its first answer. No order was charged twice.
 
 The lesson is that idempotency has to extend to each side effect. A local key table can protect the local database, and an outside effect, such as a charge, needs its own key or a way to ask what happened.
 
