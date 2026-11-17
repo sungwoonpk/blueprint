@@ -136,7 +136,7 @@ In return, it gives what a small team would struggle to build on its own: storag
 | Failover | Promote a replica, and expect seconds and not hours |
 | Recovery Test | Time a crash recovery, and compare it with the 10 seconds as a goal |
 | Write Limit | A single writer, so watch its CPU and plan for sharding past it |
-| What to Copy at Small Scale | Fewer, larger-batch writes, and separating the log from the data |
+| What to Copy at Small Scale | Fewer writes in larger batches, and the log kept apart from the data |
 
 ## Pitfalls
 
