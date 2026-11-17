@@ -19,6 +19,26 @@ The interface comes first. The caller can't hold a connection for an hour, so th
 - **Safe retries**: An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work)
 - **Cleanup**: A retention policy removes old status resources, with an `Expires` header as a hint
 
+<figure class="diagram">
+<p class="rowname">Submit</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow" data-label="POST" aria-hidden="true"></div>
+<div class="node">API<small>returns 202</small></div>
+<div class="arrow" data-label="queue" aria-hidden="true"></div>
+<div class="node hot">Worker</div>
+</div>
+<p class="rowname">Poll</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow wide" data-label="GET status" aria-hidden="true"></div>
+<div class="node">Status Resource<small>pending, running</small></div>
+<div class="arrow" data-label="303" aria-hidden="true"></div>
+<div class="node">Result</div>
+</div>
+<figcaption>The async request and reply shape: accept now, report progress, point to the result when done</figcaption>
+</figure>
+
 Task libraries use the same life cycle. Celery's task states are pending, started, success, failure and retry, with revoked for a canceled task.
 
 An unknown task id also reads as pending, started isn't reported unless the tracking option is turned on, and an application can define its own state, such as progress with a current and total count.
@@ -37,6 +57,16 @@ At each step the worker may crash with a probability p, a restart costs 5 second
 | At 50 Step Intervals | 118 s, 1.6 runs | 192 s, 4.5 runs | 610 s, 25 runs |
 | At 10 Step Intervals | 107 s, 1.5 runs | 124 s, 3.2 runs | 170 s, 7.8 runs |
 | After Each Step | 113 s, 1.5 runs | 122 s, 3.1 runs | 141 s, 6.2 runs |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Mean seconds to finish for four checkpoint choices">
+<div class="hbar peak"><span>Start Over</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">3,870 s</span></div>
+<div class="hbar"><span>Each 50 Steps</span><span class="track"><span class="fill" style="--w: 15.8%"></span></span><span class="value">610 s</span></div>
+<div class="hbar"><span>Each 10 Steps</span><span class="track"><span class="fill" style="--w: 4.4%"></span></span><span class="value">170 s</span></div>
+<div class="hbar"><span>After Each Step</span><span class="track"><span class="fill" style="--w: 3.6%"></span></span><span class="value">141 s</span></div>
+</div>
+<figcaption>Mean total time for a 100 step job at a 5 percent crash chance per step, from our simulation</figcaption>
+</figure>
 
 The chance that a 100 step job finishes in a single attempt is 61 percent at p = 0.5, 13 percent at p = 2, and 0.6 percent at p = 5.
 

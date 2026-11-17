@@ -64,6 +64,17 @@ We simulated 400,000 reads over 200,000 keys with skewed popularity, on 16 shard
 | In Process Cache for the Hottest 100, 90% Local Hits | 1.14 | 63% |
 | Local Cache for 100, and 10 Keys on 4 Shards | 1.06 | 63% |
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Busiest shard against the average for five strategies">
+<div class="hbar peak"><span>Hash Alone</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2.05</span></div>
+<div class="hbar"><span>Hottest Key on 4 Shards</span><span class="track"><span class="fill" style="--w: 71.2%"></span></span><span class="value">1.46</span></div>
+<div class="hbar"><span>Local Cache for 100</span><span class="track"><span class="fill" style="--w: 55.6%"></span></span><span class="value">1.14</span></div>
+<div class="hbar"><span>100 Keys on 8 Shards</span><span class="track"><span class="fill" style="--w: 54.1%"></span></span><span class="value">1.11</span></div>
+<div class="hbar"><span>Cache and 10 Keys on 4</span><span class="track"><span class="fill" style="--w: 51.7%"></span></span><span class="value">1.06</span></div>
+</div>
+<figcaption>Busiest shard compared with the average, where 1.00 is perfectly even, from our simulation</figcaption>
+</figure>
+
 Replicating one key helped a lot, and the next hot keys became the problem, so the fix has to cover a set of keys and not a single one. The local cache did two jobs: it brought the imbalance close to the best of the replication variants and removed 37 percent of the reads from the shards.
 
 The combination was the best, at 1.06. Redis's documentation adds the limit: a local cache is invalidated on each write to a key, so it helps keys that are read much more than they change, and counters that update often are better kept out of it.
@@ -76,6 +87,26 @@ A copy doesn't help a write, since each copy has to be updated. The fix is to sp
 - **Sharded counters**: One counter becomes 16, each update picks one at random, and a read sums them. The cost is a read of 16 values
 - **Aggregation before writing**: Count in memory and flush a total, as in [Scaling Writes](/system-design/scaling-writes)
 - **Hashing sequential keys**: MongoDB's documentation explains that with a key that keeps increasing, the new inserts go to the chunk with the maximum value, and the shard holding it becomes the write bottleneck. A hashed shard key spreads the inserts, at the cost of range queries, which become broadcasts to the full set of shards
+
+<figure class="diagram">
+<p class="rowname">Write</p>
+<div class="flow">
+<div class="node">Update</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Random Part<small>1 to 16</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">One Counter</div>
+</div>
+<p class="rowname">Read</p>
+<div class="flow">
+<div class="node">Read</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Sum 16 Counters</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Total</div>
+</div>
+<figcaption>A hot write key split in 16 parts: the write picks one at random, and the read adds them up</figcaption>
+</figure>
 
 DynamoDB's limits make the stakes concrete. A partition is designed for 1,000 write units and 3,000 read units a second, and a single hot item can use up to that maximum and no more. Adaptive capacity moves capacity toward hot partitions, and isolates frequently accessed items, which helps until the item itself is the limit.
 

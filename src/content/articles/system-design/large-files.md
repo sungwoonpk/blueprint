@@ -20,6 +20,30 @@ The standard answer is for the client to upload straight to object storage, as i
 4. **Notify**: The storage service tells the app, through an event, that an object arrived
 5. **Process**: The app records the metadata and starts the scanning and processing jobs
 
+<figure class="diagram">
+<p class="rowname">Steps 1 and 2</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow" data-label="ask" aria-hidden="true"></div>
+<div class="node">App<small>signs a URL</small></div>
+</div>
+<p class="rowname">Step 3</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow" data-label="bytes" aria-hidden="true"></div>
+<div class="node hot">Object Storage</div>
+</div>
+<p class="rowname">Steps 4 and 5</p>
+<div class="flow">
+<div class="node">Object Storage</div>
+<div class="arrow" data-label="event" aria-hidden="true"></div>
+<div class="node">App</div>
+<div class="arrow" data-label="jobs" aria-hidden="true"></div>
+<div class="node">Workers</div>
+</div>
+<figcaption>The bytes go around the app: it signs the permission and handles the events</figcaption>
+</figure>
+
 The Amazon S3 documentation describes the properties that matter. Anyone with valid credentials can create a URL, but it works within the permissions of its creator and no wider. The uploader needs no credentials of its own.
 
 A URL can be used many times until it expires, and S3 checks the expiry when a request starts, so a transfer in progress keeps going while a restart after the expiry fails.
@@ -53,6 +77,16 @@ A 2,000 MB file goes over a 40 Mbps link where the connection drops about once a
 | 100 MB | 505 s | 594 s | 1.2 |
 | 25 MB | 458 s | 487 s | 1.04 |
 | 5 MB | 524 s | 541 s | 1.01 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Mean seconds for four part sizes">
+<div class="hbar"><span>500 MB Parts</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">1,101 s</span></div>
+<div class="hbar"><span>100 MB Parts</span><span class="track"><span class="fill" style="--w: 45.9%"></span></span><span class="value">505 s</span></div>
+<div class="hbar peak"><span>25 MB Parts</span><span class="track"><span class="fill" style="--w: 41.6%"></span></span><span class="value">458 s</span></div>
+<div class="hbar"><span>5 MB Parts</span><span class="track"><span class="fill" style="--w: 47.6%"></span></span><span class="value">524 s</span></div>
+</div>
+<figcaption>Mean time to upload a 2,000 MB file on a link that drops about once a minute, from our simulation, with the single request (51,729 s) left off</figcaption>
+</figure>
 
 On the flaky link, a single request rarely finishes, because each drop restarts it and the file needs about 7 minutes of clean transfer. Parts of 25 MB were the best in this model: small enough that a drop wastes little, large enough that the overhead stays small.
 

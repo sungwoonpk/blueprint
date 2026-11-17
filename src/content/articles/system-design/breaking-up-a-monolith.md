@@ -62,6 +62,16 @@ Splitting off a group that matches the structure put between 131 and 280 calls a
 
 Splitting off 6 modules chosen at random put 477 across on average, and even the best of 2,000 random tries was 209 and the worst 731. The graph is invented, and the lesson is general: find the boundary where the traffic is lowest, which is usually the boundary the business already draws.
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Calls across the boundary for three ways to split">
+<div class="hbar"><span>Along the Structure</span><span class="track"><span class="fill" style="--w: 24.5%"></span></span><span class="value">179 avg</span></div>
+<div class="hbar"><span>Random, Best of 2,000</span><span class="track"><span class="fill" style="--w: 28.6%"></span></span><span class="value">209</span></div>
+<div class="hbar"><span>Random, Average</span><span class="track"><span class="fill" style="--w: 65.3%"></span></span><span class="value">477</span></div>
+<div class="hbar peak"><span>Random, Worst</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">731</span></div>
+</div>
+<figcaption>Calls crossing the new boundary for each 100 requests, in our made up graph of 30 modules</figcaption>
+</figure>
+
 ## Move Gradually
 
 A rewrite of the whole system in parallel tends to fail. Fowler's description of the strangler fig, taken from the vine that grows around a host tree, says wholesale replacement goes down in flames most of the time, since existing behavior is hard to specify and much of it isn't wanted.
@@ -72,6 +82,17 @@ The pattern is to build new functionality around the old and move behavior acros
 2. **Shift gradually**: Route one capability, then another, to the new service, with a way to switch back
 3. **Retire the legacy**: Remove the old code once no caller depends on it
 4. **Remove the facade**: Clients talk to the new system directly, if that suits
+
+<figure class="diagram">
+<div class="flow">
+<div class="node">Clients</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Facade<small>gateway</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack"><div class="node">Monolith<small>most routes</small></div><div class="node">New Service<small>moved routes</small></div></div>
+</div>
+<figcaption>The strangler shape: the facade decides, request by request, which system answers</figcaption>
+</figure>
 
 The Azure page lists the problems: shared services and data stores have to be reachable from both systems while they coexist, the facade must keep pace and shouldn't become a bottleneck or a single point of failure, and the pattern doesn't fit when requests can't be intercepted or the system is small.
 

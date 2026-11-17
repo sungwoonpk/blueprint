@@ -18,6 +18,19 @@ The reflex is to buy a bigger database. A bigger database is the most expensive 
 
 The order isn't a rule. It is a bias: the earlier rungs add less machinery, and each makes the later ones more effective. A cache in front of an unindexed query hides a problem and still pays 24 milliseconds on each miss.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Student</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">CDN<small>rung 4</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Cache<small>rung 2</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack"><div class="node">Replica<small>rung 3</small></div><div class="node">Leader</div></div>
+</div>
+<figcaption>Where each rung acts on a read, from the student toward the database</figcaption>
+</figure>
+
 ## Rung 1: Make the Read Cheaper
 
 [Indexes and Query Optimization](/system-design/indexing) covered how an index turns a scan into a lookup. The size of the difference is easy to underestimate. We measured it on SQLite with 1 million listings on one machine, looking up the listings of one seller:
@@ -54,6 +67,15 @@ How much a cache helps depends on how skewed the reads are. We simulated an LRU 
 | 10% | 47.5% | 75.4% | 92.9% |
 
 Each cell is the hit ratio. A cache holding 1 percent of the items answered between 22 and 84 percent of the reads, depending on the skew alone, so the first step is to measure the real distribution of reads from the logs.
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Hit ratio for three skews of the same cache size">
+<div class="hbar"><span>Mild, Skew 0.8</span><span class="track"><span class="fill" style="--w: 21.9%"></span></span><span class="value">21.9%</span></div>
+<div class="hbar peak"><span>Skew 1.0</span><span class="track"><span class="fill" style="--w: 54.7%"></span></span><span class="value">54.7%</span></div>
+<div class="hbar"><span>Strong, Skew 1.2</span><span class="track"><span class="fill" style="--w: 83.8%"></span></span><span class="value">83.8%</span></div>
+</div>
+<figcaption>Hit ratio of a cache holding 1 percent of the items, by skew of the reads, from our simulation</figcaption>
+</figure>
 
 Registration day is likely to be strongly skewed, since students look for the same few course books.
 

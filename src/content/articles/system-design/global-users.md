@@ -36,6 +36,16 @@ We counted a page that needs 6 dependent round trips after a new connection, for
 
 The columns are the round trip to Seoul, the page time going straight to the origin, and the page time through an edge.
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Page time in milliseconds for two cities, direct and through an edge">
+<div class="hbar peak"><span>São Paulo, Direct</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2,201 ms</span></div>
+<div class="hbar"><span>São Paulo, Edge</span><span class="track"><span class="fill" style="--w: 17.9%"></span></span><span class="value">395 ms</span></div>
+<div class="hbar"><span>Frankfurt, Direct</span><span class="track"><span class="fill" style="--w: 46.6%"></span></span><span class="value">1,026 ms</span></div>
+<div class="hbar"><span>Frankfurt, Edge</span><span class="track"><span class="fill" style="--w: 11.3%"></span></span><span class="value">248 ms</span></div>
+</div>
+<figcaption>Page time for 6 dependent round trips after a new connection, origin in Seoul, from our arithmetic</figcaption>
+</figure>
+
 The student in São Paulo waits over 2 seconds before the page is done, and the cause is eight round trips at 275 ms each. Users in Seoul or Tokyo, who are near the origin, gain no speed from an edge.
 
 The lesson is that the number of round trips matters as much as the distance: fewer dependent requests, connection reuse and a nearby termination point each multiply the saving.
@@ -47,6 +57,19 @@ The cheapest move is to bring the static parts close. [Content Delivery Networks
 A user connects to the nearby location, which terminates the connection and keeps a warm connection to the origin. Our table shows the effect: the handshakes and the cached requests happen over a short distance, and one dynamic request crosses the ocean.
 
 The limit is what can be cached. Listing pages, search results and photos can be shared between users. A student's own inbox can't, so it has to come from where the data lives. The next two moves address that.
+
+<figure class="diagram">
+<div class="flow">
+<div class="node">Student</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Edge<small>static content</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Nearby Origin<small>computation</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Home Region<small>data</small></div>
+</div>
+<figcaption>The three moves, from the user toward the data</figcaption>
+</figure>
 
 ## Move the Computation
 

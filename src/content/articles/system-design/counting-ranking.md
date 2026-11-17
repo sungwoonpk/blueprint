@@ -36,6 +36,19 @@ The idea is that a hash of an item looks like random bits, and the rarest patter
 
 To reduce the noise, the hash picks one of many registers, each register keeps the longest run it has seen, and the estimate combines them.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Viewer ID</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Hash</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Register<small>chosen by first bits</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Keep Longest Run<small>of leading zeros</small></div>
+</div>
+<figcaption>How HyperLogLog counts without storing the viewers: it keeps the rarest hash pattern for each register</figcaption>
+</figure>
+
 The Wikipedia description gives the steps: the first bits of the hash choose a register, the position of the first 1 in the rest is recorded if it beats the register's value, and the estimate is a constant times the number of registers squared divided by the sum of 2 to the minus register value. A correction handles small counts.
 
 Redis implements it with a documented footprint of up to 12 KB and a standard error of 0.81 percent, for sets of up to 2 to the 64th power members, and less memory when few elements have been seen. The commands are PFADD to add an item, PFCOUNT to read the estimate and PFMERGE to combine sketches.
@@ -62,6 +75,26 @@ The limits matter. The sketch can't list who the viewers were, can't remove one,
 How many views did each of 3 million listings get, in a stream, without a counter for each? A **Count-Min Sketch** is a grid of counters with several rows, one hash function for each row.
 
 An update adds one to a counter in each row, picked by that row's hash, and a query reads the same counters and returns the smallest. Collisions can add to a counter and can't subtract, so the estimate is not below the true count, and the smallest of several is close to it.
+
+<figure class="diagram">
+<p class="rowname">Update</p>
+<div class="flow">
+<div class="node">Key</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">One Hash for Each Row</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Add 1 to Each Counter</div>
+</div>
+<p class="rowname">Query</p>
+<div class="flow">
+<div class="node">Key</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Read One Counter for Each Row</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Return the Smallest</div>
+</div>
+<figcaption>Count-Min Sketch: a grid with one hash for each row, and the smallest counter as the answer</figcaption>
+</figure>
 
 The Wikipedia article gives the sizing: a width of the ceiling of e divided by the error ε, and a depth of the ceiling of the natural log of 1 over the failure probability δ. The count is within ε times the total stream length, with probability 1 minus δ. Redis's documentation phrases it as a threshold: counts below the error times the total count can't be trusted.
 

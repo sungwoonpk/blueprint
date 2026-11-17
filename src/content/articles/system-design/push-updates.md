@@ -76,6 +76,19 @@ The usual design has three parts:
 - **A publish and subscribe bus**: Services publish events by topic or user, and each gateway subscribes for the users it holds. Socket.IO's Redis adapter is an example. A message for several clients goes to the local ones and is published to a Redis channel that the other servers receive. The adapter stores no keys in Redis, and if the Redis connection drops, messages reach the clients on the same server and no others
 - **A routing question**: To message one user, find which gateway holds them, or publish to a channel for that user. A table from user to gateway, with a time to live, does it, and a user with several devices has several entries
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow" data-label="socket" aria-hidden="true"></div>
+<div class="node hot">Gateway</div>
+<div class="arrow" data-label="subscribe" aria-hidden="true"></div>
+<div class="node">Message Bus</div>
+<div class="arrow" data-label="publish" aria-hidden="true"></div>
+<div class="node">Services</div>
+</div>
+<figcaption>Gateways hold the connections, and a message bus carries each event to the gateway that holds the user</figcaption>
+</figure>
+
 Load balancing has a wrinkle. Socket.IO's documentation says sticky sessions are still required with the Redis adapter, since a server that doesn't know a session answers HTTP 400.
 
 A protocol with an upgrade step needs the requests of one session to reach one server. A pure WebSocket or Server-Sent Events setup avoids that, and the balancer needs a long idle timeout.
@@ -99,6 +112,16 @@ How much history to keep depends on how long clients are away. We simulated clie
 | 5 Minutes | 730 | 12.2% |
 | 15 Minutes | 0 | 0% |
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Events missed per reconnect for four replay windows">
+<div class="hbar peak"><span>No Replay</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2,780</span></div>
+<div class="hbar"><span>30 Seconds</span><span class="track"><span class="fill" style="--w: 85%"></span></span><span class="value">2,363</span></div>
+<div class="hbar"><span>5 Minutes</span><span class="track"><span class="fill" style="--w: 26.3%"></span></span><span class="value">730</span></div>
+<div class="hbar"><span>15 Minutes</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0</span></div>
+</div>
+<figcaption>Average events missed on each reconnect, by replay window, from our simulation</figcaption>
+</figure>
+
 A window as long as the longest absence removes the gap, at the price of memory for the events of each user. A window of 5 minutes covers most absences and leaves the rest to the state fallback, which is the common compromise.
 
 ## Reconnect Storms
@@ -110,6 +133,15 @@ When a gateway restarts or a network blip drops the connections, the clients rec
 | Fixed 3 Seconds, No Jitter | 76 s | 50,000 | 650,000 |
 | 3 Seconds Plus Up to 10 s of Jitter | 36 s | 7,439 | 101,251 |
 | Exponential Backoff From 5 s, Full Jitter | 75 s | 13,544 | 120,680 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Attempts in the busiest second for three retry policies">
+<div class="hbar peak"><span>Fixed 3 s, No Jitter</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">50,000</span></div>
+<div class="hbar"><span>3 s Plus 10 s Jitter</span><span class="track"><span class="fill" style="--w: 14.9%"></span></span><span class="value">7,439</span></div>
+<div class="hbar"><span>Backoff, Full Jitter</span><span class="track"><span class="fill" style="--w: 27.1%"></span></span><span class="value">13,544</span></div>
+</div>
+<figcaption>Connection attempts in the busiest second after 50,000 clients drop together, from our simulation</figcaption>
+</figure>
 
 The fixed retry hit the fleet with the full 50,000 clients at once and again at 3 second intervals with the crowd that was refused, and made 650,000 attempts. Jitter spread the same crowd over time and cut the attempts to a sixth.
 

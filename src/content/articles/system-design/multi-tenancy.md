@@ -74,6 +74,19 @@ The tenant has to come from the authenticated identity, and not from a parameter
 
 The identity of the tenant travels with the request through each service and queue message, and each log line, metric and cache key includes it. A cache key without the tenant is a data leak waiting to happen.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Login<small>tenant id</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Context</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Services</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Database Policy</div>
+</div>
+<figcaption>The tenant comes from the login, and each layer after it uses that value</figcaption>
+</figure>
+
 ## Noisy Neighbors
 
 The other failure is performance. On a shared system, a tenant that sends a burst takes capacity from the others. We modeled 50 tenants sharing 1,000 requests a second.
@@ -85,6 +98,18 @@ Forty nine ask for about 15 each, and one bursts to 600 for a minute, so the dem
 | No Limits, the Overload Is Shared | 74.9% | 75.0% |
 | A Limit of 45 a Second for Each Tenant | 100% | 7.5% |
 | Fair Share, With Unused Capacity Reused | 100% | 44.1% |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Share served for ordinary tenants and the bursting tenant under three policies">
+<div class="hbar peak"><span>No Limits, Others</span><span class="track"><span class="fill" style="--w: 74.9%"></span></span><span class="value">74.9%</span></div>
+<div class="hbar"><span>No Limits, Burster</span><span class="track"><span class="fill" style="--w: 75.0%"></span></span><span class="value">75.0%</span></div>
+<div class="hbar"><span>Fixed Limit, Others</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
+<div class="hbar"><span>Fixed Limit, Burster</span><span class="track"><span class="fill" style="--w: 7.5%"></span></span><span class="value">7.5%</span></div>
+<div class="hbar"><span>Fair Share, Others</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
+<div class="hbar"><span>Fair Share, Burster</span><span class="track"><span class="fill" style="--w: 44.1%"></span></span><span class="value">44.1%</span></div>
+</div>
+<figcaption>Share of requests served in the burst, by policy and tenant, from our arithmetic</figcaption>
+</figure>
 
 Without limits, the overload was spread evenly, and each innocent tenant lost a quarter of its requests because of one. A fixed limit, at three times the normal rate, protected the other tenants and gave the burster the least, since the limit holds even when capacity sits idle.
 

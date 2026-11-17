@@ -20,6 +20,16 @@ A larger alpha means a faster cooling. The shape and the values are our assumpti
 
 Of the stored listings, 97 percent are older than 30 days, 92 percent are older than 90 and 67 percent are older than a year. Even with slow cooling, the oldest two thirds of the data get under half of the reads, and with fast cooling they get 16 percent.
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Share of data over a year old compared with its share of reads">
+<div class="hbar peak"><span>Share of Stored Data</span><span class="track"><span class="fill" style="--w: 67%"></span></span><span class="value">67%</span></div>
+<div class="hbar"><span>Reads, Slow Cooling</span><span class="track"><span class="fill" style="--w: 44.6%"></span></span><span class="value">44.6%</span></div>
+<div class="hbar"><span>Reads, Moderate</span><span class="track"><span class="fill" style="--w: 28.8%"></span></span><span class="value">28.8%</span></div>
+<div class="hbar"><span>Reads, Fast Cooling</span><span class="track"><span class="fill" style="--w: 15.8%"></span></span><span class="value">15.8%</span></div>
+</div>
+<figcaption>Share of the stored data that is over a year old, beside the share of reads it gets, from our model</figcaption>
+</figure>
+
 The skew is what tiering uses, and it is also the reason to measure first: the real curve for the app has to come from the access logs, since the share of reads going to old data decides what follows.
 
 ## Decide by Arithmetic
@@ -104,6 +114,19 @@ The documentation notes that the effect isn't immediate: expired rows are handle
 Memory, flash and disk form a hierarchy, and a cache is its fastest tier, as in [Where to Put a Cache](/system-design/where-to-cache).
 
 The hot set sits in a cache or on a CDN, the warm set in the database, and the cold set in object storage. Moving a record down is a copy and a pointer change, and moving it back up is a read on demand.
+
+<figure class="diagram">
+<div class="flow">
+<div class="node hot">Cache and CDN<small>hot set</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Database<small>warm set</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Object Storage<small>cold set</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node wait">Archive<small>restore first</small></div>
+</div>
+<figcaption>Data moves down as it cools and comes back up on demand</figcaption>
+</figure>
 
 ## Designing for Cold Data
 

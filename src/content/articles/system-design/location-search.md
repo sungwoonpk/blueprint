@@ -16,6 +16,19 @@ The cost depends on how the cells are named, since nearby cells should have near
 
 It halves the longitude range and the latitude range alternately, writing a 0 or a 1 for each half chosen, and groups the interleaved bits into characters of a 32 letter alphabet. A longer hash is a smaller cell inside the cell of its prefix.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Coordinates</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Halve Ranges</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Geohash<small>longer, smaller</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Range Scan</div>
+</div>
+<figcaption>How two coordinates become one key that an ordinary index can scan</figcaption>
+</figure>
+
 That gives the property the Wikipedia article states: the longer the shared prefix of two geohashes, the closer the places are. The reverse isn't guaranteed.
 
 Two points can be very close and share a short prefix or no prefix, because the cell boundary falls between them. Across the equator or the Greenwich meridian most bits flip, the 180th meridian splits neighbors, and cells get distorted near the poles.
@@ -46,6 +59,16 @@ We ran 60 random queries for each radius and compared the listings found with th
 | 1 km, Length 7 | 0.7% | 5.7% | 131 |
 | 3 km, Length 5 | 55.0% | 100% | 33,599 |
 | 3 km, Length 6 | 3.6% | 28.2% | 3,484 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Share of results found for four setups at a 1 km radius">
+<div class="hbar"><span>Length 5, 9 Cells</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
+<div class="hbar"><span>Length 6, 9 Cells</span><span class="track"><span class="fill" style="--w: 93.6%"></span></span><span class="value">93.6%</span></div>
+<div class="hbar peak"><span>Length 6, 1 Cell</span><span class="track"><span class="fill" style="--w: 19.4%"></span></span><span class="value">19.4%</span></div>
+<div class="hbar"><span>Length 7, 9 Cells</span><span class="track"><span class="fill" style="--w: 5.7%"></span></span><span class="value">5.7%</span></div>
+</div>
+<figcaption>Share of the true results found for a 1 km radius, by geohash length and cells read, from our experiment</figcaption>
+</figure>
 
 The first two number columns are the share of the true results found, and the last is the listings examined for each query with nine cells. The true answer had 2,287 listings for 1 km and 12,377 for 3 km.
 

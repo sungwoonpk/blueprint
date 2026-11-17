@@ -38,6 +38,17 @@ Its benefit is the guarantee that the message is sent exactly when the transacti
 
 The cost is that the relay can publish a message more than once, for instance when it crashes after publishing and before recording it. The page says that a message consumer must be idempotent, for example by tracking the identifiers of messages it has processed.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">App</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Database and Outbox<small>one transaction</small></div>
+<div class="arrow" data-label="relay" aria-hidden="true"></div>
+<div class="stack"><div class="node">Search Index</div><div class="node">Cache</div></div>
+</div>
+<figcaption>The request writes one place, and the other copies follow the record of changes</figcaption>
+</figure>
+
 Debezium, which reads the log, has a router for this pattern, and its documented outbox table has five columns:
 
 | Column | Role |
@@ -72,6 +83,15 @@ We simulated the three designs on 20,000 listings with 3 updates each. The assum
 | Dual Write, Last Arrival Wins | 0.08% |
 | Outbox, Apply Whatever Arrives | 0.10% |
 | Outbox, Apply Newer Versions Alone | 0% |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Share of listings that differ for three designs">
+<div class="hbar"><span>Dual Write</span><span class="track"><span class="fill" style="--w: 80%"></span></span><span class="value">0.08%</span></div>
+<div class="hbar peak"><span>Outbox, Any Arrival</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">0.10%</span></div>
+<div class="hbar"><span>Outbox With Versions</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0%</span></div>
+</div>
+<figcaption>Listings where the index differs from the database after the run, from our simulation</figcaption>
+</figure>
 
 The wrong share is small in each of the first two, and it matters at scale: 0.08 percent of 3 million listings is about 2,400 listings with the wrong price in search, and no error to tell anyone.
 

@@ -45,6 +45,26 @@ The pieces are consistent across the sources:
 - **A reuse with a different payload**: The draft says 422, and Brandur Leach's well known implementation article uses 409. The sources disagree on this status, so pick one and document it
 - **An expiry**: Keys can't be kept forever. Stripe prunes after at least 24 hours, Adyen keeps them 7 to 14 days, and the draft asks resources to publish their expiry policy
 
+<figure class="diagram">
+<p class="rowname">First Request</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow wide" data-label="request, key K" aria-hidden="true"></div>
+<div class="node">Server</div>
+<div class="arrow wide" data-label="insert first" aria-hidden="true"></div>
+<div class="node hot">Key Table<small>unique index</small></div>
+</div>
+<p class="rowname">Retry</p>
+<div class="flow">
+<div class="node">Client</div>
+<div class="arrow wide" data-label="same key K" aria-hidden="true"></div>
+<div class="node">Server</div>
+<div class="arrow" data-label="key found" aria-hidden="true"></div>
+<div class="node">Saved Response</div>
+</div>
+<figcaption>The idempotency key: the first request does the work once, and a retry gets the saved answer</figcaption>
+</figure>
+
 ## Doing It Safely
 
 A first version of the key check has two holes, and we measured both. The simulation: 500 orders, each sent more than once about 35 percent of the time, handled by 12 threads, with a mock payment provider.
@@ -57,6 +77,16 @@ In 5 percent of first attempts the process crashes after the charge and before s
 | Check for the Key, Then Insert It | 4 | 4 |
 | Insert the Key First | 40 | 40 |
 | Insert First, and Send the Key to the Provider | 0 | 0 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Orders charged more than once for four designs">
+<div class="hbar peak"><span>No Protection</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">500</span></div>
+<div class="hbar"><span>Check, Then Insert</span><span class="track"><span class="fill" style="--w: 0.8%"></span></span><span class="value">4</span></div>
+<div class="hbar"><span>Insert the Key First</span><span class="track"><span class="fill" style="--w: 8%"></span></span><span class="value">40</span></div>
+<div class="hbar"><span>Key First, Sent On</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0</span></div>
+</div>
+<figcaption>Orders charged more than once out of 500, by design, from our simulation</figcaption>
+</figure>
 
 - **No protection**: Each duplicate request charged again, and the final retry of each order did too
 - **Check, then insert**: Two requests that arrive together both find no key and both proceed. The gap is small, 4 orders here, and it is certain to be hit at scale. The fix is to let the database decide: insert the key first, relying on a unique constraint, so that exactly one request wins

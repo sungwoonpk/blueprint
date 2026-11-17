@@ -20,6 +20,34 @@ When reads dominate, work moved from the read to the write pays off: do it once,
 
 **Fan-out on write**, or push: when a post arrives, a worker looks up the author's followers and inserts the post into each follower's stored timeline. Reads are one lookup of a ready list. A write costs as many inserts as the author has followers.
 
+<figure class="diagram">
+<p class="rowname">Pull</p>
+<div class="flow">
+<div class="node">Open Feed</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Get Follows</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Fetch Posts</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Merge</div>
+</div>
+<p class="rowname">Push, Write Side</p>
+<div class="flow">
+<div class="node">New Post</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Worker</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Follower Timelines</div>
+</div>
+<p class="rowname">Push, Read Side</p>
+<div class="flow">
+<div class="node">Open Feed</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Read One List</div>
+</div>
+<figcaption>Where the work happens: at read time for pull, at post time for push</figcaption>
+</figure>
+
 Twitter's description of its push design is a useful example:
 
 - **A timeline is a list of ids**: A Redis list of 800 entries for each user, holding tweet ids and a few flag bits, not the text. The text is fetched by id when the page is built, a step called hydration
@@ -56,6 +84,16 @@ Each row is a position on a trade:
 - **Pure push** did 10 million inserts, 50 times fewer operations, and the biggest account took 12.4 seconds to fan out
 - **The hybrid at 10,000 followers** treated 38 accounts as pulled, and each user merged on average 4.9 of them at read time. It cut the slowest fan-out to 1.0 second, and raised the lookups from 5 million to 29.6 million
 - **Lower thresholds** pushed more of the work to reads: each step lowered the inserts and the worst delay, and raised the lookups
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Slowest fan-out in seconds for four designs">
+<div class="hbar peak"><span>Push to Followers</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">12.4 s</span></div>
+<div class="hbar"><span>Hybrid, 10,000</span><span class="track"><span class="fill" style="--w: 8.1%"></span></span><span class="value">1.0 s</span></div>
+<div class="hbar"><span>Hybrid, 2,000</span><span class="track"><span class="fill" style="--w: 1.6%"></span></span><span class="value">0.2 s</span></div>
+<div class="hbar"><span>Hybrid, 500</span><span class="track"><span class="fill" style="--w: 0.8%"></span></span><span class="value">0.1 s</span></div>
+</div>
+<figcaption>Slowest fan-out for one day of posts in our simulation, in seconds</figcaption>
+</figure>
 
 The right threshold depends on which is scarce: read capacity, write capacity, or the patience of followers. It is a number to tune from data, and it can differ for each account.
 

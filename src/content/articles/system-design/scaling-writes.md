@@ -26,6 +26,16 @@ The biggest cost in a small write is usually the commit, which has to reach stab
 | 100 | 604,933 |
 | 1,000 | 1,077,847 |
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Rows per second for four batch sizes">
+<div class="hbar"><span>1 Row</span><span class="track"><span class="fill" style="--w: 2.3%"></span></span><span class="value">24,460</span></div>
+<div class="hbar"><span>10 Rows</span><span class="track"><span class="fill" style="--w: 14.2%"></span></span><span class="value">152,608</span></div>
+<div class="hbar"><span>100 Rows</span><span class="track"><span class="fill" style="--w: 56.1%"></span></span><span class="value">604,933</span></div>
+<div class="hbar peak"><span>1,000 Rows</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">1,077,847</span></div>
+</div>
+<figcaption>Rows inserted a second on one laptop with full durability, by rows for each commit</figcaption>
+</figure>
+
 The same rows went in 44 times faster at 1,000 for each commit. The absolute numbers are for one process on one machine with a fast disk, and a laptop's disk may acknowledge a flush before the data is truly safe, so just the ratio carries over.
 
 A networked database with replication pays more for each commit, which makes the effect larger.
@@ -73,6 +83,19 @@ A traditional B tree database updates pages in place, which means random disk wr
 - **Compaction**: Sorted files are merged into larger ones in levels, using bulk reads and writes, and each level is about 10 times the size of the one above it
 - **The bill**: RocksDB's documentation says leveled compaction has a write amplification that is often larger than 10, since a byte is rewritten as it moves down the levels. Reads can touch a file at each level, and too many level 0 files hurt reads, which is why Bloom filters and compaction exist
 - **The ceiling**: The documentation says the write throughput of an LSM database directly depends on the speed at which compactions can occur, and when compaction falls behind, writes stall
+
+<figure class="diagram">
+<div class="flow">
+<div class="node">Write</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack"><div class="node">Log<small>durable</small></div><div class="node">Memory Table<small>serves reads</small></div></div>
+<div class="arrow" data-label="flush" aria-hidden="true"></div>
+<div class="node">Sorted Files</div>
+<div class="arrow" data-label="merge" aria-hidden="true"></div>
+<div class="node hot">Levels</div>
+</div>
+<figcaption>The write path of an LSM tree: append and remember first, merge later in the background</figcaption>
+</figure>
 
 Databases built on this idea, such as Cassandra, HBase and RocksDB itself, are covered in [Wide Column Stores](/system-design/wide-column-stores) and [Key-Value Stores](/system-design/key-value-stores). The choice trades read cost and space for write speed, and the right answer depends on the ratio of reads to writes.
 

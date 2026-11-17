@@ -37,6 +37,24 @@ The Azure Architecture Center makes the same point in its database example for t
 
 A backfill has a race in it. The copier reads a row, and a moment later writes it to the new store. If an update lands in between, or after, the copy is stale.
 
+<figure class="diagram">
+<p class="rowname">Live Traffic</p>
+<div class="flow">
+<div class="node">App</div>
+<div class="arrow" data-label="writes" aria-hidden="true"></div>
+<div class="stack"><div class="node">Old Store</div><div class="node">New Store</div></div>
+</div>
+<p class="rowname">Backfill</p>
+<div class="flow">
+<div class="node">Old Store</div>
+<div class="arrow" data-label="reads" aria-hidden="true"></div>
+<div class="node hot">Copier<small>rate limited</small></div>
+<div class="arrow" data-label="writes" aria-hidden="true"></div>
+<div class="node">New Store</div>
+</div>
+<figcaption>Dual writes keep the stores in step from now on, and the copier moves the rows that already exist</figcaption>
+</figure>
+
 We simulated it. The table has 200,000 rows, the copier moves 2,000 rows a second, and 500 updates a second arrive, with 80 percent of them going to 20 percent of the rows. The copier takes 20 ms between reading a row and writing it, an assumption:
 
 | Method | Stale Rows | Share |
@@ -106,6 +124,19 @@ Copying correctly doesn't prove that the new store answers correctly. A differen
 
 GitHub's Scientist library, announced in 2016, is the standard technique. An experiment wraps the old code path, called the control, and runs the new one, the candidate, beside it.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Request</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack"><div class="node">Control<small>old store</small></div><div class="node">Candidate<small>new store</small></div></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Compare and Record</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Old Answer</div>
+</div>
+<figcaption>A Scientist style experiment: the caller gets the old answer, and the new one is just compared</figcaption>
+</figure>
+
 The results are compared, mismatches and timings are recorded, and the caller gets the control's result each time. Order is randomized, and an exception in the candidate isn't raised to the caller.
 
 Stripe ran its reads against both tables this way and watched for mismatches before it switched the reads over. The documentation lists the limits to know:
@@ -139,6 +170,17 @@ The steps follow the same logic as the four stages:
 - **Topology for rollback**: An upgraded candidate replicated under the old primary, with new version replicas serving traffic and old version replicas kept idle as the way back
 - **Primary last, by failover**: The primary wasn't upgraded in place, an upgraded replica was promoted, and the failover tool was set to exclude old hosts as candidates so a surprise failover couldn't go backward
 - **Clean up late**: Old servers were removed after the cluster was confirmed not to need rollback
+
+<figure class="diagram">
+<div class="flow">
+<div class="node">Old Primary<small>5.7</small></div>
+<div class="arrow wide" data-label="replicates" aria-hidden="true"></div>
+<div class="node hot">Upgraded Candidate<small>8.0</small></div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="stack"><div class="node">New Replicas<small>serve traffic</small></div><div class="node wait">Old Replicas<small>idle, for rollback</small></div></div>
+</div>
+<figcaption>The rollback shape GitHub described for each cluster during its MySQL 8.0 upgrade</figcaption>
+</figure>
 
 The way back was the hard part. MySQL replicates from one release to the next, not explicitly the other way, and in staging a promoted 8.0 host broke replication on the 5.7 replicas. The causes were a default collation unknown to 5.7 and configuration statements that 5.7 couldn't run.
 

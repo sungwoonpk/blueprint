@@ -52,6 +52,19 @@ Optimistic concurrency assumes that conflicts are rare. Each row has a version. 
 
 In our test, 283 retries were needed for 600 requests, and the total time was as short as the atomic update.
 
+<figure class="diagram">
+<div class="flow">
+<div class="node">Read Version</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Do Work</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Write If Same</div>
+<div class="arrow" data-label="else" aria-hidden="true"></div>
+<div class="node wait">Retry</div>
+</div>
+<figcaption>Optimistic concurrency: work without a lock, and write just when the version is unchanged</figcaption>
+</figure>
+
 The cost of a conflict is the wasted work of one attempt, so the method suits low contention and long operations where holding a lock would hurt, and it degrades under heavy contention, when most attempts fail.
 
 The same pattern appears in the interfaces of other systems:
@@ -86,6 +99,24 @@ Martin Kleppmann's analysis, which the Redis page itself cites, separates two us
 A client can pause, for garbage collection or a delayed network packet, after its lease has expired and then write anyway, and checking the expiry just before the write doesn't close the gap, since the pause can fall between the check and the write.
 
 The remedy is a **fencing token**: the lock service hands out a number that grows with each acquisition, the client sends it with each write, and the storage rejects a write with a lower number than one it has seen. His complaint is that Redlock has no facility for generating such tokens.
+
+<figure class="diagram">
+<p class="rowname">Current Holder</p>
+<div class="flow">
+<div class="node">Lock Service</div>
+<div class="arrow" data-label="token 34" aria-hidden="true"></div>
+<div class="node">Client B</div>
+<div class="arrow" data-label="write 34" aria-hidden="true"></div>
+<div class="node">Storage<small>has seen 34</small></div>
+</div>
+<p class="rowname">Late Holder</p>
+<div class="flow">
+<div class="node wait">Client A<small>back from a pause</small></div>
+<div class="arrow" data-label="write 33" aria-hidden="true"></div>
+<div class="node lost">Storage<small>rejects it</small></div>
+</div>
+<figcaption>A fencing token: the storage refuses a late writer holding an older number</figcaption>
+</figure>
 
 The Redis documentation agrees that tokens should be implemented. The topic of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks) and [Consensus and Leader Election](/system-design/consensus-leader-election) goes into the mechanics. The practical rule: for correctness, put the protection into the system that owns the data, with a conditional write or a fencing token, and treat a lock as an optimization.
 

@@ -82,6 +82,26 @@ A waiting room holds visitors outside the application and admits them at a contr
 - **Queueing methods**: First in, first out by default, which rewards those who arrived first, random, where open spots go to random visitors, passthrough, which just collects traffic statistics, and reject, where nobody enters and a static page is shown
 - **The wait estimate**: Visitors ahead divided by the rate at which users enter the application, which applies to the first in, first out method
 
+<figure class="diagram">
+<p class="rowname">Queue Leveling</p>
+<div class="flow">
+<div class="node">App</div>
+<div class="arrow" data-label="enqueue" aria-hidden="true"></div>
+<div class="node">Queue</div>
+<div class="arrow wide" data-label="at its pace" aria-hidden="true"></div>
+<div class="node">Worker</div>
+</div>
+<p class="rowname">Waiting Room</p>
+<div class="flow">
+<div class="node">Visitors</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hot">Waiting Room<small>holds the crowd</small></div>
+<div class="arrow wide" data-label="admit at rate" aria-hidden="true"></div>
+<div class="node">Application</div>
+</div>
+<figcaption>Two ways to level a spike: a queue behind the user, a waiting room in front of the app</figcaption>
+</figure>
+
 The tracking uses an encrypted cookie that holds the place in line and is renewed at 20 second intervals while a visitor waits.
 
 ## What the Options Do
@@ -94,6 +114,16 @@ We simulated the textbook spike on the six servers: 8,000 users a second for 30 
 | Refuse Above Half a Second of Queue, No Retry | 45.5% | 54.5% | Under 0.5 s |
 | Refuse Above Half a Second, Up to 3 Retries | 48.4% | 51.6% | Up to 15 s |
 | Waiting Room, Admit at Capacity | 100% | 0% | Median 18.4 s, longest 36.7 s |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Share served for four policies">
+<div class="hbar peak"><span>Accept Each, Users Leave</span><span class="track"><span class="fill" style="--w: 13.8%"></span></span><span class="value">13.8%</span></div>
+<div class="hbar"><span>Refuse, No Retry</span><span class="track"><span class="fill" style="--w: 45.5%"></span></span><span class="value">45.5%</span></div>
+<div class="hbar"><span>Refuse, 3 Retries</span><span class="track"><span class="fill" style="--w: 48.4%"></span></span><span class="value">48.4%</span></div>
+<div class="hbar"><span>Waiting Room</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
+</div>
+<figcaption>Share of the 240,000 users served during the spike, by policy, from our simulation</figcaption>
+</figure>
 
 Each row teaches something:
 
