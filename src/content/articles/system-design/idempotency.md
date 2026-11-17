@@ -1,6 +1,8 @@
 > An operation is **idempotent** if doing it several times leaves the server in the same state as doing it once. When an operation isn't, an **idempotency key** makes repeating it safe anyway.
 
-In [How Clients and Servers Talk](/system-design/client-server), a call that times out left the client in the dark: the request may have arrived, with only the reply lost. The fix that comes to mind is to try again, and [How HTTP Works](/system-design/http) showed that this is harmless for reads and risky for a POST. This topic is about making the risky ones safe, so a client can retry without fear.
+In [How Clients and Servers Talk](/system-design/client-server), a call that times out left the client in the dark: the request may have arrived, with only the reply lost.
+
+The fix that comes to mind is to try again, and [How HTTP Works](/system-design/http) showed that this is harmless for reads and risky for a POST. This topic is about making the risky ones safe, so a client can retry without fear.
 
 ## How a Retry Makes a Duplicate
 
@@ -28,7 +30,9 @@ The textbook app has this exact risk where students pay. A double charge is the 
 
 ## What Idempotent Means
 
-The formal definition comes from the HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html): a method is idempotent if the effect on the server of several identical requests is the same as the effect of one. Notice it talks about the server's state, not the reply. A second DELETE can answer 404 because the listing is already gone, and the method is still idempotent, since the state is the same either way.
+The formal definition comes from the HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html): a method is idempotent if the effect on the server of several identical requests is the same as the effect of one.
+
+Notice it talks about the server's state, not the reply. A second DELETE can answer 404 because the listing is already gone, and the method is still idempotent, since the state is the same either way.
 
 The standard lists PUT, DELETE and read only methods like GET as idempotent, which matches the table in [How HTTP Works](/system-design/http). It also says a client shouldn't automatically retry a non idempotent request, such as a POST, unless it knows the request is safe to repeat.
 
@@ -63,7 +67,9 @@ Here the listing can have only one reservation, so a retry changes nothing. This
 
 ## Idempotency Keys
 
-An **idempotency key** is a unique token the client creates for one logical operation, and sends with every attempt at it. The server remembers which keys it has seen, and the result of each. Stripe's API takes it as an `Idempotency-Key` header on POST requests, and Amazon's EC2 calls it a client token. The server's job is short:
+An **idempotency key** is a unique token the client creates for one logical operation, and sends with every attempt at it. The server remembers which keys it has seen, and the result of each.
+
+Stripe's API takes it as an `Idempotency-Key` header on POST requests, and Amazon's EC2 calls it a client token. The server's job is short:
 
 <figure class="diagram">
 <p class="rowname">The First Time</p>
@@ -102,7 +108,9 @@ def create_order(user, key, params):
     return response
 ```
 
-The `with db.transaction()` line carries the important detail. The order and the key have to be saved together, all or nothing. If the key were saved before the order existed, a crash in between would leave a key with no order, and a retry would get a reply about an order that was never made. Amazon's [Builders' Library article on safe retries](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/) stresses the same point: recording the token and making the change must succeed or fail as one.
+The `with db.transaction()` line carries the important detail. The order and the key have to be saved together, all or nothing. If the key were saved before the order existed, a crash in between would leave a key with no order, and a retry would get a reply about an order that was never made.
+
+Amazon's [Builders' Library article on safe retries](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/) stresses the same point: recording the token and making the change must succeed or fail as one.
 
 The client side is small too. The key is made once per operation and reused by every retry:
 
@@ -123,7 +131,7 @@ A few questions come up in most implementations, and the major APIs answer them 
 
 - **What if the same key arrives with different parameters?** That is probably a bug, so reject it with an error, as Stripe and Amazon do, and don't replay an answer to a different question
 - **What if the first request is still running?** Treat the second as a conflict and ask the client to retry later, so the work doesn't run twice at once. A unique constraint on the user and key decides which request wins
-- **What does the repeat get back?** The saved reply from the first attempt. If the state has changed since, Amazon's article suggests an equivalent reply, and Google's API guidance ([AIP-155](https://google.aip.dev/155)) says the server may return the current state of the resource
+- **What does the repeat get back?** The saved reply from the first attempt. If the state has changed since, an equivalent reply is usually fine, or the current state of the resource
 - **How long are keys kept?** Not forever. Stripe may delete keys once they are at least 24 hours old, and Google leaves it to the server to pick a reasonable time. A retry after that looks like a new request, so retries have to happen within the window
 - **What makes a good key?** Random, such as a version 4 UUID, and not built from personal data like an email address
 
@@ -131,7 +139,9 @@ Keys also have to travel down the chain. If our server calls a payment provider,
 
 ## Queues Retry Too
 
-Clients aren't the only ones who repeat things. A message queue, from [From One Server to Many](/system-design/one-server-to-many), usually promises to deliver each message at least once, so after a crash the same message can arrive again. Microsoft's Azure Architecture Center describes the same remedy under the name idempotent consumer: the worker records the ids of messages it has handled and skips repeats. The idea is the same as a key, and [Message Queues and Pub/Sub](/system-design/message-queues) returns to it.
+Clients aren't the only ones who repeat things. A message queue, from [From One Server to Many](/system-design/one-server-to-many), usually promises to deliver each message at least once, so after a crash the same message can arrive again.
+
+The same remedy has a name, the **idempotent consumer**: the worker records the ids of messages it has handled and skips repeats. The idea is the same as a key, and [Message Queues and Pub/Sub](/system-design/message-queues) returns to it.
 
 ## Deciding Whether to Retry
 

@@ -8,7 +8,7 @@ The answer depends on a decision made long before: which layer encrypts, with wh
 
 ## What Each Layer Stops
 
-Encryption can sit at several layers, and each defends against a different thief. The PostgreSQL documentation walks through the options, and the MySQL and Azure documentation describe the same layers:
+Encryption can sit at several layers, and each defends against a different thief. The options are the same across databases:
 
 | Layer | Stops | Doesn't Stop |
 | --- | --- | --- |
@@ -17,10 +17,10 @@ Encryption can sit at several layers, and each defends against a different thief
 | Chosen Columns, Inside the Database | A stolen disk or backup | A server administrator at the moment of decryption |
 | Client Side, in the Application | A stolen disk, a compromised server, an untrusted administrator | A compromised application, which holds the keys |
 
-- **Disk or volume encryption**: The PostgreSQL documentation says it prevents unencrypted reads if drives or the whole computer are stolen, and that it does not protect against attacks while the file system is mounted
-- **Database files**: MySQL's InnoDB encryption uses a master key and a key for each tablespace. The documentation says losing the master key makes the encrypted data unrecoverable, and it advises keeping the keyring outside the data directory
-- **Columns inside the database**: The extension pgcrypto encrypts chosen columns, and PostgreSQL warns that the plaintext and the key are present on the server for a moment, where someone with full access to the machine could capture them
-- **Client side**: The PostgreSQL documentation says this is the answer when the administrator of the server's machine can't be trusted, since plaintext doesn't reach the server. The price is that the server can't search or index the encrypted values
+- **Disk or volume encryption**: It prevents unencrypted reads if drives or the whole computer are stolen, and it does not protect against attacks while the file system is mounted
+- **Database files**: MySQL's InnoDB encryption uses a master key and a key for each tablespace. Losing the master key makes the encrypted data unrecoverable, so keep the keyring outside the data directory
+- **Columns inside the database**: The extension pgcrypto encrypts chosen columns, and the plaintext and the key are present on the server for a moment, where someone with full access to the machine could capture them
+- **Client side**: This is the answer when the administrator of the server's machine can't be trusted, since plaintext doesn't reach the server. The price is that the server can't search or index the encrypted values
 
 The cloud platforms make the first layer a default. Azure encrypts data at rest by default with platform managed keys, and Amazon S3 has encrypted each new object upload automatically since 5 January 2023.
 
@@ -49,7 +49,7 @@ The limit comes from the birthday effect: random values collide sooner than intu
 
 For the small space, with 24 bit nonces and 5,000 messages, the formula gave 52.5 percent and the simulation gave 50.2 percent. A repeat is a rare event at the NIST limit and becomes likely if one key is used long enough, so the key has to change before the budget runs out.
 
-OWASP says the same in other words: enforce the mode's limits on the number of encryptions and on nonce uniqueness across the instances that share the key.
+Enforce the mode's limits on the number of encryptions and on nonce uniqueness across the instances that share the key.
 
 In practice the library chooses the nonce, and the application's job is to use one key for a bounded amount of data and to rotate it.
 
@@ -60,9 +60,9 @@ Encrypting 2.7 terabytes of photos with one key creates two problems: the key is
 - **Data encryption key**: Encrypts the data, and can be unique for each object, file or volume
 - **Key encryption key**: Encrypts the data keys, and is kept in a separate, better protected place, a key management service or a hardware module
 
-The OWASP guidance says the key encryption key must be stored separately from the data key, should be at least as strong, and that the encrypted data key can live beside the data.
+The key encryption key must be stored separately from the data key and should be at least as strong, while the encrypted data key can live beside the data.
 
-Azure describes the same arrangement, with 256 bit data keys wrapped by keys in its vault, and notes that disabling the key encryption key makes the dependent services inaccessible, which works as a cryptographic erase.
+Azure uses the same arrangement, with 256 bit data keys wrapped by keys in its vault, and disabling the key encryption key makes the dependent services inaccessible, which works as a cryptographic erase.
 
 The arrangement changes what rotation costs. For the photo store, 3 million listings with 3 photos of 300 KB each make 9 million objects and 2.7 TB:
 
@@ -73,11 +73,11 @@ The arrangement changes what rotation costs. For the photo store, 3 million list
 
 The second design also bounds the damage of one leaked data key to one photo. Cloud services go further for the master level.
 
-AWS describes key rotation with a retained history: the service keeps the old key material, decryption uses the version that did the encryption, and rotation has no effect on the data the key protects.
+Key rotation can keep a history: the service keeps the old key material, decryption uses the version that did the encryption, and rotation has no effect on the data the key protects.
 
 The default period for automatic rotation is 365 days. MySQL's design is similar, and rotating its master key encrypts just the tablespace keys again and not the data.
 
-Changing a default doesn't touch old data. The S3 documentation says that switching a bucket's default to a different key type doesn't encrypt existing objects again, and that a batch copy job is the way to do it.
+Changing a default doesn't touch old data. Switching a bucket's default to a different key type doesn't encrypt existing objects again; a batch copy job does that.
 
 A migration to a new scheme is a project, with a plan like the one in [Schema Migrations Without Downtime](/system-design/schema-migrations).
 
@@ -107,7 +107,7 @@ The best protection is not holding the data. OWASP starts there: minimize what i
 | Backups | Encrypted with a key kept apart from the data, tested in restore drills |
 | Logs | Scrubbed of personal data first, as in [Data Privacy and Compliance](/system-design/privacy) |
 
-Azure's guidance adds a reminder that data leaks into side channels: a virtual machine can write to a page file, swap, crash dumps or logs, which is why it offers encryption at the host level for those.
+A reminder that data leaks into side channels: a virtual machine can write to a page file, swap, crash dumps or logs, which is why it offers encryption at the host level for those.
 
 ## Pitfalls
 

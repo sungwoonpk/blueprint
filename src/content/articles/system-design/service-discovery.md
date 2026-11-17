@@ -74,9 +74,11 @@ Once the list exists, someone has to pick an instance from it. There are two arr
 <figcaption>The caller does the choosing, or a router does it for the caller</figcaption>
 </figure>
 
-With **client-side discovery**, the caller asks the registry, picks an instance itself and calls it, so the load balancing from [Load Balancing Algorithms](/system-design/load-balancing-algorithms) happens inside the caller. There are fewer hops, but each client, in each language, needs the discovery code. Netflix's Eureka with its Ribbon library is the classic case, and gRPC can do it, as its documentation on load balancing describes.
+With **client-side discovery**, the caller asks the registry, picks an instance itself and calls it, so the load balancing from [Load Balancing Algorithms](/system-design/load-balancing-algorithms) happens inside the caller. There are fewer hops, but each client, in each language, needs the discovery code. Netflix's Eureka with its Ribbon library is the classic case, and gRPC can do it too.
 
-With **server-side discovery**, the caller sends the request to a router at a well known address, and the router consults the registry. Callers stay simple, and there is one more piece to run and one more hop. Kubernetes Services and AWS load balancers work this way, and the [load balancers](/system-design/load-balancers) from earlier in this phase are exactly such routers.
+With **server-side discovery**, the caller sends the request to a router at a well known address, and the router consults the registry.
+
+Callers stay simple, and there is one more piece to run and one more hop. Kubernetes Services and AWS load balancers work this way, and the [load balancers](/system-design/load-balancers) from earlier in this phase are exactly such routers.
 
 ## DNS as a Registry
 
@@ -91,7 +93,7 @@ Kubernetes can also inject environment variables, such as `PAYMENTS_SERVICE_HOST
 
 DNS has weaknesses as a registry, which come from [How DNS Works](/system-design/dns): answers are cached, and plain DNS knows nothing about health.
 
-gRPC resolves a name once per connection by default, and its documentation notes that a custom resolver can instead watch for changes and push new addresses as backends come and go. Envoy takes another route: with its strict DNS mode it keeps resolving the name in the background, every 5 seconds by default, and drains hosts that disappear from the answer.
+By default gRPC resolves a name once per connection, and a custom resolver can instead watch for changes and push new addresses as backends come and go. Envoy takes another route: with its strict DNS mode it keeps resolving the name in the background, every 5 seconds by default, and drains hosts that disappear from the answer.
 
 ## Keeping the List Honest
 
@@ -101,7 +103,7 @@ The hardest part of a registry is removing entries. An instance that crashes can
 - **Health checks**: the registry or platform probes each instance, as in [Health Checks](/system-design/health-checks), and leaves out failing ones
 - **Readiness**: in Kubernetes, a pod is listed as ready only when its readiness check passes, and a pod that is shutting down is marked terminating and normally skipped
 
-Even so, the list is never perfect, and callers should not trust it blindly. Envoy's documentation states the rule: treat discovery as best effort and combine it with active health checks, with health winning when they disagree:
+Even so, the list is never perfect, and callers should not trust it blindly. The rule is to treat discovery as best effort and combine it with active health checks, with health winning when they disagree:
 
 | In the Registry | Health Check | What Envoy Does |
 | --- | --- | --- |
@@ -112,13 +114,17 @@ Even so, the list is never perfect, and callers should not trust it blindly. Env
 
 The third row is the clever one. If the registry itself goes down and the list empties, hosts that still pass health checks keep getting traffic, so the system survives a registry outage.
 
-Eureka adds a safeguard of its own, called self-preservation. If a large share of instances, more than 15%, stop renewing at once, the server assumes the network is at fault and not the instances, and it stops evicting anything until renewals recover. Evicting everyone because of a network blip would turn a small problem into an outage, the same trap as the health checks in [Health Checks](/system-design/health-checks).
+Eureka adds a safeguard of its own, called self-preservation. If a large share of instances, more than 15%, stop renewing at once, the server assumes the network is at fault and not the instances, and it stops evicting anything until renewals recover.
+
+Evicting everyone because of a network blip would turn a small problem into an outage, the same trap as the health checks in [Health Checks](/system-design/health-checks).
 
 ## The Registry is Critical Too
 
 Every call depends on the registry being right, so it has to be highly available, and the usual choices appear again.
 
-Envoy's documentation calls ZooKeeper, etcd and Consul fully consistent, and also costly to run at large scale, and argues for the best effort approach described above. Others, like Eureka, lean toward availability, keeping stale entries during a partition instead of evicting healthy instances, and expect clients to cope. That choice is the tradeoff from [The CAP Theorem](/system-design/cap), and consistent registries rely on [Consensus and Leader Election](/system-design/consensus-leader-election).
+ZooKeeper, etcd and Consul are fully consistent, which is costly to run at large scale, and that is an argument for the best effort approach above.
+
+Others, like Eureka, lean toward availability, keeping stale entries during a partition instead of evicting healthy instances, and expect clients to cope. That choice is the tradeoff from [The CAP Theorem](/system-design/cap), and consistent registries rely on [Consensus and Leader Election](/system-design/consensus-leader-election).
 
 Clients help by caching. A Eureka client keeps its own copy of the list and refreshes it about every 30 seconds, so it can keep working even if every Eureka server is down, as long as it tolerates a few dead entries.
 
@@ -131,7 +137,7 @@ Clients help by caching. A Eureka client keeps its own copy of the list and refr
 | Many platforms, or VMs and containers together | A registry such as Consul |
 | A service mesh or Envoy based proxies | A control plane pushing endpoint lists |
 
-The last row leads into the next topics. An [API Gateway](/system-design/api-gateways) uses discovery to route outside requests to the right service, and a [service mesh](/system-design/service-mesh) puts a proxy beside each service, with the registry feeding those proxies a live list.
+The last row leads into the next topics. An [API Gateways](/system-design/api-gateways) uses discovery to route outside requests to the right service, and a [Service Meshes and Sidecars](/system-design/service-mesh) puts a proxy beside each service, with the registry feeding those proxies a live list.
 
 ## Key Points
 

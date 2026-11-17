@@ -23,7 +23,7 @@ For the price column, it takes six steps, each its own release:
 | 5. Write New | The app stops writing price | Yes, while price still exists |
 | 6. Contract | Drop the column price | No, so wait and back up first |
 
-Stripe described the same shape in its post on online migrations, with four steps: write to the old and new stores, move the reads to the new one, move the writes to the new one alone, and remove the old data.
+Stripe followed the same shape in its online migrations, with four steps: write to the old and new stores, move the reads to the new one, move the writes to the new one alone, and remove the old data.
 
 The team moved hundreds of millions of subscription objects while the services stayed up, and it states the arithmetic of why a plan like this is needed: at one second per object, copying 100 million objects one by one would take over three years.
 
@@ -35,11 +35,11 @@ The steps don't have to be separate releases when the traffic is low, but each m
 
 ## What the Database Locks
 
-An ALTER takes a lock, and the lock decides whether the app notices. The PostgreSQL documentation says that an ALTER TABLE takes an ACCESS EXCLUSIVE lock unless a form is noted otherwise, and when several actions are combined, the strictest applies.
+An ALTER takes a lock, and the lock decides whether the app notices. In PostgreSQL an ALTER TABLE takes an ACCESS EXCLUSIVE lock unless a form is noted otherwise, and when several actions are combined, the strictest applies.
 
-That mode alone blocks a plain read, so while it is held, the table can't be read or written. The documentation also says a statement that wants a conflicting lock waits until the lock is free, with no limit unless a deadlock is detected.
+That mode alone blocks a plain read, so while it is held, the table can't be read or written. A statement that wants a conflicting lock waits until the lock is free, with no limit unless a deadlock is detected.
 
-The real danger comes from the queue, not the lock itself. The MySQL documentation states it plainly: a pending exclusive metadata lock requested by an online DDL operation blocks subsequent transactions on the table.
+The real danger comes from the queue, not the lock itself. In MySQL a pending exclusive metadata lock requested by an online DDL operation blocks subsequent transactions on the table.
 
 Its example has one session that read the table inside a transaction and stays open, a second session that runs an ALTER and waits, and a third that runs a simple SELECT and waits too. PostgreSQL's conflict rules lead to the same shape.
 
@@ -53,7 +53,7 @@ With the same numbers, a retry at 5 second intervals delays about 16,000 reads, 
 
 ## Which Changes Are Safe
 
-The details differ by database, and the documentation is the place to check for your version:
+The details differ by database and version, so check yours:
 
 | Change | The Risky Way | The Safer Way |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ The details differ by database, and the documentation is the place to check for 
 | Change a Column Type | An ALTER that rewrites the table | A new column, a backfill and a switch |
 
 - **Concurrent index builds**: PostgreSQL's CREATE INDEX CONCURRENTLY builds without blocking inserts, updates and deletes. It scans the table twice, waits for older transactions, cannot run inside a transaction block, and on failure leaves an invalid index that still costs write overhead and must be dropped and rebuilt
-- **NOT NULL without a long lock**: The documentation says the scan is skipped when a valid CHECK constraint already proves there are no nulls. Adding the CHECK as NOT VALID is quick, and VALIDATE CONSTRAINT takes a SHARE UPDATE EXCLUSIVE lock, which lets reads and writes continue
+- **NOT NULL without a long lock**: The scan is skipped when a valid CHECK constraint already proves there are no nulls. Adding the CHECK as NOT VALID is quick, and VALIDATE CONSTRAINT takes a SHARE UPDATE EXCLUSIVE lock, which lets reads and writes continue
 - **Foreign keys**: ADD FOREIGN KEY takes a SHARE ROW EXCLUSIVE lock on both tables, so the same NOT VALID and VALIDATE route avoids the long scan under the lock
 - **MySQL**: Version 8.4 adds a column instantly by default, drops a column and renames one without changing its type as metadata changes, and adds a secondary index in place with concurrent writes. Changing a column type needs a table copy. The LOCK option sets what is allowed during the change, from the least strict to the most strict, and the statement fails if the request is stricter than the operation permits
 - **Instant has limits**: MySQL counts each instant add or drop as a row version and allows 64 before it requires a rebuild
@@ -73,9 +73,9 @@ The details differ by database, and the documentation is the place to check for 
 
 For a table too large for an in place change, the approach is a copy: build a new table with the new shape, copy rows in small pieces, apply the live changes to it, and swap the names. GitHub's gh-ost does this for MySQL, and its notes explain a design choice.
 
-Older tools use triggers, which run inside each write on the original table. Triggers add work to each write, compete for locks and can't be paused without losing data, since a throttled copy still has the triggers firing, and gh-ost's documentation reports lockups from them in production.
+Older tools use triggers, which run inside each write on the original table. Triggers add work to each write, compete for locks and can't be paused without losing data, since a throttled copy still has the triggers firing, and gh-ost's authors saw lockups from them in production.
 
-gh-ost instead reads the database's binary log and applies the changes to the new table asynchronously. The README says that lets it suspend the migration for real, with no writes to the main database while throttled.
+gh-ost instead reads the database's binary log and applies the changes to the new table asynchronously. That lets it suspend the migration for real, with no writes to the main database while throttled.
 
 It can also postpone the final swap until you choose the moment, and a test mode on a replica leaves two tables for comparison. Its advice is a dry run first, and then the real run.
 

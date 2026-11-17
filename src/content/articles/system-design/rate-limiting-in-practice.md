@@ -1,10 +1,14 @@
 > A rate limiter that works on one server breaks when the load balancer spreads a client over many. **Rate limiting in practice** is about where the counters live, how many layers have limits, and what happens when the limiter itself fails.
 
-[Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) counted requests for one client in one place. Real systems have six gateway servers, as in [Load Balancers](/system-design/load-balancers), and each request can land on a different one. This topic is about making a limit mean the same thing across all of them, and about the choices around it that decide whether it protects you or becomes another way to fail.
+[Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) counted requests for one client in one place. Real systems have six gateway servers, as in [Load Balancers](/system-design/load-balancers), and each request can land on a different one.
+
+This topic is about making a limit mean the same thing across all of them, and about the choices around it that decide whether it protects you or becomes another way to fail.
 
 ## One Counter Per Server is Not Enough
 
-Say the limit is 100 requests a minute per user, and the user's requests are spread over three gateways. If each gateway keeps its own counter with the full limit, each lets 100 through. The table shows what gets through when a client sends 300 in a minute, spread evenly in one case and landing on a single gateway in the other:
+Say the limit is 100 requests a minute per user, and the user's requests are spread over three gateways. If each gateway keeps its own counter with the full limit, each lets 100 through.
+
+The table shows what gets through when a client sends 300 in a minute, spread evenly in one case and landing on a single gateway in the other:
 
 | How the Limit is Kept | Spread Evenly | All on One Gateway |
 | --- | --- | --- |
@@ -14,7 +18,9 @@ Say the limit is 100 requests a minute per user, and the user's requests are spr
 
 Separate counters with the full limit let three times too much through.
 
-Splitting the limit fixes the even case, and punishes a client unfairly when the load balancer sends all its requests to one gateway, which real balancers do. Only a shared counter gives the right answer in both. Kong, an API gateway, documents the same tradeoff in its own words: counters kept locally on each node are cheap and drift as nodes are added, and counters in a shared store are accurate and cost a round trip.
+Splitting the limit fixes the even case, and punishes a client unfairly when the load balancer sends all its requests to one gateway, which real balancers do. Only a shared counter gives the right answer in both.
+
+Gateways such as Kong expose the same tradeoff as a setting: counters kept locally on each node are cheap and drift as nodes are added, and counters in a shared store are accurate and cost a round trip.
 
 ## Where the Counter Lives
 
@@ -42,7 +48,7 @@ The usual shared store is Redis, a fast database that keeps its data in memory. 
 <figcaption>With a shared counter, each gateway sees the same number</figcaption>
 </figure>
 
-When several gateways update the same counter at once, the read and the update must happen as one step, or two requests can both see 99 and both pass. Redis can run a small script as a single uninterrupted operation, and its own documentation shows this for the fixed window counter:
+When several gateways update the same counter at once, the read and the update must happen as one step, or two requests can both see 99 and both pass. Redis can run a small script as a single uninterrupted operation, and that is the tool for the fixed window counter:
 
 ```lua
 local count = redis.call("INCR", KEYS[1])
@@ -69,11 +75,11 @@ plugins:
 
 Kong's other policies show the range: `local` counts in each node's memory, which is cheapest and least accurate, `cluster` keeps counters in Kong's own database, which is accurate and the costliest, and `redis` sits in between.
 
-Its documentation frames the choice by purpose: when each request counts, such as billing, use a shared counter, and when you are only protecting a backend, local counters with the limit tuned for the number of nodes are usually enough.
+The choice follows the purpose: when each request counts, such as billing, use a shared counter, and when you are only protecting a backend, local counters with the limit tuned for the number of nodes are usually enough.
 
 ## A Cheaper Middle: Local First, Shared Second
 
-Another option is to combine them. Envoy's documentation recommends exactly that: a local token bucket in each proxy absorbs very large bursts first, and only what survives goes to a central rate limit service for the fine grained decision, which cuts the load on the central service.
+Another option is to combine them. Envoy supports exactly that: a local token bucket in each proxy absorbs very large bursts first, and only what survives goes to a central rate limit service for the fine grained decision, which cuts the load on the central service.
 
 Counters can also sync from local memory to the shared store on a short timer instead of on each request, which Kong exposes as a `sync_rate` setting, trading a little accuracy for much less traffic to Redis.
 
@@ -95,7 +101,9 @@ Real systems limit at more than one point, each guarding something different. Fo
 
 Stripe is a good real example of several limits at once. A global limit counts requests per second for an account, 100 in live mode and 25 in its sandbox.
 
-Each endpoint has its own limit, typically 25 a second, and there are caps on requests in flight at once. When a request is refused, Stripe says which limit caused it in a `Stripe-Rate-Limited-Reason` header, with values such as `global-rate` and `endpoint-concurrency`. That is good API design, since "slow down" is more useful when it says which thing to slow down.
+Each endpoint has its own limit, typically 25 a second, and there are caps on requests in flight at once.
+
+When a request is refused, Stripe says which limit caused it in a `Stripe-Rate-Limited-Reason` header, with values such as `global-rate` and `endpoint-concurrency`. That is good API design, since "slow down" is more useful when it says which thing to slow down.
 
 GitHub layers it too. Its primary limit is 5,000 requests an hour for an authenticated user, and secondary limits cap requests in flight at 100 and charge points per request, with reads costing 1 and writes costing 5. Both layers apply at once.
 
@@ -103,21 +111,23 @@ GitHub layers it too. Its primary limit is 5,000 requests an hour for an authent
 
 A limiter is one more dependency. If Redis is down, there are two choices: **fail open**, letting requests through unchecked, or **fail closed**, refusing them.
 
-Failing closed turns a limiter outage into a full outage. Failing open leaves the system unprotected for a while. Stripe's guidance is to fail open if the limiter itself errors, and Kong's `fault_tolerant` setting defaults to true for the same reason. For something as sensitive as login attempts, you might choose the other way and accept the risk.
+Failing closed turns a limiter outage into a full outage. Failing open leaves the system unprotected for a while.
+
+Stripe's guidance is to fail open if the limiter itself errors, and Kong's `fault_tolerant` setting defaults to true for the same reason. For something as sensitive as login attempts, you might choose the other way and accept the risk.
 
 Three habits keep a limiter from causing harm:
 
 - **Give it a time budget**: if the shared store doesn't answer within a few milliseconds, treat it as down and take the fail open path, so the limiter doesn't make requests slow
-- **Launch it quietly**: Stripe describes dark launching each limiter, counting what it would have blocked without blocking, and Envoy's rate limit service has a shadow mode for the same purpose. Look at who would have been blocked before turning it on
+- **Launch it quietly**: dark launch each limiter, counting what it would have blocked without blocking. Stripe does this, and Envoy's rate limit service has a shadow mode for the same purpose. Look at who would have been blocked before turning it on
 - **Keep a kill switch**: a flag that turns a limiter off in seconds, for the day it blocks the wrong people
 
 ## The Client's Side
 
 Limits only work if clients react well. A client that receives a 429 should wait, using `Retry-After` when present, then retry with growing, randomized delays, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries). Two further details matter.
 
-First, retries multiply. In its article on retries, AWS gives an example: if a request passes through five layers, each retrying three times, one failure at the bottom becomes 3 to the power of 5, which is 243 attempts. Retry at one layer only, and leave the other layers to pass errors up.
+First, retries multiply. For example, if a request passes through five layers, each retrying three times, one failure at the bottom becomes 3 to the power of 5, which is 243 attempts. Retry at one layer only, and leave the other layers to pass errors up.
 
-Second, clients can limit themselves. Stripe suggests a token bucket on the client side to stay under the server's limit, and queueing changes to the same object so they run one after another. AWS's SDKs use a token bucket to budget retries, which stops a whole fleet from piling onto a struggling service.
+Second, clients can limit themselves. A token bucket on the client side keeps it under the server's limit, and queueing changes to the same object makes them run one after another. AWS's SDKs use a token bucket to budget retries, which stops a whole fleet from piling onto a struggling service.
 
 ## Tuning
 

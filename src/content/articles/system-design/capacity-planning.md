@@ -6,17 +6,17 @@ Capacity planning is how the number comes from somewhere. It is the answer to a 
 
 ## The Three Jobs
 
-Google's SRE book describes capacity planning as covering two kinds of demand. **Organic growth** comes from natural adoption of the product, and **inorganic growth** comes from events such as feature launches and marketing campaigns. It lists three things a plan needs:
+Capacity planning covers two kinds of demand. **Organic growth** comes from natural adoption of the product, and **inorganic growth** comes from events such as feature launches and marketing campaigns. A plan needs three things:
 
 - **An organic forecast**: Accurate, and reaching further ahead than the time it takes to get new capacity, the lead time
 - **Inorganic demand included**: The launches, campaigns and business events that the trend line doesn't show
 - **Regular load testing**: A test that connects raw capacity, such as servers and disks, to the service capacity users receive
 
-The book adds that provisioning has to be done quickly and just when it is needed, since capacity is expensive, and that it has to be done correctly, or the capacity isn't there when it is needed.
+Provisioning has to be done quickly and just when it is needed, since capacity is expensive, and it has to be done correctly, or the capacity isn't there when it is needed.
 
 Both sides cost something: too little breaks the service, and too much wastes money, which is the subject of [Balancing Cost and Performance](/system-design/cost-performance).
 
-Lead time is the part that moves with the platform. The same book describes traditional planning for hardware, with forecasts covering several quarters to years. In a cloud, instances arrive in minutes, but quotas, a database that can't be resized quickly, and a dependency with its own limits still have lead times of their own.
+Lead time is the part that moves with the platform. Traditional planning for hardware uses forecasts covering several quarters to years. In a cloud, instances arrive in minutes, but quotas, a database that can't be resized quickly, and a dependency with its own limits still have lead times of their own.
 
 ## From Demand to Servers
 
@@ -32,7 +32,7 @@ Work backward from the peak. For the textbook app:
 
 The 600 figure is the measurement that links raw capacity to service capacity. It comes from a load test, as in [Load Testing](/system-design/load-testing), not from the size of the machine.
 
-The SRE book states the same idea: how many compute resources does a service need to serve a given number of user queries, and some services get that number from load tests and others infer it from past performance.
+The question: how many compute resources does a service need to serve a given number of user queries, and some services get that number from load tests and others infer it from past performance.
 
 The N plus 1 and N plus 2 labels come from the same book. Its examples are intents such as meeting demand in each region with N plus 2 redundancy, and it notes that N plus 2 for one service may matter more than N plus 1 for another.
 
@@ -55,7 +55,7 @@ A server that is busy constantly has no room for a burst. Queueing theory says h
 | 95% | 20 times |
 | 99% | 100 times |
 
-With a 10 ms service time, a server at 90 percent utilization answers in 100 ms on average. These multiples come from the formula, and the Wikipedia article on the model states it.
+With a 10 ms service time, a server at 90 percent utilization answers in 100 ms on average. These multiples come from queueing theory: for random arrivals at one server, the average time in the system is the service time divided by one minus the utilization.
 
 Real services have many servers and many kinds of waiting, so we simulated the textbook fleet, 6 servers that each finish 600 requests a second, and measured the 99th percentile:
 
@@ -93,11 +93,11 @@ The earlier number of 6 was the arithmetic at 100 percent utilization with no al
 
 ## Forecasting Demand
 
-Azure's capacity guidance gives a method. Collect history: utilization, performance data and the shape of the workload, with its peak hours, user load and transaction rates. Pick indicators, such as requests a second and database CPU. Then fit a trend with moving averages, regression or time series methods, and plan before the usage pattern changes.
+A method works. Collect history: utilization, performance data and the shape of the workload, with its peak hours, user load and transaction rates. Pick indicators, such as requests a second and database CPU. Then fit a trend with moving averages, regression or time series methods, and plan before the usage pattern changes.
 
 Its examples are simple on purpose. A 10 percent yearly growth is extended forward, and a feature release that adds about 5 percent is planned as 5 percent.
 
-A new workload with no history gets market research, expert judgment, a pilot or outside data. Azure also lists the regular spikes to plan for, such as an 8:00 AM sign in rush, a marketing push, a season and a feature launch.
+A new workload with no history gets market research, expert judgment, a pilot or outside data. Plan for the regular spikes too, such as an 8:00 AM sign in rush, a marketing push, a season and a feature launch.
 
 For the textbook app, a forecast looks like this. These figures are assumptions for illustration:
 
@@ -112,7 +112,7 @@ The campaign is inorganic demand, which no trend line shows, and so it comes fro
 
 ## Buying the Capacity
 
-Capacity has more than one price. The EC2 pricing page describes three options: On-Demand, paid by the hour or second with no commitment, Savings Plans, which it advertises as up to 72 percent cheaper in exchange for a usage commitment, and Spot, advertised as up to 90 percent cheaper, for capacity that can be taken back.
+Capacity has more than one price. EC2 shows three options: On-Demand, paid by the hour or second with no commitment, Savings Plans, up to 72 percent cheaper in exchange for a usage commitment, and Spot, up to 90 percent cheaper, for capacity that can be taken back.
 
 The figures are the provider's best case, and the page doesn't say how often each applies.
 

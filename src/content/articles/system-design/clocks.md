@@ -15,25 +15,25 @@ Clocks do two different jobs: measuring how long something took, and saying when
 | Wall Clock (`CLOCK_REALTIME`) | Time of day, since 1970, settable | Yes, when it is corrected or set by hand | Showing a time to a person |
 | Monotonic Clock (`CLOCK_MONOTONIC`) | Time since boot, not settable | No, but its speed can be adjusted slightly | Measuring elapsed time |
 
-The manual says to use the wall clock for wall time stamps and the monotonic clock to measure elapsed time, since a correction can make the wall clock jump forward or back. A timeout built on the wall clock can fire early, or late, when the clock is stepped in the middle of the wait.
+Use the wall clock for wall time stamps and the monotonic clock to measure elapsed time, since a correction can make the wall clock jump forward or back. A timeout built on the wall clock can fire early, or late, when the clock is stepped in the middle of the wait.
 
 ## How Wrong Are Physical Clocks?
 
 The Network Time Protocol, NTP, keeps clocks close to the official time by asking servers over the network.
 
-Wikipedia's summary is that it can usually hold clocks within tens of milliseconds over the public internet, and better than 1 ms on a local network in good conditions. Asymmetric routes and congestion can add errors of 100 ms or more.
+NTP typically keeps clocks within a few tens of milliseconds across the internet, and within a few hundred microseconds on a fast local network. Asymmetric routes and congestion can add larger errors.
 
 There are two ways to fix a clock that is off. A **step** sets it to the right value at once, which can move the time backwards. A **slew** changes the clock's speed a little until the error is gone, so time does not jump.
 
-The chrony documentation describes allowing steps in the first few updates after startup, and a default cap on slewing of about one part in twelve of the clock rate.
+Chrony allows steps in the first few updates after startup, and caps slewing by default at about one part in twelve of the clock rate.
 
 Leap seconds are another trap. When one is added, a naive clock repeats or halts a second, and the incident at Cloudflare in 2017 came from time running backwards.
 
-Google has handled leap seconds since 2008 by **smearing** them: the recommended form stretches the extra second over 24 hours, noon to noon UTC, which changes the clock's rate by about 11.6 parts per million and keeps it within half a second of UTC. Amazon's time service uses the same smear, and its documentation warns against mixing smeared and non smeared sources during a leap event.
+Google has handled leap seconds since 2008 by **smearing** them: the recommended form stretches the extra second over 24 hours, noon to noon UTC, which changes the clock's rate by about 11.6 parts per million and keeps it within half a second of UTC. Amazon's time service uses the same smear, and mixing smeared and non smeared sources during a leap event is a mistake.
 
 ## When Skew Decides the Winner
 
-Some databases settle conflicting writes by timestamp. Cassandra's documentation says each write carries a timestamp, from the client or else from the coordinator's clock, and the highest one wins. It describes this as last write wins, uses it in place of vector clocks, and says correctness depends on clocks that are kept in sync.
+Some databases settle conflicting writes by timestamp. In Cassandra each write carries a timestamp, from the client or else from the coordinator's clock, and the highest one wins. This is last write wins, used in place of vector clocks, and its correctness depends on clocks that are kept in sync.
 
 We simulated two writes to the same value on different servers, the second made after a gap of up to a second, and each server's clock off by a random amount with the standard deviation shown. The write that is really later loses when its timestamp is not greater:
 
@@ -93,7 +93,7 @@ A **Lamport clock** is a counter that respects this order. Each process incremen
 
 If a happened before b, then a's timestamp is lower than b's. The reverse doesn't hold: the email service's digest has timestamp 1 and the web send has timestamp 2, yet neither caused the other.
 
-A lower number doesn't prove a cause, and equal numbers can occur on different processes. Breaking ties by process id gives the events one total order, which the Wikipedia article on the clock calls artificial: it agrees with causality and invents order between concurrent events.
+A lower number doesn't prove a cause, and equal numbers can occur on different processes. Breaking ties by process id gives the events one total order. It agrees with causality, and between concurrent events it invents an order, which Lamport pointed out is arbitrary.
 
 ## Spotting Concurrency: Vector Clocks
 
@@ -107,7 +107,7 @@ If B had first received A's version, its edit would be [1, 1], which is later th
 
 The cost is size: a vector has an entry for each process. Amazon's Dynamo paper used vector clocks as a list of node and counter pairs to capture causality between versions of an object, and returned the conflicting versions to the application, for example to merge two shopping carts.
 
-It also describes truncation: each pair carries a timestamp, and when the list reaches a threshold, such as 10 pairs, the oldest is removed. The paper admits that this can make descendant relations impossible to derive accurately, and says the problem had not surfaced in production.
+Dynamo also truncates: each pair carries a timestamp, and when the list reaches a threshold, such as 10 pairs, the oldest is removed. This can make descendant relations impossible to derive accurately, though Amazon reported that the problem had not surfaced in production.
 
 ## Hybrid and Bounded Clocks
 
@@ -115,13 +115,13 @@ Two designs combine the benefits of both kinds. A **hybrid logical clock**, from
 
 Each event takes the larger of the previous value plus one and the physical clock, and a message receipt also takes the sender's value into account. The timestamps stay near wall time, so they are useful for queries such as "as of 10 minutes ago", and they keep the causal property.
 
-CockroachDB uses them. Its documentation says nodes attach their timestamp to requests and a receiver advances its own clock past it.
+CockroachDB uses them: nodes attach their timestamp to requests and a receiver advances its own clock past it.
 
-It also shows what skew costs: the default maximum offset is 500 ms, a node shuts itself down when its offset from the others exceeds 80 percent of that, and the documentation recommends 250 ms for new multi region clusters and a time service on each node.
+It also shows what skew costs: the default maximum offset is 500 ms, a node shuts itself down when its offset from the others exceeds 80 percent of that, and 250 ms plus a time service on each node is the usual setup for new multi region clusters.
 
 Google's Spanner takes the other route and makes clock error explicit. Its TrueTime interface returns an interval, earliest to latest, that is guaranteed to contain the true time.
 
-The error bound, from about 1 to 7 ms in the paper, comes from GPS receivers and atomic clocks in each data center and an assumed drift of 200 microseconds a second between syncs.
+The error bound, from about 1 to 7 ms in Google's description, comes from GPS receivers and atomic clocks in each data center and an assumed drift of 200 microseconds a second between syncs.
 
 To commit, a transaction picks a timestamp and then waits, called commit wait, until that timestamp is certainly in the past. The result is external consistency: if one transaction finishes before another starts, its timestamp is lower.
 

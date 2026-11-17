@@ -35,15 +35,15 @@ The store raises its own question: how does a service prove who it is, to be all
 
 A service running on a cloud platform or in Kubernetes presents the identity that the platform vouches for, the idea behind [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity), and the store decides from it.
 
-OWASP's recommended model is that the pipeline deploys with its own platform identity and the running service fetches its secrets when it starts, so application secrets don't pass through the build system.
+The recommended model: the pipeline deploys with its own platform identity and the running service fetches its secrets when it starts, so application secrets don't pass through the build system.
 
 ## Credentials That Expire
 
-A static password has no end date, so a leak is open ended. A **dynamic secret** is created on demand for one client and expires. HashiCorp Vault describes the mechanism with leases:
+A static password has no end date, so a leak is open ended. A **dynamic secret** is created on demand for one client and expires. HashiCorp Vault does it with leases:
 
 - **A lease**: Each dynamic secret has a time to live, and Vault promises the value for that period. A lease ID is the handle for renewing or revoking it
 - **Revocation**: It invalidates the secret at once and stops renewal. Revoking a token revokes the leases created with it, and a whole path of leases can be revoked together
-- **Per client credentials**: In Vault's database engine, each client that asks for credentials receives its own user, which helps auditing, and the role in the documentation's example has a default life of 1 hour and a maximum of 24 hours
+- **Per client credentials**: In Vault's database engine, each client that asks for credentials receives its own user, which helps auditing, and a role can have a default life of 1 hour and a maximum of 24 hours
 
 A request for credentials returns a lease ID, a duration such as 1 hour, a flag for whether it can be renewed, and a fresh username and password.
 
@@ -80,7 +80,7 @@ Two shares gave no information: they were consistent with any secret. Three work
 
 Operators then unseal each node by hand after each restart, which is a poor fit for automatic recovery. Vault offers auto unseal, where a trusted external service, such as a cloud key service, decrypts the root key at startup.
 
-Its documentation warns that if the seal mechanism or its keys are permanently deleted, the cluster can't be recovered. As with any key, a copy of the root material belongs in a place that is tested and kept apart from the data.
+If the seal mechanism or its keys are permanently deleted, the cluster can't be recovered. As with any key, a copy of the root material belongs in a place that is tested and kept apart from the data.
 
 ## Pipelines, Containers and People
 
@@ -110,15 +110,15 @@ Known formats are precise and narrow: they found the cloud key, the token and th
 
 Entropy found random keys with no label, missed the hex string whose alphabet is too small to reach the threshold, and raised hundreds of false alarms on long words and identifiers.
 
-The three together found the whole set of six, and the entropy noise is the price. OWASP recommends more than one scanner and a balance of pattern and entropy methods.
+The three together found the whole set of six, and the entropy noise is the price. Use more than one scanner and a balance of pattern and entropy methods.
 
 ## When One Leaks
 
-The order of steps is the same in the OWASP and GitHub guidance: revoke first. OWASP says exposed keys should be revoked immediately, then rotated, preferably by automation, then removed from the exposed places such as code and logs, and the event logged.
+The order of steps: revoke first. Revoke exposed keys immediately, then rotate them, preferably by automation, then remove them from the exposed places such as code and logs, and log the event.
 
-GitHub's documentation on removing sensitive data starts with the same step, revoke or rotate the secret, and says that may be sufficient.
+Removing sensitive data starts with the same step, revoke or rotate the secret, which may be sufficient.
 
-Rewriting history comes after, and it isn't a substitute. GitHub explains that commits may remain reachable in forks, in other people's clones, in cached views by commit hash and in pull requests that refer to them.
+Rewriting history comes after, and it isn't a substitute. Commits may remain reachable in forks, in other people's clones, in cached views by commit hash and in pull requests that refer to them.
 
 Its support team removes cached views where the risk can't be handled by rotating. A secret that reached a public repository, even for a minute, counts as disclosed. The wider process is the subject of [Incidents and Postmortems](/system-design/postmortems).
 

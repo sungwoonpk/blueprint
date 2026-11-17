@@ -25,7 +25,7 @@ There are four common placements:
 | Directory | A lookup table maps each key to a shard | Moving a single key, odd sizes | An extra lookup and a table to keep safe |
 | Compound | Part of the key picks a group, the rest spreads within it | Locality with balance | A more complex key |
 
-- **Range**: MongoDB's ranged sharding keeps nearby key values together, so a range query goes to a few shards. Its documentation warns about monotonic keys, such as timestamps or increasing ids, since new inserts go to the chunk at the top of the range, which sits on one shard
+- **Range**: MongoDB's ranged sharding keeps nearby key values together, so a range query goes to a few shards. Monotonic keys, such as timestamps or increasing ids, are a trap, since new inserts go to the chunk at the top of the range, which sits on one shard
 - **Hash**: MongoDB's hashed sharding, Cassandra's token ring and Citus each hash the key, which gives an even spread, and a range of keys no longer maps to a range of shards. Figma hashes its key because auto increment or Snowflake style ids would create hotspots, and accepts slower range scans. [Consistent Hashing](/system-design/consistent-hashing) is the related idea
 - **Directory**: Slack's original design sent each workspace to a shard through a metadata cluster. Vitess calls the same idea a lookup vindex. Both let one key move alone, and cost an extra read
 - **Compound**: MongoDB allows a compound hashed key, a plain prefix and a hashed field, so the prefix places data in zones and the hash spreads the rest. Cassandra pairs a partition key, hashed to choose the node, with clustering keys that sort rows inside the partition
@@ -45,22 +45,22 @@ The range split is the worst because new listing ids are the newest, and they fa
 
 ## Choosing the Key
 
-The guidance across systems agrees on a few tests. MongoDB lists four:
+A few tests help. MongoDB's four are:
 
 - **Cardinality**: The number of distinct values caps the number of chunks. Its example is a key of the continent, with 7 values, which can't use more than 7 shards
 - **Frequency**: If a few values dominate, their chunk can't be split, and MongoDB calls it a jumbo chunk. Add a field to the key to break it up
 - **Monotonic change**: Use hashing, or a hashed prefix, for values that keep growing
 - **Query patterns**: A query that includes the shard key goes to one shard, and one that doesn't is sent to the whole set of shards, which scales poorly
 
-DynamoDB's documentation gives the same advice from the other side. A key with many distinct values, such as a user id, spreads load, and a status code with a few values or a date rounded to the hour is a poor key.
+The same advice comes from the other side. A key with many distinct values, such as a user id, spreads load, and a status code with a few values or a date rounded to the hour is a poor key.
 
 A partition handles up to 3,000 read units and 1,000 write units a second, so a day based key sends a whole day's writes to one partition.
 
-When a key is too hot, DynamoDB suggests write sharding by adding a suffix to it: a random number such as 1 to 200, which spreads writes and makes a read of the whole key query the 200 suffixes, or a suffix calculated from another attribute, which lets a single item be found again.
+When a key is too hot, the fix is write sharding by adding a suffix to it: a random number such as 1 to 200, which spreads writes and makes a read of the whole key query the 200 suffixes, or a suffix calculated from another attribute, which lets a single item be found again.
 
 Google's Bigtable guidance for row keys is to avoid keys that start with a timestamp or a sequential id, and to put a high cardinality value first.
 
-Size matters as well. Cassandra's data modeling guide advises keeping a partition below 100,000 cells and 100 MB.
+Size matters as well. In Cassandra, keep a partition below 100,000 cells and 100 MB.
 
 ## Matching the Key to the Queries
 

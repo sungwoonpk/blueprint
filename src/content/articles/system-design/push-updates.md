@@ -34,7 +34,7 @@ The wire format is a text stream, UTF-8, in lines:
 - **Reconnection**: `EventSource` reconnects by itself, after a delay the specification calls implementation defined, probably a few seconds. A response with status 204 tells the client to stop
 - **Resuming**: On reconnect the client sends a `Last-Event-ID` header with the last id it saw, so the server can replay what was missed. An event without an id inherits the previous one
 
-The costs are the direction, since the client sends no data back on the stream and uses ordinary requests instead, and a browser limit. MDN says that over HTTP/1.1 a browser allows about 6 open connections per domain, shared across the tabs, and that Chrome and Firefox treat this as won't fix.
+The costs are the direction, since the client sends no data back on the stream and uses ordinary requests instead, and a browser limit. Over HTTP/1.1 a browser allows about 6 open connections per domain, shared across the tabs, and Chrome and Firefox treat this limit as won't fix.
 
 Over HTTP/2 the limit is negotiated and defaults to 100 simultaneous streams. For the textbook app's one stream for each user, that makes HTTP/2 the sensible baseline.
 
@@ -56,7 +56,7 @@ WebSockets earn their place for two way, frequent traffic, such as chat or a liv
 
 When the app is closed, the platform alone can reach the device: Apple's push notification service and Google's Firebase Cloud Messaging hold a connection to each phone and deliver notifications that your server sends them.
 
-The pages that give their limits, such as message lifetime, priority and payload size, didn't render for us, so we don't state numbers.
+Limits such as message lifetime, priority and payload size differ by platform, so check the current ones before relying on them.
 
 The design consequences hold without them: delivery is best effort, a notification can arrive late or be lost, and it should carry just enough to prompt the user to open the app, which then fetches the real state.
 
@@ -89,7 +89,7 @@ The usual design has three parts:
 <figcaption>Gateways hold the connections, and a message bus carries each event to the gateway that holds the user</figcaption>
 </figure>
 
-Load balancing has a wrinkle. Socket.IO's documentation says sticky sessions are still required with the Redis adapter, since a server that doesn't know a session answers HTTP 400.
+Load balancing has a wrinkle. Sticky sessions are still required with Socket.IO's Redis adapter, since a server that doesn't know a session answers HTTP 400.
 
 A protocol with an upgrade step needs the requests of one session to reach one server. A pure WebSocket or Server-Sent Events setup avoids that, and the balancer needs a long idle timeout.
 
@@ -159,7 +159,7 @@ A long lived connection has security questions of its own:
 - **Check the origin**: A browser sends an `Origin` header on the WebSocket handshake, and the server should refuse origins it doesn't expect, since WebSockets aren't covered by the usual same origin rules for requests
 - **Authorize each channel**: A subscription to a user's messages must be checked against the user, as in [Authentication and Authorization](/system-design/authn-authz)
 - **Limit what a client can send**: Message size, rate and count of subscriptions, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
-- **Trust the bus carefully**: The Socket.IO documentation notes that its adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network
+- **Trust the bus carefully**: Socket.IO's adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network
 
 ## Choosing
 

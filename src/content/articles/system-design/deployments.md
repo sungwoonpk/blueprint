@@ -45,7 +45,7 @@ The exposure is the product of the share of traffic and the time it takes to not
 
 ## Canary and Control
 
-The SRE workbook defines canarying as a partial and time limited deployment of a change in a service and its evaluation. The canary is the part that gets the change, and the control is the rest. The comparison is what makes it more than a slow rollout.
+Canarying is a partial and time limited deployment of a change in a service, and its evaluation. The canary is the part that gets the change, and the control is the rest. The comparison is what makes it more than a slow rollout.
 
 Its example shows why a breakdown matters. With a 5 percent canary and a defect that fails 20 percent of requests, the failures are just 1 percent of the service's traffic, which a whole service dashboard can hide. The error rate has to be shown for the canary and the control separately.
 
@@ -90,13 +90,13 @@ The production stage is a series of waves: a low traffic region first, one zone 
 
 Each wave starts with a one box stage, a single server or container that takes at most 10 percent of the requests of a region or zone, and the rest of the fleet is updated in rolling batches that keep at least 66 percent of capacity healthy, up to 33 percent at a time.
 
-Between steps the pipeline waits, which AWS calls **bake time**: at least one hour after a one box stage, at least 12 hours after the first regional wave, and 2 to 4 hours after each later wave.
+Between steps the pipeline waits, which is called **bake time**: in Amazon's pipeline, at least one hour after a one box stage, at least 12 hours after the first regional wave, and 2 to 4 hours after each later wave.
 
 It also waits for a minimum number of requests, such as 100 calls to an API, so that quiet periods don't pass a change unseen.
 
 The rest is automation. A high severity alarm during a deployment rolls it back on its own and pages the on call engineer, and the rollback goes to the previous immutable package. If a team's aggregate alarm is already firing, a new deployment doesn't start.
 
-Time windows keep deployments to business hours and out of nights, weekends and holidays, since recovery is slower when the on call engineer is asleep. The article says a change typically reaches the whole set of regions in about four or five business days.
+Time windows keep deployments to business hours and out of nights, weekends and holidays, since recovery is slower when the on call engineer is asleep. At Amazon a change typically reaches the whole set of regions in about four or five business days.
 
 The zones and cells in those waves are the units from [Cellular Architecture](/system-design/cells), and the alarms are the ones from [Alerting and Dashboards](/system-design/alerting).
 
@@ -108,7 +108,7 @@ Fowler's parallel change pattern gives the order: expand, adding the new version
 
 Applied to a database, the schema has to serve both versions, so a rename becomes add the new column, write to both, move the readers and drop the old one later. That discipline is a later topic in this phase, [Schema Migrations Without Downtime](/system-design/schema-migrations).
 
-The SRE workbook adds another tool: keep feature launches apart from binary releases with flags, so that code can be deployed dark and turned on for a few users, as in [Feature Flags](/system-design/feature-flags).
+Another tool: keep feature launches apart from binary releases with flags, so that code can be deployed dark and turned on for a few users, as in [Feature Flags](/system-design/feature-flags).
 
 ## A Pipeline for the Textbook App
 

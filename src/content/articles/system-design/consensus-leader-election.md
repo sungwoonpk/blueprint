@@ -33,7 +33,7 @@ The quorum rule from [Leaderless Replication and Quorums](/system-design/leaderl
 | 5 | 3 | 2 |
 | 7 | 4 | 3 |
 
-Four nodes tolerate no more failures than three, so odd sizes are the norm. Kafka's documentation recommends 3 or 5 controllers and says that tolerating N failures takes 2N plus 1.
+Four nodes tolerate no more failures than three, so odd sizes are the norm. Kafka uses 3 or 5 controllers, since tolerating N failures takes 2N plus 1.
 
 The Raft site gives the 5 server example: the cluster keeps running with 2 failures, and with more it stops making progress and does not return wrong results.
 
@@ -84,7 +84,9 @@ Michael Fischer, Nancy Lynch and Michael Paterson proved in 1985 that in an asyn
 
 The reason is the one from the clock and failure detection topics: a slow node can't be told from a dead one, and a protocol that waits forever for it may not decide, while one that gives up may decide wrongly.
 
-Wikipedia stresses what the result does not say. It doesn't mean consensus can't be reached, it means no deterministic algorithm can guarantee it in bounded time. Practical systems keep safety and get liveness from timeouts, which are the same guesses as in [Failure Detection and Gossip](/system-design/failure-detection), and from randomization.
+The result is easy to misread. It doesn't mean consensus can't be reached. It means that in a fully asynchronous system no deterministic algorithm can guarantee it finishes, even if just one process may fail.
+
+Practical systems keep safety and get liveness from timeouts, which are the same guesses as in [Failure Detection and Gossip](/system-design/failure-detection), and from randomization.
 
 ## Electing a Leader
 
@@ -105,7 +107,7 @@ The randomness matters. We simulated 5 nodes with message delays between 1 and 1
 
 With identical timeouts the candidates start together and split the votes forever. A narrow range still splits half the time.
 
-A wide range separates the candidates by more than a message delay, so the first candidate usually collects a majority before anyone else starts. etcd's documentation sets the defaults at a 100 ms heartbeat and a 1000 ms election timeout, and advises a heartbeat of 0.5 to 1.5 times the round trip time between members and an election timeout of at least 10 times it.
+A wide range separates the candidates by more than a message delay, so the first candidate usually collects a majority before anyone else starts. etcd's defaults are a 100 ms heartbeat and a 1000 ms election timeout, and the advice is a heartbeat of 0.5 to 1.5 times the round trip time between members and an election timeout of at least 10 times it.
 
 ZooKeeper's leader election recipe shows another way, using a coordination service. Each candidate creates an ephemeral sequential znode, and the one with the smallest number is leader. Each candidate watches the node just below its own, so a leader's failure wakes one watcher and not the whole group.
 

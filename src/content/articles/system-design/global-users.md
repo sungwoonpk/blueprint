@@ -6,7 +6,7 @@ They are right, and no tuning on the servers would help. The cause is geography.
 
 ## The Floor Set by Physics
 
-Light in an optical fiber travels at about two thirds of its speed in a vacuum, which is roughly 200,000 kilometers a second: the Wikipedia article on the speed of light gives light in glass as about c divided by 1.5. That is 5 milliseconds for each 1,000 kilometers one way, and 10 for a round trip.
+Light travels at 299,792 kilometers a second in a vacuum, and the glass of an optical fiber slows it by its refractive index, roughly 1.5, to about 200,000 kilometers a second. That is 5 milliseconds for each 1,000 kilometers one way, and 10 for a round trip.
 
 We computed the great circle distances between the cities and the round trip floor, and added a column for a route 1.5 times longer than the straight line, which is our assumption, since real cables don't follow great circles and equipment adds delay:
 
@@ -22,7 +22,7 @@ Between Frankfurt and São Paulo the floor is 98 ms, and with the longer route a
 
 ## Round Trips Multiply
 
-A single round trip of 128 ms is tolerable. A page isn't a single round trip. A new connection needs a TCP handshake and a TLS handshake, and TLS 1.3 needs one round trip for its full handshake, according to its specification.
+A single round trip of 128 ms is tolerable. A page isn't a single round trip. A new connection needs a TCP handshake and a TLS handshake, and TLS 1.3 needs one round trip for its full handshake.
 
 Then the page makes requests, and some of them depend on the answer to the one before: the page, then the data it names, then the data that data names.
 
@@ -77,7 +77,7 @@ If each request must go to the origin, run an origin near each group of users. A
 
 Its summary is that it brings the compute to the data. A global routing service with health checks sends the user to a geode, and each geode reads and writes a data store replicated across regions.
 
-The pattern has conditions, and the Azure page lists them:
+The pattern has conditions:
 
 - **The data is replicated asynchronously**: Different geodes may see different versions of an item while replication is in progress
 - **Read your writes needs help**: A session token returned to the client and sent with later reads lets a user's writes follow them from one geode to another
@@ -101,7 +101,7 @@ The hard part is where the writes happen. The managed databases show the options
 In each design, reads are served locally, and they run a little behind except in the strong designs.
 
 - **One primary**: The distance is paid by writes from far away. On a planned switch, Aurora reports a recovery point of zero and, on qualifying versions, read and write recovery typically under 30 seconds. An unplanned failover has a non zero recovery point measured in seconds and takes a few minutes to promote
-- **Multi active**: Each region commits locally, and the copies converge afterward. DynamoDB's default is eventual consistency between regions with last writer wins for conflicting writes, and a strongly consistent mode that can't be mixed in the same table. It advertises a 99.999 percent availability for global tables. The replication latency depends on the distance between regions, and the pages we read give no figure
+- **Multi active**: Each region commits locally, and the copies converge afterward. DynamoDB's default is eventual consistency between regions with last writer wins for conflicting writes, and a strongly consistent mode that can't be mixed in the same table. It offers 99.999 percent availability for global tables. The replication latency depends on the distance between regions and has no promised figure
 - **Strong across regions**: A commit has to reach a majority of regions before it is acknowledged, and the cost follows from the table of distances
 
 We computed that cost for three regions, Seoul, Tokyo and Frankfurt, with the leader in Seoul and a majority of 2:
@@ -118,7 +118,7 @@ The figures are our arithmetic from the route estimates. Strong consistency acro
 
 A common compromise is to give each user a home region for their own data: a student's inbox and orders live in the region nearest them, and shared data such as the listing catalog is replicated everywhere.
 
-The home region is stored with the user, requests are routed to it, and a user who travels keeps working, slower, against the home region. This is the idea of deployment stamps, which the Azure documentation describes as independent copies of the application components, each serving a subset of tenants.
+The home region is stored with the user, requests are routed to it, and a user who travels keeps working, slower, against the home region. This is the idea of deployment stamps, independent copies of the application components, each serving a subset of tenants.
 
 ## Rules About Where Data May Live
 

@@ -44,7 +44,7 @@ The standard answer is for the client to upload straight to object storage, as i
 <figcaption>The bytes go around the app: it signs the permission and handles the events</figcaption>
 </figure>
 
-The Amazon S3 documentation describes the properties that matter. Anyone with valid credentials can create a URL, but it works within the permissions of its creator and no wider. The uploader needs no credentials of its own.
+Some properties matter here. Anyone with valid credentials can create a URL, but it works within the permissions of its creator and no wider. The uploader needs no credentials of its own.
 
 A URL can be used many times until it expires, and S3 checks the expiry when a request starts, so a transfer in progress keeps going while a restart after the expiry fails.
 
@@ -110,7 +110,7 @@ A retry of a part must be safe to repeat, as in [Idempotency and Safe Retries](/
 
 ## Distrust the Upload
 
-A file that a stranger sends and the system later serves or processes is an attack surface. The OWASP file upload guidance lists the defenses:
+A file that a stranger sends and the system later serves or processes is an attack surface. The defenses:
 
 - **An allowlist of extensions**: The types the feature needs and no others, checked after the name is decoded
 - **Don't trust the Content-Type header**: It is trivial to spoof, so check the file's signature, its first bytes, as well, though the signature check isn't enough alone
@@ -127,7 +127,7 @@ This work fits a pipeline with states: the object lands in a quarantine location
 
 ## Serving Big Files
 
-Downloads need the same care in the other direction. HTTP range requests let a client ask for part of a file, which gives resumable downloads and seeking in media. RFC 9110 and the MDN guide describe them:
+Downloads need the same care in the other direction. HTTP range requests let a client ask for part of a file, which gives resumable downloads and seeking in media. RFC 9110 defines them:
 
 - **Support**: A server that advertises `Accept-Ranges: bytes` supports ranges, and a server can also ignore a `Range` header and send the whole file
 - **A request**: `Range: bytes=0-1023` asks for the first 1,024 bytes, since offsets start at zero and are inclusive, and `bytes=-500` asks for the last 500

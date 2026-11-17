@@ -10,7 +10,7 @@ Relational Software, now Oracle, shipped one of the first commercial SQL databas
 
 ## Tables, Rows and Keys
 
-PostgreSQL's documentation describes it plainly: a table is a named collection of rows, every row has the same named columns, and each column has a type. Here are some columns of the textbook app's `listings` table:
+A table is a named collection of rows. Each row has the same named columns, and each column has a type. Here are some columns of the textbook app's `listings` table:
 
 | id | seller_id | title | price_cents |
 | --- | --- | --- | --- |
@@ -46,11 +46,13 @@ Each constraint does a job:
 - **UNIQUE**: no two rows may share a value, so two users can't register the same email
 - **REFERENCES**: a **foreign key**, which says `seller_id` must match the `id` of a real row in `users`
 
-That last one is called referential integrity. The database itself refuses to create a listing for a seller who doesn't exist, whatever bug is in the application. PostgreSQL's documentation also lets you choose what happens when the referenced row is deleted: block it, delete the dependent rows too with `CASCADE`, or set the column to null.
+That last one is called referential integrity. The database itself refuses to create a listing for a seller who doesn't exist, whatever bug is in the application. PostgreSQL also lets you choose what happens when the referenced row is deleted: block it, delete the dependent rows too with `CASCADE`, or set the column to null.
 
-Two details in the definition connect to earlier topics. The price is a whole number of cents, the choice from [Serialization and Schema Evolution](/system-design/serialization), because PostgreSQL's documentation warns that floating point numbers are inexact and recommends exact types for money. And `timestamptz` stores a moment in UTC and converts it to each viewer's time zone on display, which avoids a whole class of date bugs.
+Two details in the definition connect to earlier topics. The price is a whole number of cents, the choice from [Serialization and Schema Evolution](/system-design/serialization), because floating point numbers are inexact, and money needs an exact type.
 
-One more fact from the documentation: SQL doesn't promise any order for rows. If the order matters, say so with `ORDER BY`.
+And `timestamptz` stores a moment in UTC and converts it to each viewer's time zone on display, which avoids a whole class of date bugs.
+
+One more fact: SQL doesn't promise any order for rows. If the order matters, say so with `ORDER BY`.
 
 ## Linking Tables With Keys
 
@@ -80,7 +82,7 @@ JOIN users u ON u.id = l.seller_id
 WHERE l.subject = 'calculus';
 ```
 
-The condition after `ON` says which rows belong together. Joins come in several kinds, defined in PostgreSQL's documentation, and the difference is what happens to rows with no partner. Take three users, where Joon has posted nothing:
+The condition after `ON` says which rows belong together. Joins come in several kinds, and the difference is what happens to rows with no partner. Take three users, where Joon has posted nothing:
 
 | users.id | name |
 | --- | --- |
@@ -121,14 +123,16 @@ Index Scan using listings_subject_idx on listings
   Index Cond: (subject = 'calculus')
 ```
 
-The first reads every row, and the second jumps straight to the matches through an index. Which one the planner picks depends on how many rows match and which indexes exist, and the PostgreSQL documentation shows it switching between a sequential scan, an index scan and a bitmap scan as the filter changes. [Indexes and Query Optimization](/system-design/indexing) comes up soon, and it is where this choice gets decided.
+The first reads every row, and the second jumps straight to the matches through an index.
+
+Which one the planner picks depends on how many rows match and which indexes exist, and PostgreSQL switches between a sequential scan, an index scan and a bitmap scan as the filter changes. [Indexes and Query Optimization](/system-design/indexing) comes up soon, and it is where this choice gets decided.
 
 ## Where SQL Differs From the Theory
 
 Codd's model works with mathematical sets, with no duplicate rows and no missing values. SQL bends both. A table can hold duplicate rows unless a key prevents it, and **NULL** marks a missing value, with no equivalent in the pure model. NULL causes the classic surprises:
 
 - **NULL is unknown, not a value**: `WHERE campus = NULL` matches nothing, and you write `IS NULL`
-- **Two NULLs aren't equal**: a `UNIQUE` column accepts many NULLs by default, as PostgreSQL's documentation notes
+- **Two NULLs aren't equal**: a `UNIQUE` column accepts many NULLs by default in PostgreSQL
 - **A CHECK passes on NULL**: `CHECK (price_cents >= 0)` doesn't reject a missing price, so add `NOT NULL` as well
 
 ## What It Gives You, and What It Costs

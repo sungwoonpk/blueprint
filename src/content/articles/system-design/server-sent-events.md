@@ -1,6 +1,8 @@
 > **Server-Sent Events** (SSE) let a server keep one HTTP response open and stream events down it as they happen. It is one way, from server to browser, and it reconnects on its own.
 
-[Polling and Long Polling](/system-design/polling) worked by asking again: each answer ended the request, and the client had to send a new one with its full set of headers. That is fine for occasional news and wasteful for a busy stream. SSE flips the arrangement. The client asks once, and the server doesn't finish its answer. It keeps writing new events onto the same open response, using the HTTP connection from [How HTTP Works](/system-design/http), with nothing new underneath.
+[Polling and Long Polling](/system-design/polling) worked by asking again: each answer ended the request, and the client had to send a new one with its full set of headers. That is fine for occasional news and wasteful for a busy stream.
+
+SSE flips the arrangement. The client asks once, and the server doesn't finish its answer. It keeps writing new events onto the same open response, using the HTTP connection from [How HTTP Works](/system-design/http), with nothing new underneath.
 
 ## One Request, Many Events
 
@@ -120,9 +122,13 @@ Connections drop. A phone moves from Wi-Fi to cellular, or a server restarts. Wi
 <figcaption>The server replays everything after the id it was given</figcaption>
 </figure>
 
-It is the same cursor idea as the `after=` parameter in [Polling and Long Polling](/system-design/polling) and in [Pagination](/system-design/pagination), built into the protocol. The catch is on the server: to replay, it has to keep recent events somewhere, such as a database table or a short list in a cache. How far back to keep them is a decision, and a client that was gone longer than that has to reload the page's data from scratch.
+It is the same cursor idea as the `after=` parameter in [Polling and Long Polling](/system-design/polling) and in [Pagination](/system-design/pagination), built into the protocol. The catch is on the server: to replay, it has to keep recent events somewhere, such as a database table or a short list in a cache.
 
-Two more details are worth knowing. Browsers also fire the `error` event on each reconnect attempt, not only when something is permanently wrong, so check the object's `readyState` to tell the two apart. And a server can tell the browser to stop reconnecting by answering with HTTP 204. That is how an endpoint says "nothing more will come, stop asking".
+How far back to keep them is a decision, and a client that was gone longer than that has to reload the page's data from scratch.
+
+Two more details are worth knowing. Browsers also fire the `error` event on each reconnect attempt, not only when something is permanently wrong, so check the object's `readyState` to tell the two apart.
+
+And a server can tell the browser to stop reconnecting by answering with HTTP 204. That is how an endpoint says "nothing more will come, stop asking".
 
 ## What SSE Can't Do
 
@@ -131,7 +137,7 @@ SSE is deliberately simple, and that comes with limits:
 - **One way**: data flows from server to browser. If the browser needs to send something, it makes a normal request, such as a POST. For lots of two way chatter, [WebSockets](/system-design/websockets) fit better
 - **Text only**: events are UTF-8 text. Binary data has to be encoded first, usually as base64 inside JSON
 - **A simple request**: the `EventSource` constructor takes only a URL and a flag for sending cookies across sites. You can't choose the method or add an `Authorization` header, so login usually rides on cookies. Putting a token in the URL works, but URLs end up in logs, so keep such tokens short lived
-- **Few connections per browser**: over HTTP/1.1, browsers allow about 6 SSE connections per domain, shared across all tabs, according to MDN. With HTTP/2 the number of simultaneous streams is negotiated and defaults to 100. One `EventSource` per page, shared by everything on it, avoids the problem
+- **Few connections per browser**: over HTTP/1.1, browsers allow about 6 SSE connections per domain, shared across the tabs. With HTTP/2 the number of simultaneous streams is negotiated and defaults to 100. One `EventSource` per page, shared by everything on it, avoids the problem
 
 ## What Sits Between the Server and the Browser
 

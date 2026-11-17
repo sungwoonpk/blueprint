@@ -36,7 +36,7 @@ The **transactional outbox** pattern, described on microservices.io, is the stan
 
 Its benefit is the guarantee that the message is sent exactly when the transaction commits, and in order. The relay has two forms: tailing the database's transaction log, or polling the table.
 
-The cost is that the relay can publish a message more than once, for instance when it crashes after publishing and before recording it. The page says that a message consumer must be idempotent, for example by tracking the identifiers of messages it has processed.
+The cost is that the relay can publish a message more than once, for instance when it crashes after publishing and before recording it. A message consumer must be idempotent, for example by tracking the identifiers of messages it has processed.
 
 <figure class="diagram">
 <div class="flow">
@@ -63,9 +63,9 @@ By default the topic is named from the aggregate type, so the listing events go 
 
 The router ignores deletes on the outbox table, which lets the app delete the row in the same transaction it inserted it, and the table acts as a queue and stays small.
 
-The same idea runs through Facebook's memcache deployment. Its paper describes invalidation daemons that read the commit log of the database, extract the deletes of cache keys, and broadcast them to the memcache servers in each cluster of a region, instead of having each web server issue the invalidation.
+The same idea runs through Facebook's memcache deployment. It uses invalidation daemons that read the commit log of the database, extract the deletes of cache keys, and broadcast them to the memcache servers in each cluster of a region, instead of having each web server issue the invalidation.
 
-The paper notes that just 4 percent of the deletes issued result in an actual invalidation, which is why reading them from one log and batching them is much cheaper than doing it everywhere.
+Just 4 percent of the deletes issued result in an actual invalidation, which is why reading them from one log and batching them is much cheaper than doing it everywhere.
 
 ## Make Applying a Change Safe
 
@@ -74,7 +74,7 @@ A log delivers each change at least once, and sometimes out of order across part
 - **Carry a version**: Each change has a number that grows with each update of the listing, such as the row version or the log position
 - **Apply a newer one alone**: If the stored version is at least as high as the incoming one, ignore the message. A repeated or late message has no effect
 - **Treat deletes as versioned events**: A delete is a change with a version, remembered for a while, or a late old update can bring a deleted listing back
-- **Use the engine's help**: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. Its documentation says the variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care
+- **Use the engine's help**: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. The variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care
 
 We simulated the three designs on 20,000 listings with 3 updates each. The assumptions are our own: 0.1 percent of updates lose their publish to a crash, 2 percent of the messages arrive out of order, and 1 percent are delivered twice. After the run we compared the index with the database:
 
@@ -103,7 +103,7 @@ A cache entry is the most common derived copy, and the choice is to update it or
 
 Facebook's paper chose delete, since deletes are idempotent: a repeated delete does no harm, while a repeated or reordered update can leave an old value in the cache. A delete makes the next read fetch from the database and fill the cache.
 
-Races remain. The paper's lease mechanism, a token that a client must present to fill a cache entry and that a delete invalidates, prevents a stale value from being set after a delete, and it limits how often a hot key goes to the database.
+Races remain. Facebook's lease mechanism, a token that a client must present to fill a cache entry and that a delete invalidates, prevents a stale value from being set after a delete, and it limits how often a hot key goes to the database.
 
 Another detail is a hold off: deletes to a cold cluster carry a two second hold off that rejects adds for that time, so a stale value copied from a warm cluster can't be inserted just after the delete.
 
@@ -111,7 +111,7 @@ A time to live stays as a backstop, so a missed invalidation heals itself within
 
 ## Search Indexes Have a Floor
 
-A search index doesn't show a change at once. Elasticsearch makes documents searchable within about 1 second, since it refreshes its segments at 1 second intervals by default, and the documentation says it refreshes this way for indices that received a search in the last 30 seconds.
+A search index doesn't show a change at once. Elasticsearch makes documents searchable within about 1 second, since it refreshes its segments at 1 second intervals by default, and it refreshes this way for indices that received a search in the last 30 seconds.
 
 A refresh can be requested explicitly, or an index request can wait for the next refresh with `refresh=wait_for`, which is the tool for a flow where a user must find what they just saved. It costs latency, so use it where it matters and not for each write.
 

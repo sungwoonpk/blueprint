@@ -8,7 +8,7 @@ SLOs turn the question into arithmetic that the whole team, including product ma
 
 ## SLI, SLO and SLA
 
-Google's SRE book defines the three terms, and they are often confused:
+Three terms matter, and they are often confused:
 
 | Term | What It Is | Example |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Amazon's EC2 SLA promises 99.99 percent for instances spread over two or more av
 
 ## Choosing Indicators
 
-An SLI should reflect what users feel. The SRE book lists typical ones by kind of service:
+An SLI should reflect what users feel. Typical ones by kind of service:
 
 | Kind of Service | Typical SLIs |
 | --- | --- |
@@ -33,7 +33,7 @@ An SLI should reflect what users feel. The SRE book lists typical ones by kind o
 | Data Pipelines | Throughput, end to end latency, freshness |
 | Any System | Correctness |
 
-The SRE workbook gives the form of an SLI: good events divided by total events, a percentage from 0 to 100. It separates the **specification**, the outcome that matters, such as the ratio of home page requests that load in under 100 ms, from the **implementation**, the way it is measured.
+An SLI has a simple form: good events divided by total events, a percentage from 0 to 100. It separates the **specification**, the outcome that matters, such as the ratio of home page requests that load in under 100 ms, from the **implementation**, the way it is measured.
 
 Three ways to measure a web service are server logs, which miss requests that don't reach the backend, probes that run a browser from outside, which catch network failures, and client instrumentation.
 
@@ -49,9 +49,9 @@ Use percentiles and not averages for latency, as the SRE book insists. Its examp
 
 ## Setting the Target
 
-How high? The SRE book's chapter on risk says that 100 percent is the wrong goal. Past a point, each extra nine costs far more, it slows feature work, and users can't tell the difference: someone on a phone with 99 percent reliability can't see 99.99 percent in the service.
+How high? 100 percent is the wrong goal. Past a point, each extra nine costs far more, it slows feature work, and users can't tell the difference: someone on a phone with 99 percent reliability can't see 99.99 percent in the service.
 
-The book notes that the cost of each increment can be about 100 times the previous one.
+The cost of each increment can be about 100 times the previous one.
 
 It also notes that background errors on the internet run roughly 0.01 to 1 percent, so a service far more reliable than that is invisible to users.
 
@@ -69,7 +69,7 @@ The Azure reliability guidance has the same table for a month, 43.2 minutes at 9
 
 Dependencies lower what a service can promise. As the first topic of the previous phase showed, 10 services in a chain at 99.9 percent give 99.0 percent together.
 
-The Azure guidance gives the rule as a product of the components' values, and Wikipedia's page on high availability gives the one for redundant copies: availability is 1 minus the product of the chances that each copy fails.
+The rule for a chain is the product of the components' values, and for redundant copies availability is 1 minus the product of the chances that each copy fails.
 
 Two pieces of advice from the SRE book apply when choosing:
 
@@ -88,11 +88,11 @@ The textbook app serves 3,000 requests a second, which is 7.26 billion requests 
 
 The SRE workbook's smaller example makes it concrete: 99.9 percent over 3 million requests in four weeks leaves 3,000 errors, and an outage that causes 1,500 of them uses 50 percent of the budget.
 
-The SRE book states the use: an error budget is an SLO for meeting other SLOs, and as long as budget remains, releases continue.
+The use: an error budget is an SLO for meeting other SLOs, and as long as budget remains, releases continue.
 
 The budget changes the argument between teams. Without it, product wants features and operations wants stability, and each side is arguing from taste. With it, the question is how much budget is left.
 
-The book says the system is self policing: when the budget runs low, the product team itself slows releases, since it would pay for the failures.
+The system polices itself: when the budget runs low, the product team itself slows releases, since it would pay for the failures.
 
 ## A Policy for When the Budget Runs Out
 
@@ -115,7 +115,7 @@ Over what time is the SLO measured? The workbook recommends a rolling four week 
 
 A calendar month is easy to plan around, and it hides the forecast: at the start of the month, one bad hour looks small, and on the 29th it looks fatal. A rolling window removes that cliff.
 
-The SRE book adds a note about aggregation: a rate averaged over a day can hide a bad minute, so think about the interval of each SLI.
+One note about aggregation: a rate averaged over a day can hide a bad minute, so think about the interval of each SLI.
 
 ## Don't Overachieve
 

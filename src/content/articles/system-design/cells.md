@@ -12,7 +12,7 @@ The AWS whitepaper on cell based architecture defines it as multiple isolated in
 
 The work is divided by a **partition key**, a value chosen to match the grain of the service, such as the customer or the resource. A customer is assigned to one cell, and each of that customer's requests goes there.
 
-The Azure Architecture Center describes the same pattern under the name deployment stamp, and lists the other names for it: a service unit, a scale unit or a cell. Each stamp is a full copy of the components, including the data stores, serving a set number of tenants.
+The same pattern goes by the name deployment stamp, and other names are service unit, scale unit or cell. Each stamp is a full copy of the components, including the data stores, serving a set number of tenants.
 
 Three parts make up the design:
 
@@ -50,13 +50,13 @@ Each attempt, and up to 3 retries on other servers in the same cell, crashes a s
 
 With one pool, the poison customer kept the servers down. With cells, just the poison customer's cell was lost, and the results sit close to the share that arithmetic gives: with N cells, a failure confined to one cell leaves 1 minus 1 over N of the customers untouched, 75 percent for 4 cells and 83 percent for 6.
 
-The AWS page puts it the same way: with 10 cells, a failure in one leaves 90 percent of requests unaffected, and with 100 cells, a failure reaches 1 percent.
+Put it in numbers: with 10 cells, a failure in one leaves 90 percent of requests unaffected, and with 100 cells, a failure reaches 1 percent.
 
 The customer who sent the poison request still has a bad time, since their own cell goes down. A cell gives a limit, not a cure.
 
 ## Sizing a Cell
 
-The whitepaper names three forces on the size of a cell:
+Three forces act on the size of a cell:
 
 - **Big enough**: A cell has to hold the largest customer, and be efficient enough to be worth its fixed costs
 - **Small enough**: A cell should be small enough to be tested at its full load, so that its limits are known, and far from the limits of the account or the region
@@ -64,7 +64,7 @@ The whitepaper names three forces on the size of a cell:
 
 Smaller cells reduce the damage of a failure and cost more to operate, with more cells to manage and more idle capacity in each. Larger cells are easier to run and use capacity better, and a failure reaches a larger share of the fleet.
 
-The whitepaper says cells needn't be very large for any service, and that the right maximum depends on the service. It also warns against running a cell near its limit, since a cell needs headroom to absorb a failover.
+Cells needn't be very large for any service, and the right maximum depends on the service. Don't run a cell near its limit, since a cell needs headroom to absorb a failover.
 
 Cost shows up early. The textbook app needs 6 servers at its peak. If each cell needs at least 2 servers so that one failure doesn't take the cell down, 3 cells use 6 servers, and 6 cells use 12.
 
@@ -76,9 +76,9 @@ The router needs a map from each customer to a cell. A hash and a remainder is t
 
 Many cell systems keep an explicit table, which costs a lookup and makes it easy to place a large customer in a cell of their own, or to move one.
 
-The AWS whitepaper gives these jobs to the control plane. It places new customers in cells with room, watches the use of each cell and of each customer in it, and moves customers when one grows to dominate.
+The control plane has these jobs. It places new customers in cells with room, watches the use of each cell and of each customer in it, and moves customers when one grows to dominate.
 
-Moving a customer takes care, since the data has to be copied and the router has to switch over at the right moment, which Azure calls hard and says needs custom logic. This is the same problem as in [Sharding Strategies](/system-design/sharding), and the same remedy of planning for the move before it is needed.
+Moving a customer takes care, since the data has to be copied and the router has to switch over at the right moment, which is hard and needs custom logic. This is the same problem as in [Sharding Strategies](/system-design/sharding), and the same remedy of planning for the move before it is needed.
 
 ## Deploying One Cell at a Time
 
@@ -92,7 +92,7 @@ The same boundary helps testing. A cell has a known maximum, so a load test of o
 
 The cell does not have to be a customer group. In some designs it is a data center zone, the unit that fails together.
 
-Slack's engineers wrote about moving to this layout after an incident on 30 June 2021, when a faulty network link between availability zones degraded the service, though the design was meant to survive the loss of one zone.
+Slack moved to this layout after an incident on 30 June 2021, when a faulty network link between availability zones degraded the service, though the design was meant to survive the loss of one zone.
 
 They built a way to drain a zone, with the goals of moving most traffic away within 5 minutes, in steps as small as 1 percent, and without depending on anything in the zone being drained.
 
@@ -100,7 +100,7 @@ The idea they chose is siloing: a service accepts traffic from its own zone alon
 
 The edge load balancers drain a zone by changing the weights of the routes to it, and the change takes seconds to spread. The drain time of 5 minutes was a goal in the post, and not a measured result.
 
-AWS describes the related idea of static stability in the Builders' Library. A system that is statically stable keeps working when a dependency is impaired, without needing to react.
+A related idea is static stability. A system that is statically stable keeps working when a dependency is impaired, without needing to react.
 
 For a fleet across three zones it overprovisions by 50 percent, so that each zone runs at about 66 percent of its tested level, and the loss of one zone leaves the other two able to carry the whole load without launching anything new.
 
@@ -112,11 +112,11 @@ Amazon's paper on Physalia, the store that keeps the configuration of EBS volume
 
 Each Physalia cell holds the data of one partition key, runs consensus over seven nodes, and doesn't coordinate with other cells, though each node takes part in many cells.
 
-The paper calls the division into many cells its main tool for reducing blast radius.
+Dividing into many cells is the main tool for reducing blast radius.
 
 Placement is part of the design too: the control plane gives each node a different mix of cells, so that a poisonous transition that crashes a node loses just the cell that triggered it, and puts a cell near the client it serves.
 
-The paper also says why it kept cells separate. It could have let cells share data and coordinate, as in some elastic designs, but the added complexity and the dependencies between shards worked against blast radius, so cells stayed independent and the control plane became its own system.
+There is a reason the cells stayed separate. It could have let cells share data and coordinate, as in some elastic designs, but the added complexity and the dependencies between shards worked against blast radius, so cells stayed independent and the control plane became its own system.
 
 ## Shuffle Sharding
 
@@ -126,13 +126,13 @@ With 8 workers and 2 for each customer, there are 28 possible pairs, against 4 f
 
 ## The Costs
 
-Cells are not free, and the Azure guidance says they aren't right for simple solutions:
+Cells are not free, and they aren't right for simple solutions:
 
 - **Duplicated capacity**: Each cell carries its own minimum, and the total grows with the number of cells
-- **Operations**: Many copies to deploy, monitor and keep identical, which needs automation, and Azure suggests at least two stamps from the start to avoid assumptions of a single copy
+- **Operations**: Many copies to deploy, monitor and keep identical, which needs automation, and it helps to run at least two stamps from the start to avoid assumptions of a single copy
 - **A shared router**: One component in front of the cells, so it has to be simpler and more reliable than anything behind it
 - **Cross cell work**: A report across the customers needs data from each cell, and a customer who moves needs a migration
-- **A region is one cell too**: Azure notes that stamps are not redundant across regions by themselves, so a regional failure takes down the tenants in that region, as covered in [Surviving a Region Outage](/system-design/region-outage)
+- **A region is one cell too**: Stamps are not redundant across regions by themselves, so a regional failure takes down the tenants in that region, as covered in [Surviving a Region Outage](/system-design/region-outage)
 
 Chaos experiments, as in [Chaos Engineering](/system-design/chaos-engineering), are the way to check that a cell really contains a failure.
 

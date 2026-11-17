@@ -34,9 +34,9 @@ UPDATE users SET credit_cents = credit_cents + 4500
 COMMIT;
 ```
 
-PostgreSQL's tutorial calls this all or nothing. Until `COMMIT`, other sessions can't see any of the changes, and then all of them appear together. If something goes wrong first, `ROLLBACK` throws the whole block away. A crash before the commit has the same effect as a rollback.
+This is all or nothing. Until `COMMIT`, other sessions can't see any of the changes, and then all of them appear together. If something goes wrong first, `ROLLBACK` throws the whole block away. A crash before the commit has the same effect as a rollback.
 
-Without `BEGIN`, PostgreSQL still wraps each statement in a transaction of its own, as its documentation notes. That is why one statement is safe alone, and four related ones are not.
+Without `BEGIN`, PostgreSQL still wraps each statement in a transaction of its own. That is why one statement is safe alone, and four related ones are not.
 
 Once a statement in a block fails, the block is aborted, and you must roll it back or return to a `SAVEPOINT`, a marker you can roll back to without losing earlier work.
 
@@ -44,7 +44,7 @@ The first `UPDATE` carries a check too. If it changes zero rows, the listing was
 
 ## What ACID Promises
 
-The four letters come from a 1983 paper by Theo Härder and Andreas Reuter, according to Wikipedia. Each answers a different worry:
+The four letters were put together in a 1983 paper by Theo Härder and Andreas Reuter. Each answers a different worry:
 
 - **Atomicity**: The block is all or nothing. The half finished purchase above can't be left behind, even by a crash
 - **Consistency**: A transaction takes the database from one valid state to another, and the rules of that state hold when it commits. The database enforces the rules you give it, such as `CHECK (credit_cents >= 0)` or a foreign key, and rejects a commit that breaks one
@@ -53,7 +53,7 @@ The four letters come from a 1983 paper by Theo Härder and Andreas Reuter, acco
 
 Consistency is the odd one. The database can only check rules it was told about. "Credit moved between users must add up" is a rule of your own logic. It is kept by writing the debit and the credit in one transaction, and the database can't know it.
 
-Sources also use the word loosely: Wikipedia describes it as preserving all defined rules, while MySQL's documentation uses it for protecting data from crashes. The word is also different from the C in the CAP theorem, which is about readers seeing the latest write, as in [The CAP Theorem](/system-design/cap).
+People also use the word loosely: some mean preserving the rules the database knows, others mean protecting data from crashes. The word is also different from the C in the CAP theorem, which is about readers seeing the latest write, as in [The CAP Theorem](/system-design/cap).
 
 ## How the Database Keeps Its Promise
 
@@ -77,11 +77,13 @@ Atomicity and durability both depend on the same trick, the **write-ahead log**.
 <figcaption>The log is safe on disk before the database says committed</figcaption>
 </figure>
 
-PostgreSQL's documentation explains the payoff. A commit only needs the log on permanent storage, which is a sequential write, cheaper than flushing every changed page, and one flush can cover many transactions committing together. After a crash, the database replays the log to redo changes that never reached the data files, and that is durability. [Write-Ahead Logs](/system-design/write-ahead-logs) goes deeper.
+Here is the payoff. A commit only needs the log on permanent storage, which is a sequential write, cheaper than flushing every changed page, and one flush can cover many transactions committing together.
+
+After a crash, the database replays the log to redo changes that never reached the data files, and that is durability. [Write-Ahead Logs](/system-design/write-ahead-logs) goes deeper.
 
 Rollback needs the opposite: a way back. MySQL's InnoDB keeps undo records that describe how to reverse each change, and PostgreSQL leaves old row versions in place until nothing needs them. Either way, the database can restore the earlier state without help from your code.
 
-Durability has a price, which is the wait for that flush on each commit. Most databases let you relax it for data you can afford to lose a little of, such as a page view counter, and MySQL's documentation lists several settings that trade safety against speed.
+Durability has a price, which is the wait for that flush on each commit. Most databases let you relax it for data you can afford to lose a little of, such as a page view counter, and MySQL offers several settings that trade safety against speed.
 
 ## Isolation in a Crowd
 
@@ -111,11 +113,11 @@ Plain reads take no row locks, since PostgreSQL's MVCC gives each statement a sn
 
 Locks bring one more risk. Say a transfer debits user 8 and then credits user 3, while another moves credit the other way, and each has done its first step. Each now waits for the row the other holds, which is a **deadlock**.
 
-PostgreSQL's documentation says the database detects the cycle and aborts one of the transactions, and which one is hard to predict. The best defense is to touch rows in the same order each time, for example the lower user id first. The fallback is to catch the error and retry the transaction.
+PostgreSQL detects the cycle and aborts one of the transactions, and which one is hard to predict. The best defense is to touch rows in the same order each time, for example the lower user id first. The fallback is to catch the error and retry the transaction.
 
 ## Short Transactions and Their Limits
 
-PostgreSQL's documentation also calls it a bad idea to hold transactions open for long, with waiting for a user to click as the example. Locks stay held, and every transaction that needs the same rows waits. A few habits help:
+It is also a bad idea to hold a transaction open for long, for example while waiting for a user to click. Locks stay held, and every transaction that needs the same rows waits. A few habits help:
 
 - **Keep them short**: Do the thinking before `BEGIN`, and hold the transaction only for the writes
 - **Keep outside calls out**: A payment provider or an email service can't be rolled back with the database. Make the call before or after the transaction, and make it safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency)

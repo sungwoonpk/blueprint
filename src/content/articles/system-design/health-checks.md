@@ -1,6 +1,8 @@
 > A **health check** is a small question a load balancer asks each server on a schedule: "can you take requests right now?" A server that keeps answering no is skipped until it answers yes again.
 
-[Load Balancers](/system-design/load-balancers) and [Load Balancing Algorithms](/system-design/load-balancing-algorithms) chose among servers as if they were all fine. Real servers crash, hang, run out of disk or are halfway through starting up. In [Redundancy and Failover](/system-design/redundancy-failover), the first part of any failover was noticing the failure, and the health check is how a load balancer notices. Its settings decide how fast, and what the question asks decides whether the answer can be trusted.
+[Load Balancers](/system-design/load-balancers) and [Load Balancing Algorithms](/system-design/load-balancing-algorithms) chose among servers as if they were all fine. Real servers crash, hang, run out of disk or are halfway through starting up.
+
+In [Redundancy and Failover](/system-design/redundancy-failover), the first part of any failover was noticing the failure, and the health check is how a load balancer notices. Its settings decide how fast, and what the question asks decides whether the answer can be trusted.
 
 ## The Basic Loop
 
@@ -33,7 +35,9 @@ One check isn't enough to change a server's state, because a single slow reply s
 <figcaption>The default thresholds of AWS's Application Load Balancer</figcaption>
 </figure>
 
-The settings are an interval between checks, a timeout for each, and the two thresholds. They form a tradeoff, like those in [Thinking in Tradeoffs](/system-design/trade-offs). Quick checks with low thresholds remove a failing server fast and may also remove good servers over a brief hiccup. Slow checks with high thresholds are calm and leave users hitting a dead server longer.
+The settings are an interval between checks, a timeout for each, and the two thresholds. They form a tradeoff, like those in [Thinking in Tradeoffs](/system-design/trade-offs).
+
+Quick checks with low thresholds remove a failing server fast and may also remove good servers over a brief hiccup. Slow checks with high thresholds are calm and leave users hitting a dead server longer.
 
 ## How Long Detection Takes
 
@@ -49,7 +53,9 @@ Multiply the interval by the threshold and you get roughly how long a failure go
 <figcaption>Seconds, roughly, from the interval times the threshold at each provider's defaults: 30 s with 2 and 5 on AWS, 5 s with 2 and 2 on Google</figcaption>
 </figure>
 
-With AWS's defaults, a dead server can keep receiving requests for about a minute, and a recovered one waits more than two minutes to return. Each request that lands on the dead server fails, which is why the 55 second failover in [Redundancy and Failover](/system-design/redundancy-failover) began with a detection step. You can tighten the settings, and the price is a twitchier system.
+With AWS's defaults, a dead server can keep receiving requests for about a minute, and a recovered one waits more than two minutes to return.
+
+Each request that lands on the dead server fails, which is why the 55 second failover in [Redundancy and Failover](/system-design/redundancy-failover) began with a detection step. You can tighten the settings, and the price is a twitchier system.
 
 ## What Should the Endpoint Check?
 
@@ -94,14 +100,14 @@ It feels natural to have `/health` run a query, because a server that can't reac
 <figcaption>A shared dependency makes all the servers look broken at the same moment</figcaption>
 </figure>
 
-All the servers fail the check together, and the load balancer removes the whole fleet, so users get errors from a site whose web servers were fine. A slow database turns into a full outage. The AWS article warns about exactly this, since automation that removes servers works for one bad server and does damage when the whole fleet looks bad. Azure's guidance reaches the same place from the other side.
+All the servers fail the check together, and the load balancer removes the whole fleet, so users get errors from a site whose web servers were fine. A slow database turns into a full outage. Automation that removes servers helps with one bad server and does damage when the whole fleet looks bad.
 
 The habits that follow:
 
 - **Keep the load balancer's check local**: liveness and local health only
 - **Watch dependencies another way**: run those checks in the background, report them to monitoring and alerts, and react to them gently
 - **Report degraded, not dead**: for a dependency that is optional, serve what you can, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding)
-- **Fail open**: when every server fails its check, send traffic to all of them anyway. AWS's Application Load Balancer does this, and the Builders' Library article recommends it. It is a safety net, though, not a plan
+- **Fail open**: when every server fails its check, send traffic to all of them anyway. AWS's Application Load Balancer does this. It is a safety net, though, not a plan
 
 ## Probes Inside the Platform
 
@@ -121,7 +127,7 @@ livenessProbe:
   periodSeconds: 10
 ```
 
-The split matters. A liveness probe that checks the database would restart each container whenever the database stumbles, which makes things worse. That is why Azure's guidance says to keep liveness shallow, so a dependency outage doesn't cause needless restarts.
+The split matters. A liveness probe that checks the database would restart each container whenever the database stumbles, which makes things worse. That is why a liveness probe stays shallow: a dependency outage shouldn't cause needless restarts.
 
 ## Watching Real Traffic
 
@@ -133,10 +139,10 @@ Many systems use both kinds, probes to find a dead server quickly and real traff
 
 ## Details That Bite
 
-- **Firewalls**: probes come from particular addresses. Google's documentation says to allow its probe ranges explicitly, or all the backends show unhealthy
-- **Busy servers**: if a server is so loaded that it answers the check late, the balancer removes it, which pushes its work onto the rest, and they fall too. The AWS article suggests reserving capacity so health checks get answered first
-- **Cost**: many balancers probe each server. Google notes that several probers run each check, so the load adds up, and the endpoint should be cheap
-- **Exposure**: a public `/health` should reveal little. Azure recommends a separate minimal endpoint for probes, and detailed diagnostics behind a login
+- **Firewalls**: probes come from particular addresses. Allow those addresses explicitly, or the backends look unhealthy
+- **Busy servers**: if a server is so loaded that it answers the check late, the balancer removes it, which pushes its work onto the rest, and they fall too. Reserve capacity so health checks get answered first
+- **Cost**: many balancers probe each server, and several probers can run each check, so the load adds up and the endpoint should be cheap
+- **Exposure**: a public `/health` should reveal little. Use a separate minimal endpoint for probes, and keep detailed diagnostics behind a login
 - **Startup**: a new server should receive traffic only after it passes, as AWS requires, so it doesn't take requests while still loading
 
 Health checks also drive failover beyond a single data center. DNS can take an unhealthy region's address out of its answers, which [Global Traffic Routing](/system-design/global-routing) covers next.

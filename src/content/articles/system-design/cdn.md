@@ -1,6 +1,8 @@
 > A **content delivery network** (CDN) is a network of caching servers spread around the world. It keeps copies of your content close to users, so most requests don't travel to your own servers.
 
-Photos were the heaviest part of the textbook app in [Estimating Capacity](/system-design/estimation): about 5 Gbit a second at peak, nearly all of it images. A CDN is the answer that estimate pointed to. It is the [reverse proxy](/system-design/proxies) idea spread over hundreds of locations, using the routing tools from [Global Traffic Routing](/system-design/global-routing) to find the nearest one, and the caching headers from [How HTTP Works](/system-design/http) as its rules.
+Photos were the heaviest part of the textbook app in [Estimating Capacity](/system-design/estimation): about 5 Gbit a second at peak, nearly all of it images. A CDN is the answer that estimate pointed to.
+
+It is the [Forward and Reverse Proxy Servers](/system-design/proxies) idea spread over hundreds of locations, using the routing tools from [Global Traffic Routing](/system-design/global-routing) to find the nearest one, and the caching headers from [How HTTP Works](/system-design/http) as its rules.
 
 ## What a CDN Does
 
@@ -28,7 +30,9 @@ The server behind the CDN is called the **origin**. A file that the edge already
 
 ## Why It is Faster
 
-Think back to the connection costs in [TCP and UDP](/system-design/tcp-udp): a new HTTPS connection needs three round trips before the first byte of a photo arrives. Now compare a student far from our servers with one near an edge. Say the round trip to our origin is 150 ms, as for a trip across an ocean in [Numbers Every Engineer Should Know](/system-design/numbers), and 20 ms to the edge:
+Think back to the connection costs in [TCP and UDP](/system-design/tcp-udp): a new HTTPS connection needs three round trips before the first byte of a photo arrives. Now compare a student far from our servers with one near an edge.
+
+Say the round trip to our origin is 150 ms, as for a trip across an ocean in [Numbers Every Engineer Should Know](/system-design/numbers), and 20 ms to the edge:
 
 <figure class="chart">
 <div class="hbars">
@@ -110,13 +114,15 @@ Caches are good at keeping copies, and that is a problem when a copy goes out of
 /photos/17/cover.b2d704.jpg    the new photo, a different URL
 ```
 
-The third is the best default. CloudFront's own guidance recommends versioned file names over invalidation, because they also control what browsers and other caches serve, make rollbacks easy, and avoid the need for invalidations.
+The third is the best default. Versioned file names also control what browsers and other caches serve, make rollbacks easy, and avoid the need for invalidations.
 
 One more reason is that no `Cache-Control` directive can remove a copy that is already sitting in a cache somewhere. Purging is for emergencies, such as a photo that must come down at once. The full story of keeping copies fresh is in [Cache Invalidation](/system-design/cache-invalidation).
 
 ## Layers Behind the Edge
 
-With hundreds of edges, a popular file expires in all of them around the same time, and each one asks the origin. CDNs add a layer to stop that. In CloudFront, a regional edge cache sits between the edges and the origin, and an optional Origin Shield sits in front of the origin. Fastly calls its version shielding and Cloudflare calls it tiered cache, and the shape is the same:
+With hundreds of edges, a popular file expires in all of them around the same time, and each one asks the origin. CDNs add a layer to stop that.
+
+In CloudFront, a regional edge cache sits between the edges and the origin, and an optional Origin Shield sits in front of the origin. Fastly calls its version shielding and Cloudflare calls it tiered cache, and the shape is the same:
 
 <figure class="diagram">
 <div class="flow">
@@ -133,15 +139,21 @@ With hundreds of edges, a popular file expires in all of them around the same ti
 <figcaption>Many edges ask one shield, and only the shield asks the origin</figcaption>
 </figure>
 
-Another trick is **request collapsing**. If 500 requests for the same uncached file arrive in the same second, the cache sends only one to the origin and holds the others until it answers. CloudFront says Origin Shield can bring the origin down to as few as one request per object, and Fastly describes the same waiting list. It is the defense against the stampede in [Cache Stampedes](/system-design/cache-stampedes).
+Another trick is **request collapsing**. If 500 requests for the same uncached file arrive in the same second, the cache sends only one to the origin and holds the others until it answers.
+
+CloudFront says Origin Shield can bring the origin down to as few as one request per object, and Fastly describes the same waiting list. It is the defense against the stampede in [Cache Stampedes](/system-design/cache-stampedes).
 
 ## Netflix: Moving the Edge Into the ISP
 
-Netflix's Open Connect shows how far the idea goes. Netflix places its own servers, called appliances, inside internet providers' networks and at internet exchange points, and provides them to qualifying providers for free. Its site says it works with over 1,000 providers. A viewer's stream can then come from a server inside their own provider's network, without crossing the wider internet.
+Netflix's Open Connect shows how far the idea goes. Netflix places its own servers, called appliances, inside internet providers' networks and at internet exchange points, and provides them to qualifying providers for free.
+
+It works with over 1,000 providers. A viewer's stream can then come from a server inside their own provider's network, without crossing the wider internet.
 
 Netflix doesn't wait for a first miss, either.
 
-The appliances are filled with the titles likely to be watched in their area ahead of time, with fills sent in off hours. This is a **push** style: you place the copies in advance, and it works because what people will watch is fairly predictable. Most CDNs use a **pull** style, where the edge fetches a file the first time someone asks, which is simpler and needs no prediction.
+The appliances are filled with the titles likely to be watched in their area ahead of time, with fills sent in off hours. This is a **push** style: you place the copies in advance, and it works because what people will watch is fairly predictable.
+
+Most CDNs use a **pull** style, where the edge fetches a file the first time someone asks, which is simpler and needs no prediction.
 
 ## Using One
 

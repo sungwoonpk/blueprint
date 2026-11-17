@@ -1,10 +1,10 @@
 > An **API gateway** is the single front door that clients use to reach a set of backend services. It routes each request to the right service, and handles shared work, such as login checks and rate limits, so the services don't each repeat it.
 
-After [When to Split into Microservices](/system-design/monoliths-microservices), the textbook app is four services: listings, search, messages and payments. A [reverse proxy](/system-design/proxies) can already put one address in front of them. An API gateway is that idea with more built in, aimed at APIs, and it uses [Service Discovery](/system-design/service-discovery) to find whichever instances are alive.
+After [When to Split into Microservices](/system-design/monoliths-microservices), the textbook app is four services: listings, search, messages and payments. A [Forward and Reverse Proxy Servers](/system-design/proxies) can already put one address in front of them. An API gateway is that idea with more built in, aimed at APIs, and it uses [Service Discovery](/system-design/service-discovery) to find whichever instances are alive.
 
 ## Without a Gateway
 
-Suppose the phone app talks to each service directly. Microsoft's Azure Architecture Center lists what goes wrong:
+Suppose the phone app talks to each service directly. Here is what goes wrong:
 
 - **Clients learn the internals**: the app must know which service owns what, so splitting or merging services breaks every installed copy
 - **Many round trips**: a screen that needs data from three services makes three calls, and on a cellular connection each one is slow, as in [The Life of a Request](/system-design/life-of-a-request)
@@ -41,7 +41,7 @@ Suppose the phone app talks to each service directly. Microsoft's Azure Architec
 
 ## Three Jobs
 
-Microsoft's guidance names three jobs a gateway does, and they are a useful way to organize the idea:
+A gateway does three jobs, and they are a useful way to organize the idea:
 
 | Job | What It Does | In the Textbook App |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ Microsoft's guidance names three jobs a gateway does, and they are a useful way 
 | Aggregation | Turns one client request into several backend calls and merges the answers | One call builds a whole listing page |
 | Offloading | Takes shared concerns away from the services | TLS, login checks, rate limits, logging, caching |
 
-**Routing** is the [layer 7 routing](/system-design/load-balancers) from earlier, with rules about paths and services. Here is such a table of rules, in a generic form, since each product has its own syntax:
+**Routing** is the [Load Balancers](/system-design/load-balancers) from earlier, with rules about paths and services. Here is such a table of rules, in a generic form, since each product has its own syntax:
 
 ```yaml
 routes:
@@ -66,7 +66,9 @@ routes:
 
 Products organize this in their own words. Kong, for instance, has services that point at backends, routes that match requests to them, and plugins that add features such as authentication and rate limiting. Kubernetes's Gateway API splits it into a GatewayClass, a Gateway and HTTPRoutes.
 
-**Offloading** is the cross-cutting list from the Azure documentation: ending TLS, checking identity, allowing or blocking IP addresses, limiting rates, logging, caching and compression. Doing it once at the door means a new service gets all of it for free. The caution is to pass along the verified identity and the forwarded headers from [Forward and Reverse Proxy Servers](/system-design/proxies), so services know who is asking.
+**Offloading** is the cross-cutting list: ending TLS, checking identity, allowing or blocking IP addresses, limiting rates, logging, caching and compression. Doing it once at the door means a new service gets all of it for free.
+
+The caution is to pass along the verified identity and the forwarded headers from [Forward and Reverse Proxy Servers](/system-design/proxies), so services know who is asking.
 
 ## Aggregation in Action
 
@@ -87,7 +89,9 @@ async def listing_page(listing_id, user):
     return page
 ```
 
-Two habits keep this safe. The calls run in parallel, so the page takes as long as the slowest call and not the sum. And a failure in a minor part, the badge, degrades the page without breaking it, the graceful degradation from [Load Shedding and Graceful Degradation](/system-design/load-shedding). Add timeouts and circuit breakers too, as [Timeouts, Retries and Backoff](/system-design/timeouts-retries) explains.
+Two habits keep this safe. The calls run in parallel, so the page takes as long as the slowest call and not the sum.
+
+And a failure in a minor part, the badge, degrades the page without breaking it, the graceful degradation from [Load Shedding and Graceful Degradation](/system-design/load-shedding). Add timeouts and circuit breakers too, as [Timeouts, Retries and Backoff](/system-design/timeouts-retries) explains.
 
 The same need is why [GraphQL](/system-design/graphql) appeals to front end teams. It lets the client ask for the combination it wants and does the gathering on the server.
 
@@ -95,7 +99,9 @@ The same need is why [GraphQL](/system-design/graphql) appeals to front end team
 
 Rate limiting is a natural job for the gateway, since all requests pass through it. Amazon's API Gateway shows the typical design.
 
-It uses a token bucket: tokens refill at a steady rate, each request spends one, and the bucket's size is the burst allowed above that rate. By default, in most Regions an AWS account gets 10,000 requests a second, with a burst of 5,000, and requests over the limit get a 429 Too Many Requests. Limits can be set lower per API, per method and per client through usage plans. [Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) and [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) go deeper.
+It uses a token bucket: tokens refill at a steady rate, each request spends one, and the bucket's size is the burst allowed above that rate.
+
+By default, in most Regions an AWS account gets 10,000 requests a second, with a burst of 5,000, and requests over the limit get a 429 Too Many Requests. Limits can be set lower per API, per method and per client through usage plans. [Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) and [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) go deeper.
 
 ## One Gateway or Several
 
@@ -122,13 +128,15 @@ A single gateway for everything has a failure mode of its own. Each client team 
 
 A phone wants small responses and few calls, a website can take more, and a partner wants a stable, documented API.
 
-The rule of thumb Newman cites is one experience, one BFF, owned by the team that builds that client, so the API and the app change together. Microsoft's description of the pattern adds the costs: more services to run, some duplicated code, and an extra hop. It also notes that GraphQL can make a BFF unnecessary, since each client picks its own data.
+The rule of thumb Newman cites is one experience, one BFF, owned by the team that builds that client, so the API and the app change together.
+
+Microsoft's description of the pattern adds the costs: more services to run, some duplicated code, and an extra hop. It also notes that GraphQL can make a BFF unnecessary, since each client picks its own data.
 
 ## Risks
 
 A gateway is powerful because everything passes through it, and that cuts both ways:
 
-- **Single point of failure and bottleneck**: run several copies behind a load balancer, size them for peak and load test them, as Azure's guidance advises
+- **Single point of failure and bottleneck**: run several copies behind a load balancer, size them for peak and load test them
 - **Business logic creeping in**: the gateway should route and handle cross-cutting work, and leave the rest to services. One that grows rules about listings or payments turns into a monolith in the middle
 - **Bypass**: services should accept traffic only from the gateway, or the checks it does can be skipped
 - **Extra latency**: another hop adds time, usually small, but it counts against the budget in [Latency and Throughput](/system-design/latency-throughput)
@@ -143,7 +151,9 @@ These parts overlap, so a quick comparison helps:
 | API Gateway | Outside clients, many services | Route, check identity, limit, aggregate |
 | Service Mesh | Calls between services | Secure and manage service to service traffic |
 
-Many setups use all three: a gateway at the edge, load balancing across instances, and a mesh inside. Managed gateways include Amazon API Gateway, Azure API Management and Google Cloud's, and Kong, NGINX and Envoy based ones are common to run yourself. For a small system, the reverse proxy you already have is enough. The next topic is the third part of the table: [Service Meshes and Sidecars](/system-design/service-mesh).
+Many setups use all three: a gateway at the edge, load balancing across instances, and a mesh inside. Managed gateways include Amazon API Gateway, Azure API Management and Google Cloud's, and Kong, NGINX and Envoy based ones are common to run yourself.
+
+For a small system, the reverse proxy you already have is enough. The next topic is the third part of the table: [Service Meshes and Sidecars](/system-design/service-mesh).
 
 ## Key Points
 

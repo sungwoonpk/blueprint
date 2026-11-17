@@ -1,6 +1,8 @@
 > A **load balancing algorithm** is the rule a load balancer uses to pick a server for each request. Simple rules work when servers and requests are alike, smarter ones help when they aren't, and hashing keeps related requests together.
 
-[Load Balancers](/system-design/load-balancers) showed where the choice gets made. This topic is about how, and the answer changes with the traffic. Take registration day again, with six servers and thousands of requests a second. If every request cost the same and every server were identical, almost any rule would do. Neither is true for long, and the rules differ in how they cope.
+[Load Balancers](/system-design/load-balancers) showed where the choice gets made. This topic is about how, and the answer changes with the traffic. Take registration day again, with six servers and thousands of requests a second.
+
+If every request cost the same and every server were identical, almost any rule would do. Neither is true for long, and the rules differ in how they cope.
 
 ## Taking Turns: Round Robin and Weights
 
@@ -15,13 +17,13 @@ upstream web_servers {
 }
 ```
 
-Here the first server gets 3 of every 4 requests. AWS recommends plain round robin when requests cost about the same and the targets are alike.
+Here the first server gets 3 of every 4 requests. Plain round robin is the right choice when requests cost about the same and the servers are alike.
 
 The weakness is that round robin is blind. It deals requests out in turn without noticing that one server is stuck on a slow search while another is idle. When requests vary in cost, the unlucky server falls behind and a queue builds up, even though the others have room.
 
 ## Send It Where It is Quiet
 
-The next idea is to look before picking. **Least connections**, or in AWS's words **least outstanding requests**, sends each request to the server with the fewest requests in progress. A server stuck on slow work has a long list, so it gets fewer new ones. nginx calls it `least_conn`, and AWS recommends it when request cost or server capacity varies.
+The next idea is to look before picking. **Least connections** sends each request to the server with the fewest requests in progress (AWS calls it least outstanding requests, and nginx `least_conn`). A server stuck on slow work has a long list, so it gets fewer new ones. Use it when request cost or server capacity varies.
 
 ```nginx
 upstream web_servers {
@@ -31,7 +33,9 @@ upstream web_servers {
 }
 ```
 
-It costs more, because the balancer has to count what is in flight for each server. And it has a trap: a server that is broken and answering with errors instantly has the fewest requests in flight, so it can attract more traffic, not less. Health checks, from [Health Checks](/system-design/health-checks), catch this, and AWS also watches each target's error rate against its peers and, with the right setting, eases traffic off outliers.
+It costs more, because the balancer has to count what is in flight for each server. And it has a trap: a server that is broken and answering with errors instantly has the fewest requests in flight, so it can attract more traffic, not less.
+
+Health checks, from [Health Checks](/system-design/health-checks), catch this, and AWS also watches each target's error rate against its peers and, with the right setting, eases traffic off outliers.
 
 ## Two Random Choices
 
@@ -65,7 +69,9 @@ The average request tells the same story: roughly 990 ms for random, 550 ms for 
 
 ## Same Client, Same Server
 
-Sometimes the goal is the opposite of spreading evenly. A cache server holds recently used data, and a request lands better on the server that already has it. Data kept for each user in a server's memory has the same pull. The tool is **hashing**: compute a number from something in the request and use it to pick the server, so the same input lands in the same place.
+Sometimes the goal is the opposite of spreading evenly. A cache server holds recently used data, and a request lands better on the server that already has it.
+
+Data kept for each user in a server's memory has the same pull. The tool is **hashing**: compute a number from something in the request and use it to pick the server, so the same input lands in the same place.
 
 - **By client address**: nginx's `ip_hash` uses the first three parts of an IPv4 address, so one office tends to reach one server
 - **By URL**: send each file to the same cache, so it sits in one place and not in all of them
@@ -94,11 +100,13 @@ The `consistent` keyword switches to **consistent hashing**, which places server
 
 The ideal for consistent hashing is one in five, and the new server takes its share from the others. [Consistent Hashing](/system-design/consistent-hashing) returns to how the ring works.
 
-It can create hot spots, with one server getting far more than its share, and a variant from Google called consistent hashing with bounded loads caps each server at a small margin above the average. Vimeo put it into HAProxy, and Google's post reports that it cut Vimeo's cache bandwidth by almost eight times.
+It can create hot spots, with one server getting far more than its share, and a variant from Google called consistent hashing with bounded loads caps each server at a small margin above the average. Vimeo put it into HAProxy and cut its cache bandwidth by almost eight times.
 
 ## Easing a New Server In
 
-A server that has just started has empty caches and unwarmed code, so handing it a full share at once can make it slow, and then it looks unhealthy. Many balancers can ramp a new server up gradually. AWS calls it slow start, and it is off by default, and nginx has a `slow_start` setting in its commercial edition. The same care applies in reverse when a server is removed, as with the draining in [Load Balancers](/system-design/load-balancers).
+A server that has just started has empty caches and unwarmed code, so handing it a full share at once can make it slow, and then it looks unhealthy. Many balancers can ramp a new server up gradually.
+
+AWS calls it slow start, and it is off by default, and nginx has a `slow_start` setting in its commercial edition. The same care applies in reverse when a server is removed, as with the draining in [Load Balancers](/system-design/load-balancers).
 
 ## Choosing a Rule
 

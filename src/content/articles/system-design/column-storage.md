@@ -28,7 +28,7 @@ A row store has the advantage that a whole record is in one place.
 
 The C-Store paper, which introduced the design that later systems built on, notes that one disk write is enough to store all the fields of a record, and calls such systems write optimized, good for OLTP. A column store is read optimized, for questions over many rows that use few columns.
 
-As the paper puts it, the database needs to read only the values of the columns the query uses.
+The database needs to read just the values of the columns the query uses.
 
 We measured what that means for the campus report. We made a table of one million orders with ten columns, which add up to 61 bytes per row, and counted the bytes each layout must read to answer it:
 
@@ -49,7 +49,7 @@ Neighbors in a column are alike: the same few campuses, prices in a narrow range
 
 It names two ways. Code values into a compact form, such as a US state in six bits instead of a 16 bit abbreviation, and pack values tightly, so that N values of K bits take N times K bits, with no padding to whole bytes.
 
-Parquet, a widely used column file format, and Amazon Redshift list the standard encodings. We applied the ideas to our million orders:
+Column formats such as Parquet and Redshift offer a standard set of encodings. We applied the ideas to our million orders:
 
 | Technique | Fits | Our Result |
 | --- | --- | --- |
@@ -62,11 +62,11 @@ A dictionary replaces each value with the small number of its entry. Parquet's w
 
 Delta stores the first value and then the difference from each value to the one before. In Parquet each block also subtracts its smallest difference and packs the rest at the narrowest width that fits. Run length stores a value and how many times it repeats, which Redshift advises against on a sort key column.
 
-Wikipedia's article on data orientation gives an example of the same flavor: 128 booleans take 128 bytes when stored as separate values, and 16 bytes as a bitmap. And generic compressors such as Zstandard, which Redshift offers as an encoding, work on top of these.
+The same flavor shows up with booleans: 128 of them take 128 bytes when stored as separate values, and 16 bytes as a bitmap. And generic compressors such as Zstandard, which Redshift offers as an encoding, work on top of these.
 
 ## Skipping Data: How Parquet Is Laid Out
 
-A column file is cut into pieces so a reader can skip most of them. Parquet's documentation describes the hierarchy: a file holds **row groups**, each holding one **column chunk** for every column, and each chunk is divided into pages.
+A column file is cut into pieces so a reader can skip most of them. Parquet shows the hierarchy: a file holds **row groups**, each holding one **column chunk** for every column, and each chunk is divided into pages.
 
 The file ends with a footer that has the offsets of each chunk and statistics for each: the minimum value, the maximum value and the number of nulls.
 
@@ -87,17 +87,17 @@ It works best when similar values are stored together: orders loaded in time ord
 
 ## The Cost of Writes
 
-Columns make writing harder. Inserting one order into a column store means adding a value to each of ten columns, in ten places, and updating statistics. In a row store it is one append. Wikipedia's article on data orientation says rowstores are better for fast row inserts, and columnstores for analytics.
+Columns make writing harder. Inserting one order into a column store means adding a value to each of ten columns, in ten places, and updating statistics. In a row store it is one append. Row stores are better for fast row inserts, and column stores for analytics.
 
 So column stores write in batches. Parquet fits this, with a footer written last after the data, as a file is written in one pass. C-Store's answer is to keep two stores.
 
 A small writable store takes new rows, and a large read optimized store holds the rest, and a background process called the tuple mover moves batches of rows from the first to the second.
 
-It will look familiar: it is the memtable and flush of [LSM Trees](/system-design/lsm-trees). The paper also stores the same data in several sort orders, so that different queries find their data in order, a copy for each common question.
+It will look familiar: it is the memtable and flush of [LSM Trees](/system-design/lsm-trees). C-Store also stores the same data in several sort orders, so that different queries find their data in order, a copy for each common question.
 
 ## Where You Meet It
 
-Wikipedia lists Parquet, ORC and Arrow as column formats, and the storage formats of BigQuery, Redshift and Snowflake belong to the same family. ClickHouse's documentation calls itself a columnar database that reads only the columns a query uses, and notes the cost: operations on whole rows become correspondingly more expensive.
+Parquet, ORC and Arrow are column formats, and BigQuery, Redshift and Snowflake store data the same way. ClickHouse is a columnar database that reads only the columns a query uses, at a cost: operations on whole rows become correspondingly more expensive.
 
 | Workload | Layout |
 | --- | --- |

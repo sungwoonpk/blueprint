@@ -10,7 +10,7 @@ Say the textbook app's resizer receives 1,500 jobs a second and can finish 1,000
 
 After 60 seconds the wait passes 30 seconds, and from then on each job reaches a worker after its client has gone. The workers stay busy and nothing they finish is of any use.
 
-Google's SRE book describes this as work nobody credits, and the AWS Builders' Library gives the right measure for it: **goodput**, the responses that are successful and on time, instead of throughput, all the requests handled. We worked out the first 10 minutes of the example for four ways of handling the surplus:
+This is work nobody credits, and the right measure for it is **goodput**: the responses that are successful and on time, not throughput, the count of every request handled. We worked out the first 10 minutes of the example for four ways of handling the surplus:
 
 | Policy | Jobs Finished in Time | Share of All Jobs Sent |
 | --- | --- | --- |
@@ -38,12 +38,12 @@ When a consumer can't keep up, there are four options:
 
 The standard stresses that nothing blocks, and that a receiver isn't made to buffer arbitrary amounts, so the queues between parts can be bounded.
 
-- **Bound the buffer**: Google's SRE book advises a queue in front of a thread pool no larger than about half the pool for steady traffic, so that the server rejects early when it can't keep up.
+- **Bound the buffer**: A queue in front of a thread pool should be no larger than about half the pool for steady traffic, so that the server rejects early when it can't keep up.
 
 A rejection is cheap and fast, while a long queue turns into slow failures. The AWS Builders' Library adds a second limit: bound the age of a queued item as well as the size, and throw away items that have waited too long.
 
-- **Drop or sample**: For sources that can't be slowed, the Reactive Streams README names clock ticks and mouse movement. The publisher has to buffer or drop. Under overload, the SRE book suggests serving the newest requests first, since a user whose request has waited 10 seconds has probably refreshed.
-- **Add capacity**: Microsoft's rate limiting pattern points out that more workers help when the limit is concurrency or CPU, and don't help when a downstream service is the bottleneck: extra workers only push the overload onto it.
+- **Drop or sample**: For sources that can't be slowed, clock ticks and mouse movement are examples. The publisher has to buffer or drop. Under overload, serving the newest requests first can help, since a user whose request has waited 10 seconds has probably refreshed.
+- **Add capacity**: More workers help when the limit is concurrency or CPU, and don't help when a downstream service is the bottleneck: extra workers only push the overload onto it.
 
 ## Backpressure in Code
 
@@ -56,7 +56,7 @@ if (!writable.write(chunk)) {
 }
 ```
 
-In practice `pipeline()` wires this up. The Node.js guide reports an experiment compressing a large file: with backpressure the process used a peak of about 88 MB of memory, and with the signal ignored it used about 1.5 GB, with garbage collection working much harder.
+In practice `pipeline()` wires this up. In a Node.js experiment compressing a large file, the process used a peak of about 88 MB of memory with backpressure, and about 1.5 GB with the signal ignored, with garbage collection working much harder.
 
 The guide compares the mechanism to Unix pipes and TCP flow control, which is the same idea at the network layer, as in [TCP and UDP](/system-design/tcp-udp).
 
@@ -71,7 +71,7 @@ The same signal appears in the pieces from the earlier topics:
 - **Queue depth and age**: These are the signals that something upstream should slow down, or that consumers should scale out
 - **HTTP status codes**: A `429` or `503` with a `Retry-After` header tells the caller to wait, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
 
-Callers have to obey the signal, and many don't. Google's SRE book describes a backend with a limit of 10,000 requests a second that is offered 10,100: naive retries push it to 10,200 and then higher, and cutting the load to 9,000 may not bring it back.
+Callers have to obey the signal, and many don't. Take a backend with a limit of 10,000 requests a second that is offered 10,100: naive retries push it to 10,200 and then higher, and cutting the load to 9,000 may not bring it back.
 
 Its rules for clients are a limit of three attempts for each request, a budget that allows retries only while they are below 10 percent of a client's requests, randomized exponential backoff, and retrying only at the layer just above the one that rejected.
 
@@ -79,11 +79,11 @@ Otherwise retries multiply: 4 attempts at each of 3 layers is 64 attempts at the
 
 ## Shedding by Priority
 
-When a service is nearly overloaded, **load shedding** drops a share of the traffic cheaply, so the rest is served well. It should drop the right things. Google's SRE book gives requests a criticality: the most critical ones are shed last, ordinary production traffic next, and batch work, which can retry later, first.
+When a service is nearly overloaded, **load shedding** drops a share of the traffic cheaply, so the rest is served well. It should drop the right things. Give requests a criticality: the most critical ones are shed last, ordinary production traffic next, and batch work, which can retry later, first.
 
 The AWS Builders' Library ranks by request type, with health checks from the load balancer first, and a request that finishes a piece of work ahead of one that starts it.
 
-For the textbook app the order is clear: buying a book is critical, searching is important, and generating thumbnails can wait. Google also describes graceful degradation as the companion: serve a cheaper answer, such as searching a smaller set of data, instead of failing.
+For the textbook app the order is clear: buying a book is critical, searching is important, and generating thumbnails can wait. Graceful degradation is the companion: serve a cheaper answer, such as searching a smaller set of data, instead of failing.
 
 Rejecting a request must itself be cheap, or the rejections use the capacity that was meant to be saved. When overload spreads from one service to the next, it becomes a [Cascading Failures](/system-design/cascading-failures).
 

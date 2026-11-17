@@ -56,7 +56,7 @@ With uniform popularity, with each listing equally likely to be written, the 1 s
 
 The cheapest conflict is one that can't happen. Route the writes for a given record to one leader, its home region. Within that record there is a single writer, as in single leader replication, and the system still survives the loss of a region by changing the home.
 
-EDB's multi-master PostgreSQL product suggests this too: it lists quorum commit, CRDT data types and a connection manager that routes writes to one write leader as ways to avoid conflicts.
+Multi-master PostgreSQL products take the same view, offering quorum commit, CRDT data types and a connection manager that routes writes to one write leader as ways to avoid conflicts.
 
 The price is latency for the writes that arrive in the wrong region, which need a trip to the home. In the textbook app, a seller's listings can live in the seller's region.
 
@@ -64,7 +64,7 @@ The price is latency for the writes that arrive in the wrong region, which need 
 
 When conflicts can't be avoided, the simplest rule is to keep the write with the latest timestamp and drop the other. DynamoDB global tables do this for each item, using an internal timestamp, and the replicas converge on the last write.
 
-Cosmos DB's default policy keeps the highest value of a path, `_ts` unless you pick another numeric field, and deletes beat inserts and replaces. Its documentation adds that conflicts settled this way do not appear in the conflicts feed.
+Cosmos DB's default policy keeps the highest value of a path, `_ts` unless you pick another numeric field, and deletes beat inserts and replaces. Conflicts settled this way do not appear in the conflicts feed.
 
 The rule is easy and has two weaknesses. Each conflict throws away one of two valid edits without a record: at 1 second of delay in our simulation, about 2 percent of writes. And the winner depends on clocks.
 
@@ -92,22 +92,22 @@ Figma chose a simpler path: a central server defines the order, and for each pro
 
 ## Detecting and Refusing
 
-A system can instead stop the second writer. MySQL Group Replication in multi-primary mode lets each member accept writes, and its documentation lists strict checks for this mode. A transaction at the serializable level fails, and so does one that touches tables with cascading foreign keys.
+A system can instead stop the second writer. MySQL Group Replication in multi-primary mode lets each member accept writes, and it applies strict checks in this mode. A transaction at the serializable level fails, and so does one that touches tables with cascading foreign keys.
 
-It also lists what it can't detect: gap locks, table locks, and concurrent DDL and DML on one object. The documentation recommends the read committed level, and limits a group to 9 members.
+Some conflicts it can't detect: gap locks, table locks, and concurrent DDL and DML on one object. The recommended level is read committed, and a group is limited to 9 members.
 
 DynamoDB's strongly consistent mode for global tables takes the other route. Writes go to at least one other region before they are acknowledged, so a loss of the region doesn't lose data, and a concurrent write to the same item in another region fails with a conflict exception that the client retries.
 
 It requires exactly three regions, and some features don't work with it.
 
-Plain PostgreSQL logical replication is not a multi-leader tool, and its documentation shows the default for a conflict: replication stops until someone fixes it.
+Plain PostgreSQL logical replication is not a multi-leader tool, and the default for a conflict is that replication stops until someone fixes it.
 
 ## Other Traps
 
 Multiple leaders also complicate things that a single leader gives for free:
 
 - **Unique keys and counters**: Two leaders handing out the next number would collide, which is the problem in [Unique ID Generation](/system-design/unique-ids)
-- **Transactions**: DynamoDB says a transaction in the default mode is atomic in the region where it runs, and other regions can see partial results
+- **Transactions**: In DynamoDB a transaction in the default mode is atomic in the region where it runs, and other regions can see partial results
 - **Reads of your own writes**: Strongly consistent reads return the latest version when the item was last written in the same region
 - **Replication cost**: Replicated writes use write capacity in each region
 

@@ -77,7 +77,7 @@ We simulated 400,000 reads over 200,000 keys with skewed popularity, on 16 shard
 
 Replicating one key helped a lot, and the next hot keys became the problem, so the fix has to cover a set of keys and not a single one. The local cache did two jobs: it brought the imbalance close to the best of the replication variants and removed 37 percent of the reads from the shards.
 
-The combination was the best, at 1.06. Redis's documentation adds the limit: a local cache is invalidated on each write to a key, so it helps keys that are read much more than they change, and counters that update often are better kept out of it.
+The combination was the best, at 1.06. There is a limit: a local cache is invalidated on each write to a key, so it helps keys that are read much more than they change, and counters that update often are better kept out of it.
 
 ## Fixing Hot Writes
 
@@ -86,7 +86,7 @@ A copy doesn't help a write, since each copy has to be updated. The fix is to sp
 - **Write sharding with a suffix**: DynamoDB's guidance appends a number to the key, from 1 to 200 in its example, so the writes spread over partitions. A read queries each suffix and merges. A calculated suffix, derived from an attribute of the item, makes a single item readable directly
 - **Sharded counters**: One counter becomes 16, each update picks one at random, and a read sums them. The cost is a read of 16 values
 - **Aggregation before writing**: Count in memory and flush a total, as in [Scaling Writes](/system-design/scaling-writes)
-- **Hashing sequential keys**: MongoDB's documentation explains that with a key that keeps increasing, the new inserts go to the chunk with the maximum value, and the shard holding it becomes the write bottleneck. A hashed shard key spreads the inserts, at the cost of range queries, which become broadcasts to the full set of shards
+- **Hashing sequential keys**: In MongoDB, with a key that keeps increasing, the new inserts go to the chunk with the maximum value, and the shard holding it becomes the write bottleneck. A hashed shard key spreads the inserts, at the cost of range queries, which become broadcasts to the full set of shards
 
 <figure class="diagram">
 <p class="rowname">Write</p>
@@ -110,9 +110,9 @@ A copy doesn't help a write, since each copy has to be updated. The fix is to sp
 
 DynamoDB's limits make the stakes concrete. A partition is designed for 1,000 write units and 3,000 read units a second, and a single hot item can use up to that maximum and no more. Adaptive capacity moves capacity toward hot partitions, and isolates frequently accessed items, which helps until the item itself is the limit.
 
-Cardinality matters too. MongoDB's documentation warns that a shard key with low cardinality limits scaling: a key with 7 possible values allows 7 chunks, and more than 7 shards add no capacity.
+Cardinality matters too. A shard key with low cardinality limits scaling: a key with 7 possible values allows 7 chunks, and more than 7 shards add no capacity.
 
-A hashed key doesn't change how often values repeat, so a key that most documents share stays hot even when hashed. This is our reading of the documentation.
+A hashed key doesn't change how often values repeat, so a key that most documents share stays hot even when hashed.
 
 ## Celebrity Users
 

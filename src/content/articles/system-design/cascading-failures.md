@@ -25,7 +25,7 @@ Three more mechanisms make it worse:
 - **Load balancing**: A server that fails health checks leaves the pool, and the policy that avoids servers with recent errors pushes their load onto the rest. A server that crashes and restarts is hit with the full load at once
 - **Cold starts**: New tasks are slow to start, with connections to set up and code to warm, and a cold cache sends each request to the expensive path
 
-The SRE book gives numbers for how hard it is to get out. A service that was healthy at 10,000 requests a second and begins crashing at 11,000 will not recover when the load drops to 9,000.
+Here is how hard it is to get out. A service that was healthy at 10,000 requests a second and begins crashing at 11,000 will not recover when the load drops to 9,000.
 
 If 10 percent of its servers are healthy, the request rate has to fall to about 1,000 a second to stabilize.
 
@@ -49,7 +49,7 @@ Their example is a web application that queries a database. The database answers
 
 Then a 10 second outage of the network switch hits. When connectivity returns, the lost requests and their retries arrive together, the database is overloaded, and its latency rises. While latency stays high, each client query is followed by a retry, 560 queries a second, so the database can't recover and no query succeeds.
 
-The system had two states at the same load. Below 150 queries a second it can't be pushed into the trap. Between 150 and 300 it is vulnerable, and a trigger can tip it. The paper stresses that the trigger tends to get the blame, and the real root cause is the sustaining effect.
+The system had two states at the same load. Below 150 queries a second it can't be pushed into the trap. Between 150 and 300 it is vulnerable, and a trigger can tip it. The trigger tends to get the blame, and the real root cause is the sustaining effect.
 
 A follow up study at OSDI 2022 read public incident reports. It examined 22 metastable failures from 11 organizations, and found that at least 4 of 15 major outages at Amazon Web Services in a decade were of this kind.
 
@@ -57,7 +57,7 @@ The most common sustaining effect was the retry policy, which affected more than
 
 ## Two Real Cascades
 
-Amazon's report on its DynamoDB outage of 20 September 2015 shows the pattern. Storage servers in DynamoDB ask an internal metadata service for their membership, the partitions they own, at startup and on check ins. Customers had adopted global secondary indexes quickly, and membership lists had grown, so each request was larger.
+Amazon's DynamoDB outage of 20 September 2015 shows the pattern. Storage servers in DynamoDB ask an internal metadata service for their membership, the partitions they own, at startup and on check ins. Customers had adopted global secondary indexes quickly, and membership lists had grown, so each request was larger.
 
 At 2:19 AM Pacific time a brief network disruption hit part of the storage fleet. Affected servers asked for their membership and found the answers slower than their timeout, so they dropped out of service and asked again.
 
@@ -67,7 +67,7 @@ By 2:37 AM the customer error rate stabilized at about 55 percent. Adding capaci
 
 Requests were allowed again at 7:10 AM. The effects spread: SQS had errors and Auto Scaling actions were delayed until 10:52 AM. The console's login took tens of seconds, because a long timeout on a call to DynamoDB blocked it.
 
-Cloudflare's report on its outage of 12 June 2025 is similar in kind. A failure in the storage under its Workers KV service, partly run by a third party that had its own outage, made 90.22 percent of KV requests fail in the report's table.
+Cloudflare's outage of 12 June 2025 is similar in kind. A failure in the storage under its Workers KV service, partly run by a third party that had its own outage, made 90.22 percent of KV requests fail.
 
 Services that depended on KV followed: Access failed 100 percent of identity based logins, and several other products reached error rates near 100 percent.
 
@@ -92,7 +92,7 @@ Load shedding kept the servers at capacity, so they stayed healthy and the cold 
 
 ## Defenses
 
-The SRE book lists them in order of importance:
+In order of importance:
 
 - **Load testing**: It calls this the most important exercise, to find the limits and see how the service fails under overload
 - **Capacity planning**: Its example has a breaking point of 5,000 requests a second for each cluster and a peak of 19,000, which needs about six clusters for N plus 2. Planning alone is not enough
@@ -102,11 +102,11 @@ The SRE book lists them in order of importance:
 - **Retry discipline**: Randomized exponential backoff with jitter, a limit on retries for each request, a server wide retry budget with an example of 60 retries a minute per process, and retries at one layer
 - **Deadlines**: Propagate the remaining time down the call tree, so that a 30 second deadline with 7 seconds spent leaves 23 for the next call, and drop work whose time has run out
 
-The AWS Builders' Library article on load shedding gives the reason in terms of **goodput**, the requests handled without error and quickly enough for the client to use. As load rises past capacity, latency rises, and a timeout on the client turns a slow answer into an error, so goodput can fall to zero.
+The reason is **goodput**, the requests handled without error and quickly enough for the client to use. As load rises past capacity, latency rises, and a timeout on the client turns a slow answer into an error, so goodput can fall to zero.
 
 Shedding keeps goodput flat by rejecting excess work early. Its advice: load test well past the point where goodput stops growing, serve health checks first, and prefer rejecting work that hasn't started to abandoning work that has.
 
-Envoy, a widely used proxy, puts some of these limits in the network layer. It enables circuit breakers by default, with modest limits, one example being 1,024 connections for each cluster, and its documentation recommends retry budgets over static retry limits.
+Envoy, a widely used proxy, puts some of these limits in the network layer. It enables circuit breakers by default, with modest limits, one example being 1,024 connections for each cluster, and retry budgets are preferred over static retry limits.
 
 Its retry backoff is exponential with full jitter from a 25 ms base, capped at 250 ms, and the route timeout covers the retries together.
 

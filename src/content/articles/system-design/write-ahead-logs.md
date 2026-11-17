@@ -8,7 +8,7 @@ The textbook app's purchase from that topic changes four places: a listing, an o
 
 The database keeps its tables and indexes in files made of pages, and edits the pages in memory first. Writing each edited page to its place on disk at each commit would be slow, since the pages are scattered. And a crash halfway through would leave some pages new and others old.
 
-The answer is the **write-ahead rule**, which PostgreSQL's documentation also builds on: a change may reach the data files only once the log entry that describes it is safe on disk. The log is a single file that is only ever appended to. Here is what the purchase writes to it, in a simplified form:
+The answer is the **write-ahead rule**: a change may reach the data files only once the log entry that describes it is safe on disk. The log is a single file that is only ever appended to. Here is what the purchase writes to it, in a simplified form:
 
 ```text
 LSN 101  T42  update listings page 17    status open -> sold
@@ -28,21 +28,21 @@ After that, the data pages can be written whenever it suits the database, even m
 | After the commit, before data pages are written | Records 101 to 105 | Redoes the changes from the log |
 | While a data page is being written | The log, plus a copy of the page | Restores the page, then redoes |
 
-The last row refers to a PostgreSQL feature, `full_page_writes`, on by default: the first time a page is changed after a checkpoint, the whole page is logged, so a page torn by a half finished write can be rebuilt. Replaying changes that never reached the data files is called roll-forward recovery, or REDO, in PostgreSQL's documentation.
+The last row refers to a PostgreSQL feature, `full_page_writes`, on by default: the first time a page is changed after a checkpoint, the whole page is logged, so a page torn by a half finished write can be rebuilt. Replaying changes that never reached the data files is called roll-forward recovery, or REDO.
 
 ## What the Log Holds
 
-The simplest log holds only redo information: how to reapply each change. Wikipedia's article on write-ahead logging says logs usually hold both redo and undo information, because of how databases manage memory. Two policies matter.
+The simplest log holds only redo information: how to reapply each change. Many systems log both redo and undo information, because of how databases manage memory. Two policies matter.
 
 A database may write a dirty page to disk before its transaction commits, called **steal**, to free memory, which means recovery may have to undo changes that never committed. And it needn't force pages to disk at commit, called **no-force**, which means committed changes may be missing from the files and must be redone.
 
-The classic design for this combination is ARIES, which Wikipedia describes as built for a no-force, steal database.
+The classic design for this combination is ARIES, designed for a no-force, steal database.
 
 Recovery runs in three phases: analysis, which works out from the last checkpoint what was in flight, redo, which repeats history, including changes of transactions that were never committed, and undo, which rolls those back, writing a record for each undo so that a crash during recovery can itself be recovered.
 
 The page's sequence number is also the trick that makes redo safe to repeat: each page stores the number of the last change applied to it, and a record already reflected in the page is skipped.
 
-PostgreSQL's design differs in one respect. Because it keeps old row versions in the tables, as in [Isolation Levels](/system-design/isolation-levels), its documentation describes recovery as redo, and aborted transactions simply leave versions that nobody can see.
+PostgreSQL's design differs in one respect. Because it keeps old row versions in the tables, as in [Isolation Levels](/system-design/isolation-levels), recovery is redo only, and aborted transactions simply leave versions that nobody can see.
 
 ## The Price of a Commit: Flushing
 
@@ -57,13 +57,13 @@ A commit has to wait until the log is truly on the disk, not just in the operati
 
 These numbers are for one laptop, and a server with a fast SSD will differ, but the shape is the point. A flush costs about the same however many records it covers, so sharing it is the way to go fast.
 
-This is **group commit**, which PostgreSQL's documentation describes: one flush of the log can commit many transactions that finish at the same time, and a setting named `commit_delay` lets a transaction wait a moment so that more can join.
+This is **group commit**: one flush of the log can commit many transactions that finish at the same time, and a setting named `commit_delay` lets a transaction wait a moment so that more can join.
 
 Some data can give up the guarantee. With asynchronous commit, `synchronous_commit` turned off, the database reports success before the flush.
 
-PostgreSQL's documentation says the risk is lost data, not damage: after a crash, the database comes back consistent but without the last few transactions, in their original order, and the loss window is at most three times `wal_writer_delay`.
+The risk is lost data, not damage: after a crash, the database comes back consistent but without the last few transactions, in their original order, and the loss window is at most three times `wal_writer_delay`.
 
-For the textbook app, that suits a counter of page views and not a purchase. The same documentation warns that `fsync = off` is a different matter, since a crash can then corrupt the database in arbitrary ways.
+For the textbook app, that suits a counter of page views and not a purchase. `fsync = off` is a different matter, since a crash can then corrupt the database in arbitrary ways.
 
 ## Checkpoints Bound the Replay
 
@@ -83,7 +83,7 @@ Once a database keeps an ordered record of each change, other uses follow:
 
 The same pattern appears far beyond relational databases. RocksDB, the engine behind many stores, writes each update to its WAL and to a table in memory, and the WAL recovers the table after a failure. A log is deleted once everything in it has been flushed to files.
 
-Its documentation describes recovery modes for the awkward case of a damaged end of the log, which a crash in the middle of a write can leave: one tolerates a corrupted tail, one stops at the first error and returns to a consistent earlier point, and one treats any error as corruption.
+RocksDB has recovery modes for the awkward case of a damaged end of the log, which a crash in the middle of a write can leave: one tolerates a corrupted tail, one stops at the first error and returns to a consistent earlier point, and one treats any error as corruption.
 
 The point in time mode has been the default since version 6.6. SQLite offers a WAL mode too, in which changes are appended to a separate file and readers can work while a single writer appends.
 

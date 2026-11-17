@@ -2,7 +2,9 @@
 
 The last three topics were about getting news to a browser. This one is about getting news to another server.
 
-Say a student pays for a book, and the payment happens at a payment provider, not in our app. Our server has to find out when it succeeds so it can mark the order as paid. It could ask the provider every few seconds, which is [polling](/system-design/polling) with all its waste. GitHub's documentation, for one, tells developers to use webhooks instead of polling its API.
+Say a student pays for a book, and the payment happens at a payment provider, not in our app. Our server has to find out when it succeeds so it can mark the order as paid.
+
+It could ask the provider every few seconds, which is [Polling and Long Polling](/system-design/polling) with all its waste. GitHub, for one, tells developers to use webhooks instead of polling its API.
 
 A webhook reverses the direction: the provider calls us.
 
@@ -64,14 +66,16 @@ def verify(secret, header, body):
 Three details matter:
 
 - **Use the raw bytes of the body**: parsing the JSON and serializing it again can change it and break the match
-- **Compare in constant time**, as GitHub's guidance says: an ordinary `==` can leak how many characters matched
+- **Compare in constant time**: an ordinary `==` can leak how many characters matched
 - **Protect the secret**: keep it out of code and logs, and rotate it when needed. Stripe lets the old secret keep working for a while after a rotation, so nothing breaks in between
 
 For anything that matters, treat the event as a doorbell and not as the final word. If it says order 311 was paid, you can ask the provider's API for the current state of that payment before shipping the book. Stripe's newer "thin" events are designed for exactly that, carrying only ids.
 
 ## Answer Fast, Work Later
 
-The sender is waiting on our reply, and it won't wait long. GitHub expects a 2xx within 10 seconds, or it records a failure. Stripe says to return a 2xx before running any slow logic, and counts a timeout as a failure. So the endpoint does as little as possible: check the signature, save the event, say OK, and let a background worker do the real work:
+The sender is waiting on our reply, and it won't wait long. GitHub, for one, expects a 2xx within 10 seconds and records a failure otherwise, and Stripe counts a timeout as a failure too.
+
+So the endpoint does as little as possible: check the signature, save the event, say OK, and let a background worker do the real work:
 
 <figure class="diagram">
 <div class="flow">
@@ -100,7 +104,7 @@ The queue is the one from [From One Server to Many](/system-design/one-server-to
 
 ## Events Can Come Twice, and Out of Order
 
-Senders retry whenever they don't get a clear 2xx, so an event may arrive more than once. It may also arrive late, or after a newer one. Stripe's documentation says both outright: duplicates happen, and delivery order isn't guaranteed. Two habits handle this.
+Senders retry whenever they don't get a clear 2xx, so an event may arrive more than once. It may also arrive late, or after a newer one. Both are normal: duplicates happen, and delivery order isn't guaranteed. Two habits handle this.
 
 The first is the idempotency idea from [Idempotency and Safe Retries](/system-design/idempotency), with the event id as the key. Record the id and the change in the same transaction:
 
@@ -119,7 +123,9 @@ The second is not to assume order. If a `payment.refunded` event shows up before
 
 What the sender does after a failure matters just as much, because a receiver that was down for an hour should still get its events. Providers retry for a long time.
 
-Stripe retries in live mode for up to three days with exponential backoff, and the Standard Webhooks specification recommends a schedule that spans days, with some randomness added. GitHub is the exception: it doesn't redeliver automatically, and offers manual redelivery through its dashboard and API. A schedule shaped like this one gives a struggling receiver room to recover:
+Stripe retries in live mode for up to three days with exponential backoff, and the Standard Webhooks specification recommends a schedule that spans days, with some randomness added.
+
+GitHub is the exception: it doesn't redeliver automatically, and offers manual redelivery through its dashboard and API. A schedule shaped like this one gives a struggling receiver room to recover:
 
 <figure class="chart">
 <div class="hbars">
@@ -134,9 +140,11 @@ Stripe retries in live mode for up to three days with exponential backoff, and t
 <figcaption>Wait before each retry, growing each time, about a day and a half in total (example schedule)</figcaption>
 </figure>
 
-Because every retry arrives as a fresh attempt, receivers can't tell a retry from a new event except by its id, which stays the same across retries. That is why the dedupe above keys on it. It is also why a receiver that runs behind should say so honestly, with a 429 or 503, and not time out silently, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+Because every retry arrives as a fresh attempt, receivers can't tell a retry from a new event except by its id, which stays the same across retries. That is why the dedupe above keys on it.
 
-Delivery can still fail for good, since an endpoint may be down for longer than the schedule, or an event may be dropped on the sender's side. So careful teams add a safety net: a scheduled job that asks the provider for recent events, or recent payments, and handles any it hasn't seen. GitHub's documentation suggests the same for failed deliveries, with a script that finds them and redelivers.
+It is also why a receiver that runs behind should say so honestly, with a 429 or 503, and not time out silently, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+
+Delivery can still fail for good, since an endpoint may be down for longer than the schedule, or an event may be dropped on the sender's side. So careful teams add a safety net: a scheduled job that asks the provider for recent events, or recent payments, and handles any it hasn't seen.
 
 ## When You Are the Sender
 
@@ -150,7 +158,9 @@ Now turn it around. A campus bookstore wants to know when a listing sells, and w
 - **Disable dead endpoints**: after days of failures, tell the owner by email and stop sending, so one broken URL isn't retried forever
 - **Isolation**: one slow partner shouldn't hold up the others, so each endpoint gets its own queue or limit, the idea behind [Bulkheads](/system-design/bulkheads)
 
-One more risk is specific to senders. The partner chooses the URL, and our server will call whatever it says. A malicious user could register an address that points inside our own network, such as the cloud's metadata service at `169.254.169.254` or an internal admin page, and read the response through the delivery log. This is **server-side request forgery**, SSRF. OWASP's prevention guidance lists the defenses:
+One more risk is specific to senders. The partner chooses the URL, and our server will call whatever it says.
+
+A malicious user could register an address that points inside our own network, such as the cloud's metadata service at `169.254.169.254` or an internal admin page, and read the response through the delivery log. This is **server-side request forgery**, SSRF. The defenses stack up:
 
 - Resolve the hostname, and refuse addresses that are loopback (`127.0.0.0/8`), private (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local (`169.254.0.0/16`) or otherwise internal
 - Connect to the address you checked, not to the name again, because a hostile name can answer differently the second time, a trick called DNS rebinding
@@ -166,7 +176,9 @@ One more risk is specific to senders. The partner chooses the URL, and our serve
 | Delivery | Sender retries for you | You retry yourself | You reconnect and catch up |
 | Best For | Events between services | Simple or backup checks | Live screens for people |
 
-Webhooks fit when another service owns the event and your server needs to react: payments, code pushes, shipping updates, messages from a chat platform. Their weak spot is that you must have a public HTTPS address, which is awkward on a laptop, so developers use tools such as Stripe's command line forwarder or ngrok during development. And since delivery can fail, pair them with an occasional check, as above.
+Webhooks fit when another service owns the event and your server needs to react: payments, code pushes, shipping updates, messages from a chat platform.
+
+Their weak spot is that you must have a public HTTPS address, which is awkward on a laptop, so developers use tools such as Stripe's command line forwarder or ngrok during development. And since delivery can fail, pair them with an occasional check, as above.
 
 The group on live updates ends here, and the next topics are about getting traffic to the right servers in the first place, beginning with [Forward and Reverse Proxy Servers](/system-design/proxies).
 

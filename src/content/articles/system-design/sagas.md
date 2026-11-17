@@ -12,7 +12,7 @@ Their remedy was to break the long transaction into a sequence of shorter ones t
 
 ## Steps and Their Undo Steps
 
-For each step in the saga, someone writes an undo step. Some steps can't be undone, and Microsoft's Azure guidance names three kinds:
+For each step in the saga, someone writes an undo step. Some steps can't be undone, and the steps come in three kinds:
 
 | Step | Undo Step | Kind |
 | --- | --- | --- |
@@ -50,7 +50,7 @@ A **compensable** step can be undone. The **pivot** is the point of no return: a
 Two styles exist, and both are described by microservices.io, Microsoft and AWS:
 
 - **Choreography**: Each service does its local transaction and publishes an event, and the next service reacts. microservices.io's example is an order service that creates an order as pending and emits an event, the customer service reserves credit and emits its outcome, and the order service approves or rejects the order
-- **Orchestration**: A central orchestrator tells each participant which local transaction to run, and handles the replies. AWS recommends Step Functions for it, with a failure path that runs Revert Payment, then Revert Inventory, then Remove Order
+- **Orchestration**: A central orchestrator tells each participant which local transaction to run, and handles the replies. In AWS, Step Functions can do it, with a failure path that runs Revert Payment, then Revert Inventory, then Remove Order
 
 | Question | Choreography | Orchestration |
 | --- | --- | --- |
@@ -60,9 +60,9 @@ Two styles exist, and both are described by microservices.io, Microsoft and AWS:
 | Single Point of Failure | Absent | The orchestrator, unless it is durable |
 | Hard Part | Seeing and changing the flow | Writing and running the coordinator |
 
-Microsoft's table gives these differences, and the choice is the one from [Workflow Engines](/system-design/workflow-engines): a coordinator holds the process in one place and records its progress, which is why durable engines such as Step Functions and Temporal are common for sagas.
+These differences decide it, and the choice is the one from [Workflow Engines](/system-design/workflow-engines): a coordinator holds the process in one place and records its progress, which is why durable engines such as Step Functions and Temporal are common for sagas.
 
-Each step also has the dual write problem from [The Transactional Outbox](/system-design/transactional-outbox): a service must update its database and publish an event or reply reliably, which both microservices.io and AWS point out.
+Each step also has the dual write problem from [The Transactional Outbox](/system-design/transactional-outbox): a service must update its database and publish an event or reply reliably.
 
 A sketch of an orchestrated saga shows the structure. The undo steps are registered before the step runs, since a step that times out may have done its work:
 
@@ -82,13 +82,13 @@ def purchase_saga(order):
         raise
 ```
 
-Temporal's guide describes the same pattern: a list of undo actions, run in reverse on failure, with the undo registered before its step and written to tolerate a step that did not run. It also warns that a workflow timeout can end the workflow before compensations run, and that a terminate or reset skips them.
+Temporal uses the same pattern: a list of undo actions, run in reverse on failure, with the undo registered before its step and written to tolerate a step that did not run. A workflow timeout can end the workflow before compensations run, and a terminate or reset skips them.
 
 ## Compensation Is Not Rollback
 
 A database rollback restores the state as it was. A compensation can't, since other transactions have run in the meantime.
 
-Microsoft's page on compensating transactions says that rolling data back is unsafe because concurrent writers may have changed it, so a compensation has to be specific to the business: a refund, not a reversal of the wallet row.
+Rolling data back is unsafe because concurrent writers may have changed it, so a compensation has to be specific to the business: a refund, not a reversal of the wallet row.
 
 A compensation can fail too, so it must be idempotent, as in [Idempotency and Safe Retries](/system-design/idempotency), and the saga must record its progress so it can resume. Some failures need a person.
 
@@ -107,7 +107,7 @@ The same shape applies to the forward steps, with their own retry policy. The St
 
 A saga is atomic in the sense that it completes or is compensated, and it is not isolated: other transactions can see the intermediate states.
 
-Microsoft lists the anomalies: **lost updates**, where one saga overwrites changes another made, **dirty reads**, where one reads data another saga will undo, and **fuzzy reads**, where a saga reads the same data twice and gets different values. The countermeasures are design techniques:
+The anomalies: **lost updates**, where one saga overwrites changes another made, **dirty reads**, where one reads data another saga will undo, and **fuzzy reads**, where a saga reads the same data twice and gets different values. The countermeasures are design techniques:
 
 | Countermeasure | What It Does | In the Textbook App |
 | --- | --- | --- |
@@ -135,7 +135,7 @@ The order moves from pending to approved or rejected, and the page shows the use
 | Two shards in one database system, a rare cross shard write | The database's own two phase commit |
 | Money moves and temporary inconsistency is not allowed | A single transaction, or a stricter design |
 
-Microsoft's guidance says to avoid sagas when transactions are tightly coupled, when compensations would fall on earlier participants in complicated ways, or when the system can't tolerate temporary inconsistency. AWS warns that sagas are hard to debug, and that complexity grows with the number of services.
+Avoid sagas when transactions are tightly coupled, when compensations would fall on earlier participants in complicated ways, or when the system can't tolerate temporary inconsistency. Sagas are also hard to debug, and complexity grows with the number of services.
 
 For the textbook app, the purchase is a saga with an orchestrator, because it spans services and ends in an email. The wallet itself stays in one database transaction, so the part that moves money is atomic.
 

@@ -22,11 +22,11 @@ The second gain matters more for the system. At the registration day peak of 3,0
 <figcaption>Queries per second reaching the database, out of 3,000 requests a second (example numbers)</figcaption>
 </figure>
 
-Amazon's article on caching strategies gives the same reasons: lower latency, lower cost because the dependency can be smaller, and some protection from a slow or throttled dependency. It adds a condition. A cache helps only if data is reused across requests, and a query that is unique each time gets almost no benefit.
+Those are the reasons to cache: lower latency, lower cost because the dependency can be smaller, and some protection from a slow or throttled dependency. There is a condition. A cache helps only if data is reused across requests, and a query that is unique each time gets almost no benefit.
 
-Microsoft's caching guidance says what suits it. Cache data that is read far more than it changes, that is slow or costly to produce, and whose users can live with a slightly old answer.
+What suits a cache? Data that is read far more than it changes, that is slow or costly to produce, and whose users can live with a slightly old answer.
 
-Be careful with data that changes constantly, or must be current, and don't make a cache the only copy of anything important, since the guidance calls it a transient store that can disappear at any time.
+Be careful with data that changes constantly, or must be current, and don't make a cache the only copy of anything important, since a cache is a transient store that can disappear at any time.
 
 ## The Layers
 
@@ -52,17 +52,17 @@ A request passes through several places that can hold a copy, from the user's de
 
 Moving along the path, a cache gets farther from the user and closer to the data:
 
-- **Browser cache**: A private cache that belongs to one user, so it can hold personalized responses. It is the fastest of all, since the request never leaves the device, and MDN's HTTP caching guide adds that it is also out of your control: you can't delete what a browser has stored, which is why files get new names when they change. See [How HTTP Works](/system-design/http)
-- **CDN**: A shared cache near the users that serves many people with one copy. MDN calls it a managed cache, since you can purge it through an API, and warns that storing personalized content in a shared cache risks showing it to the wrong person. See [Content Delivery Networks (CDNs)](/system-design/cdn)
-- **Server memory**: A cache inside each web server's process. Amazon calls it quick and low risk, often the first thing a team tries. Its weaknesses are that each server holds its own copy, so two servers can answer differently, a new server starts empty, and memory per server is limited
-- **Shared cache**: A separate fleet, such as Redis or Memcached, that all servers read. Amazon's article says this makes answers more consistent, keeps a deploy from emptying the cache and keeps the database load from growing with the number of servers. The costs are another fleet to run and one more network hop, and the article notes the cache can be less available than the database it protects
+- **Browser cache**: A private cache that belongs to one user, so it can hold personalized responses. It is the fastest of all, since the request never leaves the device, and it is also out of your control: you can't delete what a browser has stored, which is why files get new names when they change. See [How HTTP Works](/system-design/http)
+- **CDN**: A shared cache near the users that serves many people with one copy. It is a managed cache, since you can purge it through an API, and storing personalized content in a shared cache risks showing it to the wrong person. See [Content Delivery Networks (CDNs)](/system-design/cdn)
+- **Server memory**: A cache inside each web server's process. It is quick and low risk, often the first thing a team tries. Its weaknesses are that each server holds its own copy, so two servers can answer differently, a new server starts empty, and memory per server is limited
+- **Shared cache**: A separate fleet, such as Redis or Memcached, that all servers read. This makes answers more consistent, keeps a deploy from emptying the cache and keeps the database load from growing with the number of servers. The costs are another fleet to run and one more network hop, and the cache can be less available than the database it protects
 - **Database memory**: Databases keep recently used pages in memory, which is a cache you get without writing any code. It helps repeated queries, but each one still reaches the database and uses its connections and CPU
 
-Microsoft suggests combining the two middle layers: a small cache in each server, backed by the shared cache, with the database as the last stop. The small one keeps the app working if the shared cache can't be reached.
+A good habit is to combine the two middle layers: a small cache in each server, backed by the shared cache, with the database as the last stop. The small one keeps the app working if the shared cache can't be reached.
 
 ## Who Talks to the Cache
 
-Amazon's article also names two ways a cache can be wired in. In a **side cache**, the application checks it first and fills it after a miss, so the code decides what to do.
+A cache can also be wired in two ways. In a **side cache**, the application checks it first and fills it after a miss, so the code decides what to do.
 
 In an **inline cache**, the cache sits in front of the data and fetches on a miss by itself, which keeps cache code out of the application but makes the cache part of the data store's availability. [Caching Patterns for Reads and Writes](/system-design/caching-patterns) covers both in detail.
 
@@ -86,7 +86,7 @@ Amazon's article makes a central warning. It calls it **modal behavior**: a serv
 
 At a 90 percent hit ratio it sees 300, which is fine. If the cache restarts, all 3,000 requests a second fall through at once, the database is overwhelmed, and the outage is far worse than the cache's.
 
-The same article lists the defenses:
+The defenses are these:
 
 - **Test without the cache**: Confirm the service survives, perhaps by shedding some load, when the cache is empty or gone
 - **Expect cold starts**: A new server or a flushed cache sends a burst of misses to the database, and merging duplicate requests for the same item into one helps. See [Cache Stampedes](/system-design/cache-stampedes)
