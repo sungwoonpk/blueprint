@@ -6,7 +6,7 @@ The consumer can't read it, throws an error, and the broker offers the message a
 
 ## A Message That Never Succeeds
 
-Not every failure is the same kind. Microsoft's guidance on transient faults separates the two. A transient fault is short lived and clears by itself, such as a brief loss of connection, a busy service or a timeout, and trying again after a delay may work.
+Not every failure is the same kind. Transient faults and permanent ones need different handling. A transient fault is short lived and clears by itself, such as a brief loss of connection, a busy service or a timeout, and trying again after a delay may work.
 
 A permanent failure, such as a business rule that rejects the data or a message that can't be parsed, will fail on every attempt, and retrying it wastes time and resources.
 

@@ -81,12 +81,12 @@ maxmemory-policy allkeys-lru
 maxmemory-samples 10
 ```
 
-The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. Redis's guidance, in short:
+The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. In short:
 
 - **`allkeys-lru`**: The default choice when some entries get most of the requests
 - **`allkeys-random`**: When all entries are about equally popular
 - **`volatile-ttl`**: When your code gives short TTLs to the entries that are best to drop
-- **`volatile-*` in general**: Mainly for one instance that holds both cached and permanent keys, though the page prefers two separate instances
+- **`volatile-*` in general**: Mainly for one instance that holds both cached and permanent keys, though two separate instances are cleaner
 
 Telling whether the policy works is simple. The hit ratio is hits divided by hits plus misses. A low hit ratio together with many evicted keys suggests that the cache is evicting the wrong entries or is too small. Few evictions but many expired keys suggests the TTLs are too short.
 

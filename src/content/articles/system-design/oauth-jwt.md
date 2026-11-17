@@ -88,7 +88,7 @@ OAuth says what a client may do. It doesn't say who the user is. OpenID Connect 
 
 An ID token has required claims: `iss`, the issuer, `sub`, a stable identifier for the user at that issuer, `aud`, which must contain the client's own `client_id`, `exp`, `iat` and, when the client sent one, a `nonce` that it must check, tying the token to its own request.
 
-The audience shows who the token is for: the app that asked, not the API. The specification adds that the ID token's expiry is unrelated to the lifetime of the user's session.
+The audience shows who the token is for: the app that asked, not the API. The ID token's expiry is also unrelated to the lifetime of the user's session.
 
 ## What a JWT Contains
 

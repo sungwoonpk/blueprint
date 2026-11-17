@@ -127,13 +127,13 @@ Two students chatting about the same listing can easily be connected to differen
 
 The usual fix is a **publish and subscribe** layer. Each server subscribes to the channels its connected users care about, and a message published to a channel reaches all the subscribed servers, which then write it to its own sockets. Redis and message brokers are common choices, and [Message Queues and Pub/Sub](/system-design/message-queues) covers the idea properly. Two large products describe the same shape in their engineering blogs.
 
-Slack's account of its [real time messaging](https://slack.engineering/real-time-messaging/) has gateway servers that hold the WebSockets, and channel servers, chosen by hashing the channel id, that forward each message to each gateway that has a subscriber. Discord's post on [reaching 5 million concurrent users](https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users) describes one session process per WebSocket, with up to about 500,000 sessions on one Erlang virtual machine, and says most of the rest comes down to publish and subscribe.
+Slack's real time messaging uses gateway servers that hold the WebSockets, and channel servers, chosen by hashing the channel id, that forward each message to each gateway that has a subscriber. Discord reached 5 million concurrent users with one session process per WebSocket, up to about 500,000 sessions on one Erlang virtual machine, and most of the rest comes down to publish and subscribe.
 
 Long lived connections create operational wrinkles too:
 
 - **Capacity**: every connected user holds a connection and some memory, so 100,000 users means 100,000 connections. The estimate belongs in [Estimating Capacity](/system-design/estimation), and servers have to be built for many idle connections, as with long polling and SSE
 - **Uneven load**: connections stay put, so after adding servers, the old ones keep their connections and the new ones start nearly empty until clients reconnect. A load balancer has to understand the upgrade, and AWS's Application Load Balancer supports WebSockets natively
-- **Deploys**: restarting a server drops everyone on it at the same moment, and all of them reconnect at once. Discord's post and Slack's [Flannel post](https://slack.engineering/flannel-an-application-level-edge-cache-to-make-slack-scale/) both describe reconnect surges overloading parts of their systems, so spreading reconnects with random delays is part of the design, not an afterthought
+- **Deploys**: restarting a server drops everyone on it at the same moment, and all of them reconnect at once. Both Discord and Slack have seen reconnect surges overload parts of their systems, so spreading reconnects with random delays is part of the design, not an afterthought
 
 ## Locking It Down
 

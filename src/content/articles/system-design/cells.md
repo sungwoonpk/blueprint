@@ -108,7 +108,7 @@ For a fleet across three zones it overprovisions by 50 percent, so that each zon
 
 ## Cells at Amazon
 
-Amazon's paper on Physalia, the store that keeps the configuration of EBS volumes, is a case in which cells are the central design. Its history begins with an April 2011 outage in which a network configuration change made 13 percent of the volumes in one zone unavailable.
+Physalia, the Amazon store that keeps the configuration of EBS volumes, is a case in which cells are the central design. Its history begins with an April 2011 outage in which a network configuration change made 13 percent of the volumes in one zone unavailable.
 
 Each Physalia cell holds the data of one partition key, runs consensus over seven nodes, and doesn't coordinate with other cells, though each node takes part in many cells.
 

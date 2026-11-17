@@ -9,7 +9,7 @@ By the end of the year it holds billions of rows, almost all of which few people
 Time series data behaves in ways a database can exploit:
 
 - **Appended, not edited**: Points arrive in time order and are rarely updated afterwards
-- **Recent data matters most**: Facebook's paper on its monitoring database, Gorilla, found that at least 85 percent of the queries to its older system were for data from the past 26 hours
+- **Recent data matters most**: Facebook's monitoring database, Gorilla, found that at least 85 percent of the queries to its older system were for data from the past 26 hours
 - **Questions are about aggregates**: Users care little about individual points and much about trends, such as an average over five minutes
 - **Old data loses value**: Last year's reading every 10 seconds is rarely needed, though a daily summary of it might be
 

@@ -12,11 +12,11 @@ A key lives in one place. Redis Cluster shows the rule in its simplest form: the
 
 Hash tags place related keys together, and no part of the design spreads a single key across nodes.
 
-Facebook's paper on its memcache deployment describes the effect from the reading side. It notes that highly requested items become more popular as more web servers are added to cope with more users, so buying more of the same machines makes the hot items worse.
+The effect shows from the reading side too. Highly requested items become more popular as more web servers are added to cope with more users, so buying more of the same machines makes the hot items worse, as Facebook's memcache fleet found.
 
 Its answer was to replicate: multiple frontend clusters, and regional pools, so that the data requested most is available in several places.
 
-The Google paper on its Slicer sharding service gives a clean measure, and we used it in the last topic: load imbalance is the ratio of the busiest task's load to the mean.
+A clean measure, used in the last topic, comes from Google's Slicer sharding service: load imbalance is the ratio of the busiest task's load to the mean.
 
 A value of 1 is perfect. Slicer reports that, across its production jobs, balancing reduced the imbalance by a median of 63 percent, and by as much as 99.3 percent for the most skewed job, compared with static sharding.
 

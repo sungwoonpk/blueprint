@@ -20,13 +20,13 @@ There are two roles. A policy decision point, split into a policy engine and a p
 
 The TLS 1.3 specification, RFC 8446, lists what its handshake provides: authentication, confidentiality and integrity. It says the server side is authenticated in each handshake and the client side is optionally authenticated.
 
-Key exchange is by Diffie-Hellman in the common modes, and the specification says public key based key exchange now provides forward secrecy, so a stolen key doesn't open old recordings.
+Key exchange is by Diffie-Hellman in the common modes, and public key based key exchange now provides forward secrecy, so a stolen key doesn't open old recordings.
 
-Mutual authentication comes from one optional message. A server that authenticates with a certificate may request one from the client in a CertificateRequest. If it does, the client must send its Certificate, then a CertificateVerify, a signature that the specification says gives explicit proof the endpoint possesses the private key, and then the Finished message.
+Mutual authentication comes from one optional message. A server that authenticates with a certificate may request one from the client in a CertificateRequest. If it does, the client must send its Certificate, then a CertificateVerify, a signature that gives explicit proof the endpoint possesses the private key, and then the Finished message.
 
 If the server sends no request, the client sends no certificate. The full handshake takes one round trip before application data flows from the client.
 
-The same document warns about a speed feature. With 0-RTT, a client can send data in its first flight, and the specification says the security properties of that data are weaker: it isn't forward secret, and there is no guarantee against replay between connections.
+One speed feature needs care. With 0-RTT, a client can send data in its first flight, and the security properties of that data are weaker: it isn't forward secret, and there is no guarantee against replay between connections.
 
 Early data should be limited to requests that are safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency).
 

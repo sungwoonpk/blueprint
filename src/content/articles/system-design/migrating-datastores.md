@@ -162,7 +162,7 @@ GitHub's MySQL 8.0 upgrade shows why. Queries with very long lists of values in 
 
 ## Same Store, New Version
 
-An upgrade is a migration too, and GitHub's account of moving to MySQL 8.0 is the most complete we found. The fleet had more than 1,200 hosts, over 300 TB of data and 5.5 million queries a second across more than 50 clusters, and the work took over a year from July 2022.
+An upgrade is a migration too, and GitHub's move to MySQL 8.0 is a good example to study. The fleet had more than 1,200 hosts, over 300 TB of data and 5.5 million queries a second across more than 50 clusters, and the work took over a year from July 2022.
 
 The steps follow the same logic as the four stages:
 

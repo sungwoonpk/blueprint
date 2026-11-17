@@ -79,7 +79,7 @@ In AWS the equivalents are the gradual scale in and the cooldown, which defaults
 
 For background workers, CPU is the wrong signal: a worker with an empty queue and one with a million waiting messages can have the same utilization. The signal is the backlog.
 
-The AWS guide on queue based scaling uses backlog per instance, the visible messages divided by the instances in service, and sets the target from the acceptable latency divided by the average processing time of a message.
+A good signal for queue based scaling is backlog per instance, the visible messages divided by the instances in service, and the target comes from the acceptable latency divided by the average processing time of a message.
 
 Its worked example has 10 instances, 1,500 messages, 0.1 seconds to process a message and 10 seconds as the longest acceptable wait. The acceptable backlog for each instance is 10 divided by 0.1, which is 100, and the current backlog is 150, so the group grows to 15.
 

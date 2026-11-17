@@ -46,7 +46,7 @@ The lesson is to look at the slow queries first, with the tools of [Logs, Metric
 
 ## Rung 2: Skip the Database
 
-[Where to Put a Cache](/system-design/where-to-cache) and [Caching Patterns for Reads and Writes](/system-design/caching-patterns) covered the mechanics. Here the question is how much a cache removes. Facebook's paper on its memcache deployment describes the pattern at very large scale: a demand filled look aside cache.
+[Where to Put a Cache](/system-design/where-to-cache) and [Caching Patterns for Reads and Writes](/system-design/caching-patterns) covered the mechanics. Here the question is how much a cache removes. Facebook's memcache fleet runs the pattern at very large scale: a demand filled look aside cache.
 
 A web server asks the cache for a key, goes to the database on a miss, and fills the cache. For writes, it updates the database and then deletes the cached value, and it chooses delete over update because deletes are idempotent. The cache isn't the source of truth and is allowed to evict.
 

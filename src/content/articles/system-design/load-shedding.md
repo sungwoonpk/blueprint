@@ -112,7 +112,7 @@ If a queue is kept, its order matters. The first in, first out order serves the 
 
 Switch to last in, first out, or to a scheme like CoDel that drops requests which have waited too long. Take a search request that sat 10 seconds in the queue after the user refreshed the page.
 
-The AWS article agrees, with a condition: HTTP/2 allows last in, first out handling, and HTTP/1.1 pipelining doesn't.
+That works with a condition: HTTP/2 allows last in, first out handling, and HTTP/1.1 pipelining doesn't.
 
 In our simulation, a last in, first out queue with a 1 second age check kept goodput at 1,000 from 1,250 requests a second up to 3,000. The requests that had waited too long stayed in the queue, and nobody was served late.
 
@@ -139,7 +139,7 @@ The same applies to the dependencies of a request. If the recommendation service
 
 The sources are frank that shedding is a sharp tool:
 
-- **False positives**: The AWS article aims for no refusals while there is spare capacity, and says a regular small rate means the limits are tuned wrongly or the load is uneven
+- **False positives**: Aim for no refusals while there is spare capacity, and treat a regular small rate of refusals as a sign that the limits are tuned wrongly or the load is uneven
 - **A clash with autoscaling**: If shedding starts at a CPU level near the target of the scaling policy, it can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling)
 - **Lost headroom**: A fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails
 - **Misleading metrics**: A fast error pulls the median latency down, so count refusals in their own metric

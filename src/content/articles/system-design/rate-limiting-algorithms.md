@@ -149,7 +149,7 @@ Google Cloud Armor shows how many keys a limiter can use, including the address,
 
 ## Telling the Client
 
-A rejected client needs to know what happened. The HTTP status is 429 Too Many Requests, defined in RFC 6585. The standard says the response may carry a `Retry-After` header saying how long to wait, should explain the problem in its body, and must not be stored by a cache:
+A rejected client needs to know what happened. The HTTP status is 429 Too Many Requests, defined in RFC 6585. The response may carry a `Retry-After` header saying how long to wait, should explain the problem in its body, and must not be stored by a cache:
 
 ```http
 HTTP/1.1 429 Too Many Requests

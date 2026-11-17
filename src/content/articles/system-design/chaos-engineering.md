@@ -84,7 +84,7 @@ Systems aren't the sole thing that fails: the people and the procedures do too. 
 
 Two forms help new engineers on call. One is disaster role playing, where on-call engineers respond to a simulated page and work the problem without a real outage.
 
-The other, under the heading Break Real Things, Fix Real Things, has the team break a real system on purpose, a search cluster in the book's example, and then fix it. Azure's guidance has a milder version, a tabletop exercise, in which the team talks through a scenario without touching anything.
+The other, under the heading Break Real Things, Fix Real Things, has the team break a real system on purpose, a search cluster in the book's example, and then fix it. A milder version is a tabletop exercise, in which the team talks through a scenario without touching anything.
 
 Disaster recovery needs its own tests. Use a dedicated environment so the test can't hurt production, and measure the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
 

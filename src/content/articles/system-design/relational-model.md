@@ -111,7 +111,7 @@ A cross join is rarely wanted. With a million users and a million listings it pr
 
 ## Say What, Not How
 
-SQL is **declarative**. The query says what result is wanted, not how to find it, and the database chooses a method. In PostgreSQL's account of a query's path, the text is parsed, then a planner considers different ways to produce the same result, estimates the cost of each, and the cheapest plan is executed.
+SQL is **declarative**. The query says what result is wanted, not how to find it, and the database chooses a method. In PostgreSQL, the text is parsed, then a planner considers different ways to produce the same result, estimates the cost of each, and the cheapest plan is executed.
 
 You can see the choice with `EXPLAIN`. The same question about calculus books can run two ways:
 

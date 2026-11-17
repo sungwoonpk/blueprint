@@ -96,7 +96,7 @@ Many views become one database write, which is the real gain: a hot counter that
 | Write-Through | The cache matches the database after each write | Slower writes, and entries nobody reads |
 | Write-Behind | Fast writes, batched into fewer database writes | The database lags, and queued writes can be lost |
 
-Real systems mix them. AWS's guide ends with the combination most teams use: lazy loading for reads, write-through or invalidation for updates, and a TTL on everything as a backstop. For the textbook app, that means cache-aside with a 60 second TTL for listing pages, delete on update for price changes, and write-behind for view counters.
+Real systems mix them. The combination most teams end up with is lazy loading for reads, write-through or invalidation for updates, and a TTL on everything as a backstop. For the textbook app, that means cache-aside with a 60 second TTL for listing pages, delete on update for price changes, and write-behind for view counters.
 
 Cache-aside has limits: don't use it for sensitive data that should come from the source, and don't use it when most requests would miss, since the extra lookup then costs more than it saves.
 

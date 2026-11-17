@@ -26,7 +26,7 @@ A network call can go wrong in three ways: the request never arrives, the server
 <figcaption>In both cases the phone only sees silence, and only one of them is safe to retry blindly</figcaption>
 </figure>
 
-The textbook app has this exact risk where students pay. A double charge is the kind of bug people remember. Stripe's engineering blog, in [a post on this problem](https://stripe.com/blog/idempotency), argues that if endpoints can be retried safely, clients can keep trying until they know the outcome.
+The textbook app has this exact risk where students pay. A double charge is the kind of bug people remember. If endpoints can be retried safely, clients can keep trying until they know the outcome.
 
 ## What Idempotent Means
 
@@ -34,7 +34,7 @@ The formal definition comes from the HTTP standard, [RFC 9110](https://www.rfc-e
 
 Notice it talks about the server's state, not the reply. A second DELETE can answer 404 because the listing is already gone, and the method is still idempotent, since the state is the same either way.
 
-The standard lists PUT, DELETE and read only methods like GET as idempotent, which matches the table in [How HTTP Works](/system-design/http). It also says a client shouldn't automatically retry a non idempotent request, such as a POST, unless it knows the request is safe to repeat.
+PUT, DELETE and read only methods like GET are idempotent by definition, which matches the table in [How HTTP Works](/system-design/http). A client shouldn't automatically retry a non idempotent request, such as a POST, unless it knows the request is safe to repeat.
 
 The idea is about what a request does, so it is easiest to see in examples:
 
@@ -110,7 +110,7 @@ def create_order(user, key, params):
 
 The `with db.transaction()` line carries the important detail. The order and the key have to be saved together, all or nothing. If the key were saved before the order existed, a crash in between would leave a key with no order, and a retry would get a reply about an order that was never made.
 
-Amazon's [Builders' Library article on safe retries](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/) stresses the same point: recording the token and making the change must succeed or fail as one.
+Recording the token and making the change must succeed or fail as one.
 
 The client side is small too. The key is made once per operation and reused by every retry:
 
@@ -147,7 +147,7 @@ The same remedy has a name, the **idempotent consumer**: the worker records the 
 
 Idempotency answers whether a retry is safe. Whether it's worthwhile is a separate question. From [How HTTP Works](/system-design/http), a 4xx other than 429 usually means the request itself needs fixing, so retrying changes nothing, while 429, 502, 503 and 504 are often temporary.
 
-[Azure's retry guidance](https://learn.microsoft.com/en-us/azure/architecture/patterns/retry) adds two cautions: retry a limited number of times, and avoid stacking retries in several layers, because three layers with three tries each can send nine attempts at a service that is already struggling. The waiting between attempts, the timeouts and the limits are covered in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+Two cautions apply: retry a limited number of times, and avoid stacking retries in several layers, because three layers with three tries each can send nine attempts at a service that is already struggling. The waiting between attempts, the timeouts and the limits are covered in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 
 ## Key Points
 

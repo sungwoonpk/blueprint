@@ -76,7 +76,7 @@ With no schema, the keys are the design. A common habit is a readable pattern, `
 
 In a store that spreads data over many machines, the key does a second job. DynamoDB hashes the partition key to pick a partition, a slice of storage that serves its share of the data. Traffic spreads evenly when the keys do.
 
-AWS's guidance is to pick a key with many different values, and to avoid ones with few values or ones that group requests in time. For the textbook app logging 3,000 page views a second at the registration day peak:
+Pick a key with many different values, and to avoid ones with few values or ones that group requests in time. For the textbook app logging 3,000 page views a second at the registration day peak:
 
 | Candidate Key | Verdict | Why |
 | --- | --- | --- |

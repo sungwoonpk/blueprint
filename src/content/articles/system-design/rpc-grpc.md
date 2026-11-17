@@ -123,7 +123,7 @@ One side effect of HTTP/2 catches teams out. A gRPC client opens a connection an
 <figcaption>With long lived connections, the balancer has to look at individual calls</figcaption>
 </figure>
 
-The fixes, which gRPC's [own post on load balancing](https://grpc.io/blog/grpc-load-balancing/) describes, are a balancer that understands HTTP/2 and routes each call, a client that knows all the servers and picks one per call, or a service mesh doing the same job beside each service. See [Load Balancers](/system-design/load-balancers) and [Service Meshes and Sidecars](/system-design/service-mesh).
+The fixes are a balancer that understands HTTP/2 and routes each call, a client that knows all the servers and picks one per call, or a service mesh doing the same job beside each service. See [Load Balancers](/system-design/load-balancers) and [Service Meshes and Sidecars](/system-design/service-mesh).
 
 ## Where gRPC Fits
 

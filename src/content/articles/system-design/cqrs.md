@@ -23,7 +23,7 @@ Commands should describe a business task, such as `PostListing`, and not a low l
 
 The separation has two levels:
 
-- **Two models, one database**: The simplest form. The write model has the rules and the transactions, and the read model is a set of queries that return flat objects. Microsoft's guide for .NET microservices suggests this as the starting point
+- **Two models, one database**: The simplest form. The write model has the rules and the transactions, and the read model is a set of queries that return flat objects. It is a good starting point
 - **Two models, two stores**: Each side can use the technology and the scaling that suits it. A typical pair is a relational database for writes and a document database for reads, and other combinations of relational and NoSQL stores work on either side
 
 With two stores, something must carry changes from one to the other.

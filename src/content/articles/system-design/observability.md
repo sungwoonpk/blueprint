@@ -132,7 +132,7 @@ A span without a parent is the root, and the spans of a trace share one trace id
 
 The waterfall shows where the 420 ms went, which no metric or single log line could. For this to work, each service has to pass the trace id along.
 
-The W3C Trace Context standard defines a `traceparent` header with four parts, a version, a 32 character hexadecimal trace id, a 16 character parent span id and flags, whose last bit says whether the trace is sampled:
+The W3C Trace Context standard uses a `traceparent` header with four parts, a version, a 32 character hexadecimal trace id, a 16 character parent span id and flags, whose last bit says whether the trace is sampled:
 
 ```text
 traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01

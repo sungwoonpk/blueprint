@@ -17,7 +17,7 @@ Segment's story in [When to Split into Microservices](/system-design/monoliths-m
 
 ## A Proxy Beside Each Service
 
-The mesh approach moves the plumbing out of the application and into a separate process. In Microsoft's description of the sidecar pattern, it is a helper deployed next to the main application, with its own copy for each instance and a shared lifecycle.
+The mesh approach moves the plumbing out of the application and into a separate process. A sidecar is a helper deployed next to the main application, with its own copy for each instance and a shared lifecycle.
 
 The application talks to the proxy on its own machine, and the proxy deals with the network. The goal is to make the network transparent to applications, and running out of process has two benefits: it works with any application language, and the proxies can be upgraded across the whole system without touching application libraries.
 
@@ -117,7 +117,7 @@ Istio's own comparison rates the resource cost of sidecars as large and ambient 
 | You want the same retries, routing and metrics everywhere | The app is small, and the proxy's cost is large next to it |
 | A platform team can run it for everyone | One small team would have to learn and operate it |
 
-Microsoft's guidance on sidecars is blunt about the last two rows: when the application is small, or when components talk to each other so often that every bit of latency counts, the sidecar's cost can outweigh its benefit.
+The last two rows are the costs: when the application is small, or when components talk to each other so often that every bit of latency counts, the sidecar's cost can outweigh its benefit.
 
 A library can be the better fit when you need tighter integration and less overhead. The gateway from the last topic, a load balancer and a few well chosen libraries cover many systems, and a mesh is the step beyond when those no longer do.
 

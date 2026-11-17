@@ -121,7 +121,7 @@ It also shows what skew costs: the default maximum offset is 500 ms, a node shut
 
 Google's Spanner takes the other route and makes clock error explicit. Its TrueTime interface returns an interval, earliest to latest, that is guaranteed to contain the true time.
 
-The error bound, from about 1 to 7 ms in Google's description, comes from GPS receivers and atomic clocks in each data center and an assumed drift of 200 microseconds a second between syncs.
+The error bound, from about 1 to 7 ms in Spanner, comes from GPS receivers and atomic clocks in each data center and an assumed drift of 200 microseconds a second between syncs.
 
 To commit, a transaction picks a timestamp and then waits, called commit wait, until that timestamp is certainly in the past. The result is external consistency: if one transaction finishes before another starts, its timestamp is lower.
 
