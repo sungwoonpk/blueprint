@@ -18,12 +18,9 @@ So a design is not only judged by whether it works on day one. It is also judged
 
 ## Operability: Easy to Run
 
-A system that is easy to operate shows what it is doing, can be changed without heroics, and has few surprises:
+A system that is easy to operate shows what it is doing, can be changed without heroics, and has few surprises.
 
-- **Visibility**: logs, metrics and alerts that tell you what is wrong. See [Logs, Metrics and Traces](/system-design/observability)
-- **Automation**: deploying, restarting and rolling back are one command, not a list of manual steps
-- **Servers you can rebuild**: describe the setup in code, so a replacement matches the original. Machines that were fixed by hand over the years, each a little different, are called snowflake servers, and they are hard to reproduce or replace
-- **Written runbooks**: what to check and what to do for the problems that come up
+It has visibility: logs, metrics and alerts that tell you what is wrong, as in [Logs, Metrics and Traces](/system-design/observability). It has automation, so that deploying, restarting and rolling back are one command, not a list of manual steps. Its servers can be rebuilt, because the setup is described in code and a replacement matches the original. Machines that were fixed by hand over the years, each a little different, are called snowflake servers, and they are hard to reproduce or replace. And it has written runbooks, saying what to check and what to do for the problems that come up.
 
 A test for operability is whether a new engineer who is on call on a Friday evening could diagnose a problem without calling the person who built the service.
 
@@ -42,11 +39,9 @@ Complexity grows faster than the number of parts, because every part can connect
 
 Doubling the services roughly quadruples the ways they can interact, and each way is something that can surprise you. Most systems don't connect every pair, but each connection they do have is another thing to understand.
 
-Some complexity comes with the problem. Fred Brooks called this essential complexity: if students need to post, search, message, pay and review, the system has to do all of those. The rest he called accidental complexity, which comes from our own tools and choices, and it is the part you can cut. The usual ways to cut it:
+Some complexity comes with the problem. Fred Brooks called this essential complexity: if students need to post, search, message, pay and review, the system has to do all of those. The rest he called accidental complexity, which comes from our own tools and choices, and it is the part you can cut. The usual ways to cut it.
 
-- Hide details behind clear interfaces, so one part can be understood without reading the others
-- Delete code that nothing uses
-- Prefer well known technology. Dan McKinley's rule of thumb is that a team can afford only about three novel technologies, because each one brings unknowns it must learn to run
+Hide details behind clear interfaces, so one part can be understood without reading the others. Delete code that nothing uses. And prefer well known technology: Dan McKinley's rule of thumb is that a team can afford just about three novel technologies, because each one brings unknowns it must learn to run.
 
 ## A Costly Example
 
@@ -56,10 +51,9 @@ Both halves are in this topic: a manual, unchecked deployment is an operability 
 
 ## Evolvability: Easy to Change
 
-A system that is easy to change gets changed in small steps that can each be undone. Two habits do most of the work:
+A system that is easy to change gets changed in small steps that can each be undone. Two habits do most of the work.
 
-- **Feature flags**: new behavior ships turned off, and a switch turns it on for a few users and back off in seconds if something is wrong. Flags should be temporary, and removed once the change settles
-- **Backward compatible changes**: old clients keep working while new ones arrive, as in [API Versioning](/system-design/api-versioning)
+Feature flags let new behavior ship turned off, and a switch turns it on for a few users and back off in seconds if something is wrong. Flags should be temporary, and removed once the change settles. Backward compatible changes keep old clients working while new ones arrive, as in [API Versioning](/system-design/api-versioning).
 
 For a change that would break existing users, such as renaming a column or an API field, the safe path has three stages:
 

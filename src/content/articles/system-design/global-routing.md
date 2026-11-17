@@ -6,11 +6,13 @@ This topic is about the layer above, choosing between whole regions. It matters 
 
 ## Why Route by Place
 
-There are three reasons, and each one connects to something earlier:
+There are three reasons, and each one connects to something earlier.
 
-- **Distance is time**: from [Numbers Every Engineer Should Know](/system-design/numbers), light needs about 56 ms for a round trip from New York to London at best, and a trip across an ocean costs around 150 ms in practice. A student in Europe talking to servers in Virginia pays that on each round trip
-- **A region can fail**: in [Redundancy and Failover](/system-design/redundancy-failover), the biggest row in the table was the whole data center. A second region is the spare for that
-- **Rules about data**: some laws and contracts require certain users' data to stay in a certain region, so users have to be sent to the right one
+Distance is time. From [Numbers Every Engineer Should Know](/system-design/numbers), light needs about 56 ms for a round trip from New York to London at best, and a trip across an ocean costs around 150 ms in practice. A student in Europe talking to servers in Virginia pays that on each round trip.
+
+A region can fail. In [Redundancy and Failover](/system-design/redundancy-failover), the biggest row in the table was the whole data center, and a second region is the spare for that.
+
+And there are rules about data. Some laws and contracts require certain users' data to stay in a certain region, so users have to be sent to the right one.
 
 <figure class="diagram">
 <div class="flow">
@@ -64,11 +66,11 @@ Its own example is that a user sent to Oregon one week might be sent to Singapor
 
 ## Where DNS Routing Falls Short
 
-DNS is easy to use and has built in blind spots:
+DNS is easy to use and has built in blind spots.
 
-- **It sees the resolver, not the user**: as in [How DNS Works](/system-design/dns), the question comes from a resolver that may be far from the person asking. A fix called EDNS Client Subnet, in RFC 7871, lets the resolver pass along a shortened version of the user's address. It helps, and its own authors worry about the privacy cost, so it is optional
-- **Caches slow failover**: when a region fails, the old answer stays in caches until the TTL runs out. Route 53 advises 60 seconds or less for records with health checks, and some clients ignore TTLs and keep the old address longer
-- **Location is a guess**: an address maps to a place only roughly
+DNS sees the resolver, not the user. As in [How DNS Works](/system-design/dns), the question comes from a resolver that may be far from the person asking. A fix called EDNS Client Subnet, in RFC 7871, lets the resolver pass along a shortened version of the user's address. It helps, and it has a privacy cost, so it is optional.
+
+Caches slow failover: when a region fails, the old answer stays in caches until the TTL runs out. A TTL of 60 seconds or less suits records with health checks, and some clients ignore TTLs and keep the old address longer. And location is a guess, since an address maps to a place only roughly.
 
 ## Routing With Anycast
 

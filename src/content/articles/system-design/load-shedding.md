@@ -46,12 +46,11 @@ The idea is the same one as in [Cascading Failures](/system-design/cascading-fai
 
 ## What a Server Can Use as a Signal
 
-A server needs a cheap, local measure of being overloaded. The designs in the sources use a few:
+A server needs a cheap, local measure of being overloaded. A few signals are in common use.
 
-- **Concurrent requests**: A limit on requests in flight, with a quick 503 above it
-- **Queue length and age**: A queue of about half the size of the thread pool or less suits steady traffic. Add a limit on how long a request may wait, dropping requests that are too old
-- **CPU or thread load**: An executor load average, the count of active threads smoothed over time, is a good signal: start rejecting when it exceeds the number of processors
-- **Memory and connections**: Envoy's overload manager watches heap, cgroup memory, CPU use and open connections
+The simplest is concurrent requests: a limit on requests in flight, with a quick 503 above it. Queue length and age work too. A queue of about half the size of the thread pool or less suits steady traffic, with a limit on how long a request may wait, dropping requests that are too old.
+
+CPU or thread load is a good signal as well. An executor load average, the count of active threads smoothed over time, can start rejecting when it exceeds the number of processors. Memory and connections can be watched too, as Envoy's overload manager watches heap, cgroup memory, CPU use and open connections.
 
 Envoy's design shows how the signal becomes an action. Each monitor reports a pressure between 0 and 1, and each action has a trigger. A threshold trigger flips on above one value. A scaled trigger ramps up between two values, so the response grows with the pressure.
 
@@ -95,10 +94,9 @@ The limits add up to more than the machine has, which is deliberate, since the c
 
 ## Saying No Clearly
 
-A refusal is a message to the caller, and there are two standard ones:
+A refusal is a message to the caller, and there are two standard ones.
 
-- **503 Service Unavailable**: RFC 9110 says the server can't handle the request now because of a temporary overload or maintenance, and it may send a `Retry-After` header to suggest how long to wait. The same text says the status doesn't oblige a server to use it when it is overloaded
-- **429 Too Many Requests**: RFC 6585 says the user sent too many requests in a given time, and it may include `Retry-After`. It describes a limit on one client, so it fits a quota more than an overload of the whole server
+A 503 Service Unavailable means the server can't handle the request now because of a temporary overload or maintenance, and it may send a `Retry-After` header to suggest how long to wait. A server isn't obliged to use the status when it is overloaded. A 429 Too Many Requests means the user sent too many requests in a given time, and it may include `Retry-After`. It describes a limit on one client, so it fits a quota more than an overload of the whole server.
 
 A fast, clear error does two things. Clients that follow [Timeouts, Retries and Backoff](/system-design/timeouts-retries) wait and retry with jitter, within their budget. And the refusal costs the server little.
 
@@ -137,14 +135,13 @@ The same applies to the dependencies of a request. If the recommendation service
 
 ## When Shedding Goes Wrong
 
-The sources are frank that shedding is a sharp tool:
+Several things can go wrong.
 
-- **False positives**: Aim for no refusals while there is spare capacity, and treat a regular small rate of refusals as a sign that the limits are tuned wrongly or the load is uneven
-- **A clash with autoscaling**: If shedding starts at a CPU level near the target of the scaling policy, it can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling)
-- **Lost headroom**: A fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails
-- **Misleading metrics**: A fast error pulls the median latency down, so count refusals in their own metric
-- **Untested paths**: The code path you don't use is the one that often doesn't work, so run a few servers near overload regularly, which also shows whether the limits are right
-- **Feedback loops**: Complex rules can start degraded mode when it isn't needed, so keep them simple, and build a quick way to turn them off or tune them
+Shedding is a sharp tool. Watch for false positives: aim for no refusals while there is spare capacity, and treat a regular small rate of refusals as a sign that the limits are tuned wrongly or the load is uneven. It can clash with autoscaling, since shedding that starts at a CPU level near the target of the scaling policy can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling).
+
+Headroom gets lost. A fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails. Metrics mislead: a fast error pulls the median latency down, so count refusals in their own metric.
+
+Untested paths are the usual trap. The code path you don't use is the one that often doesn't work, so run a few servers near overload regularly, which also shows whether the limits are right. And watch for feedback loops: complex rules can start degraded mode when it isn't needed, so keep them simple, and build a quick way to turn them off or tune them.
 
 Dropping a request can cost as much as holding it, in which case slow the refusal to match the latency of the successes. Also watch it: log the client and the operation of each refusal, and alert on a high volume.
 

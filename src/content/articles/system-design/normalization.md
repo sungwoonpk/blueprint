@@ -12,11 +12,9 @@ Suppose the textbook app began with one wide table, a row per listing that carri
 | 18 | Calculus | Stewart | Jun | South |
 | 19 | Linear Algebra | Axler | Mina | North |
 
-It works until the data changes. The database tells you it is time to split the table through three kinds of trouble, called **anomalies**:
+It works until the data changes. The database tells you it is time to split the table through three kinds of trouble, called **anomalies**.
 
-- **Update anomaly**: Mina moves to the South campus. Her campus is repeated on each of her listings, so a change that reaches row 17 but not row 19 leaves two answers
-- **Insertion anomaly**: A librarian wants to add a new textbook to the catalog before anyone sells it. There is no listing yet, so the table has no place to put it
-- **Deletion anomaly**: Mina sells listing 19 and deletes the row. The one row that said the book exists, and who wrote it, goes with it
+In the update anomaly, Mina moves to the South campus. Her campus is repeated on each of her listings, so a change that reaches row 17 but not row 19 leaves two answers. In the insertion anomaly, a librarian wants to add a new textbook to the catalog before anyone sells it, and there is no listing yet, so the table has no place to put it. In the deletion anomaly, Mina sells listing 19 and deletes the row, and the one row that said the book exists, and who wrote it, goes with it.
 
 All three come from the same cause: one row holds facts about several different things. Edgar Codd, who invented the relational model, defined the cure in the early 1970s. He called it normalization, and it is a set of rules for where each fact belongs.
 
@@ -53,11 +51,9 @@ LIMIT 20;
 
 With an index on `listings (book_id, price_cents)`, as in [Indexes and Query Optimization](/system-design/indexing), a single database server can answer this quickly, and for many apps that is the end of the story. A join is not slow by nature.
 
-The cost becomes real in a few places:
+The cost becomes real in a few places.
 
-- **Rows on different machines**: Once data is split across servers, as in [Sharding Strategies](/system-design/sharding), a join may have to cross the network
-- **Stores without joins**: Many databases in [Key-Value Stores](/system-design/key-value-stores) and [Document Stores](/system-design/document-stores) don't offer the join, so the data has to arrive already combined
-- **Big scans**: A report over millions of rows pays for the join on each of them, which is why [OLTP, OLAP and Data Warehouses](/system-design/oltp-olap) systems are often shaped differently
+Rows may be on different machines: once data is split across servers, as in [Sharding Strategies](/system-design/sharding), a join may have to cross the network. Some stores have no joins, since many databases in [Key-Value Stores](/system-design/key-value-stores) and [Document Stores](/system-design/document-stores) don't offer them, so the data has to arrive already combined. And big scans pay: a report over millions of rows pays for the join on each of them, which is why [OLTP, OLAP and Data Warehouses](/system-design/oltp-olap) systems are often shaped differently.
 
 ## Copying on Purpose
 
@@ -127,11 +123,11 @@ The unique index is what lets `CONCURRENTLY` refresh the view without blocking t
 
 ## Keeping Copies Honest
 
-A foreign key, as in [Data Modeling](/system-design/data-modeling), keeps a reference true: it makes sure that a seller exists. It does not check that two copies of the same fact agree. That job moves to you, and there are three common ways to do it:
+A foreign key, as in [Data Modeling](/system-design/data-modeling), keeps a reference true: it makes sure that a seller exists. It does not check that two copies of the same fact agree. That job moves to you, and there are three common ways to do it.
 
-- **Same transaction**: Write the source and the copies together, as above. The copies do not disagree, at the price of a bigger write. See [Transactions and ACID](/system-design/transactions-acid)
-- **Refresh later**: Rebuild the copy on a schedule, as with the materialized view. Readers may see old data until the next refresh
-- **Follow events**: Publish a change when the source changes, and let other parts of the system update their own copies, as in [Event-Driven Architecture](/system-design/event-driven) and [The Transactional Outbox](/system-design/transactional-outbox). Copies in other databases, caches and search indexes often work this way, and they are a little behind
+One way is the same transaction: write the source and the copies together, as above. The copies don't disagree, at the price of a bigger write. See [Transactions and ACID](/system-design/transactions-acid). Another is to refresh later, rebuilding the copy on a schedule, as with the materialized view, so readers may see old data until the next refresh.
+
+The third is to follow events. Publish a change when the source changes, and let other parts of the system update their own copies, as in [Event-Driven Architecture](/system-design/event-driven) and [The Transactional Outbox](/system-design/transactional-outbox). Copies in other databases, caches and search indexes often work this way, and they are a little behind.
 
 The right choice depends on what the copied data is like. Duplicated data can be sorted by how it behaves, and the same sorting helps in any database:
 

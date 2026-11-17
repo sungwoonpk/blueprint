@@ -19,12 +19,15 @@ For the nightly job, a rare double run wastes some compute, which is an efficien
 
 ## How Locks Are Built
 
-Several mechanisms are in use, each with a lease or a session that bounds the holder's time:
+Several mechanisms are in use, each with a lease or a session that bounds the holder's time.
 
-- **A key with an expiry in Redis**: In Redis the recipe is `SET resource_name my_random_value NX PX 30000`, which sets the key when it doesn't exist and lets it expire after 30,000 ms. The value must be unique to the client, and release must check the value before deleting, with a script or a newer check and delete command, since a plain `DEL` can remove another client's lock
-- **A node in ZooKeeper**: Each client creates an ephemeral sequential node, and the lowest number holds the lock. Each waiter watches the node ahead of it alone, so a release wakes one client. The node disappears when the client's session ends
-- **A lease in etcd**: A lock is a key attached to a lease. When the lease expires or is revoked, the lock is released. The Go client's session defaults to a 60 second TTL
-- **A conditional write in DynamoDB**: AWS's lock client stores the owner, a lease duration and a random record version, and the owner heartbeats by changing the version. In AWS's example the lease is 10 seconds and the heartbeat 3 seconds, and a waiter treats the lock as expired if the version doesn't change for a full lease. The lock is advisory
+In Redis the recipe is `SET resource_name my_random_value NX PX 30000`, which sets the key when it doesn't exist and lets it expire after 30,000 ms. The value must be unique to the client, and release must check the value before deleting, with a script or a newer check and delete command, since a plain `DEL` can remove another client's lock.
+
+In ZooKeeper, each client creates an ephemeral sequential node, and the lowest number holds the lock. Each waiter watches the node ahead of it alone, so a release wakes one client, and the node disappears when the client's session ends.
+
+In etcd, a lock is a key attached to a lease. When the lease expires or is revoked, the lock is released, and the Go client's session defaults to a 60 second TTL.
+
+In DynamoDB, a conditional write does the job. AWS's lock client stores the owner, a lease duration and a random record version, and the owner heartbeats by changing the version. In AWS's example the lease is 10 seconds and the heartbeat 3 seconds, and a waiter treats the lock as expired if the version doesn't change for a full lease. The lock is advisory.
 
 Each is a lease, and each has the same gap.
 

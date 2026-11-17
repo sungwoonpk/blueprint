@@ -15,11 +15,9 @@ TCP works like a phone call. You dial, the other side picks up, you talk, and if
 
 ## What TCP Does for You
 
-Start with TCP, since most of what you build uses it. It turns a messy network into a clean stream of bytes:
+Start with TCP, since most of what you build uses it. It turns a messy network into a clean stream of bytes.
 
-- It numbers every byte, so the receiver can put data back in order and drop duplicates
-- It waits for acknowledgments and resends anything that goes missing
-- It slows the sender down when the receiver or the network can't keep up
+It numbers each byte, so the receiver can put data back in order and drop duplicates. It waits for acknowledgments and resends anything that goes missing. And it slows the sender down when the receiver or the network can't keep up.
 
 The web, databases, email and file transfers all rely on this. Your code reads a stream and doesn't see lost packets.
 
@@ -48,12 +46,9 @@ Pool size is a tradeoff, like the ones in [Thinking in Tradeoffs](/system-design
 
 ## When Waiting is the Wrong Choice
 
-TCP's waiting is the right deal for web pages and databases. Sometimes it's the wrong one, because a late answer can be worse than none. That is where UDP fits:
+TCP's waiting is the right deal for web pages and databases. Sometimes it's the wrong one, because a late answer can be worse than none. That is where UDP fits.
 
-- **DNS lookups**: the phone book from [How DNS Works](/system-design/dns) deals in one small question and one small answer, so a handshake would cost more than the exchange
-- **Video and voice calls**: a resent frame arrives too late to show, so skipping it beats waiting for it
-- **Fast online games**: the next position update replaces a lost one
-- **Metrics**: sending a number should be cheap, and losing one reading rarely matters
+DNS lookups fit: the phone book from [How DNS Works](/system-design/dns) deals in one small question and one small answer, so a handshake would cost more than the exchange. Video and voice calls fit, since a resent frame arrives too late to show, and skipping it beats waiting for it. Fast online games fit, because the next position update replaces a lost one. So do metrics: sending a number should be cheap, and losing one reading rarely matters.
 
 Using UDP doesn't mean being careless. An app can add the little reliability it needs on top, such as resending a game's "player fired" message while letting position updates go. Some slower games use TCP instead.
 

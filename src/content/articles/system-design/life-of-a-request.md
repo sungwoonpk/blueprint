@@ -58,12 +58,9 @@ Here is the first visit to the app from a phone whose server is 60 ms away, draw
 <figcaption>One first visit, 300 ms in total (example numbers)</figcaption>
 </figure>
 
-Only 50 ms of the 300 is our code. Most of the rest is waiting on the distance: the TCP and TLS handshakes each cost a round trip, and so does the request itself. That is why the cheapest speed ups are often not in the code:
+Only 50 ms of the 300 is our code. Most of the rest is waiting on the distance: the TCP and TLS handshakes each cost a round trip, and so does the request itself. That is why the cheapest speed ups are often not in the code.
 
-- **Skip the setup**: a kept connection and a cached DNS answer remove the first three rows, which makes this visit 140 ms instead of 300
-- **Move closer**: a CDN near the user cuts the length of every round trip
-- **Cut round trips**: HTTP/3 does the connection and the encryption setup together
-- **Skip the trip**: a cache, in the browser or at the CDN, answers without reaching the server
+Skip the setup: a kept connection and a cached DNS answer remove the first three rows, which makes this visit 140 ms instead of 300. Move closer, since a CDN near the user cuts the length of each round trip. Cut round trips, since HTTP/3 does the connection and the encryption setup together. Or skip the trip entirely, with a cache, in the browser or at the CDN, that answers without reaching the server.
 
 Browsers report the time until the first reply byte arrives as **TTFB**, time to first byte. For a page's first response, web.dev's guideline is that 0.8 seconds or less is good. Your own browser's network panel draws a waterfall like this for every request, so you can measure a real one.
 

@@ -51,11 +51,9 @@ Look at the pattern. Operations that say "make it this way" are idempotent, and 
 
 ## Make the Operation Idempotent
 
-The best fix is to design the action so repeating it is naturally harmless:
+The best fix is to design the action so repeating it is naturally harmless. Three techniques do it.
 
-- **Set, don't add**: store `status = sold` and not a "sold count", and send the final price, not "lower the price by 5"
-- **Let the client choose the id**: `PUT /orders/c1d9...` creates the order or replaces it with the same content, so a repeat lands on the same row
-- **Let the database refuse duplicates**: a unique constraint turns a second insert into a harmless no-op
+Set, don't add: store `status = sold` and not a "sold count", and send the final price, not "lower the price by 5". Let the client choose the id: `PUT /orders/c1d9...` creates the order or replaces it with the same content, so a repeat lands on the same row. And let the database refuse duplicates, since a unique constraint turns a second insert into a harmless no-op.
 
 ```sql
 INSERT INTO reservations (listing_id, buyer_id)
@@ -127,13 +125,15 @@ A new purchase gets a new key. Reusing one key for two different purchases would
 
 ## The Details That Matter
 
-A few questions come up in most implementations, and the major APIs answer them in similar ways:
+A few questions come up in most implementations, and the major APIs answer them in similar ways.
 
-- **What if the same key arrives with different parameters?** That is probably a bug, so reject it with an error, as Stripe and Amazon do, and don't replay an answer to a different question
-- **What if the first request is still running?** Treat the second as a conflict and ask the client to retry later, so the work doesn't run twice at once. A unique constraint on the user and key decides which request wins
-- **What does the repeat get back?** The saved reply from the first attempt. If the state has changed since, an equivalent reply is usually fine, or the current state of the resource
-- **How long are keys kept?** Not forever. Stripe may delete keys once they are at least 24 hours old, and Google leaves it to the server to pick a reasonable time. A retry after that looks like a new request, so retries have to happen within the window
-- **What makes a good key?** Random, such as a version 4 UUID, and not built from personal data like an email address
+If the same key arrives with different parameters, that is probably a bug, so reject it with an error, as Stripe and Amazon do, and don't replay an answer to a different question.
+
+If the first request is still running, treat the second as a conflict and ask the client to retry later, so the work doesn't run twice at once. A unique constraint on the user and key decides which request wins.
+
+The repeat gets back the saved reply from the first attempt. If the state has changed since, an equivalent reply is usually fine, or the current state of the resource.
+
+Keys are not kept forever. Stripe may delete keys once they are at least 24 hours old, and Google leaves it to the server to pick a reasonable time. A retry after that looks like a new request, so retries have to happen within the window. A good key is random, such as a version 4 UUID, and not built from personal data like an email address.
 
 Keys also have to travel down the chain. If our server calls a payment provider, it should pass along a key derived from the one it received, or the duplicate protection ends at our front door.
 

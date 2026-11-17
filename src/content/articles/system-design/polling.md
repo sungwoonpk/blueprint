@@ -42,12 +42,13 @@ Each of those empty polls still costs a request to parse and a response to send,
 
 ## Making Polls Cheaper
 
-Before reaching for something more complicated, a few habits take most of the waste out of polling:
+Before reaching for something more complicated, a few habits take most of the waste out of polling.
 
-- **Ask for what's new, not everything**: the `after=` in the code above is a cursor, like the one in [Pagination](/system-design/pagination). The server returns only items past that point, so a poll with nothing new is tiny
-- **Use conditional requests**: the server tags each response with an ETag, the version tag from [How HTTP Works](/system-design/http), and the client sends it back in `If-None-Match`. If nothing changed, the answer is a short 304 with no body
-- **Let the server set the pace**: a server can tell clients how often to ask, and slow them down when it is busy
-- **Spread the clients out**: if all the phones poll at the same instant, the server sees a spike. A little random delay on each timer avoids it
+The first habit is to ask for what's new, not everything. The `after=` in the code above is a cursor, like the one in [Pagination](/system-design/pagination). The server returns only items past that point, so a poll with nothing new is tiny.
+
+The second is the conditional request. The server tags each response with an ETag, the version tag from [How HTTP Works](/system-design/http), and the client sends it back in `If-None-Match`. If nothing changed, the answer is a short 304 with no body.
+
+The third is to let the server set the pace: it can tell clients how often to ask, and slow them down when it is busy. The last is to spread the clients out. If the phones poll at the same instant, the server sees a spike, and a little random delay on each timer avoids it.
 
 The conditional request looks like this:
 
@@ -124,12 +125,13 @@ Two details keep it from losing news. The `after` cursor covers the short gap be
 
 Waiting isn't free, because every waiting client holds an open connection on the server, and that connection takes memory. RFC 6202 lists this among the main issues, and notes that some proxies and servers limit how many requests can be outstanding at once.
 
-A server that gives each waiting request its own thread runs out quickly, so long polling usually runs on a server built for many idle connections at once. Further costs and limits:
+A server that gives each waiting request its own thread runs out quickly, so long polling usually runs on a server built for many idle connections at once. Further costs and limits.
 
-- **Timeouts**: the hold time must stay below the idle timeout of the load balancers and proxies in the path, the same problem as the random 502s in [How HTTP Works](/system-design/http). Real services pick tens of seconds. Amazon SQS caps its long poll at 20 seconds, and Socket.IO's default heartbeat interval is 25 seconds
-- **Overhead on each request**: each answer is a full HTTP message with headers, which RFC 6202 points out matters when messages are small and frequent
-- **Connection limits**: browsers allow about 6 parallel connections to a host over HTTP/1.1, so a page with several long polls can use them up. One shared long poll per page is a common answer. HTTP/2 lets requests share a connection, as in [How HTTP Works](/system-design/http)
-- **Delay is small but not zero**: after each answer there is a gap before the next request lands, so the worst case is longer than one trip
+Timeouts come first: the hold time must stay below the idle timeout of the load balancers and proxies in the path, the same problem as the random 502s in [How HTTP Works](/system-design/http). Real services pick tens of seconds. Amazon SQS caps its long poll at 20 seconds, and Socket.IO's default heartbeat interval is 25 seconds.
+
+Each request carries overhead, since each answer is a full HTTP message with headers, which matters when messages are small and frequent. Connection limits bite too: browsers allow about 6 parallel connections to a host over HTTP/1.1, so a page with several long polls can use them up. One shared long poll per page is a common answer, and HTTP/2 lets requests share a connection, as in [How HTTP Works](/system-design/http).
+
+The delay is small but not zero, because after each answer there is a gap before the next request lands, so the worst case is longer than one trip.
 
 Some message queues use the same idea. Amazon SQS, for example, calls it long polling, and a worker asks for messages and says how long it is willing to wait:
 
