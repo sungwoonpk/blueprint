@@ -220,7 +220,7 @@ Random reads from disk scaled worst, and the reason is a lesson in blocks. Each 
 
 One server read about 1,200 values a second, which was about 75 MB a second from the file system and enough to fill the machine's network link. The usual fix was a smaller block, about 8 KB.
 
-The arithmetic is plain: the useful share of that 64 KB block is 1,000 divided by 65,536, about 1.5 percent. Shrinking the block to 8 KB raises it to about 12 percent, and the same network moves 8 times as many lookups.
+The arithmetic is plain: the useful share of that 64 KB block is 1,000 divided by 65,536, about 1.5 percent. Shrinking the block to 8 KB raises it to about 12 percent, and the same network can move up to 8 times as many lookups.
 
 Scans were fastest, since one request returns a large range, and sequential reads next, since a block that is read serves the next 64 reads from the cache. The pattern repeats through the whole design: Bigtable is built for large ranges and bulk writes, and a random read of a cold row is its slowest move.
 
@@ -234,7 +234,7 @@ It treats values as uninterpreted bytes and leaves types to the client. A hot ro
 
 Those limits came with the design, and the design was right for its users. The families of systems it inspired, which [Wide Column Stores](/system-design/wide-column-stores) describes, kept the row key, the families and the merge of memory and files, and each changed a different part: how data is placed, how copies agree, and what a transaction may touch.
 
-The next topics, [Dynamo](/system-design/dynamo) and [Cassandra](/system-design/cassandra), take the placement and replication in a different direction, and Spanner adds the transactions that Bigtable left out.
+The next topics, [Dynamo](/system-design/dynamo) and [Cassandra](/system-design/cassandra), take the placement and replication in a different direction, and [Spanner](/system-design/spanner) adds the transactions that Bigtable left out.
 
 ## What the Textbook App Takes From It
 
