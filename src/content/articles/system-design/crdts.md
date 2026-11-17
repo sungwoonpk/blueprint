@@ -70,7 +70,7 @@ Removes need the causal context from an earlier read, since without it a remove 
 
 ## Text and Documents
 
-Editing text needs a sequence CRDT, in which each character has an identity that stays valid as others insert around it. Treedoc, RGA, WOOT, Logoot and LSEQ are published designs. Martin Kleppmann's talk on the hard parts notes that many published algorithms have anomalies, such as interleaved text from concurrent inserts, and that naive implementations perform badly.
+Editing text needs a sequence CRDT, in which each character has an identity that stays valid as others insert around it. Treedoc, RGA, WOOT, Logoot and LSEQ are published designs. Many published algorithms have anomalies, such as interleaved text from concurrent inserts, and naive implementations perform badly.
 
 Two libraries are widely used. Yjs offers shared types, Y.Array, Y.Map, Y.Text and XML types, and is network agnostic, with providers for WebSocket, WebRTC and local storage. It merges adjacent items, drops the content of deleted ones, and garbage collects tombstones when their order no longer matters.
 

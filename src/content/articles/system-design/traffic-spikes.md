@@ -36,13 +36,13 @@ A viral link or a news event has no date, and the defenses have to be automatic.
 | Degrade | Serve a cheaper version to each user | Less of the product |
 | Waiting Room | Admit users at a rate the app can serve | People wait, and each holds a place |
 
-### Spare capacity and caches
+### Spare Capacity and Caches
 
 Capacity bought ahead is the most reliable answer for a predictable spike, and the scheduled scaling of [Autoscaling](/system-design/autoscaling) provides it at a known cost.
 
 A spike made mostly of reads should hit a cache or a CDN first, as in [Scaling Reads](/system-design/scaling-reads) and [Content Delivery Networks (CDNs)](/system-design/cdn), with the request coalescing of [Cache Stampedes](/system-design/cache-stampedes) so that a popular page expiring doesn't send the whole crowd to the database.
 
-### A queue to level the load
+### A Queue to Level the Load
 
 Queue based load leveling puts a queue between a task and the service it invokes, as a buffer. The producer posts a message and moves on, and the service pulls messages at its own pace.
 
@@ -58,7 +58,7 @@ And since delivery is usually at least once, consumers need to be idempotent, as
 
 For the textbook app, the receipts, emails and statistics from a registration go through a queue, as in [Task Queues](/system-design/task-queues), and the student sees a confirmation page at once. The step that decides whether a student gets a seat can't be queued silently, since the answer is what the student is waiting for.
 
-### Throttling: say no early
+### Throttling: Say No Early
 
 Throttling limits the resources that an application instance, a tenant or a service can use, and the HTTP status says which kind of refusal it is. A 429 says the caller exceeded a configured rate over a window.
 
@@ -72,7 +72,7 @@ Throttling can cover the time while autoscaling catches up, though it may not bu
 
 Priorities help, by serving high priority work first. With one pool of consumers, low priority messages can be delayed continually and may stay unprocessed, so use separate pools or an aging rule.
 
-### A waiting room
+### A Waiting Room
 
 A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. The design has a few knobs, and each answers a question.
 

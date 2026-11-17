@@ -65,7 +65,7 @@ Segmented LRU keeps new entries in a probationary part and moves them to a prote
 
 LFU with aging keeps a small counter for each entry that decays over time, so yesterday's hits fade. Redis does this, with the decay time a setting, one minute by default.
 
-Adaptive policies tune themselves. ARC balances recency and frequency as it runs, and beat LRU on 23 real traces in its authors' tests. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and reaches hit rates close to optimal on its test traces.
+Adaptive policies tune themselves. ARC balances recency and frequency as it runs, and beat LRU on 23 real traces in its own tests. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and reaches hit rates close to optimal on its test traces.
 
 You rarely implement these yourself. You choose among the policies your cache offers, and that is easier when you know what each is betting on.
 

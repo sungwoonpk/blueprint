@@ -137,7 +137,7 @@ The first cost is complexity and hardware. Spanner needs the clock infrastructur
 
 The second is leaders. Each group has a leader that handles its writes and its locks, and a lease of 10 seconds.
 
-In the original tests, killing the zone that held the leaders dropped read throughput to almost zero, and it recovered over about 10 seconds as the leases expired and new leaders were elected. The authors noted that shorter leases would cut the recovery time and cost lease renewal traffic.
+In the original tests, killing the zone that held the leaders dropped read throughput to almost zero, and it recovered over about 10 seconds as the leases expired and new leaders were elected. Shorter leases would cut the recovery time, at the price of more lease renewal traffic.
 
 The third is that multi group transactions are slower, as our table shows. And the strongest consistency is more than much of the data needs. Spanner is the sound choice where a wrong answer is expensive, such as money, stock and identity, and the textbook app's carts and search suggestions don't need it.
 

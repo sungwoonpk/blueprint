@@ -20,7 +20,7 @@ Developers start with a prototype that has no plan for high availability, and ad
 
 With a lock service, adding a primary is a few lines: acquire a lock, pass the lock's acquisition count with each write, and have the file server reject a write whose count is older. That is easier than making an existing server take part in a consensus protocol.
 
-Services that elect a primary also need to announce who it is, so the service allows small files, and a lock service that holds them gives clients one fewer system to depend on. Programmers also understand locks, even if, as the paper says, they are usually wrong about how locks behave when machines fail independently.
+Services that elect a primary also need to announce who it is, so the service allows small files, and a lock service that holds them gives clients one fewer system to depend on. Programmers also understand locks, even if they are usually wrong about how locks behave when machines fail independently.
 
 And a service reduces the number of machines a client system needs. Chubby's five replicas need three to be up, and a client system with a single running process can still obtain a lock and make progress safely.
 
@@ -40,7 +40,7 @@ Each client holds a **session**, kept alive by KeepAlive calls. The session has 
 
 The client sends the next KeepAlive as soon as one returns, so one is usually waiting at the master, and the master uses the reply to carry events and cache invalidations back.
 
-If a client can't renew in time, it enters a period of grace and tells its application that the session is in jeopardy, which gives a master failover time to complete without clients losing their locks. In the authors' experience the grace period was long enough that applications saw a pause and no worse effect.
+If a client can't renew in time, it enters a period of grace and tells its application that the session is in jeopardy, which gives a master failover time to complete without clients losing their locks. In practice the grace period was long enough that applications saw a pause and no worse effect.
 
 Clients cache file data in memory, and the cache is kept consistent, not by timeouts. When a file changes, the master blocks the write until it has invalidated the cache of each client that holds it.
 

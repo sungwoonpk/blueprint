@@ -153,7 +153,7 @@ Last writer wins is the default of many systems, and it silently drops work when
 
 Two details keep the clocks practical. The coordinator is usually among the top N nodes, so clocks stay short, but failures can send writes through other nodes and grow them. Dynamo stores a timestamp with each pair and, past a threshold of about 10 pairs, drops the oldest.
 
-That can blur ancestry, which the authors noted had not shown up in production. And the number of conflicts was small: over 24 hours in the cart service, 99.94 percent of reads saw exactly one version.
+That can blur ancestry, which had not shown up in production. And the number of conflicts was small: over 24 hours in the cart service, 99.94 percent of reads saw exactly one version.
 
 ## What It Costs
 

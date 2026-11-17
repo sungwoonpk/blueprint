@@ -49,7 +49,7 @@ For relational data, three habits cause trouble: a set of tables for each tenant
 
 There are three reasons to isolate a tenant's data: its own encryption keys, its own backup and restore policy, and a required data location. Those map to [Encrypting Data at Rest](/system-design/encryption-at-rest), [Backups and Disaster Recovery](/system-design/backup-dr) and [Serving Users Worldwide](/system-design/global-users).
 
-### Let the database enforce it
+### Let the Database Enforce It
 
 In a shared table, each query must include the tenant condition, and a single forgotten `WHERE tenant_id = ...` leaks data. PostgreSQL's row level security moves the rule into the database:
 
@@ -71,7 +71,7 @@ The examples use `current_user`, and applications that connect through a shared 
 
 Teams often skip the feature: it needs both user and tenant identity to be passed into each query, and many multitenant products decide the complexity isn't worth it. The best use is as a second wall behind the application's own checks.
 
-### Carry the tenant everywhere
+### Carry the Tenant Everywhere
 
 The tenant has to come from the authenticated identity, and not from a parameter the client sends, since a request that names another tenant's id is the same flaw as the broken object level authorization in [Authentication and Authorization](/system-design/authn-authz).
 

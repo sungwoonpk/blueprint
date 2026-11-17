@@ -26,7 +26,7 @@ And a page was built from a graph of dependent data, so the client fetched what 
 
 A cluster has hundreds of memcached servers, and the keys are spread over them by consistent hashing. A page that needs 521 items talks to many servers at once, and the web servers talk to the whole set of memcached servers, which brings two problems: latency and load.
 
-### The client does the work
+### The Client Does the Work
 
 Memcached servers don't talk to each other. The intelligence lives in a stateless client, either a library or a proxy called mcrouter, which handles routing, batching, serialization and retries. That keeps the servers simple and the software easy to change.
 
@@ -38,7 +38,7 @@ Many to many traffic causes incast congestion: when a client asks for many keys,
 
 A window that is too small makes a page wait through serial batches, and one that is too large drops replies and sends the requests to the database.
 
-### Leases, against stale sets and herds
+### Leases, Against Stale Sets and Herds
 
 Two failures dominate the cost of a miss. A **stale set** happens when concurrent operations reorder: one reader fetches the old value from the database, a writer updates the database and deletes the key, and then the reader puts the old value in the cache, where it stays until something deletes it again.
 
@@ -75,7 +75,7 @@ The price is waiting or staleness, and the system softens it. When a key is dele
 
 Applications that can make progress with slightly old data, which most can since a cached value tends to be an older snapshot of the database, don't wait.
 
-### Pools, replication and the gutter
+### Pools, Replication and the Gutter
 
 A cluster serves many kinds of data, and one kind can hurt another. Low churn keys that are still valuable get evicted by high churn keys that nobody reads again, so the servers are split into **pools**.
 
@@ -97,7 +97,7 @@ The gutter sends the load to idle machines instead. In practice it cut client vi
 
 A single cluster can't scale forever: hot items get hotter as web servers are added, and incast worsens with more memcached servers. So the system splits into several front end clusters, and the clusters in one place, together with a storage cluster that holds the databases, form a **region**.
 
-### One pipeline for invalidation
+### One Pipeline for Invalidation
 
 The storage cluster holds the authoritative data, and it is responsible for invalidating the caches in each front end cluster. The change is built into the write itself.
 
@@ -107,7 +107,7 @@ Reading the commit log has three advantages. A delete is sent after the transact
 
 And a lost or misrouted delete can be replayed, because the log is reliable, which a web server broadcasting deletes directly can't offer. Most deletes find no value to remove: just 4 percent of deletes issued ended in an actual invalidation, which is why batching from one log is far cheaper than doing it everywhere.
 
-### Regional pools and warming a cold cluster
+### Regional Pools and Warming a Cold Cluster
 
 Each cluster caches what its users ask for, so popular data is cached in each cluster. That is wasteful for large items that are rarely read, so some are kept in a **regional pool** shared by the clusters of a region.
 

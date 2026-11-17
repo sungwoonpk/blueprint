@@ -81,7 +81,7 @@ A shift isn't a problem by itself. Registration day brings a wave of questions a
 
 The system behind an API can change without a change in your code. Chen, Zaharia and Zou compared the same hosted models in March and June 2023 and found that the behavior of the same service can change substantially in a short time.
 
-On one test of telling prime from composite numbers, GPT-4 went from 84 percent in March to 51 percent in June. It became less willing to answer sensitive questions, did better on multi step questions, and made more formatting mistakes in generated code, and the authors call for continuous monitoring.
+On one test of telling prime from composite numbers, GPT-4 went from 84 percent in March to 51 percent in June. It became less willing to answer sensitive questions, did better on multi step questions, and made more formatting mistakes in generated code, which is why continuous monitoring matters.
 
 Three habits follow. Pin the version: call a dated model, not an alias that moves, and record it in the trace. Plan for retirement: providers publish end of life dates for model versions, so a model switch belongs on a calendar.
 

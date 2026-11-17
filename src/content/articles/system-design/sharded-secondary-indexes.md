@@ -10,7 +10,7 @@ The first answer keeps the index next to the data. Each shard indexes the rows i
 
 The cost is on the read. Rows for a given course are spread over the shards, so a search by course has to ask each of them and merge the answers.
 
-The Google cluster paper from 2003 describes the idea for web search: the index is divided into shards, each holding a randomly chosen subset of documents, and each query goes to one machine in the pool of each shard.
+Web search clusters of the early 2000s used this idea: the index is divided into shards, each holding a randomly chosen subset of documents, and each query goes to one machine in the pool of each shard.
 
 Elasticsearch and MongoDB work this way. In Elasticsearch, a node that receives a search picks one copy of each relevant shard, sends each a request and merges the results, while a lookup by id touches one shard.
 

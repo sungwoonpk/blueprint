@@ -76,7 +76,7 @@ The method is what lasts: compare the cost of holding the data in the faster tie
 
 ## The Tools
 
-### Object storage classes and rules
+### Object Storage Classes and Rules
 
 The S3 classes have a clear structure. Standard, infrequent access and the instant retrieval archive class offer millisecond access, with durability designed at 99.999999999 percent.
 
@@ -97,7 +97,7 @@ For data whose pattern isn't known, Intelligent-Tiering decides for you. Objects
 
 It has no retrieval fees, charges a small monthly monitoring fee, and doesn't monitor objects under 128 KB. It trades a fee for not having to measure, which is a good deal when the access pattern is unpredictable and a poor one for objects whose pattern is known.
 
-### Databases: partitions and tablespaces
+### Databases: Partitions and Tablespaces
 
 A database table that grows with time is a candidate for partitioning by date. PostgreSQL's declarative partitioning splits a table into ranges, such as a month for each partition, and queries that filter on the date touch the matching partitions and no others, which the planner decides by pruning. The tiering benefits are concrete:
 
@@ -109,7 +109,7 @@ ClickHouse puts the same idea in a rule. A time to live expression can delete ro
 
 The effect isn't immediate: expired rows are handled during merges, and the related timeouts default to four hours. Dropping whole partitions is much more efficient than deleting rows, so the partition key should match the time to live.
 
-### Caches as the top tier
+### Caches as the Top Tier
 
 Memory, flash and disk form a hierarchy, and a cache is its fastest tier, as in [Where to Put a Cache](/system-design/where-to-cache).
 

@@ -14,7 +14,7 @@ vLLM is one example. One command, `vllm serve` with a model name, starts an HTTP
 
 The chat route needs a chat template, and without one the server can't process chat requests and they return errors.
 
-NVIDIA's Triton Inference Server is a more general model server that handles many kinds of models, and it makes the batching explicit. A model's configuration enables the dynamic batcher with one line. By default, per its documentation, the batcher forms batches as large as it can up to the model's maximum batch size, without waiting.
+NVIDIA's Triton Inference Server is a more general model server that handles many kinds of models, and it makes the batching explicit. A model's configuration enables the dynamic batcher with one line. By default, the batcher forms batches as large as it can up to the model's maximum batch size, without waiting.
 
 An optional queue delay lets it wait a short time for a fuller batch. A list of preferred batch sizes also exists, mainly useful for TensorRT. The sound process is to start with the plain setting, measure, and then add a delay or raise the maximum.
 
