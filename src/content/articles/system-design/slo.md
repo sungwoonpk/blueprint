@@ -76,7 +76,7 @@ Two pieces of advice apply when choosing.
 - **Start from the user**: Don't pick a target from what is easy to measure, or from the current performance, which can lock in a level that takes heroics to keep
 - **Keep it small**: Have as few SLOs as possible, avoid absolute promises such as perfect availability, and start loose and tighten later, since loosening a promise is harder
 
-The workbook's worked example is a mobile game with four weeks of data: 3,663,253 requests, of which 97.123 percent succeeded, with a 90th percentile of 432 ms and a 99th of 891 ms.
+A worked example is a mobile game with four weeks of data: 3,663,253 requests, of which 97.123 percent succeeded, with a 90th percentile of 432 ms and a 99th of 891 ms.
 
 Its starter SLOs were set just under the observed values: 97 percent availability, 90 percent of requests under 450 ms and 99 percent under 900 ms.
 
@@ -96,7 +96,7 @@ The system polices itself: when the budget runs low, the product team itself slo
 
 ## A Policy for When the Budget Runs Out
 
-A budget needs a rule to mean anything, and the workbook publishes an example policy. In its example game service, the policy covers backend and client releases and sets these terms:
+A budget needs a rule to mean anything. Take a game service whose policy covers backend and client releases, with these terms:
 
 - **Within budget**: Releases proceed under the normal release process
 - **Out of budget**: The team halts changes and releases except for top priority fixes and security fixes, until the service is back within its SLO
@@ -105,13 +105,13 @@ A budget needs a rule to mean anything, and the workbook publishes an example po
 - **Postmortem trigger**: A single incident that uses more than 20 percent of the four week budget needs a postmortem, with at least one top priority action item for the root cause
 - **Escalation**: Disagreements over the budget math or the required actions go to the CTO
 
-The policy also states its purpose: it isn't a punishment, it is a way to focus on reliability when the data says so. The workbook adds that changes cause about 70 percent of outages, which is why release speed is what the budget governs.
+The policy also states its purpose: it isn't a punishment, it is a way to focus on reliability when the data says so. Changes cause about 70 percent of outages, which is why release speed is what the budget governs.
 
 Developers have to accept a freeze, product managers have to accept the threshold, and the team on call has to find the SLO defensible without heroics. If any of them won't, the SLIs and targets need another round.
 
 ## Windows and Reporting
 
-Over what time is the SLO measured? The workbook recommends a rolling four week window as a good general purpose interval, in whole weeks so that each window has the same weekends, with weekly summaries and quarterly reports.
+Over what time is the SLO measured? A rolling four week window is a good general purpose interval, in whole weeks so that each window has the same weekends, with weekly summaries and quarterly reports.
 
 A calendar month is easy to plan around, and it hides the forecast: at the start of the month, one bad hour looks small, and on the 29th it looks fatal. A rolling window removes that cliff.
 
@@ -127,7 +127,7 @@ The same applies to the textbook app's internal services. If the wallet service 
 
 ## Writing It Down
 
-An SLO document, in the workbook's form, records the service, the SLIs and how each is measured, the targets, the budget math, the reasons, and who approved it. Review it monthly at first and then quarterly. For the textbook app:
+An SLO document records the service, the SLIs and how each is measured, the targets, the budget math, the reasons, and who approved it. Review it monthly at first and then quarterly. For the textbook app:
 
 | SLI | Target | Window | Budget |
 | --- | --- | --- | --- |

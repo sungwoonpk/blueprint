@@ -29,7 +29,7 @@ Its naming advice is practical: use base units such as seconds and bytes, end co
 
 ### Cardinality
 
-Each combination of label values is a separate time series. Prometheus says to try to keep the cardinality of a metric below 10, to rethink any that exceeds 100, and not to use labels for values such as user ids.
+Each combination of label values is a separate time series. Try to keep the cardinality of a metric below 10, rethink any that exceeds 100, and don't use labels for values such as user ids.
 
 We counted the series for one counter in the textbook app, with 20 routes, 5 status codes and 6 servers:
 

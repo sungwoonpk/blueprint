@@ -55,7 +55,7 @@ if (!writable.write(chunk)) {
 
 In practice `pipeline()` wires this up. In a Node.js experiment compressing a large file, the process used a peak of about 88 MB of memory with backpressure, and about 1.5 GB with the signal ignored, with garbage collection working much harder.
 
-The guide compares the mechanism to Unix pipes and TCP flow control, which is the same idea at the network layer, as in [TCP and UDP](/system-design/tcp-udp).
+The mechanism is the same idea as Unix pipes and TCP flow control at the network layer, as in [TCP and UDP](/system-design/tcp-udp).
 
 A practical note: asking for one item at a time is a slow stop and wait protocol, so a subscriber should request the largest batch it can handle.
 

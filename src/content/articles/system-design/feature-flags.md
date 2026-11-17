@@ -8,7 +8,7 @@ Keep feature launches apart from binary releases through flags or an experiment 
 
 ## Four Kinds of Flags
 
-Pete Hodgson's article on feature toggles, hosted on Martin Fowler's site, sorts flags by purpose, and the purpose decides how long a flag lives and how it should be handled:
+Flags sort by purpose, and the purpose decides how long a flag lives and how it should be handled:
 
 | Kind | Purpose | Typical Life |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ When something goes wrong, the OpenFeature standard defines reasons and error co
 
 A staged rollout must treat a user the same way each time. A coin flip on each request at 10 percent would show a student the new search on one page and the old one on the next. We simulated it: with a coin flip, 65 percent of users saw both versions within 10 visits.
 
-The standard method is to hash. Flagsmith merges the identity with the segment's identifier and hashes it into a number between 0 and 1, which is then compared with the percentage. We tried the same idea with the flag name and the user id:
+The standard method is to hash. One flag service merges the identity with the segment's identifier and hashes it into a number between 0 and 1, which is then compared with the percentage. We tried the same idea with the flag name and the user id:
 
 | Property | Result in Our Test of 100,000 Users |
 | --- | --- |

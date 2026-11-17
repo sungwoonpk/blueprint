@@ -33,7 +33,7 @@ They pull against each other. A hair trigger has a short detection time and poor
 
 ## Alerting on Burn Rate
 
-The workbook walks through six rules, from naive to recommended, using the **burn rate**: how fast the service spends its error budget compared with the SLO. A burn rate of 1 uses the budget exactly by the end of the window. For a 99.9 percent SLO over 30 days:
+Alert rules improve in steps, from naive to recommended, and the key measure is the **burn rate**: how fast the service spends its error budget compared with the SLO. A burn rate of 1 uses the budget exactly by the end of the window. For a 99.9 percent SLO over 30 days:
 
 | Burn Rate | Error Rate | Budget Gone in |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ A required duration of an hour makes the full outage wait an hour, the same as a
 
 The recommended design is **multiwindow, multi burn rate**. Each alert needs two conditions at once: the budget burned over a long window and the error rate over a short one, about one twelfth as long, which shows that the problem is still going.
 
-The short window is what lets the alert reset about 5 minutes after errors stop. The workbook's table for a 99.9 percent SLO:
+The short window is what lets the alert reset about 5 minutes after errors stop. The table for a 99.9 percent SLO:
 
 | Budget Consumed | Long Window | Short Window | Burn Rate | Action |
 | --- | --- | --- | --- | --- |
@@ -95,7 +95,7 @@ The detection times are the price of precision. A 6 hour burn at 1 percent took 
 
 Burn rates assume enough requests for the error rate to be meaningful.
 
-The workbook's example is a service with 10 requests an hour: one failure is a 10 percent hourly error rate, a burn rate of 1,000 for a 99.9 percent SLO, and it pages at once, though a 99.9 percent SLO over 30 days allows about 7 failures.
+Take a service with 10 requests an hour: one failure is a 10 percent hourly error rate, a burn rate of 1,000 for a 99.9 percent SLO, and it pages at once, though a 99.9 percent SLO over 30 days allows about 7 failures.
 
 The options it lists are to generate synthetic traffic, to combine related services into one group, to change the product so that a single failure matters less, with retries and fallbacks, or to lower the target or lengthen the window.
 

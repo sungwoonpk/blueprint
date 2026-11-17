@@ -30,7 +30,7 @@ If 10 percent of its servers are healthy, the request rate has to fall to about 
 
 ## Retries Multiply
 
-The book's example of retry amplification: a backend can handle 10,000 requests a second for each task, and the frontend sends 10,100.
+An example of retry amplification: a backend can handle 10,000 requests a second for each task, and the frontend sends 10,100.
 
 Each failed request is retried, up to 10 times, so each second adds load on top of the last, and the backend melts down. Even when traffic returns to 9,000 a second, failing requests still use resources.
 

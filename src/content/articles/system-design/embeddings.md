@@ -41,10 +41,10 @@ The comparison is usually **cosine similarity**: the dot product of the two vect
 
 When the vectors are normalized to length 1, the dot product equals the cosine. Voyage AI's documentation, which Anthropic points to for embeddings, says its vectors are normalized, that the dot product is the quicker way to compute the same thing, and that cosine similarity and Euclidean distance give identical rankings.
 
-Some details from the documentation are worth knowing before building:
+Some details are worth knowing before building:
 
 - **Size**: Voyage models default to 1,024 numbers for each text, with 256, 512 and 2,048 as options on some models
-- **Queries and documents differ**: A short question and a long passage don't look alike, so the documentation has the client mark each text as a query or a document, and Sentence Transformers describes asymmetric search for this case
+- **Queries and documents differ**: A short question and a long passage don't look alike, so the client marks each text as a query or a document, which is called asymmetric search
 - **Limits on length**: Models read a limited number of tokens, which is 32,000 for most Voyage models, so a long text needs splitting
 - **One model, one space**: Vectors from different models aren't comparable, so changing the model means embedding the whole collection again
 
@@ -120,7 +120,7 @@ A hybrid search runs both and merges the results. It runs full text and vector s
 
 For each list that contains a document, the document earns 1 divided by a constant plus its rank in that list, and the scores add up.
 
-The constant defaults to 60. Each list has equal weight, and the documentation's worked example with a constant of 1 gives a document ranked second in one list and first in another a score of 1/3 plus 1/2, or 0.833.
+The constant defaults to 60. Each list has equal weight, and a worked example with a constant of 1 gives a document ranked second in one list and first in another a score of 1/3 plus 1/2, or 0.833.
 
 The method needs no tuning of scores, since it uses ranks and not the raw numbers from the two systems, which aren't on one scale. A document that does well in both lists wins. Our experiment shows what it doesn't do: it doesn't rescue a query on which one ranker has little to offer.
 

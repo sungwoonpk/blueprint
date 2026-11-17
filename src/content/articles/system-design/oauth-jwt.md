@@ -19,13 +19,13 @@ RFC 6749, the OAuth 2.0 specification, names four roles. For the bookstore case:
 
 The client is either confidential, able to keep a secret such as a server side web app, or public, like a mobile app or a browser app, where any secret shipped inside the code can be extracted.
 
-The result of the flow is an **access token**, which the RFC describes as a string representing an authorization issued to the client. The client sends it to the resource server on each call, and the server decides what the token allows.
+The result of the flow is an **access token**, a string that represents an authorization issued to the client. The client sends it to the resource server on each call, and the server decides what the token allows.
 
-A **refresh token** is optional, and the authorization server may issue one so the client can get a new access token without bothering the user again. The RFC says refresh tokens are not sent to resource servers.
+A **refresh token** is optional, and the authorization server may issue one so the client can get a new access token without bothering the user again. Refresh tokens are not sent to resource servers.
 
 ## The Authorization Code Flow
 
-The flow most apps use is the authorization code grant, in five steps lettered A to E in the RFC:
+The flow most apps use is the authorization code grant, in five steps, lettered A to E in the standard's diagram:
 
 1. **The client sends the user to the authorization server**: The request carries `response_type=code`, the `client_id`, a `redirect_uri`, the requested `scope` and a `state` value
 2. **The user signs in and approves**: This happens at the authorization server, so the client doesn't see the password
@@ -58,7 +58,7 @@ code_challenge = b64url(hashlib.sha256(code_verifier.encode()).digest())
 
 The verifier is a random string of 43 to 128 characters, and 32 random bytes encoded this way give 43. The first request sends just the hash, the challenge, with the method `S256`. The token request sends the verifier, and the server hashes it and compares.
 
-A mismatch returns `invalid_grant`. An attacker who caught the code has no verifier, so the code is useless to them. The RFC says a client that can use S256 must, and it warns against falling back to the plain method.
+A mismatch returns `invalid_grant`. An attacker who caught the code has no verifier, so the code is useless to them. A client that can use S256 must, and it shouldn't fall back to the plain method.
 
 RFC 9700 makes PKCE the default: public clients must use it, and it is recommended for confidential clients too.
 
@@ -137,7 +137,7 @@ A JWT can be checked by any service that has the key, without a call to the auth
 
 The alternative is an opaque token, a random string with no content, which the resource server checks by asking the authorization server. RFC 7662 describes that introspection: a POST with the token, and a JSON answer whose required field is `active`.
 
-The caller has to authenticate, and an unknown token gets `{"active": false}`. The answer may be cached, but not beyond the token's expiry, and the RFC notes that a cached answer can accept a token that was revoked meanwhile.
+The caller has to authenticate, and an unknown token gets `{"active": false}`. The answer may be cached, but not beyond the token's expiry, and a cached answer can accept a token that was revoked meanwhile.
 
 | Property | Self Contained JWT | Opaque With Introspection |
 | --- | --- | --- |
@@ -147,7 +147,7 @@ The caller has to authenticate, and an unknown token gets `{"active": false}`. T
 
 RFC 7009 defines revocation, where a client posts the token, and the server answers 200 even if the token was already invalid. Revoking a refresh token should also invalidate the access tokens of the same grant.
 
-For self contained tokens, the RFC says immediate revocation needs some backend interaction beyond the standard, and its alternatives are short lived access tokens or handles the server can revoke.
+For self contained tokens, immediate revocation needs some backend interaction beyond the standard, and the alternatives are short lived access tokens or handles the server can revoke.
 
 A stolen token that can't be revoked is usable for the rest of its life, which is on average half of the lifetime if the theft is at a random time:
 
