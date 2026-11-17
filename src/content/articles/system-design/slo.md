@@ -16,7 +16,7 @@ Three terms matter, and they are often confused:
 | SLO | A target value or range for an SLI | At least 99.9 percent of them, over 28 days |
 | SLA | A contract with consequences, usually money, for missing the objective | A refund of 10 percent if monthly uptime falls below 99.9 percent |
 
-The SRE book's test is simple: if there is no explicit consequence for missing it, it is an SLO. Google Search, for instance, has no public SLA and still has SLOs. An SLA is usually looser than the internal SLO, so that the team gets a warning before a contract is breached.
+The test is simple: if there is no explicit consequence for missing it, it is an SLO. Google Search, for instance, has no public SLA and still has SLOs. An SLA is usually looser than the internal SLO, so that the team gets a warning before a contract is breached.
 
 Cloud providers show real SLAs. Amazon's S3 SLA measures the error rate in each 5 minute interval and gives credits of 10 percent if monthly uptime falls below 99.9 percent, 25 percent below 99.0 percent and 100 percent below 95.0 percent.
 
@@ -45,7 +45,7 @@ For the textbook app, three SLIs cover the purchase path:
 - **Latency**: The share of listing page requests served in under 400 ms
 - **Freshness**: The share of new listings that appear in search within 60 seconds
 
-Use percentiles and not averages for latency, as the SRE book insists. Its example shows a median near 50 ms while 5 percent of requests are about 20 times slower. The workbook's way to state it is several grades at once, such as 90 percent under 100 ms and 99 percent under 400 ms.
+Use percentiles and not averages for latency, since an average hides the tail: a median near 50 ms can sit beside 5 percent of requests that are about 20 times slower. State it as several grades at once, such as 90 percent under 100 ms and 99 percent under 400 ms.
 
 ## Setting the Target
 
@@ -71,12 +71,12 @@ Dependencies lower what a service can promise. As the first topic of the previou
 
 The rule for a chain is the product of the components' values, and for redundant copies availability is 1 minus the product of the chances that each copy fails.
 
-Two pieces of advice from the SRE book apply when choosing:
+Two pieces of advice apply when choosing.
 
 - **Start from the user**: Don't pick a target from what is easy to measure, or from the current performance, which can lock in a level that takes heroics to keep
 - **Keep it small**: Have as few SLOs as possible, avoid absolute promises such as perfect availability, and start loose and tighten later, since loosening a promise is harder
 
-The workbook's worked example is a mobile game with four weeks of data: 3,663,253 requests, of which 97.123 percent succeeded, with a 90th percentile of 432 ms and a 99th of 891 ms.
+A worked example is a mobile game with four weeks of data: 3,663,253 requests, of which 97.123 percent succeeded, with a 90th percentile of 432 ms and a 99th of 891 ms.
 
 Its starter SLOs were set just under the observed values: 97 percent availability, 90 percent of requests under 450 ms and 99 percent under 900 ms.
 
@@ -96,7 +96,7 @@ The system polices itself: when the budget runs low, the product team itself slo
 
 ## A Policy for When the Budget Runs Out
 
-A budget needs a rule to mean anything, and the workbook publishes an example policy. In its example game service, the policy covers backend and client releases and sets these terms:
+A budget needs a rule to mean anything. Take a game service whose policy covers backend and client releases, with these terms:
 
 - **Within budget**: Releases proceed under the normal release process
 - **Out of budget**: The team halts changes and releases except for top priority fixes and security fixes, until the service is back within its SLO
@@ -105,13 +105,13 @@ A budget needs a rule to mean anything, and the workbook publishes an example po
 - **Postmortem trigger**: A single incident that uses more than 20 percent of the four week budget needs a postmortem, with at least one top priority action item for the root cause
 - **Escalation**: Disagreements over the budget math or the required actions go to the CTO
 
-The policy also states its purpose: it isn't a punishment, it is a way to focus on reliability when the data says so. The workbook adds that changes cause about 70 percent of outages, which is why release speed is what the budget governs.
+The policy also states its purpose: it isn't a punishment, it is a way to focus on reliability when the data says so. Changes cause about 70 percent of outages, which is why release speed is what the budget governs.
 
 Developers have to accept a freeze, product managers have to accept the threshold, and the team on call has to find the SLO defensible without heroics. If any of them won't, the SLIs and targets need another round.
 
 ## Windows and Reporting
 
-Over what time is the SLO measured? The workbook recommends a rolling four week window as a good general purpose interval, in whole weeks so that each window has the same weekends, with weekly summaries and quarterly reports.
+Over what time is the SLO measured? A rolling four week window is a good general purpose interval, in whole weeks so that each window has the same weekends, with weekly summaries and quarterly reports.
 
 A calendar month is easy to plan around, and it hides the forecast: at the start of the month, one bad hour looks small, and on the 29th it looks fatal. A rolling window removes that cliff.
 
@@ -119,7 +119,7 @@ One note about aggregation: a rate averaged over a day can hide a bad minute, so
 
 ## Don't Overachieve
 
-An SLO is a ceiling as well as a floor. The SRE book's cautionary example is Chubby, Google's lock service, which was so reliable that other services began to assume it would not fail, and built hard dependencies on it.
+An SLO is a ceiling as well as a floor. A cautionary example is Chubby, Google's lock service, which was so reliable that other services began to assume it would not fail, and built hard dependencies on it.
 
 To avoid it, the Chubby team keeps it near its SLO, and if a quarter passes with no real failure that takes availability below target, they cause a controlled outage so that unreasonable dependencies show up while they can be fixed.
 
@@ -127,7 +127,7 @@ The same applies to the textbook app's internal services. If the wallet service 
 
 ## Writing It Down
 
-An SLO document, in the workbook's form, records the service, the SLIs and how each is measured, the targets, the budget math, the reasons, and who approved it. Review it monthly at first and then quarterly. For the textbook app:
+An SLO document records the service, the SLIs and how each is measured, the targets, the budget math, the reasons, and who approved it. Review it monthly at first and then quarterly. For the textbook app:
 
 | SLI | Target | Window | Budget |
 | --- | --- | --- | --- |

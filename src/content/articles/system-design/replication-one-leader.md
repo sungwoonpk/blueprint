@@ -80,7 +80,7 @@ When the link returned, the application wrote to the new West Coast primaries. T
 
 GitHub chose to keep the West Coast primaries and repair the data. Restoring several terabytes from backups, which were taken at 4 hour intervals, took hours, replicas stayed behind, and the site was degraded for 24 hours and 11 minutes.
 
-Their report says no user data was lost, and that reconciling a few seconds of writes was still under way. One of the busiest clusters had 954 writes in the window.
+No user data was lost, though reconciling a few seconds of writes was still under way. One of the busiest clusters had 954 writes in the window.
 
 Two changes followed. The tool was reconfigured so that primaries are not promoted across regional boundaries, since a promotion inside one region is generally safe and the cross country latency made the damage worse, and they moved toward designs that survive losing a data center.
 

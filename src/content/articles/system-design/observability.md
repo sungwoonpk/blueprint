@@ -14,7 +14,7 @@ The OpenTelemetry project describes the three signals this way. Each answers a d
 | Traces | The spans of one request across services | Where in the path the time went | Volume, so they are sampled |
 | Logs | Timestamped records of events | Why, in detail | Searching and cost at scale |
 
-A good investigation uses them in that order. A metric raises the alarm, a trace points at the slow step, and logs explain what happened there. Google's SRE book makes the related point that monitoring should answer both what is broken, the symptom, and why, the cause, and that most effort should go to symptoms.
+A good investigation uses them in that order. A metric raises the alarm, a trace points at the slow step, and logs explain what happened there. Monitoring should answer both what is broken, the symptom, and why, the cause, and most effort should go to symptoms.
 
 ## Metrics
 
@@ -29,7 +29,7 @@ Its naming advice is practical: use base units such as seconds and bytes, end co
 
 ### Cardinality
 
-Each combination of label values is a separate time series. Prometheus says to try to keep the cardinality of a metric below 10, to rethink any that exceeds 100, and not to use labels for values such as user ids.
+Each combination of label values is a separate time series. Try to keep the cardinality of a metric below 10, rethink any that exceeds 100, and don't use labels for values such as user ids.
 
 We counted the series for one counter in the textbook app, with 20 routes, 5 status codes and 6 servers:
 
@@ -70,7 +70,7 @@ If you have room to watch four things, these are the four:
 
 ## Logs
 
-A log is the detailed record that a metric can't hold. The AWS Builders' Library gives the pattern that works at scale: write one structured entry for each unit of work, an HTTP request or a queue message, and not several loose lines.
+A log is the detailed record that a metric can't hold. The pattern that works at scale is to write one structured entry for each unit of work, an HTTP request or a queue message, and not several loose lines.
 
 The entry carries the input parameters, who called, counters, timers, and the latency and result of each dependency call:
 
@@ -87,13 +87,13 @@ The entry carries the input parameters, who called, counters, timers, and the la
 }
 ```
 
-Several habits in the article are worth copying. Record the request early, before validation or throttling can reject it, and sanitize the input, since a 1 MB string in a field can break a log pipeline.
+Several habits are worth copying. Record the request early, before validation or throttling can reject it, and sanitize the input, since a 1 MB string in a field can break a log pipeline.
 
 Time successful responses separately, because fast rejections skew a general latency number. Keep debug output in separate files from request entries, and keep logs on their own disk partition so a full disk doesn't take down the service.
 
-Cost is the catch. The article judges logging each request worth the expense, noting that DynamoDB logs each request at over 20 million requests a second of internal traffic, and for services with more traffic than that budget it suggests sampling, such as writing one entry in N and recording how many were skipped, or keeping errors and slow requests first.
+Cost is the catch. Logging each request is usually worth the expense, and DynamoDB does it at over 20 million requests a second of internal traffic. For services with more traffic than that budget, sample, such as writing one entry in N and recording how many were skipped, or keeping errors and slow requests first.
 
-The SRE book's advice on logs agrees: several verbosity levels that can be raised at runtime, sampling such as 1 operation in 1,000 for high volume, and a unique request id passed across calls so that entries from different components can be joined.
+Good practice agrees: several verbosity levels that can be raised at runtime, sampling such as 1 operation in 1,000 for high volume, and a unique request id passed across calls so that entries from different components can be joined.
 
 The backend matters too. Grafana Loki turns each combination of labels into a stream, with a default limit of 15 index labels, and warns against putting timestamps, trace ids or order ids in labels. Those go in the log body or in structured metadata.
 
@@ -153,7 +153,7 @@ Tracing each request costs time and storage, so traces are sampled. Dapper measu
 | 1 in 16 | 2.12% |
 | 1 in 1,024 | within the measurement error, minus 0.20% |
 
-Google's first production setup sampled about 1 trace in 1,024, and the authors argue that for busy services even rates near 0.01 percent don't hinder most analyses, since a notable pattern that appears once will appear thousands of times.
+Google's first production setup sampled about 1 trace in 1,024, and for busy services even rates near 0.01 percent don't hinder most analyses, since a notable pattern that appears once will appear thousands of times.
 
 Services with dozens of requests a second can trace each one. They moved to adaptive sampling that targets a number of traces a second, and Jaeger offers the same, along with a probabilistic default of 0.001 and a rate limiting sampler.
 

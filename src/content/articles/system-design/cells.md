@@ -82,7 +82,7 @@ Moving a customer takes care, since the data has to be copied and the router has
 
 ## Deploying One Cell at a Time
 
-A change can be the cause of an outage as easily as a hardware fault. Cells give a deploy a natural order. The whitepaper deploys to one or more cells at a time, in waves, and rolls back at the first sign of a problem, which limits how many customers are exposed.
+A change can be the cause of an outage as easily as a hardware fault. Cells give a deploy a natural order. Deploy to one or more cells at a time, in waves, and roll back at the first sign of a problem, which limits how many customers are exposed.
 
 For the textbook app with 10 cells, a bad release that is noticed after 10 minutes of errors in the first cell reaches 10 percent of the customers, for those 10 minutes. Without cells it reaches the whole customer base. This is the foundation for the staged rollouts in [Canary Releases and Other Deployment Strategies](/system-design/deployments).
 
@@ -98,7 +98,7 @@ They built a way to drain a zone, with the goals of moving most traffic away wit
 
 The idea they chose is siloing: a service accepts traffic from its own zone alone and calls upstream services in its own zone alone, so each zone behaves as a cell.
 
-The edge load balancers drain a zone by changing the weights of the routes to it, and the change takes seconds to spread. The drain time of 5 minutes was a goal in the post, and not a measured result.
+The edge load balancers drain a zone by changing the weights of the routes to it, and the change takes seconds to spread. The drain time of 5 minutes is a goal, and not a measured result.
 
 A related idea is static stability. A system that is statically stable keeps working when a dependency is impaired, without needing to react.
 

@@ -93,7 +93,7 @@ These are our arithmetic, with a spare server for failures not included. The gai
 
 A cache adds a risk of its own. A service can become addicted to its cache: behavior differs between a cached and an uncached object, and a cache failure or a shift in the hit distribution can cause an outage, since the database wasn't sized for the miss traffic.
 
-Cold starts have the same effect, with a new server's empty local cache flooding its dependency, and the article's remedies are request coalescing, a fallback, and testing with the cache switched off.
+Cold starts have the same effect, with a new server's empty local cache flooding its dependency, and the remedies are request coalescing, a fallback, and testing with the cache switched off.
 
 It also describes soft and hard time limits, serving cached data past the soft limit while the dependency is unhealthy, and caching negative answers, where a failure to do so has caused higher failure rates. [Cache Stampedes](/system-design/cache-stampedes) and [Load Shedding and Graceful Degradation](/system-design/load-shedding) are the two defenses to have ready.
 

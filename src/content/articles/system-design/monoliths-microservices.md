@@ -52,7 +52,7 @@ Notice that nearly all of these are about people and organization, not about raw
 
 ## What Splitting Costs
 
-Fowler names three costs, and each one connects to something earlier in this roadmap.
+Three costs stand out, and each one connects to something earlier in this roadmap.
 
 **Distribution.** A call between services is a network call. From [Numbers Every Engineer Should Know](/system-design/numbers), a call inside one data center takes around half a millisecond, thousands of times longer than a function call in memory, and it can fail, as in [Idempotency and Safe Retries](/system-design/idempotency). Calls also add up when a page needs many of them, one after another:
 
@@ -87,11 +87,11 @@ messages.notify(seller, 42)       # Messages Service
 
 If the charge fails, the listing already says sold. Someone has to write the compensation, which is what the patterns in [Sagas](/system-design/sagas) are for.
 
-**Operational complexity.** One program to deploy becomes many. Each needs its own pipeline, monitoring, versioning and on-call, and the interactions between them are where new failures live, the problem behind [Cascading Failures](/system-design/cascading-failures). Fowler is direct that this needs mature automation and a team culture that can run it.
+**Operational complexity.** One program to deploy becomes many. Each needs its own pipeline, monitoring, versioning and on-call, and the interactions between them are where new failures live, the problem behind [Cascading Failures](/system-design/cascading-failures). It takes mature automation and a team culture that can run it.
 
 ## Start With a Monolith
 
-Fowler's "MonolithFirst" essay makes an argument worth remembering. Almost all the successful microservice systems he knew of began as a monolith that grew too big and was split, and almost all the ones built as microservices from the start ran into serious trouble, by his account.
+The "MonolithFirst" argument is worth remembering. Most of the successful microservice systems began as a monolith that grew too big and was split, and most of the ones built as microservices from the start ran into serious trouble.
 
 His reasoning is that you don't know the right boundaries early, and moving a boundary inside one program is a refactoring, while moving it between services is a project.
 
@@ -128,7 +128,7 @@ Splitting can also go too far. Segment's engineers wrote in 2018 about a system 
 
 It is one story, with its own context, and not a law. It does show that the same system can be right as many services at one moment and as one at another.
 
-A related trap is the **distributed monolith**, services that are separate on paper but have to be deployed together or call each other constantly. Fowler's point is that coordinated deployments aren't really microservices. You pay the network cost and get none of the independence.
+A related trap is the **distributed monolith**, services that are separate on paper but have to be deployed together or call each other constantly. Coordinated deployments aren't really microservices. You pay the network cost and get little of the independence.
 
 ## Splitting When the Time Comes
 

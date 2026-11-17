@@ -8,7 +8,7 @@ At first both use the same tables, and the search page joins five of them. Write
 
 ## Commands and Queries
 
-The idea comes from a rule for single methods. Bertrand Meyer's command query separation, which Martin Fowler describes in a 2005 note, says a method either returns a result with no side effects, a **query**, or changes state and returns no value, a **command**. A query can be called anywhere, in any order, with confidence.
+The idea comes from a rule for single methods. Bertrand Meyer's command query separation says a method either returns a result with no side effects, a **query**, or changes state and returns no value, a **command**. A query can be called anywhere, in any order, with confidence.
 
 CQRS applies the same split to whole models: it means using a different model to update information than the one used to read it, an idea that comes from Greg Young. Queries return plain data objects with no domain logic.
 
@@ -107,7 +107,7 @@ A similar point for commands: validate in the client where possible, so most com
 
 ## When Not to Use It
 
-Fowler is blunt: for most systems CQRS adds risky complexity, and most systems fit a plain create, read, update and delete model.
+For most systems CQRS adds risky complexity, and most systems fit a plain create, read, update and delete model.
 
 He says most of the cases he has met went badly, and advises using it in a part of a system, within one bounded context, and not across the whole. Two models, a projector, a queue and a lag to manage are a lot to run.
 
@@ -127,5 +127,5 @@ Skip it when the domain and the rules are simple. In the textbook app, the listi
 - The two can share one database, or use two stores with events carrying changes across, preferably through an outbox or a log reader
 - <u>The read side is a projection</u> that can be rebuilt from events, and a version check makes its handler safe to repeat
 - Two stores mean stale reads, so answer from the command, show pending work, and expect users to act on old data
-- Fowler warns that most systems don't need it, so use it for one part with many readers or collaborating writers, and keep plain tables elsewhere
+- Most systems don't need it, so use it for one part with many readers or collaborating writers, and keep plain tables elsewhere
 

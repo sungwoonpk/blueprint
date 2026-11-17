@@ -56,7 +56,7 @@ How many workers are enough follows from Little's law, which says the number of 
 | 50 | 150 | 60 |
 | 200 | 600 | 240 |
 
-The same relation shows a danger that the AWS Builders' Library describes with its own numbers: if jobs slow from 100 ms to 10 s, the workers needed for the same rate grow a hundred times. Workers can be added when the queue grows and removed when it empties, as in [Autoscaling](/system-design/autoscaling).
+The same relation shows a danger: if jobs slow from 100 ms to 10 s, the workers needed for the same rate grow a hundred times. Workers can be added when the queue grows and removed when it empties, as in [Autoscaling](/system-design/autoscaling).
 
 One RabbitMQ setting guards against uneven loads. The **prefetch** count limits how many unacknowledged messages a consumer holds at once. Without a limit, a slow consumer can be handed a huge pile and its fast neighbors sit idle.
 

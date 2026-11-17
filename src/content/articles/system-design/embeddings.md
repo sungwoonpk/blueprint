@@ -8,7 +8,7 @@ The students aren't wrong. Words are one of several ways to say a thing, and the
 
 A keyword engine, as in [Full Text Search with Inverted Indexes](/system-design/search-engines), scores a document by the words it shares with the query. It is fast, cheap and exact about what it matches. It has no idea that two different words mean one thing, and that gap is the **vocabulary mismatch**.
 
-It would be a mistake to think vectors replace keywords. The BEIR benchmark tested 10 retrieval systems on 18 public datasets, and its authors found that BM25, the classic keyword scoring function, is a dependable baseline, and that re-ranking and late interaction models do best on average at a high computational cost.
+It would be a mistake to think vectors replace keywords. The BEIR benchmark tested 10 retrieval systems on 18 public datasets, and the results showed that BM25, the classic keyword scoring function, is a dependable baseline, and that re-ranking and late interaction models do best on average at a high computational cost.
 
 Dense retrieval, the vector approach, often did worse than that on data it hadn't been trained on.
 
@@ -18,7 +18,7 @@ The MTEB benchmark, which covers 8 task types, 58 datasets and 112 languages for
 
 The idea of representing words as vectors learned from text goes back to word2vec in 2013, which computed such vectors from very large data sets, 1.6 billion words in under a day. The same idea was extended to whole sentences.
 
-The Sentence-BERT paper of 2019 explains why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which the authors put at about 65 hours.
+Sentence-BERT, in 2019, showed why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which takes about 65 hours.
 
 If each sentence is embedded once and the vectors are compared with cosine similarity, the same task took about 5 seconds, with accuracy maintained in their tests.
 
@@ -41,10 +41,10 @@ The comparison is usually **cosine similarity**: the dot product of the two vect
 
 When the vectors are normalized to length 1, the dot product equals the cosine. Voyage AI's documentation, which Anthropic points to for embeddings, says its vectors are normalized, that the dot product is the quicker way to compute the same thing, and that cosine similarity and Euclidean distance give identical rankings.
 
-Some details from the documentation are worth knowing before building:
+Some details are worth knowing before building:
 
 - **Size**: Voyage models default to 1,024 numbers for each text, with 256, 512 and 2,048 as options on some models
-- **Queries and documents differ**: A short question and a long passage don't look alike, so the documentation has the client mark each text as a query or a document, and Sentence Transformers describes asymmetric search for this case
+- **Queries and documents differ**: A short question and a long passage don't look alike, so the client marks each text as a query or a document, which is called asymmetric search
 - **Limits on length**: Models read a limited number of tokens, which is 32,000 for most Voyage models, so a long text needs splitting
 - **One model, one space**: Vectors from different models aren't comparable, so changing the model means embedding the whole collection again
 
@@ -120,7 +120,7 @@ A hybrid search runs both and merges the results. It runs full text and vector s
 
 For each list that contains a document, the document earns 1 divided by a constant plus its rank in that list, and the scores add up.
 
-The constant defaults to 60. Each list has equal weight, and the documentation's worked example with a constant of 1 gives a document ranked second in one list and first in another a score of 1/3 plus 1/2, or 0.833.
+The constant defaults to 60. Each list has equal weight, and a worked example with a constant of 1 gives a document ranked second in one list and first in another a score of 1/3 plus 1/2, or 0.833.
 
 The method needs no tuning of scores, since it uses ranks and not the raw numbers from the two systems, which aren't on one scale. A document that does well in both lists wins. Our experiment shows what it doesn't do: it doesn't rescue a query on which one ranker has little to offer.
 

@@ -117,7 +117,7 @@ Compression loses accuracy, so the pattern is to search the compressed index for
 
 For data beyond memory, DiskANN, a NeurIPS 2019 paper, keeps the graph on a solid state drive.
 
-Its abstract reports indexing a billion points on a single workstation with 64 GB of memory, serving more than 5,000 queries a second with under 3 ms mean latency and 95 percent or better 1-recall@1 on a 16 core machine, where two FAISS methods held in memory at a similar memory footprint plateaued around 50 percent. The figures are for one benchmark, SIFT1B, on the authors' hardware.
+It indexed a billion points on a single workstation with 64 GB of memory, serving more than 5,000 queries a second with under 3 ms mean latency and 95 percent or better 1-recall@1 on a 16 core machine, where two FAISS methods held in memory at a similar memory footprint plateaued around 50 percent. The figures are for one benchmark, SIFT1B, on the authors' hardware.
 
 ## Filters Change the Problem
 
@@ -131,7 +131,7 @@ We tested that. The graph search with a candidate list of 40 returned the neares
 | 10% | 3.7 of 10 | 1,108 | 1,000 |
 | 1% | 0.3 of 10 | 6,918 | 100 |
 
-Filtering afterward matched the documentation, 3.7 rows against its 4, and collapsed for a selective filter, returning 0.3 rows of 10.
+Filtering afterward matched the expected figure, 3.7 rows against 4, and collapsed for a selective filter, returning 0.3 rows of 10.
 
 Filtering during the walk returned the full 10 rows in each case, at a cost that grew as the filter tightened, and at 1 percent it cost 69 times as much as scanning the matching rows directly.
 

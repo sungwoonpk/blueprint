@@ -29,7 +29,7 @@ A connect timeout a little above 3 seconds fits, tied to the TCP retransmission 
 
 ## Choosing the Number
 
-The Builders' Library gives a method. Decide on an acceptable rate of false timeouts, requests that would have succeeded if given more time, such as 0.1 percent, and take the latency of the downstream service at that percentile, here the 99.9th.
+One method: decide on an acceptable rate of false timeouts, requests that would have succeeded if given more time, such as 0.1 percent, and take the latency of the downstream service at that percentile, here the 99.9th.
 
 It adds caveats: add network time for clients on the internet, pad the value when the 99.9th percentile is close to the median, and use well tested library timeouts.
 
@@ -63,14 +63,14 @@ Envoy applies the idea to retries: its route timeout covers them together, so a 
 
 ## Which Failures to Retry
 
-A retry is worth it when the next attempt can succeed and is safe to repeat. The guidance from the Builders' Library and Azure agrees:
+A retry is worth it when the next attempt can succeed and is safe to repeat. The rules of thumb:
 
 - **Retry**: Temporary failures such as timeouts, HTTP 429, and 5xx errors from a server that may recover
 - **Don't retry**: Errors that repeat, such as 400, 401, 403 and 404, which won't change
 - **Obey the server**: If a response has a `Retry-After` header, wait at least that long
 - **Retry safe operations**: Calls without side effects are typically safe, and a call with side effects needs an idempotency key, as in [Idempotency and Safe Retries](/system-design/idempotency), since a lost reply makes a retry run the request twice
 
-The Builders' Library calls retries selfish: each one takes more of the server's time in return for a better chance of success. That is fine for the rare transient failure and harmful when the server is overloaded, where retries can delay recovery.
+Retries are selfish: each one takes more of the server's time in return for a better chance of success. That is fine for the rare transient failure and harmful when the server is overloaded, where retries can delay recovery.
 
 ## Backoff and Jitter
 
@@ -104,7 +104,7 @@ Waits of 2, 4 and 8 seconds plus jitter suit background work, and immediate or r
 
 Backoff spaces retries out. It doesn't limit them, and for that there are three tools:
 
-- **A cap on attempts**: The Builders' Library prefers a limit on the number of retries and an earlier failure, over a long capped backoff, which retries forever at the cap
+- **A cap on attempts**: Prefer a limit on the number of retries and an earlier failure over a long capped backoff, which retries forever at the cap
 - **One layer**: A stack five layers deep with 3 retries at each makes 3 to the power of 5, or 243 calls to the database. Retry at one layer for cheap operations, as the library advises, and 3 retries at each of 2 layers gives 9 attempts
 - **A budget**: Retries are allowed while a bucket of tokens lasts, and then proceed at a fixed rate. AWS added this to its SDK in 2016, and it is preferred to a circuit breaker, which adds behavior that is hard to test and can slow recovery
 

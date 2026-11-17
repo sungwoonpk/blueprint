@@ -25,7 +25,7 @@ Michael Nygard described the pattern in *Release It!*, named after the switch in
 - **Open**: Calls fail immediately, with an error or a fallback. After a reset timeout, it moves to half open
 - **Half open**: A limited number of trial calls go through. If they succeed, the breaker closes, and if one fails, it opens again and restarts the timer
 
-Fowler's example in Ruby trips after 5 failures. He also mentions a more refined rule, such as tripping at a 50 percent failure rate, and different thresholds for different errors, such as 10 for timeouts and 3 for connection failures.
+A simple version trips after 5 failures. A more refined rule trips at a 50 percent failure rate, and different thresholds for different errors, such as 10 for timeouts and 3 for connection failures.
 
 ## What the Libraries Use
 
@@ -72,13 +72,13 @@ The breaker is as good as its definition of failure. Several points need a decis
 - **Which errors count**: Timeouts, connection failures and 5xx responses count, and a 404 or a validation error is the caller's mistake, so it should not open the breaker
 - **Slow calls**: A dependency that answers in 10 seconds is failing for the caller, and Resilience4j can count calls above a duration
 - **Throttling signals**: A response that says "retry in a few minutes", such as HTTP 429 or 503, can open the breaker at once for that time, sometimes called accelerated circuit breaking
-- **Weights**: Some errors can count more than others, as in Fowler's thresholds of 10 and 3
+- **Weights**: Some errors can count more than others, as in thresholds of 10 and 3
 
 Use one breaker for each dependency, or each independent part of it, such as each provider or shard, not one for a whole service. A single breaker across two payment providers stops both when one fails.
 
 ## Around the Breaker
 
-An open breaker needs a plan for the callers. Fowler suggests a fallback: queue the work, show stale data or offer a degraded answer. For the textbook app, a payment that can't be taken is queued and shown as pending, as in [Sagas](/system-design/sagas), and the buyer is told.
+An open breaker needs a plan for the callers. Give it a fallback: queue the work, show stale data or offer a degraded answer. For the textbook app, a payment that can't be taken is queued and shown as pending, as in [Sagas](/system-design/sagas), and the buyer is told.
 
 Operations need to see it. Log each state change, expose the state in metrics, alert when a breaker trips, and give operators a way to force it open or closed.
 
@@ -102,7 +102,7 @@ Envoy also has settings it calls circuit breakers that are limits on connections
 
 ## The Case Against
 
-Not everyone likes them. The Amazon Builders' Library notes that circuit breakers are widely promoted and add modal behavior, a system that acts one way when closed and another when open, which is hard to test and can slow recovery.
+Not everyone likes them. Circuit breakers are widely promoted, and they add modal behavior, a system that acts one way when closed and another when open, which is hard to test and can slow recovery.
 
 It prefers a local token bucket for retries, which throttles retries without a state machine. Our simulation's 5.6 seconds of delay is the cost it means.
 

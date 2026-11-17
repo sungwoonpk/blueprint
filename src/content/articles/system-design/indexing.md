@@ -74,11 +74,13 @@ A good habit is to put the columns you compare with equality first, and the colu
 
 ## Indexes That Do More
 
-Three variations are common:
+Three variations are common.
 
-- **Covering index**: If the index holds every column the query needs, the database can answer without visiting the table. In PostgreSQL this is an index-only scan, and `INCLUDE` adds extra columns to carry along. It helps most when the table's pages are mostly unchanged, since the database still has to check that rows are visible
-- **Partial index**: An index over some rows only, chosen with a `WHERE` clause. If most of the 3 million listings are sold, an index of the open ones is much smaller. The query has to repeat the condition so the database can see that the index applies
-- **Expression index**: An index on a computed value, such as a lowercase email. A query that wraps a column in a function can't use a plain index on that column, but it can use an index built on the same expression
+A covering index holds each column the query needs, so the database can answer without visiting the table. In PostgreSQL this is an index-only scan, and `INCLUDE` adds extra columns to carry along. It helps most when the table's pages are mostly unchanged, since the database still has to check that rows are visible.
+
+A partial index covers just some of the rows, chosen with a `WHERE` clause. If most of the 3 million listings are sold, an index of the open ones is much smaller. The query has to repeat the condition so the database can see that the index applies.
+
+An expression index is built on a computed value, such as a lowercase email. A query that wraps a column in a function can't use a plain index on that column, but it can use an index built on the same expression.
 
 ```sql
 -- Covering: carry the seller along
@@ -117,15 +119,13 @@ That makes the choice a trade, in the sense of [Thinking in Tradeoffs](/system-d
 
 ## When the Database Ignores an Index
 
-Indexes are not applied by command. The database's **query planner** estimates the cost of each way to run a query and picks the cheapest. Sometimes it is right to skip the index, and sometimes the index can't be used at all:
+Indexes are not applied by command. The database's **query planner** estimates the cost of each way to run a query and picks the cheapest. Sometimes it is right to skip the index, and sometimes the index can't be used at all.
 
-- **A tiny table**: Reading one page is cheaper than reading an index and then the page
-- **Too many matches**: If a query needs a large part of the table, a sequential scan beats thousands of random trips to the table. In PostgreSQL, a query that matches about 70 percent of a table stays a scan
-- **A missing leading column**: A search on the second column of a two column index, as above
-- **A function on the column**: `WHERE lower(email) = ...` with no matching expression index
-- **A conversion**: A comparison that forces the database to convert the column, such as a text column compared with a number. In MySQL this is a known way to lose an index
-- **A leading wildcard**: `LIKE '%calculus'` can't use sorted order, since the start of the value is unknown. Searching inside text is the job of [Full Text Search with Inverted Indexes](/system-design/search-engines)
-- **Old statistics**: The planner guesses from sampled numbers about each column. If a table changed a lot since the last `ANALYZE`, the guesses can be far off. Autovacuum normally keeps them current
+A tiny table is the simplest case: reading one page is cheaper than reading an index and then the page. Too many matches is the second. If a query needs a large part of the table, a sequential scan beats thousands of random trips to the table, and in PostgreSQL a query that matches about 70 percent of a table stays a scan.
+
+Some queries defeat the index by their shape. A search on the second column of a two column index has no leading column to use. A function on the column, such as `WHERE lower(email) = ...`, needs a matching expression index. A comparison that forces a conversion, such as a text column compared with a number, loses the index in MySQL. A leading wildcard, `LIKE '%calculus'`, can't use sorted order, since the start of the value is unknown, and searching inside text is the job of [Full Text Search with Inverted Indexes](/system-design/search-engines).
+
+The last cause is old statistics. The planner guesses from sampled numbers about each column, and if a table changed a lot since the last `ANALYZE`, the guesses can be far off. Autovacuum normally keeps them current.
 
 ## Reading a Query Plan
 
@@ -153,11 +153,13 @@ Limit  (actual time=0.03..0.06 rows=20.00)
 Execution Time: 0.09 ms
 ```
 
-Three things are worth reading in any plan:
+Three things are worth reading in any plan.
 
-- **The scan type**: `Seq Scan` reads the whole table. `Index Scan` walks an index and fetches the rows. `Index Only Scan` skips the table. `Bitmap Heap Scan` collects the row locations first and then reads the table pages in order, a middle road when a moderate share of rows match
-- **Rows removed**: A large `Rows Removed by Filter`, as above, means the database read many rows only to throw them away
-- **Estimated and actual rows**: A plan shows both the planner's guess and the real count. A big gap, such as a guess of 10 rows and a count of 100,000, usually means stale statistics, and `ANALYZE` is the first thing to try
+Start with the scan type. `Seq Scan` reads the whole table, `Index Scan` walks an index and fetches the rows, and `Index Only Scan` skips the table. `Bitmap Heap Scan` collects the row locations first and then reads the table pages in order, a middle road when a moderate share of rows match.
+
+Then look at rows removed. A large `Rows Removed by Filter`, as above, means the database read many rows just to throw them away.
+
+Last, compare estimated and actual rows. A plan shows both the planner's guess and the real count. A big gap, such as a guess of 10 rows and a count of 100,000, usually means stale statistics, and `ANALYZE` is the first thing to try.
 
 Joins have their own nodes. A **nested loop** looks up the inner table once for each outer row, which suits a small outer side and an indexed inner side. A **hash join** builds a hash table from one input and probes it, which suits larger inputs. A **merge join** walks two sorted inputs together.
 

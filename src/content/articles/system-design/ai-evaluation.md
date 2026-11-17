@@ -98,7 +98,7 @@ Evaluation numbers carry noise, and the noise decides how many questions you nee
 
 At 100 questions the true accuracy could be 8 points either side of the measured one, and at 1,000 it is 2.5.
 
-The Miller paper, which applies standard statistics to language model evaluations, tells readers to report the standard error and the number of questions with each result, and gives its formula for a proportion: the square root of the accuracy times its complement, divided by the number of questions.
+Standard statistics apply to language model evaluations: report the standard error and the number of questions with each result. For a proportion, the formula is the square root of the accuracy times its complement, divided by the number of questions.
 
 Comparing two versions is a different problem, and we simulated it. System A is right on 80 percent of questions and B on 83 percent, a true gain of 3 points. They share a question difficulty and add independent noise, which makes them agree on 81 percent of the questions. We ran each size 2,500 times:
 
@@ -110,7 +110,7 @@ Comparing two versions is a different problem, and we simulated it. System A is 
 | 1,000 | 39% | 60% |
 | 2,000 | 73% | 88% |
 
-A **paired** comparison looks at the difference on each question, which is the paper's recommendation, since the two versions find the same questions hard. It roughly doubled the chance of detecting the gain at small sizes.
+A **paired** comparison looks at the difference on each question, which is the better practice, since the two versions find the same questions hard. It roughly doubled the chance of detecting the gain at small sizes.
 
 Comparing two separate intervals threw that information away, and it also rarely cried wolf: with no true difference it declared a winner in about 1 percent of runs, against about 5 percent for the paired test, which is the rate it should have.
 
@@ -131,12 +131,12 @@ The danger of a small set is sharper than a missed gain. Without a test, we comp
 
 At 100 questions, B scored below A in 20 percent of runs although it is truly better, at 500 questions 6 percent, and at 1,000 questions 1.8 percent. A team that ships whichever number is higher will reverse good changes a fifth of the time at that size.
 
-Two more points from the paper:
+Two more points matter.
 
-- **Grouped questions**: When several questions come from the same document, they aren't independent, and standard errors that account for the groups can be over 3 times larger. Its example on one reading benchmark was 1.34 points against 0.44 for the naive figure
+- **Grouped questions**: When several questions come from the same document, they aren't independent, and standard errors that account for the groups can be over 3 times larger. An example on one reading benchmark was 1.34 points against 0.44 for the naive figure
 - **Repeated sampling**: Asking the same question several times and averaging reduces the noise from the model, and lowering the temperature is not a good way to do it
 
-When the effect you care about is small, plan the set size before building it, with the power formula of the paper, and when you can't afford the size, say that differences under the half width are not established.
+When the effect you care about is small, plan the set size before building it, with a power formula, and when you can't afford the size, say that differences under the half width are not established.
 
 ## Evals in the Release Process
 

@@ -14,7 +14,7 @@ The same document adds tenets that shape the design:
 - **Dynamic policy**: The decision uses the observable state of the client's identity, the application or service, and the requesting asset, and it can include behavior and environment
 - **Strict enforcement**: Authentication and authorization are dynamic and strictly enforced before access is allowed
 
-There are two roles. A policy decision point, split into a policy engine and a policy administrator, decides. A policy enforcement point enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays the second role, and Istio calls sidecar and perimeter proxies policy enforcement points.
+There are two roles. A policy decision point, split into a policy engine and a policy administrator, decides. A policy enforcement point enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays the second role, and sidecar and perimeter proxies are policy enforcement points.
 
 ## What TLS Gives
 
@@ -51,11 +51,11 @@ That is CPU alone, without network delay, and it is paid on a new connection, no
 An address says where a service runs now. Containers move and addresses are reused, so a name tied to an address names the wrong thing within minutes. SPIFFE, the Secure Production Identity Framework for Everyone, defines a name that follows the workload:
 
 - **SPIFFE ID**: A URI in the form `spiffe://trust domain/workload identifier`, such as `spiffe://acme.com/billing/payments`
-- **Trust domain**: The root of trust for a system, such as an organization or an environment. The guidance is to keep different environments, like staging and production, in different trust domains
+- **Trust domain**: The root of trust for a system, such as an organization or an environment. Keep different environments, like staging and production, in different trust domains
 - **SVID**: A SPIFFE verifiable identity document, which holds one SPIFFE ID and is valid when signed by an authority of that trust domain. It comes as an X.509 certificate or a JWT
 - **Trust bundle**: The root certificates a workload uses to check the other side
 
-The specification prefers the X.509 form, since a token can be replayed by an attacker who captures it in transit, and keeps the JWT form for cases such as a layer 7 proxy or load balancer between two workloads.
+The X.509 form is preferred, since a token can be replayed by an attacker who captures it in transit, and keeps the JWT form for cases such as a layer 7 proxy or load balancer between two workloads.
 
 Kubernetes gives a close analogue: Istio's identity for a workload is the Kubernetes service account, and during the handshake the client side proxy checks that the server certificate's service account is the one expected for the service it called.
 

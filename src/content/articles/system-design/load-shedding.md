@@ -10,7 +10,7 @@ The previous topics set the stage: [Cascading Failures](/system-design/cascading
 
 ## Why Waiting Is the Worst Choice
 
-The AWS Builders' Library separates two numbers. **Throughput** is the requests a second that arrive. **Goodput** is the part of them answered without error and fast enough for the client to use the answer.
+Two numbers matter. **Throughput** is the requests a second that arrive. **Goodput** is the part of them answered without error and fast enough for the client to use the answer.
 
 A server that does not shed sees its goodput fall once the load passes its capacity, because each request waits in line behind the others, and the client has often given up before its turn comes.
 
@@ -95,7 +95,7 @@ The limits add up to more than the machine has, which is deliberate, since the c
 
 ## Saying No Clearly
 
-A refusal is a message to the caller, and the standard has two for it:
+A refusal is a message to the caller, and there are two standard ones:
 
 - **503 Service Unavailable**: RFC 9110 says the server can't handle the request now because of a temporary overload or maintenance, and it may send a `Retry-After` header to suggest how long to wait. The same text says the status doesn't oblige a server to use it when it is overloaded
 - **429 Too Many Requests**: RFC 6585 says the user sent too many requests in a given time, and it may include `Retry-After`. It describes a limit on one client, so it fits a quota more than an overload of the whole server
@@ -120,7 +120,7 @@ In our simulation, a last in, first out queue with a 1 second age check kept goo
 
 Shedding refuses work. **Graceful degradation** takes load shedding one step further by reducing the work for each request.
 
-The book's examples are searching a smaller part of the index, such as the copy kept in memory, using a cheaper ranking method, and answering from a local copy that may be stale in place of the canonical store.
+Examples are searching a smaller part of the index, such as the copy kept in memory, using a cheaper ranking method, and answering from a local copy that may be stale in place of the canonical store.
 
 Each degraded path has to be designed before the incident, since it is a second implementation of the feature. Some for the textbook app:
 

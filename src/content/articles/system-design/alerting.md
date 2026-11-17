@@ -33,7 +33,7 @@ They pull against each other. A hair trigger has a short detection time and poor
 
 ## Alerting on Burn Rate
 
-The workbook walks through six rules, from naive to recommended, using the **burn rate**: how fast the service spends its error budget compared with the SLO. A burn rate of 1 uses the budget exactly by the end of the window. For a 99.9 percent SLO over 30 days:
+Alert rules improve in steps, from naive to recommended, and the key measure is the **burn rate**: how fast the service spends its error budget compared with the SLO. A burn rate of 1 uses the budget exactly by the end of the window. For a 99.9 percent SLO over 30 days:
 
 | Burn Rate | Error Rate | Budget Gone in |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ A required duration of an hour makes the full outage wait an hour, the same as a
 
 The recommended design is **multiwindow, multi burn rate**. Each alert needs two conditions at once: the budget burned over a long window and the error rate over a short one, about one twelfth as long, which shows that the problem is still going.
 
-The short window is what lets the alert reset about 5 minutes after errors stop. The workbook's table for a 99.9 percent SLO:
+The short window is what lets the alert reset about 5 minutes after errors stop. The table for a 99.9 percent SLO:
 
 | Budget Consumed | Long Window | Short Window | Burn Rate | Action |
 | --- | --- | --- | --- | --- |
@@ -95,11 +95,11 @@ The detection times are the price of precision. A 6 hour burn at 1 percent took 
 
 Burn rates assume enough requests for the error rate to be meaningful.
 
-The workbook's example is a service with 10 requests an hour: one failure is a 10 percent hourly error rate, a burn rate of 1,000 for a 99.9 percent SLO, and it pages at once, though a 99.9 percent SLO over 30 days allows about 7 failures.
+Take a service with 10 requests an hour: one failure is a 10 percent hourly error rate, a burn rate of 1,000 for a 99.9 percent SLO, and it pages at once, though a 99.9 percent SLO over 30 days allows about 7 failures.
 
 The options it lists are to generate synthetic traffic, to combine related services into one group, to change the product so that a single failure matters less, with retries and fallbacks, or to lower the target or lengthen the window.
 
-At the other end, a 99.999 percent target is spent by a full outage in 26 seconds, shorter than typical metric collection intervals, and the chapter says that design, such as canarying a change to 1 percent of users, can defend such a target.
+At the other end, a 99.999 percent target is spent by a full outage in 26 seconds, shorter than typical metric collection intervals, and only design, such as canarying a change to 1 percent of users, can defend such a target.
 
 ## Routing and Quieting
 
@@ -114,7 +114,7 @@ Run several Alertmanagers and point Prometheus at the whole set of them, since s
 
 ## The Person Who Answers
 
-Pages cost people. The SRE book's chapter on on-call sets numbers: at most 2 incidents per 12 hour shift, where an incident is the set of events tied to one root cause and takes about 6 hours to handle in full.
+Pages cost people, so set a budget: at most 2 incidents per 12 hour shift, where an incident is the set of events tied to one root cause and takes about 6 hours to handle in full.
 
 Paging should be flat over time with a median of 0 pages a day, and a component that pages daily is a warning sign. Response times are typically 5 minutes for user facing services and 30 minutes for less time sensitive ones.
 
@@ -129,7 +129,7 @@ A dashboard is where the person goes next. Two methods fit different layers:
 - **RED, for services**: Rate, errors and duration for each service, from Tom Wilkie. It is a proxy for user happiness, and gives each team the same view, so engineers can be on call for code they didn't write
 - **USE, for machines**: Brendan Gregg's method checks utilization, saturation and errors for each resource, such as CPUs, memory, network and disks. He notes that 100 percent utilization usually marks a bottleneck, that more than about 70 percent can already hide bursts, that any saturation, meaning queued work, can be a problem, and that the method finds many server problems with little effort
 
-The four golden signals from the SRE book are RED plus saturation. Grafana says to build alerts from RED dashboards, since alerts should be on symptoms, and to use USE for the causes.
+The four golden signals are RED plus saturation. Build alerts from RED dashboards, since alerts should be on symptoms, and use USE for the causes.
 
 It also gives a maturity model. At the low level, anyone can edit dashboards, copies spread, and no definition is under version control. In the middle, template variables replace per node dashboards, each service has a row in data flow order, and the definitions are in version control.
 
