@@ -94,7 +94,7 @@ When a later step fails, the earlier ones have to be undone by compensation, as 
 | Failure | The coordinator can be a single point of failure | No central point |
 | Fits | Complex flows with many steps | Simple flows with few services |
 
-Microsoft's guidance is to prefer choreography for simple workflows and few services, as in [Event-Driven Architecture](/system-design/event-driven), and an orchestrator for complex ones, where choreography becomes hard to follow and risks cycles between services.
+Prefer choreography for simple workflows and few services, as in [Event-Driven Architecture](/system-design/event-driven), and an orchestrator for complex ones, where choreography becomes hard to follow and risks cycles between services.
 
 ## Limits and Costs
 

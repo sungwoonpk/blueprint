@@ -113,7 +113,7 @@ A limiter is one more dependency. If Redis is down, there are two choices: **fai
 
 Failing closed turns a limiter outage into a full outage. Failing open leaves the system unprotected for a while.
 
-Stripe's guidance is to fail open if the limiter itself errors, and Kong's `fault_tolerant` setting defaults to true for the same reason. For something as sensitive as login attempts, you might choose the other way and accept the risk.
+A common choice is to fail open if the limiter itself errors, and Kong's `fault_tolerant` setting defaults to true for the same reason. For something as sensitive as login attempts, you might choose the other way and accept the risk.
 
 Three habits keep a limiter from causing harm:
 

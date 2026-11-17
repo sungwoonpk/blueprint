@@ -110,7 +110,7 @@ No protection costs almost as many queries as there are requests in the rebuild 
 
 A few cheap habits reduce the chance of a stampede in the first place:
 
-- **Add jitter to TTLs**: Give each entry its TTL plus or minus about 10 percent, so keys written together don't expire together. Amazon's article on retries applies the same idea to timers and periodic jobs: add a little randomness to spread out spikes of work
+- **Add jitter to TTLs**: Give each entry its TTL plus or minus about 10 percent, so keys written together don't expire together. The same idea works for timers and periodic jobs: add a little randomness to spread out spikes of work
 - **Warm the cache**: Fill the hottest entries before a deploy or a known peak, instead of letting the first users do it
 - **Cache "not found" briefly**: Repeated requests for a missing key would otherwise reach the database each time, as in [Caching Patterns for Reads and Writes](/system-design/caching-patterns)
 - **Protect the database**: Cap how many rebuild queries run at once, so an unexpected crowd is turned away instead of taking the database down

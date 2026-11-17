@@ -80,7 +80,7 @@ When each server has a queue of its own and requests are sent at random, a reque
 
 The shared queue is the best case, like a single line for the whole bank. A balancer that sends each request to a free or less busy server gets closer to it, as [Load Balancing Algorithms](/system-design/load-balancing-algorithms) discusses.
 
-The target utilization comes from the knee of your own curve and your latency goal. No source we read gives a universal number, and Azure's guidance just asks for a balance between the cost of too much and the harm of too little.
+The target utilization comes from the knee of your own curve and your latency goal. There is no universal number, only a balance between the cost of too much and the harm of too little.
 
 For the textbook app, we pick 80 percent from the knee of the curve, so the planning figure is 480 requests a second for each server.
 

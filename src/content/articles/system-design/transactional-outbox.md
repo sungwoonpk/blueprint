@@ -81,7 +81,7 @@ The relay can crash after publishing a row and before recording that it did. Whe
 
 The row's id makes this possible: Debezium puts it in an `id` header that can be used to remove duplicates. The techniques are those of [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees), and some queues accept the row id as a deduplication id.
 
-On the consumer side, Microsoft's guidance on the idempotent consumer calls the matching pattern the **inbox**. The consumer stores the message's key and does its work in one transaction, so a repeat finds the key and is skipped:
+On the consumer side, The matching pattern is the **inbox**. The consumer stores the message's key and does its work in one transaction, so a repeat finds the key and is skipped:
 
 ```sql
 BEGIN;
@@ -107,7 +107,7 @@ The outbox grows with each event, so published rows must go. The AWS sample dele
 
 Whether to delete at once or keep rows for a few days is a choice: keeping them gives a record for debugging and a way to publish an event again, at the cost of space.
 
-Microsoft's guide for Azure Cosmos DB, which expires event documents with a time to live, recommends several days, 10 in its example, so that the relay and the broker have time to catch up after an outage. A shorter lifetime can drop events that were never published.
+If the outbox rows expire with a time to live, set it to several days, such as 10, so that the relay and the broker have time to catch up after an outage. A shorter lifetime can drop events that were never published.
 
 ## Costs and Alternatives
 

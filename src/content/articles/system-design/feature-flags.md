@@ -50,7 +50,7 @@ const useNewRanking = await client.getBooleanValue(
 - **The evaluation context**: Facts about the request, such as the user and the region, that the flag system uses to target. The targeting key should uniquely identify the subject
 - **The provider**: The translation layer between the evaluation API and the flag system in use, so the application code doesn't depend on a vendor
 
-When something goes wrong, the standard defines reasons and error codes, such as the flag not being found, a type mismatch or a provider that isn't ready, and the detailed form reports why the default was returned. A flag that can't be read means the default behavior, not a crash.
+When something goes wrong, the OpenFeature standard defines reasons and error codes, such as the flag not being found, a type mismatch or a provider that isn't ready, and the detailed form reports why the default was returned. A flag that can't be read means the default behavior, not a crash.
 
 ## Rolling Out by Percentage
 

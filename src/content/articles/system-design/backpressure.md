@@ -36,7 +36,7 @@ When a consumer can't keep up, there are four options:
 
 - **Slow the producer**: This is the true backpressure. The Reactive Streams standard builds it into an interface: the subscriber asks for `n` items with `request(n)`, and the publisher may send no more than it has been asked for.
 
-The standard stresses that nothing blocks, and that a receiver isn't made to buffer arbitrary amounts, so the queues between parts can be bounded.
+Nothing blocks, and a receiver isn't made to buffer arbitrary amounts, so the queues between parts can be bounded.
 
 - **Bound the buffer**: A queue in front of a thread pool should be no larger than about half the pool for steady traffic, so that the server rejects early when it can't keep up.
 
@@ -60,7 +60,7 @@ In practice `pipeline()` wires this up. In a Node.js experiment compressing a la
 
 The guide compares the mechanism to Unix pipes and TCP flow control, which is the same idea at the network layer, as in [TCP and UDP](/system-design/tcp-udp).
 
-The Reactive Streams specification adds a practical note. Asking for one item at a time is a slow stop and wait protocol, so a subscriber should request the largest batch it can handle.
+A practical note: asking for one item at a time is a slow stop and wait protocol, so a subscriber should request the largest batch it can handle.
 
 ## Between Services and Queues
 

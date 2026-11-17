@@ -36,7 +36,7 @@ Pay-Signature: t=1794700000,v1=5b2f0c...
  "data": {"order": 311, "amount_cents": 4500}}
 ```
 
-The body is a small JSON event: an `id` that is unique to the event, a `type` saying what happened, and the details in `data`. The names differ between providers. Stripe puts the signature in `Stripe-Signature`, GitHub in `X-Hub-Signature-256`, and the community Standard Webhooks specification suggests `webhook-id`, `webhook-timestamp` and `webhook-signature`. The shape is the same everywhere.
+The body is a small JSON event: an `id` that is unique to the event, a `type` saying what happened, and the details in `data`. The names differ between providers. Stripe puts the signature in `Stripe-Signature`, GitHub in `X-Hub-Signature-256`, and the community Standard Webhooks specification uses `webhook-id`, `webhook-timestamp` and `webhook-signature`. The shape is the same everywhere.
 
 ## Anyone Can POST to That URL
 
@@ -123,7 +123,7 @@ The second is not to assume order. If a `payment.refunded` event shows up before
 
 What the sender does after a failure matters just as much, because a receiver that was down for an hour should still get its events. Providers retry for a long time.
 
-Stripe retries in live mode for up to three days with exponential backoff, and the Standard Webhooks specification recommends a schedule that spans days, with some randomness added.
+Stripe retries in live mode for up to three days with exponential backoff, and a good schedule spans days, with some randomness added.
 
 GitHub is the exception: it doesn't redeliver automatically, and offers manual redelivery through its dashboard and API. A schedule shaped like this one gives a struggling receiver room to recover:
 

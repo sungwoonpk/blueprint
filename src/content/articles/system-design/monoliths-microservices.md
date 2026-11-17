@@ -40,7 +40,7 @@ A monolith isn't the same as a mess. A well organized one has clear modules insi
 
 ## What Splitting Buys
 
-Martin Fowler's article with James Lewis, which popularized the style, and Microsoft's Azure Architecture Center list much the same benefits:
+The benefits people name for the style are much the same everywhere:
 
 - **Independent deployment**: a team ships its service without waiting for the others, and a bug in one is less likely to take down all of them
 - **Strong boundaries**: it is hard to reach into another service's internals, because there is a network between you
@@ -66,7 +66,7 @@ Fowler names three costs, and each one connects to something earlier in this roa
 <figcaption>Milliseconds added by calls between services, at half a millisecond each and made one after another (example numbers)</figcaption>
 </figure>
 
-Microsoft's guidance on the chatty I/O antipattern puts it plainly: many small requests, each with its own overhead, drag down a system that one larger request would serve well. A bad split makes exactly that happen.
+This is the chatty I/O antipattern: many small requests, each with its own overhead, drag down a system that one larger request would serve well. A bad split makes exactly that happen.
 
 **Eventual consistency.** Each service owns its data, so there is no single transaction across them. In the monolith, selling a book is one database transaction:
 
@@ -159,7 +159,7 @@ And do it a piece at a time. The **strangler fig** pattern, named by Fowler afte
 <figcaption>Requests move to the new service one URL at a time, and the monolith is retired when nothing is left in it</figcaption>
 </figure>
 
-AWS's guidance on the pattern adds two cautions: the proxy can become a bottleneck or single point of failure, and drawing the boundaries too early can put them in the wrong place. [Breaking Up a Monolith](/system-design/breaking-up-a-monolith) goes through a full migration. Running many services also needs a way to package and start them consistently, which is the subject of [Containers and Orchestration](/system-design/containers).
+The pattern has two cautions: the proxy can become a bottleneck or single point of failure, and drawing the boundaries too early can put them in the wrong place. [Breaking Up a Monolith](/system-design/breaking-up-a-monolith) goes through a full migration. Running many services also needs a way to package and start them consistently, which is the subject of [Containers and Orchestration](/system-design/containers).
 
 ## Key Points
 

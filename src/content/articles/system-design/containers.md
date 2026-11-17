@@ -75,7 +75,7 @@ A container is a running copy of an image, with a writable layer on top that is 
 
 One container is easy to run by hand. Running 6 copies of 4 services across 10 machines is not: someone has to decide which machine runs what, restart what crashes, replace a dead machine's containers, roll out new versions and let services find each other. An **orchestrator** does that work.
 
-Kubernetes is the most widely used one. Google open sourced it in 2014, and it grew out of Google's experience with Borg, the internal system its engineers describe in a 2015 paper as running hundreds of thousands of jobs across clusters of up to tens of thousands of machines. The vocabulary takes some getting used to:
+Kubernetes is the most widely used one. Google open sourced it in 2014, and it grew out of Google's experience with Borg, the internal system that ran hundreds of thousands of jobs across clusters of up to tens of thousands of machines. The vocabulary takes some getting used to:
 
 | Term | What It is |
 | --- | --- |

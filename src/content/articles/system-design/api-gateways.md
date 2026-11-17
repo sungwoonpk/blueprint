@@ -130,7 +130,7 @@ A phone wants small responses and few calls, a website can take more, and a part
 
 The rule of thumb Newman cites is one experience, one BFF, owned by the team that builds that client, so the API and the app change together.
 
-Microsoft's description of the pattern adds the costs: more services to run, some duplicated code, and an extra hop. It also notes that GraphQL can make a BFF unnecessary, since each client picks its own data.
+The pattern has costs: more services to run, some duplicated code, and an extra hop. GraphQL can make a BFF unnecessary, since each client picks its own data.
 
 ## Risks
 

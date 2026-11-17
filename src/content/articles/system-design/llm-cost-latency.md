@@ -90,7 +90,7 @@ The tools we read describe the same design. GPTCache states that it uses a vecto
 
 A semantic cache has a similarity threshold, the minimum score to count as a match, and a time to live, both editable. A response served from the cache costs no output tokens.
 
-A Redis article, which is vendor material without sources, gives starting points: a threshold between 0.85 and 0.95 on cosine similarity, a start at 0.90 to 0.95 while watching false positives, and the remark that if false positives exceed 3 to 5 percent, tuning the threshold alone won't fix it.
+Vendor material, which comes without sources, suggests starting points: a threshold between 0.85 and 0.95 on cosine similarity, a start at 0.90 to 0.95 while watching false positives, and the remark that if false positives exceed 3 to 5 percent, tuning the threshold alone won't fix it.
 
 Reasonable lifetimes are 5 to 15 minutes for prices and stock, 1 to 4 hours for product descriptions and 24 hours for stable text, and the vector search adds 5 to 20 ms. Add jitter to the lifetimes, so entries don't expire at once and cause a burst of calls.
 

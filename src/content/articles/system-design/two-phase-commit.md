@@ -120,7 +120,7 @@ Flink's two phase commit sink prepares when a checkpoint barrier arrives, and co
 
 Two phase commit works inside one organization's databases with a reliable coordinator. It fits badly across services and companies, because each participant must support it, and a slow participant makes the others wait with locks held.
 
-Microsoft's guidance on the saga pattern says that ACID doesn't carry across independently managed data stores, and presents two phase commit as less suited to that setting.
+ACID doesn't carry across independently managed data stores, and two phase commit suits that setting less well.
 
 The alternative is to give up atomic commit and accept eventual consistency with compensation, which is the subject of [Sagas](/system-design/sagas).
 

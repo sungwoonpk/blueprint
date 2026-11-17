@@ -105,14 +105,14 @@ Waits of 2, 4 and 8 seconds plus jitter suit background work, and immediate or r
 Backoff spaces retries out. It doesn't limit them, and for that there are three tools:
 
 - **A cap on attempts**: The Builders' Library prefers a limit on the number of retries and an earlier failure, over a long capped backoff, which retries forever at the cap
-- **One layer**: A stack five layers deep with 3 retries at each makes 3 to the power of 5, or 243 calls to the database. Retry at one layer for cheap operations, as the library advises, and Azure's example of 3 retries at each of 2 layers gives 9 attempts
+- **One layer**: A stack five layers deep with 3 retries at each makes 3 to the power of 5, or 243 calls to the database. Retry at one layer for cheap operations, as the library advises, and 3 retries at each of 2 layers gives 9 attempts
 - **A budget**: Retries are allowed while a bucket of tokens lasts, and then proceed at a fixed rate. AWS added this to its SDK in 2016, and it is preferred to a circuit breaker, which adds behavior that is hard to test and can slow recovery
 
 gRPC's retry throttling is an example: each server has a token count that starts at a maximum such as 10, each failure subtracts 1, each success adds a ratio such as 0.1, and retries pause while the count is below half of the maximum.
 
 A reasonable budget is 60 retries a minute per process, or per dependency. When the budget is exhausted, the call fails at once.
 
-A related idea is the hedged request, in which a second copy is sent after a short wait. gRPC supports it with a limit of 5 attempts, and Google's paper on tail latency, quoted in the first topic of this phase, measured a hedge after 10 ms cutting the 99.9th percentile of a large read from 1,800 ms to 74 ms for 2 percent more requests.
+A related idea is the hedged request, in which a second copy is sent after a short wait. gRPC supports it with a limit of 5 attempts, and the tail latency work quoted in the first topic of this phase measured a hedge after 10 ms cutting the 99.9th percentile of a large read from 1,800 ms to 74 ms for 2 percent more requests.
 
 It needs the same care as a retry, since it adds load.
 

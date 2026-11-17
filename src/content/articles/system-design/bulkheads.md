@@ -80,7 +80,7 @@ A ResourceQuota caps the total for a namespace, and requests that would exceed i
 
 Priority classes let important pods preempt less important ones when the cluster is full, and its default policy lets a pending pod evict lower priority pods. These limits don't isolate network or disk traffic, and they don't limit concurrency inside the application, so they complement the pools in the code.
 
-The Azure guidance on the noisy neighbor problem names the symptom for multitenant systems: one tenant's heavy use degrades the others.
+The noisy neighbor problem is the symptom in multitenant systems: one tenant's heavy use degrades the others.
 
 It suggests tracking use for each tenant, then limiting it, with quotas, throttling and rate limits, restricting expensive operations such as a cap on the records a query returns, moving non urgent work to off peak jobs, and moving heavy tenants to separate capacity.
 
@@ -99,7 +99,7 @@ With 4 plain shards of 2 workers, a bad customer takes out 25 percent of the oth
 
 About 47 percent of customers lost one of their two workers, and a client that retries finds the other, since any other customer shares at most one worker with the bad one.
 
-The AWS article makes the same argument, and it gives the Route 53 example: 2,048 virtual name servers, 4 for each domain, which allows about 730 billion distinct shards, and no two domains share more than 2 of them. The number of combinations grows quickly: 5 workers out of 100 give 75,287,520, our arithmetic.
+Route 53 uses the same idea: 2,048 virtual name servers, 4 for each domain, which allows about 730 billion distinct shards, and no two domains share more than 2 of them. The number of combinations grows quickly: 5 workers out of 100 give 75,287,520, our arithmetic.
 
 The next topic, [Cellular Architecture](/system-design/cells), takes the idea to the whole stack.
 
