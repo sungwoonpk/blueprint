@@ -30,7 +30,7 @@ The wire format is a UTF-8 text stream, in lines. A `data` line carries the payl
 
 An `id` line sets the last event id, and `retry` sets the reconnection time in milliseconds. A blank line ends an event and dispatches it, and an event cut off at the end of the stream is discarded.
 
-A line starting with a colon is a comment and is ignored, which makes it a cheap heartbeat: send one about every 15 seconds to stop proxies from dropping the connection.
+A line starting with a colon is a comment and is ignored, which makes it a cheap heartbeat: send one at about 15 second intervals to stop proxies from dropping the connection.
 
 Reconnection is built in. `EventSource` reconnects by itself, after a delay that is implementation defined, probably a few seconds, and a response with status 204 tells the client to stop.
 
