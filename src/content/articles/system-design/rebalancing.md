@@ -8,11 +8,15 @@ The plan is to add a seventh node and give it a fair share of the data, with the
 
 ## When to Rebalance
 
-Three events trigger a move, and systems detect them differently:
+Three events trigger a move, and systems detect them differently.
 
-- **Capacity changes**: A node is added or removed. Cassandra's new node streams the ranges it will own from the current owners, and a decommissioned node streams its data to the new ones
-- **Imbalance in data**: MongoDB's balancer treats a collection as balanced when the data difference between shards is under three times the range size. With the default of 128 MB, a move needs at least a 384 MB difference
-- **Imbalance in load or space**: Elasticsearch relocates shards by disk use, with a low watermark at 85 percent, where new shards are not allocated to the node, a high one at 90 percent, where shards move off it, and a flood stage at 95 percent, where indices on it are blocked from writes. CockroachDB doesn't choose a store above 92.5 percent full as a target, and at 95 percent replicas are moved off it
+The first is a change in capacity. When a node is added or removed, Cassandra's new node streams the ranges it will own from the current owners, and a decommissioned node streams its data to the new ones.
+
+The second is an imbalance in data. MongoDB's balancer treats a collection as balanced when the data difference between shards is under three times the range size, so with the default of 128 MB, a move needs at least a 384 MB difference.
+
+The third is an imbalance in load or space. Elasticsearch relocates shards by disk use, with a low watermark at 85 percent, where new shards are not allocated to the node, a high one at 90 percent, where shards move off it, and a flood stage at 95 percent, where indices on it are blocked from writes.
+
+CockroachDB doesn't choose a store above 92.5 percent full as a target, and at 95 percent replicas are moved off it.
 
 ## Moving Little: Why Not Hash Modulo
 
@@ -37,16 +41,17 @@ Notion has 480 logical shards on its physical databases, and chose 480 because i
 
 ## Ways to Choose What Moves
 
-Systems differ in who decides:
+Systems differ in who decides what moves. Some use fixed units that the system moves: Redis slots, Notion's logical shards, Elasticsearch shards. Others use units that split and merge.
 
-- **Fixed units, moved by the system**: Redis slots, Notion's logical shards, Elasticsearch shards
-- **Units that split and merge**: MongoDB cuts data into ranges that split as they grow and moves them. CockroachDB splits a range at its default size and merges small neighbors, and rebalances replicas across stores
-- **Tokens that follow the nodes**: Cassandra's token ranges change as nodes join and leave
-- **A plan made by a person**: Kafka's reassignment tool moves partitions between brokers, but it can't study the data distribution by itself, so the administrator must choose what to move. It generates a candidate plan, executes it, and verifies it
+MongoDB cuts data into ranges that split as they grow and moves them, and CockroachDB splits a range at its default size, merges small neighbors, and rebalances replicas across stores.
+
+Cassandra uses tokens that follow the nodes, so token ranges change as nodes join and leave.
+
+And Kafka leaves the plan to a person: its reassignment tool moves partitions between brokers, but it can't study the data distribution by itself, so the administrator must choose what to move. It generates a candidate plan, executes it, and verifies it.
 
 ## Moving Without Stopping
 
-All the systems follow one pattern: copy what exists, catch up the changes that arrived during the copy, switch the owner, and clean up. MongoDB's steps show it in detail:
+Each system follows one pattern: copy what exists, catch up the changes that arrived during the copy, switch the owner, and clean up. MongoDB's steps show it in detail:
 
 <figure class="diagram">
 <div class="flow">
@@ -96,11 +101,13 @@ Kafka's tool takes a throttle in bytes per second, and the throttle must be clea
 
 ## What Can Go Wrong
 
-- **A move starves the live traffic**: Without a throttle, the copy competes with queries for disk and network. Use the limits above, and move during quiet hours
-- **A move in a failing cluster**: Cassandra's bootstrap streams from the primary replica for consistency, and fails if a replica is down, unless an override accepts the risk of missing data
-- **Old data lingers**: Cassandra's old owners keep data until an operator runs cleanup, and it still counts toward their load
-- **Detection triggers mass movement**: If a false alarm from [Failure Detection and Gossip](/system-design/failure-detection) starts a rebalance, a healthy node's data is copied without need. Pair a quick suspicion with a slow decision, as Kubernetes does with its 5 minute wait before eviction
-- **Rebalancing doesn't cure a hot key**: Moving a range to a quiet node helps, and a single key that is too busy for any node needs a different key, as in the sharding topic. Notion's expansion from 32 to 96 hosts cut peak CPU and I/O to near 20 percent and exposed a few outlier workspaces
+Moves go wrong in a few familiar ways. A move can starve the live traffic: without a throttle, the copy competes with queries for disk and network, so use the limits above and move during quiet hours.
+
+A move in a failing cluster is risky too. Cassandra's bootstrap streams from the primary replica for consistency, and fails if a replica is down, unless an override accepts the risk of missing data. And old data lingers: Cassandra's old owners keep data until an operator runs cleanup, and it still counts toward their load.
+
+Detection can trigger mass movement. If a false alarm from [Failure Detection and Gossip](/system-design/failure-detection) starts a rebalance, a healthy node's data is copied without need, so pair a quick suspicion with a slow decision, as Kubernetes does with its 5 minute wait before eviction.
+
+Finally, rebalancing doesn't cure a hot key. Moving a range to a quiet node helps, and a single key that is too busy for any node needs a different key, as in the sharding topic. Notion's expansion from 32 to 96 hosts cut peak CPU and I/O to near 20 percent and exposed a few outlier workspaces.
 
 ## Automatic or by Hand
 
