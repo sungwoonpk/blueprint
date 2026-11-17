@@ -8,29 +8,37 @@ This topic is about the layers that handle that, how to set their thresholds, an
 
 A short list of main cases covers most of the risk. **Prompt injection** is user input that changes the model's behavior in unintended ways, in two forms. Direct injection is the user's own input.
 
-Indirect injection is content the model reads that carries instructions, such as a web page, a file or a listing. **Jailbreaking** is a form of injection that makes the model ignore its safety rules. The listed impacts include leaking the system prompt or sensitive data, unauthorized use of connected functions, and manipulated decisions.
+Indirect injection is content the model reads that carries instructions, such as a web page, a file or a listing. **Jailbreaking** is a form of injection that makes the model ignore its safety rules. The impacts include leaking the system prompt or sensitive data, unauthorized use of connected functions, and manipulated decisions.
 
 Indirect injection is hard for a plain reason: an application that mixes data and instructions in one prompt lets anyone who can plant text where it will be retrieved attack it, with no direct access.
 
 Researchers have shown attacks on a search chat product and on code completion, and effective mitigations are lacking. It is unclear whether fool proof prevention exists, so measures aim to reduce the impact.
 
-Attacks can also be generated. Zou and colleagues found a way to produce suffixes automatically, by greedy and gradient based search, that make aligned models comply with requests they would refuse, and the suffixes transferred to public models that weren't used to build them.
+Attacks can also be generated. Researchers found a way to produce suffixes automatically, by greedy and gradient based search, that make aligned models comply with requests they would refuse, and the suffixes transferred to public models that weren't used to build them.
 
-Earlier jailbreaks, they note, needed human ingenuity and were brittle. The lesson for a designer is to assume that some attacks will get through, and to limit what an attack can do.
+Earlier jailbreaks needed human ingenuity and were brittle. The lesson for a designer is to assume that some attacks will get through, and to limit what an attack can do.
 
 The model's output is the other side. The failure is called improper output handling: model output passed to a browser, a database, a shell or a file path without validation. A model that can be steered can be steered into a script tag, an injected query or a path with `..` in it.
 
 ## Layers Around the Model
 
-No single check works, so the answer is a set of layers, each with a different job:
+No single check works, so the answer is a set of layers, each with a different job.
 
-- **Limits on input**: Limiting the amount of text a user can enter helps against prompt injection, and validated choices instead of free text where they fit. Cap the length of messages and the number of requests, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
-- **Classifiers on input**: A moderation model flags harmful content. OpenAI's moderation endpoint is free, covers 13 categories such as harassment, hate, illicit and self harm, and returns a flag and a score from 0 to 1 for each category. Treat the scores as signals and not automatic blocks, and recalibrate when the model is upgraded. Azure AI Content Safety scores sexual content, violence, hate and self harm at several severity levels and adds Prompt Shields for attacks on the model, groundedness detection, in preview, and a protected material check, with some features limited to English
-- **A screening model**: A lightweight model screens each input and is forced by structured outputs to return a classification, such as a boolean for harmful, and a refusal by the screen counts as harmful. The same pattern can screen tool outputs for suspected injection before they reach the main model
-- **Prompt design**: State the limits and how to decline, and tell the model that content from tools is data and not instructions
-- **Separation of content**: For indirect injection, put outside text just in the result blocks of tools, label where it came from, and keep your own instructions out of it
-- **Checks on output**: Validate formats with ordinary code, encode output for where it will be shown, use parameterized queries for any database use, and remove personal data. Structured outputs use constrained decoding so that the output follows a schema, which holds in most scenarios, with refusals and truncated outputs as exceptions that still need handling
-- **Actions**: Least privilege, approval for high impact actions, and authorization in the system behind the tool, from [Agents and Tool Use](/system-design/agents)
+The first layer is limits on input. Limiting the amount of text a user can enter helps against prompt injection, and so do validated choices instead of free text where they fit. Cap the length of messages and the number of requests, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
+
+Classifiers come next. A moderation model flags harmful content. OpenAI's moderation endpoint is free, covers 13 categories such as harassment, hate, illicit and self harm, and returns a flag and a score from 0 to 1 for each category. Treat the scores as signals and not automatic blocks, and recalibrate when the model is upgraded.
+
+Azure AI Content Safety scores sexual content, violence, hate and self harm at several severity levels and adds Prompt Shields for attacks on the model, groundedness detection, in preview, and a protected material check, with some features limited to English.
+
+A screening model is a lighter option: a small model screens each input and is forced by structured outputs to return a classification, such as a boolean for harmful, and a refusal by the screen counts as harmful. The same pattern can screen tool outputs for suspected injection before they reach the main model.
+
+Prompt design and separation of content work on the model's side. State the limits and how to decline, and tell the model that content from tools is data and not instructions. For indirect injection, put outside text just in the result blocks of tools, label where it came from, and keep your own instructions out of it.
+
+Checks on output close the loop. Validate formats with ordinary code, encode output for where it will be shown, use parameterized queries for any database use, and remove personal data.
+
+Structured outputs use constrained decoding so that the output follows a schema, which holds in most scenarios, with refusals and truncated outputs as exceptions that still need handling.
+
+The last layer is the action gate: least privilege, approval for high impact actions, and authorization in the system behind the tool, from [Agents and Tool Use](/system-design/agents).
 
 <figure class="diagram">
 <div class="flow">
@@ -105,24 +113,19 @@ The strongest layers are the ones that don't rely on the model's judgment: a dat
 
 ## When a Check Fires
 
-What happens on a block matters as much as the block:
+What happens on a block matters as much as the block. For safety critical checks, such as personal data in an answer, fail closed and block when the check is unavailable. For a tone check, fail open: serve the answer and log it, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
-- **Fail closed or open**: For safety critical checks, such as personal data in an answer, block when the check is unavailable. For a tone check, serve the answer and log it, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding)
-- **A plain refusal**: Say that the request can't be handled, and don't explain which rule fired, since the explanation helps the next attempt
-- **Log with care**: Keep the input, the scores and the decision for review, treating the logs as personal data
-- **Repeat offenders**: Throttle or ban users who repeatedly trigger refusals, and send a stable per user identifier so abuse can be traced
-- **A way out**: A student who is blocked wrongly needs a route to a person
-- **Human review**: Review outputs before use in high stakes areas, with reviewers who can see the source material
+Refuse plainly. Say that the request can't be handled, and don't explain which rule fired, since the explanation helps the next attempt. Log with care, keeping the input, the scores and the decision for review and treating the logs as personal data.
+
+Repeat offenders can be throttled or banned, and a stable per user identifier lets abuse be traced. A student who is blocked wrongly needs a route to a person. And in high stakes areas, review outputs before use, with reviewers who can see the source material.
 
 ## Testing the Guardrails
 
-A guardrail is a claim that something is blocked, and it needs a test like any other. Test adversarially, with the model treated as an untrusted user:
+A guardrail is a claim that something is blocked, and it needs a test like any other. Test adversarially, with the model treated as an untrusted user. An attack set of known injections, jailbreaks, hostile listings and malicious payloads runs on each change, with the share blocked tracked over time.
 
-- **An attack set**: Known injections, jailbreaks, hostile listings and malicious payloads, run on each change, with the share blocked tracked over time
-- **A benign set**: Real questions that look suspicious, such as a student asking about a policy on selling counterfeit books, to measure false blocks
-- **Indirect cases**: Listings and pages with planted instructions, to test the separation of content
-- **Output cases**: Answers with markup, queries and paths, to test the encoders
-- **Fresh attacks**: A new technique found in the wild becomes a test the same week
+A benign set of real questions that look suspicious, such as a student asking about a policy on selling counterfeit books, measures false blocks.
+
+Indirect cases, listings and pages with planted instructions, test the separation of content, and output cases, answers with markup, queries and paths, test the encoders. A new technique found in the wild becomes a test the same week.
 
 Both sets live in the evaluation process, and the threshold table above is the report to produce: attacks caught and honest users blocked, with intervals, as in [Evaluation](/system-design/ai-evaluation). [Monitoring AI Systems in Production](/system-design/ai-monitoring) follows what happens afterward.
 
