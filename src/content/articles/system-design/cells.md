@@ -8,7 +8,7 @@ The student retries, and the load balancer sends the retry to another server, wh
 
 ## What a Cell Is
 
-The AWS whitepaper on cell based architecture defines it as multiple isolated instances of a workload, each called a cell. A cell shares no state with other cells and handles a subset of the requests. The model comes from the ship's hull again: a breach stays in one compartment.
+A cell based design runs multiple isolated instances of a workload, and each instance is a cell. A cell shares no state with other cells and handles a subset of the requests. The model comes from the ship's hull again: a breach stays in one compartment.
 
 The work is divided by a **partition key**, a value chosen to match the grain of the service, such as the customer or the resource. A customer is assigned to one cell, and each of that customer's requests goes there.
 
@@ -20,7 +20,7 @@ Three parts make up the design:
 - **The router**: One shared layer that maps a customer to a cell and sends the request there
 - **The control plane**: Creates cells, places customers in them, and moves customers between cells
 
-The AWS whitepaper wants the router to be the thinnest possible layer, doing routing and no other work. A cheap mapping such as a hash of the key followed by a remainder works, and the router keeps no business logic, so that it is simple, easy to test and easy to scale.
+The router should be the thinnest layer that can do the job, routing and no other work. A cheap mapping such as a hash of the key followed by a remainder works, and the router keeps no business logic, so that it is simple, easy to test and easy to scale.
 
 The whole set of cells shares it, so it can't be split into cells itself, and it has to keep serving the other cells when one is unreachable.
 

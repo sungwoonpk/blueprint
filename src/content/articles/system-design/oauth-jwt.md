@@ -74,7 +74,7 @@ A **scope** is a space separated list of strings defined by the authorization se
 
 Least privilege from [Authentication and Authorization](/system-design/authn-authz) applies: the bookstore asks for listings:read, and no more.
 
-The older grants are discouraged. RFC 9700 says clients should not use the implicit grant, which puts the token in the redirect address where it can leak, and it says the resource owner password credentials grant must not be used, since it hands the password to the client and can't work with a second factor.
+The older grants are discouraged. Clients should not use the implicit grant, which puts the token in the redirect address where it can leak, and the resource owner password credentials grant must not be used, since it hands the password to the client and can't work with a second factor.
 
 It also asks that refresh tokens for public clients be tied to the sender or rotated on each use, and that access tokens be limited to one resource server through the audience. Sender constraining by mutual TLS or by a proof of possession called DPoP keeps a stolen token from working elsewhere.
 
@@ -135,7 +135,7 @@ The naive verifier made the classic mistake of trusting the algorithm named in t
 
 A JWT can be checked by any service that has the key, without a call to the authorization server. That is fast and scales well. It also means a token stays valid until it expires.
 
-The alternative is an opaque token, a random string with no content, which the resource server checks by asking the authorization server. RFC 7662 describes that introspection: a POST with the token, and a JSON answer whose required field is `active`.
+The alternative is an opaque token, a random string with no content, which the resource server checks by asking the authorization server. That check is called introspection: a POST with the token, and a JSON answer whose required field is `active`.
 
 The caller has to authenticate, and an unknown token gets `{"active": false}`. The answer may be cached, but not beyond the token's expiry, and a cached answer can accept a token that was revoked meanwhile.
 

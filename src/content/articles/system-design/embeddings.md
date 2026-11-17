@@ -126,7 +126,7 @@ The method needs no tuning of scores, since it uses ranks and not the raw number
 
 Filters belong in the same request. A student who wants calculus books under 20,000 won, in the 2nd semester, needs the price and course conditions applied exactly, with the vectors ordering what remains.
 
-## Retrieve, Then Re-rank
+## Retrieve, Then Re-Rank
 
 The vectors are computed ahead of time, which makes them fast and approximate. A **cross-encoder** reads the query and a candidate together, which is slower and more precise.
 

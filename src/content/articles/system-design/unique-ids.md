@@ -24,7 +24,7 @@ The simplest source is a sequence or auto increment column. PostgreSQL's `nextva
 
 MySQL's InnoDB likewise loses values on rollback and does not reuse them. Treat gaps as normal, and don't use IDs as an unbroken count.
 
-With several databases, a counter in each would collide. Flickr's engineers described the fix in 2010: a pair of dedicated ticket servers.
+With several databases, a counter in each would collide. One fix, which Flickr used around 2010, is a pair of dedicated ticket servers.
 
 Each holds a table with an auto increment column, and a client asks for an ID with a replace and a read of the last inserted ID. One server hands out odd numbers and the other even numbers, set with an increment of 2 and offsets of 1 and 2, and clients alternate between them.
 
@@ -73,9 +73,9 @@ Put a timestamp first, and new IDs sort after old ones, which keeps inserts at t
 
 The time in a version 7 UUID and a ULID is Unix milliseconds. A KSUID counts seconds from 2014. ULIDs are written in Crockford base32 and KSUIDs in base62, which is why their text is shorter than a UUID's.
 
-Within one millisecond, order is not defined unless the generator keeps it. RFC 9562 describes counters placed in the random bits, and a generator that increases by a random step.
+Within one millisecond, order is not defined unless the generator keeps it. A generator can keep order by placing a counter in the random bits, or by increasing the random part by a random step.
 
-The ULID specification has a monotonic mode that adds 1 to the random part when the millisecond repeats, with an error if it overflows. For a clock that moves backwards, RFC 9562 suggests keeping the last timestamp and counting up, or returning an error.
+ULIDs have a monotonic mode that adds 1 to the random part when the millisecond repeats, with an error if it overflows. For a clock that moves backwards, the generator can keep the last timestamp and count up, or return an error.
 
 All of these trust the clock a little. An ID made on a machine whose clock is a minute behind sorts a minute early, which is harmless for an index and wrong for anything that treats the ID order as the order of events.
 

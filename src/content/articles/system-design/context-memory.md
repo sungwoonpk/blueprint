@@ -62,19 +62,19 @@ The compaction row includes three summarizing calls, with their output. Four fin
 - **Clearing old tool results** kept the dialogue and removed most of the bytes, at a price close to keeping the whole history, since each clearing changes the prefix
 - **Compaction was the cheapest with a cache**, since a summary is rare and a shorter prompt is cheap, and it is also the policy that loses the most detail
 
-### Drop the oldest turns
+### Drop the Oldest Turns
 
 A window of recent turns is the simplest: keep the last N and drop the rest. It is predictable, and it forgets.
 
 The student's budget from turn 2 is gone at turn 12, and the model will suggest a book that costs too much. It also moves the start of the history on each turn, which defeats the prompt cache as the table showed.
 
-### Clear old tool results
+### Clear Old Tool Results
 
 Tool results are bulky and age quickly. Anthropic's context editing, a beta feature at the time of writing, clears the oldest tool results on the server once the input passes a trigger, replaces each with a placeholder, and keeps the most recent few. The client keeps the full history, and an option clears the tool inputs too.
 
 Clearing invalidates cached prefixes, so set a minimum amount to clear, so that the saving is worth the cache write. For the helper this is the natural first step, since the 800 token listing lookups are most of the history and the answers that used them stay.
 
-### Summarize and compact
+### Summarize and Compact
 
 A **summary** replaces older turns with a short text, written by the model. Anthropic's compaction runs in three ways: on demand from your code, by a threshold on the server, or with a summarizer you write.
 
@@ -84,7 +84,7 @@ A custom prompt replaces that default, so it can ask for what matters to your ta
 
 Summaries have costs. The model that summarizes is the one you pay for, images and documents in the summarized range are lost, and a system message inside that range is summarized too, so check that the instructions you need stay in the prompt after compaction. A summary also drops detail you didn't think to ask for.
 
-### Start a new window with notes
+### Start a New Window with Notes
 
 At a task boundary, such as the student finishing a comparison, the cleanest move may be to save the result and start fresh. That needs somewhere to keep notes.
 
@@ -123,7 +123,7 @@ Whatever policy you choose, order the window by how often parts change. The inst
 
 The conversation follows, and the newest question comes last. This also places the most important facts near the start and end, where the Lost in the Middle results say models attend best.
 
-Each trim changes the prefix, so trim in larger steps and less often: clear a batch of old results when the prompt passes a threshold, and not one result on each turn, which is the point of the thresholds in the documentation.
+Each trim changes the prefix, so trim in larger steps and less often: clear a batch of old results when the prompt passes a threshold, and not one result on each turn, which is the point of a threshold.
 
 ## A Plan for the Textbook App
 

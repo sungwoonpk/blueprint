@@ -31,7 +31,7 @@ An approximate index returns most of the true nearest neighbors and not the full
 
 The test data is invented: 10,000 vectors of 16 numbers in 50 clusters, and 150 queries from the same distribution. A scan compares each query with 10,000 vectors, and we count comparisons.
 
-### Inverted lists
+### Inverted Lists
 
 An **inverted file** index, called IVF, groups the vectors by a clustering step. Training finds centroids with k-means, each vector goes into the list of its nearest centroid, and a query visits the lists of the few nearest centroids and scans just those.
 
@@ -64,7 +64,7 @@ A sizing rule for pgvector: a number of lists equal to the rows divided by 1,000
 
 Its default is 1 probe, which our table shows is the least accurate setting. Two operational facts: the index is trained, so it should be built after the table holds data, and the FAISS guidance asks for training sets of 30 to 256 times the number of lists.
 
-### Neighbor graphs
+### Neighbor Graphs
 
 A graph index links each vector to some near neighbors. A search starts at an entry point and repeatedly moves to the neighbor nearest the query, keeping a list of the best candidates, until it stops improving.
 

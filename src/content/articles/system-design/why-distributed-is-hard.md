@@ -90,7 +90,7 @@ A page that makes 30 sequential remote calls at 0.5 ms each spends 15 ms just on
 
 ## The Slowest Part Sets the Pace
 
-Variation in speed gets amplified when a request touches many machines. Jeffrey Dean and Luiz Barroso, in their paper on tail latency, give a clear example.
+Variation in speed gets amplified when a request touches many machines. Work on tail latency at Google gives a clear example.
 
 If a server is slow for 1 request in 100, a request handled by one server is slow 1 percent of the time. If the request must collect answers from 100 such servers, 63 percent of requests are slow.
 

@@ -20,7 +20,7 @@ The two fit together. Twelve-Factor is about separating config from code, and OW
 
 ## One Place, With a Log
 
-OWASP's first recommendation is to centralize. Use one secret store, or a few, that cover storing, providing, auditing and rotating, and protect the store's own primary credentials in a second system.
+The first step is to centralize. Use one secret store, or a few, that cover storing, providing, auditing and rotating, and protect the store's own primary credentials in a second system.
 
 The cloud providers sell this as a service: AWS Secrets Manager, Google Cloud Secret Manager and Azure Key Vault. OWASP asks of a store that it supports granular access, automated rotation, encryption at rest and in transit, central audit logging and versions with recovery.
 

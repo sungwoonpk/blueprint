@@ -120,9 +120,9 @@ A coarse leaf is cheaper to compare and streams much more than it needs to: with
 
 Dynamo keeps a separate tree for each key range of a virtual node. It names the disadvantage: when a node joins or leaves, many key ranges change and the trees must be recomputed, a problem that its refined partitioning scheme reduces.
 
-ScyllaDB's engineers described the trouble with fixed leaves in their 2019 post.
+ScyllaDB ran into the trouble with fixed leaves before version 3.1.
 
-Their old method split a range into pieces of about 100 partitions, compared checksums for each, and streamed a whole piece on a mismatch, so one differing row could stream 100 partitions, and in the worst case a single byte could stream up to 10 GB. Version 3.1 repairs at the row level, with a 64 bit hash for each row.
+Its old method split a range into pieces of about 100 partitions, compared checksums for each, and streamed a whole piece on a mismatch, so one differing row could stream 100 partitions, and in the worst case a single byte could stream up to 10 GB. Version 3.1 repairs at the row level, with a 64 bit hash for each row.
 
 Their test on 3 nodes with a billion rows, 99.9 percent already in sync, took 96.4 minutes before and 14.2 minutes after, with transfer falling from 120.52 GiB to 4.28 GiB.
 

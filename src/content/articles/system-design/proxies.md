@@ -129,7 +129,7 @@ These matter in practice. An app that doesn't know the user was on HTTPS may bui
 
 ## Trust Only What Your Proxies Added
 
-RFC 7239 warns that any node, including the client, can alter these headers. A client can send its own `X-Forwarded-For`, and a proxy then adds the real address after it:
+Any node on the path, including the client, can alter these headers. A client can send its own `X-Forwarded-For`, and a proxy then adds the real address after it:
 
 ```text
 Client sends:    X-Forwarded-For: 1.2.3.4

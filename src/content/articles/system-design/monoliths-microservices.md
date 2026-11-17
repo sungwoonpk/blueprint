@@ -124,7 +124,7 @@ A lint check in the build enforces it. You get the clear boundaries without the 
 
 ## A Warning From Segment
 
-Splitting can also go too far. Segment's engineers wrote in 2018 about a system with a separate service and queue for each of its over a hundred destinations. It solved a real problem, one slow destination blocking the rest, and then brought its own: shared code that drifted between copies, services that each had to be scaled by hand, and a growing on-call load. They merged it back into a single service.
+Splitting can also go too far. Segment is a known case: a system with a separate service and queue for each of its over a hundred destinations. It solved a real problem, one slow destination blocking the rest, and then brought its own: shared code that drifted between copies, services that each had to be scaled by hand, and a growing on-call load. In 2018 they merged it back into a single service.
 
 It is one story, with its own context, and not a law. It does show that the same system can be right as many services at one moment and as one at another.
 

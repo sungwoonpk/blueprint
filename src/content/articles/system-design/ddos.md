@@ -6,7 +6,7 @@ A limit per client rarely triggers, so the defenses sit in other places, mostly 
 
 ## Three Kinds of Flood
 
-The US government's CISA, in its guide for defenders, sorts attacks by what they try to use up:
+Attacks can be sorted by what they try to use up:
 
 | Kind | What It Exhausts | Example |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ And services shouldn't expose UDP to the internet unless they must. Turn off wha
 
 ## Protocol: The SYN Flood
 
-A TCP connection starts with a handshake, covered in [TCP and UDP](/system-design/tcp-udp). RFC 4987 describes how it is abused.
+A TCP connection starts with a handshake, covered in [TCP and UDP](/system-design/tcp-udp). The handshake is the weak spot, and it can be abused.
 
 A server that receives a SYN message sets aside memory for a half open connection and waits for the final reply. An attacker sends a flood of SYNs from forged or unresponsive addresses, so the replies don't come.
 
