@@ -1,6 +1,8 @@
 > A **distributed denial of service** (DDoS) attack uses many machines to flood a target until real users can't get through. The defense is layered, because the flood can exhaust bandwidth, connection tables or application code.
 
-[Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) deal with one client sending too much. A DDoS is the opposite shape: thousands or millions of sources, each sending a modest amount, adding up to more than the target can take. A limit per client rarely triggers, so the defenses sit in other places, mostly at the edge, before the traffic reaches your servers.
+[Rate Limiting Algorithms](/system-design/rate-limiting-algorithms) deal with one client sending too much. A DDoS is the opposite shape: thousands or millions of sources, each sending a modest amount, adding up to more than the target can take.
+
+A limit per client rarely triggers, so the defenses sit in other places, mostly at the edge, before the traffic reaches your servers.
 
 ## Three Kinds of Flood
 
@@ -44,15 +46,21 @@ The bandwidth amplification factor is the reply size divided by the request size
 <figcaption>How many times larger the reply is than the request, on a linear scale where memcached dwarfs the rest</figcaption>
 </figure>
 
-Memcached, a cache server from [Redis and Memcached](/system-design/redis-memcached), could be abused this way when exposed to the internet over UDP. At the top of that range, a flood of 1.35 Tbps needs only about 26 Mbit a second of requests, which is a home internet connection. That is the best case for the attacker, and real floods are usually smaller, but the principle holds.
+Memcached, a cache server from [Redis and Memcached](/system-design/redis-memcached), could be abused this way when exposed to the internet over UDP. At the top of that range, a flood of 1.35 Tbps needs only about 26 Mbit a second of requests, which is a home internet connection.
 
-Two defenses work at the root. Networks can filter packets whose source address doesn't belong to them, which is the recommendation of BCP 38, RFC 2827, though it works best when many providers do it and does nothing against floods from real addresses. And services shouldn't expose UDP to the internet unless they must. Turn off what you don't need.
+That is the best case for the attacker, and real floods are usually smaller, but the principle holds.
+
+Two defenses work at the root. Networks can filter packets whose source address doesn't belong to them, which is the recommendation of BCP 38, RFC 2827, though it works best when many providers do it and does nothing against floods from real addresses.
+
+And services shouldn't expose UDP to the internet unless they must. Turn off what you don't need.
 
 ## Protocol: The SYN Flood
 
 A TCP connection starts with a handshake, covered in [TCP and UDP](/system-design/tcp-udp). RFC 4987 describes how it is abused.
 
-A server that receives a SYN message sets aside memory for a half open connection and waits for the final reply. An attacker sends a flood of SYNs from forged or unresponsive addresses, so the replies don't come. The server's table of half open connections fills, and real users are turned away. The target is the server's memory, not its bandwidth.
+A server that receives a SYN message sets aside memory for a half open connection and waits for the final reply. An attacker sends a flood of SYNs from forged or unresponsive addresses, so the replies don't come.
+
+The server's table of half open connections fills, and real users are turned away. The target is the server's memory, not its bandwidth.
 
 The main fix is **SYN cookies**: the server encodes the needed state into the reply it sends and keeps nothing until the final message returns, so a flood costs it almost nothing. Operating systems implement it, and on Linux it is a setting:
 
@@ -60,7 +68,7 @@ The main fix is **SYN cookies**: the server encodes the needed state into the re
 sysctl -w net.ipv4.tcp_syncookies=1
 ```
 
-Smaller measures help, such as a larger backlog or a shorter timeout, and the RFC notes they are weak compared with cookies. Most managed load balancers and cloud edges already handle this for you.
+Smaller measures help, such as a larger backlog or a shorter timeout, and they are weak compared with SYN cookies. Most managed load balancers and cloud edges already handle this for you.
 
 ## Application: Looks Like Real Users
 
@@ -77,7 +85,7 @@ Defenses here use what the earlier topics built:
 
 Two attacks show the range. In October 2016, a botnet called Mirai, made of hacked internet connected cameras and similar devices, attacked Dyn, a company that ran DNS for many large sites.
 
-Per Wikipedia's account, three waves hit during the day, and Twitter, Netflix, Spotify, Reddit and GitHub became hard to reach, though their own servers were fine, the single point of failure from [How DNS Works](/system-design/dns). A USENIX study of Mirai counted a peak of about 600,000 infected devices.
+Dyn's customers could not be reached for hours even though their own servers were fine, because nobody could look up their names. That is the single point of failure from [How DNS Works](/system-design/dns). At its peak, Mirai had infected about 600,000 devices.
 
 In February 2018, GitHub was hit by a memcached amplification attack. Its incident report gives the numbers and the timeline:
 
@@ -92,7 +100,7 @@ The attack peaked at 1.35 Tbit a second and 126.9 million packets a second, from
 
 ## Defense in Layers
 
-Cloud providers describe the same shape. The AWS, Google Cloud and Azure documentation all say that the network layer attacks are handled at the provider's edge, automatically or always on, and that the application layer needs rules you set up yourself.
+Cloud providers draw the same line: network layer attacks are handled at the provider's edge, automatically or always on, and the application layer needs rules you set up yourself.
 
 <figure class="diagram">
 <div class="flow">
@@ -108,8 +116,8 @@ Cloud providers describe the same shape. The AWS, Google Cloud and Azure documen
 </figure>
 
 - **Reduce the target**: let only the CDN reach your servers, hide their real addresses, and close unused ports and services, especially UDP ones
-- **Absorb at the edge**: a CDN or anycast network spreads an attack across many locations, the idea in [Global Traffic Routing](/system-design/global-routing), and has more capacity than you do. AWS Shield Standard defends against common layer 3 and 4 attacks at no extra charge, and Google Cloud Armor and Azure DDoS Protection describe always on protection for those layers
-- **Filter at layer 7**: a WAF plus rate limits. Azure's documentation says plainly that layer 7 protection needs a WAF, and Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top
+- **Absorb at the edge**: a CDN or anycast network spreads an attack across many locations, the idea in [Global Traffic Routing](/system-design/global-routing), and has more capacity than you do. AWS Shield Standard defends against common layer 3 and 4 attacks at no extra charge, and Google Cloud Armor and Azure DDoS Protection offer always on protection for those layers
+- **Filter at layer 7**: a WAF plus rate limits, since layer 7 protection needs a WAF, and Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top
 - **Scale, with a ceiling**: [autoscaling](/system-design/autoscaling) can absorb some load, and an attack can drive the bill up, which is why Shield Advanced lists cost protection among its features. Set a maximum
 - **Keep spare capacity and plans**: the headroom from [Redundancy and Failover](/system-design/redundancy-failover), and a plan written down before it's needed
 
@@ -130,7 +138,9 @@ Because the two overlap, response begins gently: tighten limits on the costly pa
 
 When an attack lands, the questions are who decides, what to switch on and whom to call.
 
-A written runbook answers them: how to confirm it is an attack, which stricter rules to enable, how to move traffic to a scrubbing provider, how to tell users. Provider support contacts should be known in advance, dashboards ready, and the plan practiced in a drill, as in [Chaos Engineering](/system-design/chaos-engineering). The next phase moves from how requests reach the servers to what the servers keep: [The Relational Model](/system-design/relational-model).
+A written runbook answers them: how to confirm it is an attack, which stricter rules to enable, how to move traffic to a scrubbing provider, how to tell users.
+
+Provider support contacts should be known in advance, dashboards ready, and the plan practiced in a drill, as in [Chaos Engineering](/system-design/chaos-engineering). The next phase moves from how requests reach the servers to what the servers keep: [The Relational Model](/system-design/relational-model).
 
 ## Key Points
 

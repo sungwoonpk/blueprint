@@ -17,7 +17,7 @@ At the instant of expiry the next request misses and starts the query. The one a
 <figcaption>Each request that misses starts its own rebuild</figcaption>
 </figure>
 
-Wikipedia's article on cache stampedes uses the same arithmetic with a page that takes 3 seconds to render and 10 requests a second: about 30 processes recompute it at once. It describes the result as a kind of cascading failure.
+Take a page that needs 3 seconds to render and 10 requests a second. While the entry is missing, about 30 processes start recomputing it, and the result is a kind of cascading failure.
 
 The extra load slows the database, so the rebuild takes longer, which lets more requests miss, which adds more load. The hit rate stays near zero while the load stays high, until something gives. See [Cascading Failures](/system-design/cascading-failures).
 
@@ -27,13 +27,13 @@ Expiry is only one trigger. The same crowd appears when:
 - **An invalidation deletes a hot key**: Delete on write, from [Cache Invalidation](/system-design/cache-invalidation), turns a hot entry into a miss
 - **Many keys expire together**: Entries filled in one batch, or all at once after a flush, share an expiry time
 
-This is the danger that Amazon's article on caching calls modal behavior: the database is sized for the misses at a healthy hit ratio, and a stampede sends it all the requests at once, as described in [Where to Put a Cache](/system-design/where-to-cache).
+This is the danger of **modal behavior**: the database is sized for the misses at a healthy hit ratio, and a stampede sends it all the requests at once, as described in [Where to Put a Cache](/system-design/where-to-cache).
 
 ## One Request Rebuilds
 
-The most direct fix is to let one request rebuild the entry while the others wait or use something else. This is called **request coalescing**, and Wikipedia describes the lock version of it under locking.
+The most direct fix is to let one request rebuild the entry while the others wait or use something else. This is called **request coalescing**, and the lock version is the common one.
 
-A common form uses a lock in the shared cache. Redis's documentation shows the building block: `SET key value NX PX 5000` sets a key only if it doesn't exist, and expires it after 5000 milliseconds, so a crashed holder can't keep the lock forever:
+A common form uses a lock in the shared cache. The building block is `SET key value NX PX 5000`, which sets a key only if it doesn't exist, and expires it after 5000 milliseconds, so a crashed holder can't keep the lock forever:
 
 ```python
 def get_search(subject, tries=20):
@@ -54,15 +54,15 @@ def get_search(subject, tries=20):
     return get_search(subject, tries - 1)        # look again
 ```
 
-One request builds the entry and the others check again every 50 ms. The tradeoffs come straight from Wikipedia's list: the lock costs an extra write, a holder that crashes or runs slowly needs a sensible lock timeout, and races remain.
+One request builds the entry and the others check again every 50 ms. The tradeoffs: the lock costs an extra write, a holder that crashes or runs slowly needs a sensible lock timeout, and races remain.
 
-Redis's documentation adds that a lock like this is fine when an occasional race is acceptable, but it isn't safe under failover.
+A lock like this is fine when an occasional race is acceptable, but it isn't safe under failover.
 
 Some tools do this for you. Go's `singleflight` package makes sure only one call per key is in flight and gives its result to the duplicates, but only inside one process, so six servers still send six queries, a great improvement over 480.
 
 Nginx has `proxy_cache_lock on`, which lets one request fetch from the origin while the others wait, and Varnish keeps a waiting list for the same object automatically.
 
-The waiters have to wait, and that is the weak point. Wikipedia lists three choices for them: wait, get a "not found" answer, or get a stale copy.
+The waiters have to wait, and that is the weak point. They have three choices: wait, get a "not found" answer, or get a stale copy.
 
 ## Serve Stale While Refreshing
 
@@ -78,13 +78,13 @@ With these, one request refreshes an expired entry in the background while the o
 
 The price is that for a moment users see data that is a little old, which for a 60 second search result is usually fine.
 
-Amazon's article describes the same idea as a soft and a hard TTL: refresh after the soft one, and keep serving the old copy until the hard one if the database is struggling.
+This is the soft and hard TTL idea again: refresh after the soft one, and keep serving the old copy until the hard one if the database is struggling.
 
 ## Refresh Before Expiry
 
-A third approach avoids the empty moment altogether by rebuilding the entry before it expires. Wikipedia lists two ways. **External recomputation** has a separate job rebuild entries when they near expiry or on a schedule, which suits a small known set of keys, like the top searches, and adds a component to maintain.
+A third approach avoids the empty moment altogether by rebuilding the entry before it expires. There are two ways. **External recomputation** has a separate job rebuild entries when they near expiry or on a schedule, which suits a small known set of keys, like the top searches, and adds a component to maintain.
 
-**Probabilistic early expiration** needs no extra part. Each request that finds the entry decides, with a weighted coin, whether to refresh early, and the chance rises as expiry approaches. Wikipedia gives the rule, named XFetch after the paper by Vattani and others, which it describes as optimal:
+**Probabilistic early expiration** needs no extra part. Each request that finds the entry decides, with a weighted coin, whether to refresh early, and the chance rises as expiry approaches. The rule, called XFetch after the paper by Vattani, Chierichetti and Lowenstein that proved it optimal, is:
 
 ```python
 def should_refresh(now, expiry, delta, beta=1.0):

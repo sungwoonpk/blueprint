@@ -4,11 +4,11 @@ In the last four topics we met key-value, document, wide-column and graph stores
 
 ## What NoSQL Means
 
-The name is read as "not only SQL" or as "non-relational", and both AWS and MongoDB say either reading is fine. MongoDB also points out that the two words don't compare like with like: SQL is a query language, and NoSQL is an approach to databases.
+The name is read as "not only SQL" or as "non-relational", and either reading is fine. The two words also don't compare like with like: SQL is a query language, and NoSQL is an approach to databases.
 
-Wikipedia traces the modern use of the term to 2009, when it named a meetup about open source, distributed, non-relational stores, many inspired by Google's Bigtable and Amazon's Dynamo.
+The name took off in the late 2000s, when systems inspired by Google's Bigtable and Amazon's Dynamo, described in papers in 2006 and 2007, spread as open source projects.
 
-The reasons they appeared, according to Wikipedia, are a simple design without a fixed schema, scaling out over clusters of machines, and control over availability. AWS describes them as databases built for a purpose, each designed for one data model. The four families from this group:
+They appeared for three reasons: a simple design without a fixed schema, scaling out over clusters of machines, and control over availability. Each one is built for a purpose, designed around one data model. The four families from this group:
 
 | Family | Good At | Example in the App |
 | --- | --- | --- |
@@ -17,15 +17,15 @@ The reasons they appeared, according to Wikipedia, are a simple design without a
 | Wide-Column | A huge volume of writes read by key and time | Messages in conversations |
 | Graph | Questions about connections, many hops deep | Books sold by friends of friends |
 
-Microsoft's guide lists more kinds of data stores around them, such as search indexes, time series and object storage, which come later in this phase.
+There are more kinds of data stores around them, such as search indexes, time series and object storage, which come later in this phase.
 
 ## The Gap is Smaller Than It Was
 
 Two slogans used to sum up the choice: relational databases can't scale out, and NoSQL databases have no transactions. Neither is a safe rule now.
 
-NoSQL systems have added what they lacked. Wikipedia's comparison table marks ACID transactions as supported by several of them, including DynamoDB and MongoDB, and MongoDB's own page says some NoSQL databases, MongoDB among them, support ACID transactions. The caveats remain: as [Document Stores](/system-design/document-stores) noted, MongoDB's transactions usually cost more than writes to one document.
+NoSQL systems have added what they lacked. Several of them, including DynamoDB and MongoDB, now support ACID transactions. The caveats remain: as [Document Stores](/system-design/document-stores) noted, MongoDB's transactions usually cost more than writes to one document.
 
-Relational databases have moved toward flexibility. PostgreSQL stores and indexes JSON, as in [Data Modeling](/system-design/data-modeling), and its documentation says the JSON and relational styles can coexist in one application. It also claims databases of many terabytes, and [Sharding Strategies](/system-design/sharding) shows how a relational database can be split across machines when one is not enough.
+Relational databases have moved toward flexibility. PostgreSQL stores and indexes JSON, as in [Data Modeling](/system-design/data-modeling), and the JSON and relational styles can coexist in one application. Relational databases also handle many terabytes, and [Sharding Strategies](/system-design/sharding) shows how a relational database can be split across machines when one is not enough.
 
 So the question is no longer which kind of database can do the job. It is which one does it with the least effort and risk for this data.
 
@@ -63,7 +63,7 @@ Using several stores like this is called **polyglot persistence**, and AWS's adv
 
 It is another system to run, back up and watch, and the same facts may now live in two places that must be kept in step, with the techniques from [Choosing Between Normalization and Denormalization](/system-design/normalization) and [The Transactional Outbox](/system-design/transactional-outbox).
 
-Microsoft's guide lists the usual mistakes: adding a data model before the team can monitor and back it up, and making a search index the only copy of the data. It also advises using one service when it meets the requirements.
+The usual mistakes are adding a data model before the team can monitor and back it up, and making a search index the only copy of the data. When one service meets the requirements, use it.
 
 With 2,000 campus users and a peak of 3,000 requests a second, a single well indexed PostgreSQL server is often enough for most of this table. The other rows are the answers for when a measured problem appears.
 

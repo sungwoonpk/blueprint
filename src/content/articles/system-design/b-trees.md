@@ -6,7 +6,7 @@ It is also the reason that, back in [Data Modeling](/system-design/data-modeling
 
 ## Why Nodes Are Wide
 
-A database keeps its data on disk, and a disk is read in blocks. The cost of a lookup is the number of blocks it touches, so the structure's job is to touch as few as possible. Wikipedia's article on B-trees works through the numbers.
+A database keeps its data on disk, and a disk is read in blocks. The cost of a lookup is the number of blocks it touches, so the structure's job is to touch as few as possible.
 
 A binary search over 1,000,000 records needs up to 20 comparisons. If each one is a separate 10 ms disk read, that is 0.2 seconds. If a block holds 100 entries instead, the search takes 3 block reads.
 
@@ -36,7 +36,7 @@ The level counts up from 0 at the leaves, so a result of 2 means three levels of
 
 Databases mostly use the variant called a B+ tree, in which the internal pages hold only keys and child pointers, and all the entries are in the leaves, which are linked side by side.
 
-Wikipedia points out the benefit: with no data in the internal pages, more keys fit on each, and the tree is shorter. PostgreSQL's documentation says its levels can be walked as a linked list of pages, and that over 99 percent of the pages are leaves.
+The benefit: with no data in the internal pages, more keys fit on each, and the tree is shorter. In PostgreSQL the leaves are linked as a list of pages, and over 99 percent of the pages are leaves.
 
 A lookup starts at the root, finds the right child with a search inside the page, and repeats until it reaches a leaf. A range scan finds the first leaf and then follows the links:
 
@@ -73,7 +73,7 @@ That is why a B-tree answers `ORDER BY` and range conditions cheaply: the leaves
 
 An insert descends to the leaf where the key belongs and adds it. Pages have a fixed size, so sooner or later a leaf is full. The database then splits it into two pages, each about half full, and adds a pointer to the new page in the parent.
 
-If the parent is full, it splits as well. PostgreSQL's documentation says splits cascade upward in this way, and when the root itself splits, a new root is created above it. That is the only way the tree gets taller, and it is why all the leaves stay at the same depth.
+If the parent is full, it splits as well. Splits cascade upward in this way, and when the root itself splits, a new root is created above it. That is the only way the tree gets taller, and it is why all the leaves stay at the same depth.
 
 Where the inserts land changes how full the pages are. We simulated 200,000 keys going into leaf pages of 100 entries, in two orders:
 
@@ -84,13 +84,13 @@ Where the inserts land changes how full the pages are. We simulated 200,000 keys
 
 Appending at the right end fills each page before starting the next. Random inserts split pages that are full in the middle, leaving halves, and the average settles near 70 percent: 44 percent more pages for the same keys, more to read and more to cache.
 
-InnoDB's documentation describes the same effect from the other side: sequential inserts leave pages about 15/16 full, while random ones leave them anywhere from half to 15/16 full.
+InnoDB shows the same effect from the other side: sequential inserts leave pages about 15/16 full, while random ones leave them anywhere from half to 15/16 full.
 
 Random inserts are also expensive in another way. Each key lands on a different leaf, so the page needed is likely to be out of memory and must be read first.
 
 This is the reason for the advice in [Data Modeling](/system-design/data-modeling) about random UUIDs: version 4 values scatter inserts over the whole tree, while sequential numbers and version 7 UUIDs, which are ordered by time, keep them at the right edge, where the busy pages stay in memory.
 
-Deletes work in reverse. A page that becomes too empty is merged with a neighbor or borrows from one. InnoDB's documentation names a merge threshold of 50 percent by default, below which it tries to contract the tree.
+Deletes work in reverse. A page that becomes too empty is merged with a neighbor or borrows from one. InnoDB has a merge threshold of 50 percent by default, below which it tries to contract the tree.
 
 PostgreSQL adds its own cleanup, such as removing dead entries from a page that is about to split, but still depends on its vacuum process for the rest.
 
@@ -104,9 +104,9 @@ A B-tree index can sit beside the table or hold the table. Systems differ, and i
 | PostgreSQL | A separate table file, the heap | The row's location in the heap |
 | SQLite | The table's own B-tree, keyed by row id | The row id, as part of the index key |
 
-In InnoDB, MySQL's documentation explains, a secondary index record holds the primary key columns of its row, and a lookup through it then searches the clustered index with that value: two tree descents. A long primary key also makes every secondary index bigger.
+In InnoDB, a secondary index record holds the primary key columns of its row, and a lookup through it then searches the clustered index with that value: two tree descents. A long primary key also makes every secondary index bigger.
 
-In PostgreSQL, an index entry points straight into the heap, which is the extra trip that an index-only scan from [Indexes and Query Optimization](/system-design/indexing) can avoid. SQLite's format documentation says its table trees store all the data in the leaves, while its index trees store no data at all.
+In PostgreSQL, an index entry points straight into the heap, which is the extra trip that an index-only scan from [Indexes and Query Optimization](/system-design/indexing) can avoid. SQLite's table trees store the data in the leaves, while its index trees store no data at all.
 
 ## Crash Safety and the Cost of a Write
 

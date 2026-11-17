@@ -18,7 +18,7 @@ Tyler Akidau, an author of Google's Dataflow model, defines a streaming system a
 
 Latency depends on the engine. Kafka Streams handles one record at a time and aims for millisecond latency.
 
-Spark's Structured Streaming runs small batch jobs, and its documentation gives end to end latency as low as about 100 ms with exactly once guarantees, or as low as about 1 ms in its continuous mode, which promises at least once.
+Spark's Structured Streaming runs small batch jobs, with end to end latency as low as about 100 ms and exactly once guarantees, or as low as about 1 ms in its continuous mode, which promises at least once.
 
 ## The Shape of a Job
 
@@ -44,7 +44,7 @@ The steps differ in what they remember:
 
 ## Streams and Tables
 
-Kafka's documentation describes a useful view of this: a stream and a table are two forms of the same thing. Counting views for each course turns a stream of events into a table with a row for each course, and each new event changes one row.
+A useful view: a stream and a table are two forms of the same thing. Counting views for each course turns a stream of events into a table with a row for each course, and each new event changes one row.
 
 | Event in the Stream | Row Changed in the Table |
 | --- | --- |
@@ -54,7 +54,7 @@ Kafka's documentation describes a useful view of this: a stream and a table are 
 
 Read the right column as its own stream, and it is the changelog of the table. That is the same idea as [Change Data Capture](/system-design/cdc): a table's changes form a stream, and replaying a stream rebuilds the table.
 
-The documentation adds that an aggregation produces a table, so that a late event can update a result already emitted, and the new value replaces the old one.
+An aggregation produces a table, so that a late event can update a result already emitted, and the new value replaces the old one.
 
 ## Keeping State
 
@@ -88,7 +88,7 @@ An operator saves its state when a barrier reaches it, and after a failure the j
 
 The guarantee is a setting and not a given. Kafka Streams defaults to at least once, and exactly once is turned on with `processing.guarantee` set to `exactly_once_v2`, which needs brokers of version 2.5 or newer.
 
-Its documentation is careful about the limits: the guarantee holds for the input topics, the state stores and the output topics, because they take part in one transaction.
+The guarantee has limits: it holds for the input topics, the state stores and the output topics, because they take part in one transaction.
 
 Writing to an outside system, such as sending an email or updating a database, is beyond it. Spark states the general rule: replayable sources plus idempotent sinks give end to end exactly once.
 
@@ -106,7 +106,7 @@ Use a stream when the answer loses value with age: an alert, a recommendation th
 
 Use batch when a delay of hours is fine and the logic needs the full history at once, since batch is simpler to run, to test and to correct.
 
-Kafka's documentation notes that teams who can't accept any loss or duplicates have often added a batch pipeline beside the stream, an arrangement called the Lambda architecture. Engines that offer exactly once can make that duplication less necessary, and many systems still keep a nightly batch to recompute the numbers from the raw events.
+Teams who can't accept any loss or duplicates have often added a batch pipeline beside the stream, an arrangement called the Lambda architecture. Engines that offer exactly once can make that duplication less necessary, and many systems still keep a nightly batch to recompute the numbers from the raw events.
 
 In the textbook app, the trending list and the scam alert are streams, and the nightly price suggestions stay batch.
 

@@ -6,13 +6,13 @@ It turns random writes into sequential ones and pays later, by merging files and
 
 ## The Write Path
 
-Patrick O'Neil and his colleagues described the idea in 1996. Today's version, as Wikipedia describes it, has an in-memory level and sorted runs on disk below it. The write path of Cassandra's documentation shows the steps, and RocksDB and LevelDB are alike:
+Patrick O'Neil and his colleagues described the idea in 1996. Today's version has a level in memory and sorted runs on disk below it. Cassandra's write path shows the steps, and RocksDB and LevelDB are alike:
 
 - **Log**: Each write is appended to a write-ahead log first, as in [Write-Ahead Logs](/system-design/write-ahead-logs), so a crash doesn't lose it
 - **Memtable**: The write also goes into a sorted structure in memory, a skip list by default in RocksDB, and reads can see it right away
 - **Flush**: When the memtable is full it is frozen, and a background thread writes it to disk as one sorted file, called an **SSTable**, for sorted string table. Writes carry on into a fresh memtable, and the old log is deleted
 
-Cassandra's documentation stresses that an SSTable is immutable once written. Nothing edits it: an update is a new entry in a newer file, and a delete is a marker, called a **tombstone**, that hides older values. All the writing to disk is sequential, which suits both hard disks and SSDs.
+An SSTable is immutable once written. Nothing edits it: an update is a new entry in a newer file, and a delete is a marker, called a **tombstone**, that hides older values. All the writing to disk is sequential, which suits both hard disks and SSDs.
 
 ## Reads Look in Several Places
 
@@ -35,11 +35,11 @@ Each level below has files with separate key ranges, and each is about ten times
 
 A key that exists is found early, if it was written recently. The costly case is a key that doesn't exist, since each place has to be checked.
 
-Wikipedia gives the cost as one probe per component without help, and the help is a **Bloom filter** kept for each file, a small structure that says either "definitely not here" or "maybe here".
+Without help, a lookup probes each component, and the help is a **Bloom filter** kept for each file, a small structure that says either "definitely not here" or "maybe here".
 
 If a filter has a 1 percent false positive rate, a lookup in our 14 file example below makes about 0.14 unnecessary file reads instead of 14. Bloom filters are the subject of [Bloom Filters and Sketches](/system-design/probabilistic-structures).
 
-A range scan reads each file from the start key and merges the results with a priority queue, keeping only the newest version of each key, according to Wikipedia. Here the linked leaves of a B-tree are a simpler design.
+A range scan reads each file from the start key and merges the results with a priority queue, keeping only the newest version of each key. Here the linked leaves of a B-tree are a simpler design.
 
 ## Compaction: Paying Later
 
@@ -47,7 +47,7 @@ Left alone, files would pile up and each read would slow down. Background **comp
 
 LevelDB drops a tombstone only when no deeper level could still hold the key it hides. Cassandra adds a safety wait, `gc_grace_seconds`, ten days by default, so that a replica that was offline can still learn of a delete. A replica that stays away longer can bring the deleted data back.
 
-There are two main policies, and Wikipedia, RocksDB and Cassandra all describe the same pair. **Leveling** keeps one sorted run per level and merges often, so reads check few files, but data is rewritten many times.
+There are two main policies. **Leveling** keeps one sorted run per level and merges often, so reads check few files, but data is rewritten many times.
 
 **Tiering**, called size tiered in Cassandra and universal in RocksDB, waits until several files of similar size exist and merges them at once, so data is rewritten less, but there are more files to check. We simulated both for one million entries, with a memtable of 1,000:
 
@@ -60,17 +60,17 @@ The model is simple, since our leveling merges whole levels, where real systems 
 
 Compare it with a B-tree's page rewrite: changing one 100 byte row on an 8 kB page writes about 80 times the data, while an LSM tree writes each entry roughly 5 to 16 times in the background and writes it sequentially.
 
-RocksDB's documentation states the tradeoff in its own words: universal compaction typically has lower write amplification but higher space and read amplification than leveled.
+The tradeoff in RocksDB: universal compaction typically has lower write amplification but higher space and read amplification than leveled.
 
-Cassandra's documentation points each strategy at a workload: size tiered for write heavy loads, leveled for read heavy ones or ones with many updates and deletes, and a time window strategy for data with a TTL.
+Each strategy suits a workload: size tiered for write heavy loads, leveled for read heavy ones or ones with many updates and deletes, and a time window strategy for data with a TTL.
 
 ## The Costs That Show Up Later
 
 An LSM tree hides its bills until compaction runs:
 
-- **Space**: Old versions and tombstones stay until they are merged. RocksDB warns that a full universal compaction can temporarily need about twice the disk space
+- **Space**: Old versions and tombstones stay until they are merged. A full universal compaction in RocksDB can temporarily need about twice the disk space
 - **Stalls**: If writes outrun compaction, the files pile up, and the system slows or stops writes on purpose. RocksDB has settings named `level0_slowdown_writes_trigger` and `level0_stop_writes_trigger` for this
-- **Spiky load**: Compaction uses disk and CPU in bursts, and Wikipedia notes that it also churns the buffer cache, which hurts mixed read and write workloads
+- **Spiky load**: Compaction uses disk and CPU in bursts, and it also churns the buffer cache, which hurts mixed read and write workloads
 - **Time data**: Cassandra's time window strategy groups files by time, so a whole expired window can be dropped at once, the same idea as the chunks in [Time Series Databases](/system-design/time-series)
 
 ## LSM Tree or B-Tree

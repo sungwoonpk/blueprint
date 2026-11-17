@@ -44,13 +44,13 @@ A spike made mostly of reads should hit a cache or a CDN first, as in [Scaling R
 
 ### A queue to level the load
 
-The Azure Architecture Center describes queue based load leveling as a queue that acts as a buffer between a task and the service it invokes.
+Queue based load leveling puts a queue between a task and the service it invokes, as a buffer.
 
 The producer posts a message and moves on, and the service pulls messages at its own pace. The app can be sized for the average and not the peak, and it keeps accepting work when the service is slow or down.
 
-The pattern comes with conditions, and the Azure page lists them:
+The pattern comes with conditions:
 
-- **The queue grows if production exceeds consumption**: Azure says that if the average producer rate exceeds the consumer rate, the queue continues to grow and latency increases, so a queue absorbs a spike and doesn't fix a lasting overload
+- **The queue grows if production exceeds consumption**: If the average producer rate exceeds the consumer rate, the queue continues to grow and latency increases, so a queue absorbs a spike and doesn't fix a lasting overload
 - **Scaling consumers can move the problem**: Autoscaling consumers without bounding their combined rate downstream just moves the overload to the dependencies
 - **Replies are separate**: A queue is one way, so a caller that needs an answer needs another channel for it
 - **Delivery is usually at least once**: Consumers need to be idempotent, as in [Idempotency and Safe Retries](/system-design/idempotency), and poison messages go to a dead letter queue
@@ -62,19 +62,19 @@ For the textbook app, the receipts, emails and statistics from a registration go
 
 The Azure throttling pattern limits the resources that an application instance, a tenant or a service can use. For HTTP, it names two statuses.
 
-A 429 says the caller exceeded a configured rate over a window, and a 503 says the service can't handle the request right now, often because of a load spike, and the page advises including a `Retry-After` header so the client can pick a retry strategy. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanisms.
+A 429 says the caller exceeded a configured rate over a window, and a 503 says the service can't handle the request right now, often because of a load spike, and a `Retry-After` header helps the client pick a retry strategy. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanisms.
 
 Amazon API Gateway shows the shape with a token bucket. Its default for an account in a region is 10,000 requests a second with a bucket of 5,000 for bursts, clients receive a 429 beyond that, and both throttles and quotas are best effort targets and not guaranteed ceilings.
 
 A fast refusal is cheap for the server, which is the point of [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
-The Azure pattern also says that throttling can cover the time while autoscaling catches up, and that it may not buy enough time when demand grows faster than capacity arrives.
+Throttling can cover the time while autoscaling catches up, though it may not buy enough time when demand grows faster than capacity arrives.
 
-Priorities help: the Priority Queue pattern serves high priority work first. Azure warns that with one pool of consumers, low priority messages can be continually delayed and potentially left unprocessed, so separate pools or an aging rule are used.
+Priorities help: the Priority Queue pattern serves high priority work first. With one pool of consumers, low priority messages can be continually delayed and potentially left unprocessed, so separate pools or an aging rule are used.
 
 ### A waiting room
 
-A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. Cloudflare's Waiting Room documents the settings, and they show the design:
+A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. Cloudflare's Waiting Room shows the design in its settings:
 
 - **Total active users**: The most sessions allowed on the protected path at one time, and Cloudflare's guidance is to set it to 75 percent of the origin's capacity
 - **New users per minute**: A threshold on admissions, not on the number added each minute, and it must not exceed the total active users

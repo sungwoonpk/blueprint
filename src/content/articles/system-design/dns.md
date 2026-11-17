@@ -88,7 +88,7 @@ DNS is a coarse tool. It sends clients toward the right neighborhood, and a load
 
 When DNS breaks, servers can be perfectly healthy and still unreachable, because clients can't find them. Engineers joke that when something is mysteriously broken, "it's always DNS". Two real cases:
 
-- **Dyn, 2016**: an attack flooded Dyn, a company that ran DNS for many big sites. Twitter, Netflix, Reddit and GitHub were hard to reach for hours, though their own servers were fine
+- **Dyn, 2016**: an attack flooded Dyn, a company that ran DNS for many big sites. Many of those sites were hard to reach for hours, though their own servers were fine
 - **AWS, 2025**: a bug in the automation that manages DynamoDB's DNS records left its regional name with an empty record. Clients could not find DynamoDB, and many services in that region failed for hours
 
 One lesson from Dyn is that a single DNS provider is a single point of failure, a part whose failure takes everything down. Teams that can't afford that run two, on separate networks, with identical records. It costs money and effort, so it is a tradeoff too. See [Redundancy and Failover](/system-design/redundancy-failover).

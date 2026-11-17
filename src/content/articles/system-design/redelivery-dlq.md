@@ -12,7 +12,7 @@ A permanent failure, such as a business rule that rejects the data or a message 
 
 For HTTP calls, the same page treats 429 and the 5xx errors as worth retrying, and most other 4xx errors, such as 400 or 404, as not.
 
-A broker can't tell the two apart from outside. It only sees "not confirmed" and offers the message again, and RabbitMQ's documentation notes that a message put back after failures can cycle forever.
+A broker can't tell the two apart from outside. It only sees "not confirmed" and offers the message again, and a message put back after failures can cycle forever.
 
 We simulated the damage. 100,000 messages arrive, 100 of them are poison, and a failed message goes back to the head of the queue, where the next attempt picks it up:
 
@@ -36,7 +36,7 @@ The three brokers from [Message Queues and Pub/Sub](/system-design/message-queue
 | RabbitMQ | A rejection, an expiry, a length limit, or a delivery limit | An `x-death` header with the queue, reason, count and time |
 | Azure Service Bus | 10 deliveries by default, or when the application asks | A reason and a description |
 
-In SQS the source queue has a redrive policy that names the DLQ and the count. The DLQ must be in the same account and region. One caveat from AWS's documentation catches people: in a standard queue, a message's expiry is counted from when it was first sent, and moving it doesn't reset that.
+In SQS the source queue has a redrive policy that names the DLQ and the count. The DLQ must be in the same account and region. One caveat catches people: in a standard queue, a message's expiry is counted from when it was first sent, and moving it doesn't reset that.
 
 If the source keeps messages for 1 day and the DLQ for 4, the message disappears from the DLQ after 3 more days. AWS's advice is to make the DLQ's retention longer than the source's.
 
@@ -44,7 +44,7 @@ RabbitMQ sends dead letters to an exchange, as described in the routing section 
 
 In classic queues, dead lettering happens without confirms, so a message can be lost if its destination is down, and quorum queues do it with at least once delivery.
 
-Service Bus gives each queue a built in queue inside the queue, `$deadletterqueue`, and the application can also move a message there on its own, with a reason and description. Its documentation recommends putting the exception type in the reason and the details in the description. Nothing is deleted from it automatically.
+Service Bus gives each queue a built in queue inside the queue, `$deadletterqueue`, and the application can also move a message there on its own, with a reason and description. Put the exception type in the reason and the details in the description. Nothing is deleted from it automatically.
 
 The last point suggests a better design for permanent failures. If the consumer knows that a failure is permanent, it should dead letter the message at once and not wait for the limit:
 
@@ -60,9 +60,9 @@ def handle(msg):
 
 ## Choosing the Count and the Delay
 
-There is no universal number. Set the limit high enough that a short hiccup, such as a database failover, doesn't send good messages to the DLQ. AWS's documentation says exactly that about `maxReceiveCount`. And set it low enough that a bad message doesn't spend long in the loop.
+There is no universal number. Set the limit high enough that a short hiccup, such as a database failover, doesn't send good messages to the DLQ. In SQS the setting is `maxReceiveCount`. And set it low enough that a bad message doesn't spend long in the loop.
 
-Retries should wait. Microsoft's guidance recommends exponential backoff with jitter for background work, with delays like 2, 4 and 8 seconds, capped by a maximum number of tries, and a pause of at least the `Retry-After` value when a service gives one. Without a delay, a struggling dependency gets the retries at its worst moment.
+Retries should wait. Use exponential backoff with jitter for background work, with delays like 2, 4 and 8 seconds, capped by a maximum number of tries, and a pause of at least the `Retry-After` value when a service gives one. Without a delay, a struggling dependency gets the retries at its worst moment.
 
 Retries also multiply across layers. The AWS Builders' Library gives an example of five layers of calls, each retrying three times: when the database at the bottom fails, it receives 3 to the power of 5, or 243 times the normal load.
 
@@ -74,7 +74,7 @@ A DLQ is only useful if someone looks at it. A usable routine has four steps:
 
 - **Alarm on it**: A message arriving in the DLQ is a bug report, so an alert on the queue's depth turns it into one. A DLQ with no alarm is a place where messages go to be forgotten
 - **Find the cause**: Read the reason and the message. The usual causes are a bug in the consumer, bad data from a producer, or a dependency that was down for too long
-- **Fix the cause first**: Both AWS and Azure describe examining a message and its cause before resubmitting it
+- **Fix the cause first**: Examine a message and its cause before resubmitting it
 - **Then send it back**: Redrive the messages to the source queue, or fix and resend them one by one, as Service Bus Explorer allows. Redelivery means duplicates, so the handlers have to be idempotent, as in [Idempotency and Safe Retries](/system-design/idempotency)
 
 Watch the retention too. If the DLQ deletes its messages before anyone has investigated, the evidence is gone.
@@ -83,13 +83,13 @@ Watch the retention too. If the DLQ deletes its messages before anyone has inves
 
 A dead letter queue breaks strict order. Moving a message out lets the ones behind it go on, which is the point, and it means the order of the stream no longer holds for that message.
 
-AWS's documentation warns against using a DLQ with a FIFO queue if the exact order matters, and gives an edit list for a video as the example. Service Bus notes that a message returned from its DLQ gets a new sequence number and loses its original place.
+Be careful with a DLQ on a FIFO queue if the exact order matters, for example the edit list of a video. In Service Bus a message returned from its DLQ gets a new sequence number and loses its original place.
 
 So for ordered streams, decide in advance what a failure should do. Options are to stop the stream and page someone, which keeps order and stops all the work behind it, or to set the message aside and carry on, which keeps the work going and accepts a gap.
 
 For listing events keyed by listing id, a failure only blocks the events of the partition it sits in, and setting the message aside is usually the better choice.
 
-RabbitMQ's documentation also separates two jobs that are easy to confuse. Dead lettering is for messages that can't be processed at all. A temporary failure is better served by a delayed retry, which it describes as built into its quorum queues, than by the older loop of dead lettering with an expiry time.
+Two jobs are easy to confuse. Dead lettering is for messages that can't be processed at all. A temporary failure is better served by a delayed retry, which is built into RabbitMQ's quorum queues, than by the older loop of dead lettering with an expiry time.
 
 ## Key Points
 

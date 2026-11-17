@@ -12,7 +12,7 @@ The previous topics set the stage: [Cascading Failures](/system-design/cascading
 
 The AWS Builders' Library separates two numbers. **Throughput** is the requests a second that arrive. **Goodput** is the part of them answered without error and fast enough for the client to use the answer.
 
-Its article on load shedding argues that a server that does not shed sees its goodput fall once the load passes its capacity, because each request waits in line behind the others, and the client has often given up before its turn comes.
+A server that does not shed sees its goodput fall once the load passes its capacity, because each request waits in line behind the others, and the client has often given up before its turn comes.
 
 We simulated a service that can finish 1,000 requests a second, with clients that give up after 1 second. Requests arrive at random, a Poisson process, at the rate on the horizontal axis:
 
@@ -42,28 +42,28 @@ The bounded queue refuses a request when 100 are already waiting, which is a wai
 | 1,500 a Second | 51 Answered in Time | 1,000 Answered in Time, 492 Refused |
 | 3,000 a Second | 25 Answered in Time | 1,000 Answered in Time, 1,986 Refused |
 
-The idea is the same one the metastable failures papers describe, in [Cascading Failures](/system-design/cascading-failures): a backlog keeps a system busy after the trigger is gone. Refusing early is the cheap way to avoid the backlog.
+The idea is the same one as in [Cascading Failures](/system-design/cascading-failures): a backlog keeps a system busy after the trigger is gone. Refusing early is the cheap way to avoid the backlog.
 
 ## What a Server Can Use as a Signal
 
 A server needs a cheap, local measure of being overloaded. The designs in the sources use a few:
 
-- **Concurrent requests**: A limit on requests in flight, with a quick 503 above it, as the Google SRE book suggests for each task
-- **Queue length and age**: The SRE book advises a queue of about half the size of the thread pool or less for steady traffic. The AWS article adds a limit on how long a request may wait, dropping requests that are too old
-- **CPU or thread load**: The SRE book describes an executor load average, the count of active threads smoothed over time, and starts rejecting when it exceeds the number of processors
+- **Concurrent requests**: A limit on requests in flight, with a quick 503 above it
+- **Queue length and age**: A queue of about half the size of the thread pool or less suits steady traffic. Add a limit on how long a request may wait, dropping requests that are too old
+- **CPU or thread load**: An executor load average, the count of active threads smoothed over time, is a good signal: start rejecting when it exceeds the number of processors
 - **Memory and connections**: Envoy's overload manager watches heap, cgroup memory, CPU use and open connections
 
 Envoy's design shows how the signal becomes an action. Each monitor reports a pressure between 0 and 1, and each action has a trigger. A threshold trigger flips on above one value. A scaled trigger ramps up between two values, so the response grows with the pressure.
 
 In its examples, stopping new requests with an immediate 503 begins at 95 percent of heap, and a CPU based version ramps from 80 to 95 percent. Other actions shorten idle timeouts or close idle connections to free resources before the last resort.
 
-The AWS article recommends setting connection limits high at the load balancer and letting each server decide, using local information, when to refuse. A limit on connections must stay below the number of listener threads and file descriptors, so that the server can still answer its health checks.
+Set connection limits high at the load balancer and let each server decide, using local information, when to refuse. A limit on connections must stay below the number of listener threads and file descriptors, so that the server can still answer its health checks.
 
 ## Which Requests to Refuse
 
 Refusing at random is better than collapse. Refusing the right requests is better again.
 
-Google's SRE book gives each request a criticality, which travels with the request through each service it calls:
+Give each request a criticality, which travels with the request through each service it calls:
 
 | Criticality | Meaning |
 | --- | --- |
@@ -72,11 +72,11 @@ Google's SRE book gives each request a criticality, which travels with the reque
 | Sheddable Plus | Partial unavailability is expected, the default for batch jobs |
 | Sheddable | Frequent partial and occasional full unavailability is expected |
 
-An overloaded task starts by rejecting the lower levels, and it rejects a level just after the ones below it are already being rejected. The book says that four levels are enough to model nearly any service.
+An overloaded task starts by rejecting the lower levels, and it rejects a level just after the ones below it are already being rejected. Four levels are enough to model nearly any service.
 
 It adds a point that is easy to miss: criticality is separate from latency. A suggestion as you type is sheddable, and it is also very sensitive to delay.
 
-The AWS article gives its own examples of ordering. The load balancer's health check ping comes first, because a server that misses pings is taken out of rotation and the fleet shrinks in the middle of the overload.
+Ordering matters in other ways too. The load balancer's health check ping comes first, because a server that misses pings is taken out of rotation and the fleet shrinks in the middle of the overload.
 
 After that come requests from people before crawlers, the end of a multistep operation before its start, and the next page of a result before the first. Each of those lets the clients that have already invested effort finish.
 
@@ -89,7 +89,7 @@ For the textbook app, the arithmetic is simple. At twice the capacity, 2,000 req
 
 The second row is our own arithmetic: the crawler's 600 requests go first, then 400 of the 1,200 browsing requests. A buyer in the middle of paying finishes, and some students get an error on a browse, which they can retry.
 
-The SRE book adds a second control, a quota for each customer. In its example, a backend with 10,000 CPUs gives Gmail and Calendar up to 4,000 CPU seconds a second each, Android 3,000 and the rest of the users 500 together.
+A second control is a quota for each customer. For example, a backend with 10,000 CPUs might give Gmail and Calendar up to 4,000 CPU seconds a second each, Android 3,000 and the rest of the users 500 together.
 
 The limits add up to more than the machine has, which is deliberate, since the customers aren't expected to hit their limits together. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the same idea at the edge.
 
@@ -102,7 +102,7 @@ A refusal is a message to the caller, and the standard has two for it:
 
 A fast, clear error does two things. Clients that follow [Timeouts, Retries and Backoff](/system-design/timeouts-retries) wait and retry with jitter, within their budget. And the refusal costs the server little.
 
-The SRE book warns that a refusal still takes CPU, and for a service where rejecting is nearly as expensive as serving, as in a lookup in memory, shedding alone can fail to protect the backend, so the refusal has to happen early and cheaply.
+A refusal still takes CPU, and for a service where rejecting is nearly as expensive as serving, as in a lookup in memory, shedding alone can fail to protect the backend, so the refusal has to happen early and cheaply.
 
 A refused request tells a client to slow down when the client listens. If each client retries at once, shedding turns into a retry storm, as described in [Cascading Failures](/system-design/cascading-failures), which is why the retry budget and the adaptive throttling of [Circuit Breakers](/system-design/circuit-breakers) matter on the client side.
 
@@ -110,7 +110,7 @@ A refused request tells a client to slow down when the client listens. If each c
 
 If a queue is kept, its order matters. The first in, first out order serves the oldest request first, and under overload the oldest request is the one whose client is the most likely to have left.
 
-The SRE book suggests switching to last in, first out, or to a scheme like CoDel that drops requests which have waited too long. Its example is a search request that sat 10 seconds in the queue after the user refreshed the page.
+Switch to last in, first out, or to a scheme like CoDel that drops requests which have waited too long. Take a search request that sat 10 seconds in the queue after the user refreshed the page.
 
 The AWS article agrees, with a condition: HTTP/2 allows last in, first out handling, and HTTP/1.1 pipelining doesn't.
 
@@ -118,7 +118,7 @@ In our simulation, a last in, first out queue with a 1 second age check kept goo
 
 ## Graceful Degradation
 
-Shedding refuses work. **Graceful degradation**, in the words of the SRE book, takes load shedding one step further by reducing the work for each request.
+Shedding refuses work. **Graceful degradation** takes load shedding one step further by reducing the work for each request.
 
 The book's examples are searching a smaller part of the index, such as the copy kept in memory, using a cheaper ranking method, and answering from a local copy that may be stale in place of the canonical store.
 
@@ -143,10 +143,10 @@ The sources are frank that shedding is a sharp tool:
 - **A clash with autoscaling**: If shedding starts at a CPU level near the target of the scaling policy, it can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling)
 - **Lost headroom**: A fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails
 - **Misleading metrics**: A fast error pulls the median latency down, so count refusals in their own metric
-- **Untested paths**: The SRE book warns that the code path you don't use is the one that often doesn't work, and it suggests running a few servers near overload regularly, which also shows whether the limits are right
+- **Untested paths**: The code path you don't use is the one that often doesn't work, so run a few servers near overload regularly, which also shows whether the limits are right
 - **Feedback loops**: Complex rules can start degraded mode when it isn't needed, so keep them simple, and build a quick way to turn them off or tune them
 
-The AWS article adds that dropping a request can cost as much as holding it, in which case it suggests slowing the refusal to match the latency of the successes. It also asks for visibility: log the client and the operation of each refusal, and alert on a high volume.
+Dropping a request can cost as much as holding it, in which case slow the refusal to match the latency of the successes. Also watch it: log the client and the operation of each refusal, and alert on a high volume.
 
 Shedding triggers shouldn't fire often. When many servers are shedding, the lesson isn't in the shedding, it is in the capacity, and [Capacity Planning](/system-design/capacity-planning) is where that is decided.
 

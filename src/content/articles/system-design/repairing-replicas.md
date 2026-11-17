@@ -18,16 +18,16 @@ Dynamo, the design behind Cassandra and Riak, answered with three layers, each c
 
 When a replica is down during a write, the system keeps the write for it. Dynamo's description: the write goes to the next healthy node in the key's list, with a hint in its metadata naming the intended owner.
 
-That node keeps the hinted replicas in a separate store and scans it periodically. When it sees that the owner is back, it sends the data and deletes its own copy. The paper notes that this works best when membership churn is low.
+That node keeps the hinted replicas in a separate store and scans it periodically. When it sees that the owner is back, it sends the data and deletes its own copy. This works best when membership churn is low.
 
-Cassandra stores the hint at the coordinator, on local disk, and replays it when the replica returns. Its documentation lists the defaults:
+Cassandra stores the hint at the coordinator, on local disk, and replays it when the replica returns. The defaults:
 
 - **A time window**: Hints are kept for `max_hint_window`, 3 hours by default. If the replica returns in time, the hints are replayed, and if it stays down longer, it stays out of date until a repair
 - **Timeouts count too**: A write that times out at `write_request_timeout`, 2,000 ms by default, also produces a hint
 - **Safe to replay**: Each hint keeps the original mutation's timestamp, so replaying one twice does no harm
-- **A throttled delivery**: 1,024 KiB a second for each delivery thread, with 2 threads by default, and the page says the throttle is scaled down with cluster size
+- **A throttled delivery**: 1,024 KiB a second for each delivery thread, with 2 threads by default, and the throttle is scaled down with cluster size
 
-The documentation calls hints best effort and no substitute for repair. The throttle matters, because a backlog can take a long time to drain. With RF 3 on 6 nodes and the textbook app's 3,000 writes a second, each node receives about 1,500 writes a second. We assumed 1 KB for each hint:
+Hints are best effort and no substitute for repair. The throttle matters, because a backlog can take a long time to drain. With RF 3 on 6 nodes and the textbook app's 3,000 writes a second, each node receives about 1,500 writes a second. We assumed 1 KB for each hint:
 
 | Node Down For | Hints Stored | Size | Replay at 2 MiB a Second |
 | --- | --- | --- | --- |
@@ -43,7 +43,7 @@ When a read asks several replicas and they disagree, the coordinator writes the 
 
 Background read repair, a chance of repairing on any read, was removed in Cassandra 4.0. Riak repairs the same way when the replicas it asked disagree.
 
-Read repair fixes the data that is read. A record that no one asks for can stay wrong indefinitely, which is why a third layer exists. Cassandra's documentation is explicit that read repair is not an alternative to full repair.
+Read repair fixes the data that is read. A record that no one asks for can stay wrong indefinitely, which is why a third layer exists. Read repair is not an alternative to full repair.
 
 ## Anti-Entropy With Merkle Trees
 
@@ -102,7 +102,7 @@ The anti-entropy process compares replicas in the background. Sending each key t
 
 Two replicas compare the root hashes of a key range they share. If the roots are equal, the data under them is equal and no data is sent.
 
-If not, they exchange the hashes of the children and continue into the subtrees that differ, until they reach the leaves, which name the keys that are out of sync. The paper says this reduces both the data transferred and the disk reads. Each branch can be checked independently, without downloading the whole tree.
+If not, they exchange the hashes of the children and continue into the subtrees that differ, until they reach the leaves, which name the keys that are out of sync. This reduces both the data transferred and the disk reads. Each branch can be checked independently, without downloading the whole tree.
 
 We measured the effect on 1 million keys where two replicas differ in k random keys, and a leaf covers B consecutive keys:
 
@@ -130,10 +130,10 @@ Their test on 3 nodes with a billion rows, 99.9 percent already in sync, took 96
 
 Repair is a scheduled job, and how it runs differs. Cassandra does not start a repair by itself. An operator or a tool runs `nodetool repair`:
 
-- **Full or incremental**: A full repair covers the whole range. An incremental repair, the default, covers data written since the last one, and the documentation advises occasional full repairs to catch corruption and mistakes
+- **Full or incremental**: A full repair covers the whole range. An incremental repair, the default, covers data written since the last one, and occasional full repairs are advised to catch corruption and mistakes
 - **Primary ranges**: By default a node repairs each range it holds, which duplicates work, and `-pr` limits it to the ranges it owns first
 - **Preview**: `--preview` builds the trees and reports what would stream, without streaming
-- **Cadence**: The docs suggest an incremental repair at 1 to 3 day intervals and a full one at 1 to 3 week intervals
+- **Cadence**: A typical cadence is an incremental repair at 1 to 3 day intervals and a full one at 1 to 3 week intervals
 
 Riak runs its version without being asked. Active anti-entropy is on by default, keeps its hash trees on disk and updates them as writes arrive, so a restart doesn't rebuild them, and regenerates them weekly by default to catch silent corruption.
 
@@ -143,9 +143,9 @@ Its defaults include a 15 second trigger interval and a limit of 2 concurrent ex
 
 Repair has a deadline set by deletes. A delete in these stores writes a tombstone, a marker that must reach each replica before it is purged.
 
-Cassandra's documentation says repair must run often enough that the grace period, `gc_grace_seconds`, which defaults to 10 days, doesn't expire on unrepaired data. Otherwise a replica that missed the delete can send the old value back after the tombstone is purged elsewhere, and deleted data reappears.
+Repair must run often enough that the grace period, `gc_grace_seconds`, which defaults to 10 days, doesn't expire on unrepaired data. Otherwise a replica that missed the delete can send the old value back after the tombstone is purged elsewhere, and deleted data reappears.
 
-Repairing each node at least once in 7 days leaves about 3 days of slack, in the docs' words. ScyllaDB's documentation says the same: if data is deleted often, repair more often than the grace period.
+Repairing each node at least once in 7 days leaves about 3 days of slack. If data is deleted often, repair more often than the grace period.
 
 ## A Plan for the Textbook App
 

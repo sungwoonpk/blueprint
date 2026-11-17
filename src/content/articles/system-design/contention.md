@@ -17,7 +17,7 @@ The unprotected code sold 600 copies of a book that had 100 and left a stock of 
 
 ## What the Database Promises
 
-Isolation levels set what a transaction sees while others run. The PostgreSQL documentation describes what each level does with a concurrent change:
+Isolation levels set what a transaction sees while others run. Here is what each level does with a concurrent change in PostgreSQL:
 
 | Level | What Happens on a Concurrent Change |
 | --- | --- |
@@ -27,9 +27,9 @@ Isolation levels set what a transaction sees while others run. The PostgreSQL do
 
 At Read Committed, a single `UPDATE ... WHERE stock > 0` is safe, because after waiting it checks the condition against the new value. A separate read and write is not, since the read happened before the wait.
 
-At the stricter levels, the documentation says applications must be prepared to retry transactions because of serialization failures: a conflicting writer gets `could not serialize access due to concurrent update`, and a serializable transaction can fail with SQLSTATE 40001. The retry has to repeat the whole transaction, not just the failed statement.
+At the stricter levels, applications must be prepared to retry transactions because of serialization failures: a conflicting writer gets `could not serialize access due to concurrent update`, and a serializable transaction can fail with SQLSTATE 40001. The retry has to repeat the whole transaction, not just the failed statement.
 
-The documentation also says that under Serializable, unique constraint violations can appear where a serial run wouldn't produce them, unless the inserters check for the key first, and it advises short transactions.
+Under Serializable, unique constraint violations can appear where a serial run wouldn't produce them, unless the inserters check for the key first, and transactions should stay short.
 
 ## Tool One: Make the Check Part of the Write
 
@@ -71,26 +71,26 @@ The same pattern appears in the interfaces of other systems:
 
 - **HTTP**: A client sends the entity tag it last saw in `If-Match`, and the server answers 412 Precondition Failed if the resource has changed. RFC 9110 names the purpose as preventing the lost update problem
 - **DynamoDB's mapper**: A version attribute is incremented on each save, and a save with an old version throws `ConditionalCheckFailedException`
-- **A caveat from the same documentation**: Global tables reconcile concurrent updates with last writer wins, so this locking strategy doesn't work as expected there
+- **A caveat**: Global tables reconcile concurrent updates with last writer wins, so this locking strategy doesn't work as expected there
 
 ## Tool Three: Pessimistic Locks
 
 When conflicts are common or the rule spans rows, take a lock first. In PostgreSQL, `SELECT ... FOR UPDATE` locks the selected rows so that other writers, and others trying to lock them, wait.
 
-The documentation lists four row lock modes, from the strongest, `FOR UPDATE`, through `FOR NO KEY UPDATE` and `FOR SHARE` to the weakest, `FOR KEY SHARE`. Row locks block writers and other lockers of the same row, and plain reads pass through.
+There are four row lock modes, from the strongest, `FOR UPDATE`, through `FOR NO KEY UPDATE` and `FOR SHARE` to the weakest, `FOR KEY SHARE`. Row locks block writers and other lockers of the same row, and plain reads pass through.
 
 The lock serialized our test, and the run took 0.40 seconds, five times longer than the atomic update, since each buyer had to wait for the one before. That is the price: correctness through a queue. Locks bring their own hazards:
 
-- **Deadlocks**: Two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The documentation's advice is that the applications acquire locks on multiple objects in a consistent order, and that aborted transactions are retried
-- **Long holds**: A lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it. The documentation says not to keep transactions open during user input
-- **Queue tables**: The `SKIP LOCKED` option skips rows that are locked, which suits several workers taking jobs from one table, at the cost, as the documentation puts it, of an inconsistent view of the data
-- **Advisory locks**: Locks on an application defined key, such as a seller's id, at session level, held until released and surviving a rollback, or at transaction level, released at the end. The documentation warns that a lock function in a query with `LIMIT` may run on more rows than the limit suggests
+- **Deadlocks**: Two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The advice: acquire locks on multiple objects in a consistent order, and retry aborted transactions
+- **Long holds**: A lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it. Don't keep transactions open during user input
+- **Queue tables**: The `SKIP LOCKED` option skips rows that are locked, which suits several workers taking jobs from one table, at the cost of an inconsistent view of the data
+- **Advisory locks**: Locks on an application defined key, such as a seller's id, at session level, held until released and surviving a rollback, or at transaction level, released at the end. A lock function in a query with `LIMIT` may run on more rows than the limit suggests
 
 ## Locks Across Machines
 
 When the resource isn't in one database, such as a seat in a service that several databases touch, people reach for a distributed lock.
 
-The Redis documentation describes the single instance version: set a key when it doesn't exist, with an expiry, using `SET resource_name my_random_value NX PX 30000`, and release when the value matches, since a plain delete can free someone else's lock.
+The single instance version: set a key when it doesn't exist, with an expiry, using `SET resource_name my_random_value NX PX 30000`, and release when the value matches, since a plain delete can free someone else's lock.
 
 Redlock extends it across several independent instances and counts the lock as held when a majority agree within the validity time.
 
@@ -118,7 +118,7 @@ The remedy is a **fencing token**: the lock service hands out a number that grow
 <figcaption>A fencing token: the storage refuses a late writer holding an older number</figcaption>
 </figure>
 
-The Redis documentation agrees that tokens should be implemented. The topic of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks) and [Consensus and Leader Election](/system-design/consensus-leader-election) goes into the mechanics. The practical rule: for correctness, put the protection into the system that owns the data, with a conditional write or a fencing token, and treat a lock as an optimization.
+Redis's own guidance agrees that tokens should be implemented. The topic of [Distributed Locks and Fencing Tokens](/system-design/distributed-locks) and [Consensus and Leader Election](/system-design/consensus-leader-election) goes into the mechanics. The practical rule: for correctness, put the protection into the system that owns the data, with a conditional write or a fencing token, and treat a lock as an optimization.
 
 ## Holds, Retries and Hot Rows
 

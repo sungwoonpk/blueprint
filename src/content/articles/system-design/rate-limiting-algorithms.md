@@ -1,6 +1,6 @@
 > A **rate limiter** decides, for each request, whether the client is still within its allowance. The algorithms differ in how they count and in how they treat bursts.
 
-An [API gateway](/system-design/api-gateways) is a natural place to limit traffic, and [Idempotency and Safe Retries](/system-design/idempotency) showed clients that retry. This topic is about what a limiter does with each request. The next, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), covers running one across many servers.
+An [API Gateways](/system-design/api-gateways) is a natural place to limit traffic, and [Idempotency and Safe Retries](/system-design/idempotency) showed clients that retry. This topic is about what a limiter does with each request. The next, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), covers running one across many servers.
 
 ## Why Limit at All
 
@@ -8,7 +8,7 @@ A limit protects the system from a client that sends too much, whether it is an 
 
 It also keeps one heavy user from starving everyone else, and it keeps costs and response times predictable. Registration day, from [Estimating Capacity](/system-design/estimation), is the honest case: some load is legitimate and still has to be shaped.
 
-Stripe's engineering blog describes four limiters it runs, which are a useful map of what can be limited:
+Stripe runs four limiters, which make a useful map of what can be limited:
 
 - **Request rate**: a cap on requests per second for each user, the one most people mean
 - **Concurrent requests**: a cap on how many a user has in flight at once, for expensive endpoints
@@ -19,7 +19,7 @@ The last two are the idea behind [Load Shedding and Graceful Degradation](/syste
 
 ## Fixed Window Counter
 
-The simplest approach: split time into fixed windows, such as each minute, and count requests per client in the current one. Over the limit means rejected, and a new window starts at zero. Redis, a store that keeps its data in memory, makes this a few lines, as its documentation shows with the `INCR` command:
+The simplest approach: split time into fixed windows, such as each minute, and count requests per client in the current one. Over the limit means rejected, and a new window starts at zero. Redis, a store that keeps its data in memory, makes this a few lines with the `INCR` command:
 
 ```python
 def allow(client_id, limit=100, window=60):
@@ -30,7 +30,7 @@ def allow(client_id, limit=100, window=60):
     return count <= limit
 ```
 
-One caution from the Redis documentation: setting the expiry as a separate step can leave a key that never expires if the program fails in between, so a real implementation does both steps in one transaction or one script.
+One caution: setting the expiry as a separate step can leave a key that never expires if the program fails in between, so a real implementation does both steps in one transaction or one script.
 
 It is cheap and easy to explain, and it has a flaw at the edges. A window resets at a fixed moment, so a client can use a full allowance at the end of one window and another full allowance at the start of the next:
 
@@ -62,14 +62,16 @@ It is cheap and easy to explain, and it has a flaw at the edges. A window resets
 
 A sliding window fixes this by looking at the last N seconds counted back from now, instead of at a calendar window. There are two ways to do it:
 
-- **Sliding log**: keep the timestamp of each recent request, drop the old ones, and count what's left. It is exact and costs memory in proportion to the limit. Redis's documentation shows a list based version of this idea
+- **Sliding log**: keep the timestamp of each recent request, drop the old ones, and count what's left. It is exact and costs memory in proportion to the limit. A list in Redis is enough to build it
 - **Sliding counter**: keep a count for the current window and the previous one, and estimate the last N seconds by weighting the previous count by how much of it still overlaps. One second into a new 10 second window, 90% of the previous window's count still counts. It is cheap and approximate
 
 Either way, the boundary trick no longer works, because the recent past always counts.
 
 ## Token Bucket
 
-A **token bucket** takes a different view. Each client has a bucket that holds up to a fixed number of tokens, and tokens are added at a steady rate. A request takes one token, and a request that finds the bucket empty is rejected. So a client that has been quiet has a full bucket and can send a burst, and after that is held to the refill rate.
+A **token bucket** takes a different view. Each client has a bucket that holds up to a fixed number of tokens, and tokens are added at a steady rate.
+
+A request takes one token, and a request that finds the bucket empty is rejected. So a client that has been quiet has a full bucket and can send a burst, and after that is held to the refill rate.
 
 ```python
 def allow(bucket, now, rate=0.5, capacity=5):
@@ -84,7 +86,7 @@ def allow(bucket, now, rate=0.5, capacity=5):
 
 The bucket refills lazily, only when a request arrives, so there is no timer per client. Two numbers set the behavior: the capacity is the largest burst, and the refill rate is the long run average.
 
-Amazon's API Gateway describes its throttling as a token bucket with exactly these two settings, a rate and a burst, and Envoy's local rate limiter takes `max_tokens`, `tokens_per_fill` and `fill_interval`. Stripe says it uses a token bucket kept in Redis for its request rate limiter.
+Amazon's API Gateway throttles with a token bucket and exactly these two settings, a rate and a burst, and Envoy's local rate limiter takes `max_tokens`, `tokens_per_fill` and `fill_interval`. Stripe keeps a token bucket in Redis for its request rate limiter.
 
 When many servers share a bucket, the read and update have to happen as one atomic step, usually a small Redis script, so two servers can't spend the same token.
 
@@ -92,7 +94,7 @@ When many servers share a bucket, the read and update have to happen as one atom
 
 A **leaky bucket** looks similar and behaves differently. Requests go into a queue, the bucket, which drains at a fixed rate, and when the bucket is full new requests are refused. The output is smooth: the server sees a steady stream no matter how bursty the input was.
 
-nginx's `limit_req` module uses this method, and Shopify describes its REST API limit as a leaky bucket too, with a bucket of 40 requests that drains at 2 a second for a standard plan. In nginx:
+nginx's `limit_req` module uses this method, and Shopify's REST API limit is a leaky bucket too, with a bucket of 40 requests that drains at 2 a second for a standard plan. In nginx:
 
 ```nginx
 limit_req_zone $binary_remote_addr zone=api:10m rate=5r/s;
@@ -105,7 +107,9 @@ server {
 }
 ```
 
-With `burst=10`, up to ten extra requests wait their turn at 5 a second and the rest are refused. Adding `nodelay` serves the waiting ones at once while still counting them, which moves the behavior closer to a token bucket. The choice between them is whether you want to let bursts through, which token buckets do, or to smooth them out, which leaky buckets do.
+With `burst=10`, up to ten extra requests wait their turn at 5 a second and the rest are refused. Adding `nodelay` serves the waiting ones at once while still counting them, which moves the behavior closer to a token bucket.
+
+The choice between them is whether you want to let bursts through, which token buckets do, or to smooth them out, which leaky buckets do.
 
 ## One Burst, Four Algorithms
 
@@ -135,7 +139,9 @@ The token bucket lets the first batch use the full bucket, then allows one more 
 
 ## What to Count By
 
-The key decides who shares an allowance. Usual choices are the logged in user, an API key, an IP address, or a combination such as a user and an endpoint. Each has a catch. A campus network may put 2,000 students behind one IP address, so a limit per IP can lock out a whole building because of one person.
+The key decides who shares an allowance. Usual choices are the logged in user, an API key, an IP address, or a combination such as a user and an endpoint.
+
+Each has a catch. A campus network may put 2,000 students behind one IP address, so a limit per IP can lock out a whole building because of one person.
 
 And behind proxies, the address comes from `X-Forwarded-For`, so the rule from [Forward and Reverse Proxy Servers](/system-design/proxies) applies: trust only the entries your own proxies added.
 

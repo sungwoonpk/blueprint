@@ -17,7 +17,7 @@ Martin Fowler has a name for the mistake of sending a command in the form of an 
 | Command | Do this | One named receiver | `ResizePhotos` |
 | Event | This happened | Anyone who is interested | `ListingPosted` |
 
-AWS describes an event as a change of state or an update, and notes that it can carry the whole new state, such as the item, the price and the address, or only an identifier, such as "order shipped". Here is the textbook app's event, laid out with the attributes CloudEvents defines:
+An event is a change of state or an update. It can carry the whole new state, such as the item, the price and the address, or only an identifier, such as "order shipped". Here is the textbook app's event, laid out with the attributes CloudEvents defines:
 
 ```json
 {
@@ -106,7 +106,7 @@ A few habits keep a set of events manageable:
 - **Version the type**: CloudEvents advises that a compatible change keeps the type, and an incompatible change gets a new type, with the old and new events produced side by side for a while
 - **Keep them compact**: The CloudEvents specification says intermediaries must forward events up to 64 KiB and advises linking to large items, such as the photo, instead of embedding them
 - **Choose thin or full on purpose**: A thin event makes consumers call back, and a full one spreads copies. The CloudEvents primer gives a privacy reason for thin events: consumers fetch the details from the source with their own authorization
-- **Remember who can read them**: Microsoft warns that events are visible beyond their intended consumers, so they can leak information. Keep sensitive data out of them
+- **Remember who can read them**: Events are visible beyond their intended consumers, so they can leak information. Keep sensitive data out of them
 
 ## When to Use It
 

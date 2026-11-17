@@ -1,6 +1,8 @@
 > **Polling** means the client asks the server "anything new?" again and again. **Long polling** is a patient version: the server holds each question open until it has news, or until a timeout.
 
-[How Clients and Servers Talk](/system-design/client-server) left a problem: a server only answers, so how does it tell the phone "your book sold"? The client has to ask, and the simplest way to ask is to keep asking. This topic covers the two oldest answers, which need nothing beyond the ordinary HTTP requests from [How HTTP Works](/system-design/http). The next topics, [Server-Sent Events](/system-design/server-sent-events) and [WebSockets](/system-design/websockets), cover what to use when these two aren't enough.
+[How Clients and Servers Talk](/system-design/client-server) left a problem: a server only answers, so how does it tell the phone "your book sold"? The client has to ask, and the simplest way to ask is to keep asking.
+
+This topic covers the two oldest answers, which need nothing beyond the ordinary HTTP requests from [How HTTP Works](/system-design/http). The next topics, [Server-Sent Events](/system-design/server-sent-events) and [WebSockets](/system-design/websockets), cover what to use when these two aren't enough.
 
 ## Just Ask Again
 
@@ -15,7 +17,9 @@ async function poll() {
 setInterval(poll, 10000);
 ```
 
-It needs no special server support, it works through nearly any proxy and firewall, and it is easy to test, since each poll is a plain GET request that is safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency). For a progress bar on an upload, or a dashboard that is allowed to be a few seconds old, this is often all you need.
+It needs no special server support, it works through nearly any proxy and firewall, and it is easy to test, since each poll is a plain GET request that is safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency).
+
+For a progress bar on an upload, or a dashboard that is allowed to be a few seconds old, this is often all you need.
 
 ## The Price of Asking
 
@@ -32,7 +36,9 @@ The cost has two sides, and they pull against each other. A shorter interval mea
 
 The second half of the cost is waste. Suppose each student gets about one notification an hour, which is roughly 28 a second across all users.
 
-At the 10 second interval, 10,000 polls a second go out and 28 of them carry news, so over 99% come back empty. Each of those empty polls still costs a request to parse and a response to send, and it adds to the load figures from [Estimating Capacity](/system-design/estimation). So the interval is a tradeoff, in the sense of [Thinking in Tradeoffs](/system-design/trade-offs): lower delay, higher load.
+At the 10 second interval, 10,000 polls a second go out and 28 of them carry news, so over 99% come back empty.
+
+Each of those empty polls still costs a request to parse and a response to send, and it adds to the load figures from [Estimating Capacity](/system-design/estimation). So the interval is a tradeoff, in the sense of [Thinking in Tradeoffs](/system-design/trade-offs): lower delay, higher load.
 
 ## Making Polls Cheaper
 
@@ -116,11 +122,13 @@ Two details keep it from losing news. The `after` cursor covers the short gap be
 
 ## What Long Polling Costs
 
-Waiting isn't free, because every waiting client holds an open connection on the server, and that connection takes memory. RFC 6202 lists this among the main issues, and notes that some proxies and servers limit how many requests can be outstanding at once. A server that gives each waiting request its own thread runs out quickly, so long polling usually runs on a server built for many idle connections at once. Further costs and limits:
+Waiting isn't free, because every waiting client holds an open connection on the server, and that connection takes memory. RFC 6202 lists this among the main issues, and notes that some proxies and servers limit how many requests can be outstanding at once.
+
+A server that gives each waiting request its own thread runs out quickly, so long polling usually runs on a server built for many idle connections at once. Further costs and limits:
 
 - **Timeouts**: the hold time must stay below the idle timeout of the load balancers and proxies in the path, the same problem as the random 502s in [How HTTP Works](/system-design/http). Real services pick tens of seconds. Amazon SQS caps its long poll at 20 seconds, and Socket.IO's default heartbeat interval is 25 seconds
 - **Overhead on each request**: each answer is a full HTTP message with headers, which RFC 6202 points out matters when messages are small and frequent
-- **Connection limits**: browsers allow about 6 parallel connections to a host over HTTP/1.1, according to MDN, so a page with several long polls can use them up. One shared long poll per page is a common answer. HTTP/2 lets requests share a connection, as in [How HTTP Works](/system-design/http)
+- **Connection limits**: browsers allow about 6 parallel connections to a host over HTTP/1.1, so a page with several long polls can use them up. One shared long poll per page is a common answer. HTTP/2 lets requests share a connection, as in [How HTTP Works](/system-design/http)
 - **Delay is small but not zero**: after each answer there is a gap before the next request lands, so the worst case is longer than one trip
 
 Some message queues use the same idea. Amazon SQS, for example, calls it long polling, and a worker asks for messages and says how long it is willing to wait:
@@ -133,7 +141,7 @@ messages = sqs.receive_message(
 )
 ```
 
-With the wait set to 0, SQS answers right away even when the queue is empty, which is its short polling. AWS's documentation says the long version can cut down empty responses and so lower the cost of asking. See [Message Queues and Pub/Sub](/system-design/message-queues).
+With the wait set to 0, SQS answers right away even when the queue is empty, which is its short polling. The long version cuts down the empty responses and so lowers the cost of asking. See [Message Queues and Pub/Sub](/system-design/message-queues).
 
 ## Which One, and What Comes Next
 
@@ -145,7 +153,7 @@ With the wait set to 0, SQS answers right away even when the queue is empty, whi
 | Through Proxies | Works nearly everywhere | Usually works, but held requests can be cut |
 | Fits | Rare updates, or ones that can be late, such as job progress | Near live updates, with no special protocol |
 
-Neither is the end of the road. Long polling is also a fallback: Socket.IO's documentation explains that it starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software.
+Neither is the end of the road. Long polling is also a fallback: The Socket.IO library starts with long polling and then upgrades to WebSocket when it can, because WebSocket is sometimes blocked by corporate proxies, firewalls or antivirus software.
 
 When the server needs to send a steady stream one way, [Server-Sent Events](/system-design/server-sent-events) is a better fit, and when both sides talk freely, [WebSockets](/system-design/websockets) are. When the receiver is another server and not a person's app, [Webhooks](/system-design/webhooks) let the sender make the call instead.
 

@@ -1,6 +1,6 @@
 > A **service mesh** is a layer of proxies, one beside each service instance, that handles the traffic between services: encryption, retries, timeouts, routing and metrics. The helper process that sits next to the application is called a **sidecar**.
 
-An [API gateway](/system-design/api-gateways) handles traffic coming in from outside. Once the textbook app is split into services, there is a second kind of traffic: calls from one service to another, which in [When to Split into Microservices](/system-design/monoliths-microservices) became network calls that can be slow and can fail. A mesh is about that inside traffic.
+An [API Gateways](/system-design/api-gateways) handles traffic coming in from outside. Once the textbook app is split into services, there is a second kind of traffic: calls from one service to another, which in [When to Split into Microservices](/system-design/monoliths-microservices) became network calls that can be slow and can fail. A mesh is about that inside traffic.
 
 ## Every Service Needs the Same Plumbing
 
@@ -11,13 +11,15 @@ Think of what the payments service needs when it calls the listings service:
 - **Load balancing**: pick a healthy instance, using ideas from [Load Balancing Algorithms](/system-design/load-balancing-algorithms)
 - **Metrics and traces**: record each call, so slow ones can be found, as in [Logs, Metrics and Traces](/system-design/observability)
 
-One way is to build all of this into a library, and each service uses it. That works until the services use different languages, which needs one library per language, or until different services run different library versions. Segment's story in [When to Split into Microservices](/system-design/monoliths-microservices) had this exact drift, with shared code updated in some places and not others.
+One way is to build all of this into a library, and each service uses it. That works until the services use different languages, which needs one library per language, or until different services run different library versions.
+
+Segment's story in [When to Split into Microservices](/system-design/monoliths-microservices) had this exact drift, with shared code updated in some places and not others.
 
 ## A Proxy Beside Each Service
 
 The mesh approach moves the plumbing out of the application and into a separate process. In Microsoft's description of the sidecar pattern, it is a helper deployed next to the main application, with its own copy for each instance and a shared lifecycle.
 
-The application talks to the proxy on its own machine, and the proxy deals with the network. Envoy's documentation puts the goal as making the network transparent to applications, and lists two benefits of running out of process: it works with any application language, and the proxies can be upgraded across the whole system without touching application libraries.
+The application talks to the proxy on its own machine, and the proxy deals with the network. The goal is to make the network transparent to applications, and running out of process has two benefits: it works with any application language, and the proxies can be upgraded across the whole system without touching application libraries.
 
 <figure class="diagram">
 <p class="rowname">Data Plane: The Proxies Carry the Traffic</p>
@@ -39,11 +41,13 @@ The application talks to the proxy on its own machine, and the proxy deals with 
 <figcaption>Applications only talk to the proxy beside them, and the proxies are managed together</figcaption>
 </figure>
 
-The proxies that carry the traffic are the **data plane**. The part that configures them is the **control plane**. In Istio, the best known mesh, the data plane is Envoy proxies and the control plane is a program called istiod. Istio's documentation says it handles service discovery, configuration and certificates, and it feeds each proxy the live list of instances, the discovery described in [Service Discovery](/system-design/service-discovery).
+The proxies that carry the traffic are the **data plane**. The part that configures them is the **control plane**. In Istio, the best known mesh, the data plane is Envoy proxies and the control plane is a program called istiod.
+
+It handles service discovery, configuration and certificates, and it feeds each proxy the live list of instances, the discovery described in [Service Discovery](/system-design/service-discovery).
 
 ## What a Mesh Gives You
 
-Istio's documentation groups the benefits in three:
+The benefits fall in three groups:
 
 | Group | What It Covers | In the Textbook App |
 | --- | --- | --- |
@@ -67,14 +71,16 @@ metadata:
     timeout.linkerd.io/request: 2s
 ```
 
-Linkerd's own documentation carries a caution that applies to any mesh: only retry calls that are safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency). A mesh can retry without any code asking it to, which is convenient and dangerous. Retrying every failed charge would be a bug, and retries layered on retries can pile load onto a struggling service, as in [Cascading Failures](/system-design/cascading-failures).
+A caution applies to any mesh: only retry calls that are safe to repeat, as in [Idempotency and Safe Retries](/system-design/idempotency). A mesh can retry without any code asking it to, which is convenient and dangerous.
+
+Retrying every failed charge would be a bug, and retries layered on retries can pile load onto a struggling service, as in [Cascading Failures](/system-design/cascading-failures).
 
 ## What It Costs
 
 The extra proxies are not free. Several costs add up:
 
 - **Resources**: Istio's published measurements for version 1.24 put a sidecar at about 0.20 of a CPU core and 60 MB of memory when handling 1,000 requests a second with mutual TLS. If 50 pods each did that, the proxies alone would use about 10 cores and 3 GB
-- **Latency**: each call passes through two proxies, one on each side. Microsoft's guidance warns that sidecars add overhead, especially latency
+- **Latency**: each call passes through two proxies, one on each side, so sidecars add overhead, especially latency
 - **Operations**: the mesh is another system to install, upgrade, secure and debug, and a failure in it affects every service
 - **Lifecycle friction**: in Istio's sidecar mode, adding a workload means labeling its namespace and restarting its pods
 
@@ -113,7 +119,9 @@ Istio's own comparison rates the resource cost of sidecars as large and ambient 
 
 Microsoft's guidance on sidecars is blunt about the last two rows: when the application is small, or when components talk to each other so often that every bit of latency counts, the sidecar's cost can outweigh its benefit.
 
-A library can be the better fit when you need tighter integration and less overhead. The gateway from the last topic, a load balancer and a few well chosen libraries cover many systems, and a mesh is the step beyond when those no longer do. The next topic goes in the opposite direction, to platforms that hide the servers altogether: [Serverless Computing](/system-design/serverless).
+A library can be the better fit when you need tighter integration and less overhead. The gateway from the last topic, a load balancer and a few well chosen libraries cover many systems, and a mesh is the step beyond when those no longer do.
+
+The next topic goes in the opposite direction, to platforms that hide the servers altogether: [Serverless Computing](/system-design/serverless).
 
 ## Key Points
 

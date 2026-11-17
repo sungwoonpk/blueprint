@@ -6,7 +6,7 @@ Containers solve the packaging half, and an orchestrator solves the running half
 
 ## A Box Around a Program
 
-Docker's documentation describes a container as an isolated process with all the files it needs to run. It is complete in itself, so it doesn't rely on anything installed in advance on the host, and it runs the same on a laptop, in a data center or in the cloud.
+A container is an isolated process with all the files it needs to run. It is complete in itself, so it doesn't rely on anything installed in advance on the host, and it runs the same on a laptop, in a data center or in the cloud.
 
 A **virtual machine** isolates by running a whole separate operating system. A container is lighter, because all the containers on a machine share one operating system kernel:
 
@@ -38,7 +38,9 @@ A **virtual machine** isolates by running a whole separate operating system. A c
 
 Because there is no second operating system to boot, a container starts in moments and uses far less memory. The price is weaker isolation, since a flaw in the shared kernel affects all the containers on the machine. The two are often combined, with containers running inside cloud VMs.
 
-Two Linux features do the work, according to the Linux manual pages. **Namespaces** give a process its own view of the system: its own process list, network, file mounts, hostname and users. **Control groups**, or cgroups, limit and measure how much CPU, memory and disk traffic a group of processes may use. A container is an ordinary process with its own namespaces and limits, which is why the boundary is thinner than a VM's.
+Two Linux features do the work. **Namespaces** give a process its own view of the system: its own process list, network, file mounts, hostname and users.
+
+**Control groups**, or cgroups, limit and measure how much CPU, memory and disk traffic a group of processes may use. A container is an ordinary process with its own namespaces and limits, which is why the boundary is thinner than a VM's.
 
 A standard from the Open Container Initiative defines the image format and how runtimes start them, so different tools can work together.
 
@@ -63,7 +65,9 @@ Each line has a job:
 - **EXPOSE**: documents the port, and doesn't open it by itself
 - **CMD**: what runs when a container starts
 
-The order matters. Docker reuses unchanged layers, so putting the slow dependency install before the code means that a code change rebuilds only the last layer. Images are stored in a **registry**, such as Docker Hub, under a name and a tag, and `FROM python` with no tag means the `latest` tag. Pinning a specific version, as above, keeps builds from changing under you.
+The order matters. Docker reuses unchanged layers, so putting the slow dependency install before the code means that a code change rebuilds only the last layer.
+
+Images are stored in a **registry**, such as Docker Hub, under a name and a tag, and `FROM python` with no tag means the `latest` tag. Pinning a specific version, as above, keeps builds from changing under you.
 
 A container is a running copy of an image, with a writable layer on top that is thrown away when the container is removed. So anything that must survive, such as uploads or database files, lives outside it, the same rule as in [Stateless and Stateful Services](/system-design/stateless-stateful).
 
@@ -132,7 +136,9 @@ Behind this are a few control plane parts. The API server takes your declaration
 
 ## Updating Without Downtime
 
-Changing the image tag in the file above starts a **rolling update**: new pods are started and old ones removed gradually, so some copies keep serving. By default Kubernetes allows a quarter of the pods to be unavailable and a quarter extra to exist during the change, which for three pods means no pod is removed before its replacement is ready and at most four exist at once:
+Changing the image tag in the file above starts a **rolling update**: new pods are started and old ones removed gradually, so some copies keep serving.
+
+By default Kubernetes allows a quarter of the pods to be unavailable and a quarter extra to exist during the change, which for three pods means no pod is removed before its replacement is ready and at most four exist at once:
 
 <figure class="diagram">
 <p class="rowname">Start</p>
@@ -182,7 +188,9 @@ spec:
       targetPort: 8000
 ```
 
-Other services now reach this one at the name `listings`, and Kubernetes keeps the list of healthy pods behind it up to date. The default type is reachable only inside the cluster, one type opens a port on each node, and another, `LoadBalancer`, asks the cloud for an external load balancer. [Service Discovery](/system-design/service-discovery) covers the general problem next.
+Other services now reach this one at the name `listings`, and Kubernetes keeps the list of healthy pods behind it up to date.
+
+The default type is reachable only inside the cluster, one type opens a port on each node, and another, `LoadBalancer`, asks the cloud for an external load balancer. [Service Discovery](/system-design/service-discovery) covers the general problem next.
 
 ## Requests and Limits
 
@@ -196,11 +204,11 @@ resources:
 
 The two limits behave differently. A container that wants more CPU than its limit is throttled, so it slows down. One that goes over its memory limit is killed by the kernel and restarted, which `kubectl describe pod` shows as `OOMKilled` with exit code 137.
 
-Set the memory limit too low and you get surprise restarts, and set requests too high and nodes sit half empty, which makes this a [capacity](/system-design/capacity-planning) and cost question as much as a technical one.
+Set the memory limit too low and you get surprise restarts, and set requests too high and nodes sit half empty, which makes this a [Capacity Planning](/system-design/capacity-planning) and cost question as much as a technical one.
 
 ## What It Costs
 
-Kubernetes solves real problems and is a large system itself. Its own documentation says what it is not: it is not a complete platform, and it leaves logging, monitoring and databases to other tools. Running your own cluster takes expertise, so most teams use a managed service from a cloud provider, or something simpler such as a platform that runs containers without exposing a cluster.
+Kubernetes solves real problems and is a large system itself. It is not a complete platform: it leaves logging, monitoring and databases to other tools. Running your own cluster takes expertise, so most teams use a managed service from a cloud provider, or something simpler such as a platform that runs containers without exposing a cluster.
 
 At the simplest end, [Serverless Computing](/system-design/serverless) goes further and removes the machines from view entirely. For one small team and one app, a single server or a few, as in [From One Server to Many](/system-design/one-server-to-many), is often enough, and containers can still help by making the build the same everywhere.
 

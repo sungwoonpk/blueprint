@@ -12,13 +12,13 @@ The usual answer is to stay online and move in small, checked steps. This articl
 
 ## Why Size Changes the Plan
 
-Stripe described the problem in a 2017 post about moving its subscription data. It had hundreds of millions of objects, and it noted that at one second each, a sequential migration of 100 million objects takes more than three years. Its services had to stay fully available the whole time.
+Stripe met the problem in 2017 while moving its subscription data. It had hundreds of millions of objects, and at one second each, a sequential migration of 100 million objects takes more than three years. Its services had to stay fully available the whole time.
 
-The lesson is in the arithmetic: the copy has to run in parallel, in the background, and for long enough that changes will arrive while it runs. Stripe also wrote that it avoided changing more than a few hundred lines of code at a time.
+The lesson is in the arithmetic: the copy has to run in parallel, in the background, and for long enough that changes will arrive while it runs. Stripe also kept each change small, no more than a few hundred lines of code at a time.
 
 ## The Four Steps
 
-Stripe's post gives a pattern that most online migrations follow. It lists four phases: write to the old and new tables, move the read paths to the new table, move the write paths to write just the new table, and remove the old data.
+Stripe's migration followed a pattern that most online migrations share, in four phases: write to the old and new tables, move the read paths to the new table, move the write paths to write just the new table, and remove the old data.
 
 | Stage | Reads From | Writes To |
 | --- | --- | --- |
@@ -69,7 +69,7 @@ The seven stale rows are the ones updated inside the 20 ms gap, where the old va
 
 The fix is a version check: each row carries a version or an updated time, and the copier writes just when the new store doesn't already hold a newer one. That closes the race.
 
-Stripe's description adds practical points:
+Stripe adds practical points:
 
 - **List from a snapshot**: It built the list of ids to copy offline from a snapshot of the data, so the listing didn't load the production database
 - **Parallel copy**: A fleet of multi threaded workers did the copying
@@ -107,16 +107,16 @@ The race is rare on a wide table and common on a narrow, hot one, which resemble
 
 The alternative is to let the old store's change log feed the new store, which is the idea of [Change Data Capture](/system-design/cdc). The log has one order, so the order race disappears, and the application writes to one place.
 
-AWS Database Migration Service describes two task types: a full load followed by ongoing change capture, and change capture alone for a target that already holds the data. Its documentation reads the source's log through the engine's native mechanism, such as row based binary logs for MySQL and a logical replication slot for PostgreSQL.
+AWS Database Migration Service has two task types: a full load followed by ongoing change capture, and change capture alone for a target that already holds the data. It reads the source's log through the engine's native mechanism, such as row based binary logs for MySQL and a logical replication slot for PostgreSQL.
 
 It also lists limits worth planning around:
 
-- **No latency promise**: The documentation says there is no service level for capture latency, and that it depends on source load, network and instance size
-- **Log retention**: The source has to keep its change log long enough, and for RDS sources the page suggests about 24 hours as usually enough
+- **No latency promise**: There is no service level for capture latency, and it depends on source load, network and instance size
+- **Log retention**: The source has to keep its change log long enough, and for RDS sources about 24 hours is usually enough
 - **Fixed start point**: The start is set when the task is created, and changing it means a new task
 - **Open transactions**: For Oracle, starting from a point in time can miss transactions that were open then, with a setting to cover them
 
-The Azure page describes the same shape: a bulk load and change capture, then a check for consistency, and then the new store becomes the system of record. A third route avoids the two writes by putting the change in an outbox, as in [The Transactional Outbox](/system-design/transactional-outbox).
+The strangler pattern's database example has the same shape: a bulk load and change capture, then a check for consistency, and then the new store becomes the system of record. A third route avoids the two writes by putting the change in an outbox, as in [The Transactional Outbox](/system-design/transactional-outbox).
 
 ## Check Before You Trust
 
@@ -139,7 +139,7 @@ GitHub's Scientist library, announced in 2016, is the standard technique. An exp
 
 The results are compared, mismatches and timings are recorded, and the caller gets the control's result each time. Order is randomized, and an exception in the candidate isn't raised to the caller.
 
-Stripe ran its reads against both tables this way and watched for mismatches before it switched the reads over. The documentation lists the limits to know:
+Stripe ran its reads against both tables this way and watched for mismatches before it switched the reads over. Know the limits:
 
 - **Reads**: The tool is meant for code that doesn't change data, so writes need another method
 - **Latency**: The candidate runs in the request, so it adds time to production

@@ -10,7 +10,7 @@ Time series data behaves in ways a database can exploit:
 
 - **Appended, not edited**: Points arrive in time order and are rarely updated afterwards
 - **Recent data matters most**: Facebook's paper on its monitoring database, Gorilla, found that at least 85 percent of the queries to its older system were for data from the past 26 hours
-- **Questions are about aggregates**: The same paper says users care little about individual points and much about trends, such as an average over five minutes
+- **Questions are about aggregates**: Users care little about individual points and much about trends, such as an average over five minutes
 - **Old data loses value**: Last year's reading every 10 seconds is rarely needed, though a daily summary of it might be
 
 Prometheus, the most widely used metrics system, describes a time series as a stream of timestamped values for one metric name plus a set of labels. Each sample is a number and a millisecond timestamp:
@@ -23,14 +23,14 @@ That line names one series. Change any label, or add one, and it becomes a diffe
 
 ## Cardinality: Counting Series
 
-The cost of a time series database depends on the number of series as much as on the number of points. Prometheus's documentation warns that each unique combination of labels is a new series, and advises against labels with unbounded values such as user ids or email addresses. The reason is multiplication:
+The cost of a time series database depends on the number of series as much as on the number of points. In Prometheus each unique combination of labels is a new series, so labels with unbounded values such as user ids or email addresses are a trap. The reason is multiplication:
 
 | Labels on the Request Counter | Series |
 | --- | --- |
 | Method (4), route (30), status (8), server (6) | 5,760 |
 | The same, plus the user id (2,000 users) | 11,520,000 |
 
-One extra label with many values turns thousands of series into millions, and each series carries its own index entry and state held in memory. The InfluxDB documentation draws the same line between tags, which are indexed and meant to be few and stable, and fields, which hold the measured values.
+One extra label with many values turns thousands of series into millions, and each series carries its own index entry and state held in memory. InfluxDB draws the same line between tags, which are indexed and meant to be few and stable, and fields, which hold the measured values.
 
 It adds that newer InfluxDB 3 handles very high cardinality much better than earlier versions, so check the version of the system you use. The safe habit is to keep unbounded values out of labels and in the logs or traces from [Logs, Metrics and Traces](/system-design/observability).
 
@@ -38,7 +38,7 @@ It adds that newer InfluxDB 3 handles very high cardinality much better than ear
 
 A point stored naively is 16 bytes: 8 for the timestamp and 8 for the value. Gorilla got an average of 1.37 bytes, a 12 times reduction, with two ideas that fit the shape of the data:
 
-- **Timestamps**: Points usually arrive at a fixed interval, so storing the difference between timestamps, and then the difference of those differences, gives numbers that are almost always zero. Take timestamps 1000, 1060, 1120, 1181 and 1240. The gaps are 60, 60, 61 and 59, and the changes in the gaps are 0, +1 and -2. Gorilla stores a zero as a single bit, and a small number as a 2 bit prefix followed by 7 bits. The paper reports that about 96 percent of its timestamps compress to one bit
+- **Timestamps**: Points usually arrive at a fixed interval, so storing the difference between timestamps, and then the difference of those differences, gives numbers that are almost always zero. Take timestamps 1000, 1060, 1120, 1181 and 1240. The gaps are 60, 60, 61 and 59, and the changes in the gaps are 0, +1 and -2. Gorilla stores a zero as a single bit, and a small number as a 2 bit prefix followed by 7 bits. In Gorilla's data about 96 percent of timestamps compress to one bit
 - **Values**: Neighboring values are often close or identical, so Gorilla takes the XOR of each value with the previous one. Equal values give zero, stored as a single bit, and close values leave long runs of zero bits that are cheap to store
 
 We tried the timestamp scheme on a day of 60 second points, with a few points dropped and a share of them arriving a second early or late:
@@ -53,7 +53,7 @@ We tried the timestamp scheme on a day of 60 second points, with a few points dr
 <figcaption>Average bits for one timestamp, raw and with delta of delta encoding (our own simulation)</figcaption>
 </figure>
 
-Prometheus reports a similar result for its own storage: an average of 1 to 2 bytes per sample. Its documentation gives a formula for planning the disk:
+Prometheus gets a similar result in its own storage: an average of 1 to 2 bytes per sample. A formula for planning the disk:
 
 ```text
 disk = retention seconds * samples per second * bytes per sample
@@ -61,7 +61,7 @@ disk = retention seconds * samples per second * bytes per sample
 
 For the textbook app, 600 series scraped every 10 seconds make 60 samples a second.
 
-Kept for Prometheus's default retention of 15 days, at 2 bytes each, that is about 155 MB. Stored as raw 16 byte points it would be about 1.2 GB. The documentation adds that reducing the number of series usually saves more than scraping less often.
+Kept for Prometheus's default retention of 15 days, at 2 bytes each, that is about 155 MB. Stored as raw 16 byte points it would be about 1.2 GB. Reducing the number of series usually saves more than scraping less often.
 
 ## Storing by Time Blocks
 
@@ -83,15 +83,15 @@ TimescaleDB, a PostgreSQL extension, partitions a table into chunks by time rang
 <figcaption>Old data leaves by dropping a whole chunk, and new data goes to the current one</figcaption>
 </figure>
 
-Removing old data is the case that benefits most. TimescaleDB's documentation explains that retention works on whole chunks, so dropping one deletes a file instead of running a row by row `DELETE` that leaves work for the cleanup.
+Removing old data is the case that benefits most. In TimescaleDB retention works on whole chunks, so dropping one deletes a file instead of running a row by row `DELETE` that leaves work for the cleanup.
 
-Queries for a time range touch only the chunks that overlap it. The same documentation gives a sizing rule: choose the chunk interval so that the indexes of the chunks being written fit in memory, within about 25 percent of it, since too many tiny chunks slow planning down.
+Queries for a time range touch only the chunks that overlap it. A sizing rule: choose the chunk interval so that the indexes of the chunks being written fit in memory, within about 25 percent of it, since too many tiny chunks slow planning down.
 
 This is a close cousin of the log structured storage in [LSM Trees](/system-design/lsm-trees): append to the newest part, and merge or delete older parts in the background.
 
 ## Rollups: Keep the Shape, Lose the Detail
 
-Keeping each point forever is rarely worth it. **Downsampling**, as InfluxDB's glossary puts it, aggregates high resolution data into lower resolution data to save space. A typical plan for the textbook app:
+Keeping each point forever is rarely worth it. **Downsampling** aggregates high resolution data into lower resolution data to save space. A typical plan for the textbook app:
 
 | Age of Data | Resolution Kept |
 | --- | --- |
@@ -101,7 +101,7 @@ Keeping each point forever is rarely worth it. **Downsampling**, as InfluxDB's g
 
 A rollup is a query that is saved and kept up to date, which is the materialized view from [Choosing Between Normalization and Denormalization](/system-design/normalization).
 
-TimescaleDB's docs describe its continuous aggregates as incrementally updated materialized views, and a retention policy as a rule that deletes old raw data on a schedule, so that summaries remain after the details are gone. In plain PostgreSQL, a rollup looks like this:
+TimescaleDB offers continuous aggregates, which are incrementally updated materialized views, and a retention policy, a rule that deletes old raw data on a schedule, so that summaries remain after the details are gone. In plain PostgreSQL, a rollup looks like this:
 
 ```sql
 CREATE MATERIALIZED VIEW requests_hourly AS
@@ -117,7 +117,7 @@ One trap: some summaries can't be added up. An average of averages is wrong when
 
 Use a dedicated store when the write volume is steady and high, when old data should disappear cheaply, and when most questions are about ranges of time:
 
-- **Metrics for your own servers**: Prometheus. Its documentation says its local storage is a single node and not replicated, and that network file systems aren't supported, so plan for what a lost server means
+- **Metrics for your own servers**: Prometheus. Its local storage is a single node and not replicated, and network file systems aren't supported, so plan for what a lost server means
 - **A time series inside the main database**: PostgreSQL tables partitioned by time, or the TimescaleDB extension, which keeps SQL and joins with business data
 - **A separate time series database**: InfluxDB, when the data has its own life and tools
 

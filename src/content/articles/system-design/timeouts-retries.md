@@ -6,13 +6,13 @@ Both choices are easy to get wrong in ways that don't show until the system is u
 
 ## Every Call Needs a Timeout
 
-The Amazon Builders' Library article on the subject says to set a timeout on each remote call, including the connection and the request, even calls to the same host. Too high, and the caller wastes resources waiting. Too low, and the extra retries add load that can cause an outage of its own.
+Set a timeout on each remote call, including the connection and the request, even calls to the same host. Too high, and the caller wastes resources waiting. Too low, and the extra retries add load that can cause an outage of its own.
 
 The trouble is that many clients and servers ship with no timeout, or with a very long one:
 
 | System | Default |
 | --- | --- |
-| Python `requests` | No timeout, and the docs say a call can hang for minutes or more |
+| Python `requests` | No timeout, so a call can hang for minutes or more |
 | gRPC | No deadline, so a client can wait effectively forever |
 | Go `http.Get` and the default client | No timeout |
 | Envoy, Route | 15 seconds |
@@ -25,7 +25,7 @@ The last two are the operating system's own patience, and they are far longer th
 
 Two details on what a timeout measures. In Python's `requests`, the read timeout is the wait between bytes received, not for the whole response, and the connect timeout applies to each IP address, so a host with IPv4 and IPv6 addresses can take about twice as long.
 
-The docs suggest a connect timeout a little above 3 seconds, tied to the TCP retransmission window. Go's timeouts are absolute deadlines that don't reset when data flows, and the Cloudflare engineers' guide warns that the convenience server functions have no way to set them and are unsafe on the public internet.
+A connect timeout a little above 3 seconds fits, tied to the TCP retransmission window. Go's timeouts are absolute deadlines that don't reset when data flows, and its convenience server functions have no way to set them, which makes them unsafe on the public internet.
 
 ## Choosing the Number
 
@@ -57,7 +57,7 @@ A **deadline** is an absolute point in time, a timeout is a duration that become
 
 A call with a 2 second deadline that has used 0.5 seconds sends 1.5 seconds downstream.
 
-When the deadline passes, the client gets an error, and the server cancels the call, though the application code still has to notice and stop its work. The SRE book gives the same advice: check the remaining time at each stage and drop work whose time has run out.
+When the deadline passes, the client gets an error, and the server cancels the call, though the application code still has to notice and stop its work. Check the remaining time at each stage and drop work whose time has run out.
 
 Envoy applies the idea to retries: its route timeout covers them together, so a 3 second timeout with a first attempt that took 2.7 seconds leaves 0.3 seconds for the rest.
 
@@ -76,7 +76,7 @@ The Builders' Library calls retries selfish: each one takes more of the server's
 
 Retrying at once is the worst choice, since the server that failed is still busy.
 
-Waiting longer after each failure, **exponential backoff**, is better, and it has a flaw that the AWS Architecture Blog showed with a simple experiment: when many clients fail at the same moment, they back off by the same amounts and retry together again.
+Waiting longer after each failure, **exponential backoff**, is better, and it has a flaw that a simple experiment shows: when many clients fail at the same moment, they back off by the same amounts and retry together again.
 
 We repeated the experiment. 100 clients contend for one resource, in which one attempt succeeds in each time slot and the others fail. A base wait of 1 slot, doubling to a cap of 64:
 
@@ -92,13 +92,13 @@ Exponential backoff with no randomness made exactly as many calls as retrying at
 
 The blog's variants are full jitter, a random wait between 0 and the exponential value, equal jitter, half the value plus a random half, and decorrelated jitter, which bases the next wait on the previous one.
 
-The blog found full jitter used the least work, and its text says that equal jitter was the slowest of the three, which our run matches. It concludes that jitter is a cheap change that should be standard for remote clients.
+Full jitter used the least work, and equal jitter was the slowest of the three, which our run matches. Jitter is a cheap change that should be standard for remote clients.
 
 Real libraries have it built in. gRPC applies plus or minus 20 percent to its backoff, so an initial backoff of 100 ms gives a first delay between 80 and 120 ms.
 
 Envoy uses fully jittered exponential backoff from a 25 ms base, capped at 250 ms, with the first retry waiting 0 to 24 ms, the second 0 to 74 ms and the third 0 to 174 ms.
 
-Azure's guidance gives waits of 2, 4 and 8 seconds plus jitter for background work, and immediate or regular intervals for interactive work. Most AWS SDKs implement backoff with jitter in their standard retry mode.
+Waits of 2, 4 and 8 seconds plus jitter suit background work, and immediate or regular intervals for interactive work. Most AWS SDKs implement backoff with jitter in their standard retry mode.
 
 ## Limiting the Retries
 
@@ -106,11 +106,11 @@ Backoff spaces retries out. It doesn't limit them, and for that there are three 
 
 - **A cap on attempts**: The Builders' Library prefers a limit on the number of retries and an earlier failure, over a long capped backoff, which retries forever at the cap
 - **One layer**: A stack five layers deep with 3 retries at each makes 3 to the power of 5, or 243 calls to the database. Retry at one layer for cheap operations, as the library advises, and Azure's example of 3 retries at each of 2 layers gives 9 attempts
-- **A budget**: Retries are allowed while a bucket of tokens lasts, and then proceed at a fixed rate. AWS added this to its SDK in 2016, and the library prefers it to a circuit breaker, which adds behavior that is hard to test and can slow recovery
+- **A budget**: Retries are allowed while a bucket of tokens lasts, and then proceed at a fixed rate. AWS added this to its SDK in 2016, and it is preferred to a circuit breaker, which adds behavior that is hard to test and can slow recovery
 
 gRPC's retry throttling is an example: each server has a token count that starts at a maximum such as 10, each failure subtracts 1, each success adds a ratio such as 0.1, and retries pause while the count is below half of the maximum.
 
-The SRE book suggests a budget of 60 retries a minute per process, and Azure's guidance gives the same figure per dependency. When the budget is exhausted, the call fails at once.
+A reasonable budget is 60 retries a minute per process, or per dependency. When the budget is exhausted, the call fails at once.
 
 A related idea is the hedged request, in which a second copy is sent after a short wait. gRPC supports it with a limit of 5 attempts, and Google's paper on tail latency, quoted in the first topic of this phase, measured a hedge after 10 ms cutting the 99.9th percentile of a large read from 1,800 ms to 74 ms for 2 percent more requests.
 

@@ -6,7 +6,7 @@ And when the analytics team fixes a bug in how they count, they want to read las
 
 ## A Queue That Doesn't Forget
 
-Kafka's design document describes the log and its readers. New messages are appended at the end. A consumer fetches by saying "give me what comes after offset 7", and the broker returns a chunk of log from there.
+In Kafka's log, new messages are appended at the end. A consumer fetches by saying "give me what comes after offset 7", and the broker returns a chunk of log from there.
 
 Nothing is removed when it is read. Here is a log of ten events, and three consumers at different places in it:
 
@@ -33,17 +33,17 @@ Nothing is removed when it is read. Here is a log of ten events, and three consu
 | Email Sender | 5 | 5 events |
 | New Analytics Job | 0 | 10 events |
 
-Each consumer's whole state is one number. Kafka's documentation points out why that is a strong idea. A queue broker has to track the fate of every message, which gets expensive, and it has the confirmation problem of the last topic.
+Each consumer's whole state is one number. That is a strong idea. A queue broker has to track the fate of every message, which gets expensive, and it has the confirmation problem of the last topic.
 
 In a log, a topic is split into ordered partitions, each read by one consumer at a time within a group, so the position is a single offset per partition, cheap to store and to save regularly.
 
 It also allows something a queue can't do. The consumer can move its offset backward and read old events again.
 
-Kafka's documentation says this breaks the usual contract of a queue, and gives the case where it matters most: a bug is found in the consumer, and once it is fixed the same messages can be processed again. For the analytics job that starts at offset 0, replay is the whole way it catches up.
+This breaks the usual contract of a queue, and the case where it matters most is this: a bug is found in the consumer, and once it is fixed the same messages can be processed again. For the analytics job that starts at offset 0, replay is the whole way it catches up.
 
 ## Why Logs Are Fast
 
-Kafka's documentation argues against the idea that disks are slow. Disks are slow at seeking and fast at reading and writing in a line.
+It helps that disks aren't slow in the way people assume. Disks are slow at seeking and fast at reading and writing in a line.
 
 It quotes a drive array on which linear writes ran at about 600 MB per second while random writes ran at about 100 KB per second, a difference of over 6,000 times. That figure is from older hardware, but the gap between sequential and random access is still the point.
 
@@ -79,7 +79,7 @@ Compaction guarantees that the last value for each key stays, which is 3500 for 
 
 A message with a key and an empty value is a delete marker, also called a tombstone, which removes the key and is itself cleaned up after a time, 24 hours by default in Kafka.
 
-Kafka's document lists what remains true: order is never changed, an offset keeps its meaning, and a consumer that stays close to the head of the log sees every message.
+What remains true: order doesn't change, an offset keeps its meaning, and a consumer that stays close to the head of the log sees every message.
 
 With compaction a log holds the full current state and not only recent changes. That is how a cache or a search index can be rebuilt from the log, the use behind [Change Data Capture](/system-design/cdc) and [Event Sourcing](/system-design/event-sourcing).
 
@@ -100,7 +100,7 @@ The weakness of pulling is a tight loop of polling an empty log, which a long po
 | Retries and Bad Messages | Per message, with a dead letter queue | Not built in, since the offset moves past a failure |
 | Order | Roughly first in, first out | Total order inside a partition |
 
-Kafka has noticed that last gap. Its documentation describes **share groups**, a newer kind of group where consumers acknowledge records one at a time, a record is locked for 30 seconds by default, and delivery attempts are counted so unprocessable records can be set aside. In effect, it adds queue behavior on top of a log.
+Kafka has noticed that last gap with **share groups**, a newer kind of group where consumers acknowledge records one at a time, a record is locked for 30 seconds by default, and delivery attempts are counted so unprocessable records can be set aside. In effect, it adds queue behavior on top of a log.
 
 A rough guide for the textbook app: use a queue for jobs that one worker should do, such as resizing a photo. Use a log for facts that many systems want to hear, read again and again, such as "listing posted" and "price changed".
 

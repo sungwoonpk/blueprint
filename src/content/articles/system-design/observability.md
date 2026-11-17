@@ -43,7 +43,7 @@ OpenTelemetry's SDK guards against this with a default limit of 2,000 attribute 
 
 ### Averages Hide the Tail
 
-Google's SRE book gives a warning: a mean of 100 ms at 1,000 requests a second can hide 1 percent of requests that take about 5 seconds. We built a distribution like that. Of 1 million requests, 99 percent were around 40 ms, and 1 percent took 3 to 8 seconds:
+A warning: a mean of 100 ms at 1,000 requests a second can hide 1 percent of requests that take about 5 seconds. We built a distribution like that. Of 1 million requests, 99 percent were around 40 ms, and 1 percent took 3 to 8 seconds:
 
 | Measure | Value |
 | --- | --- |
@@ -55,13 +55,13 @@ Google's SRE book gives a warning: a mean of 100 ms at 1,000 requests a second c
 
 The mean looks acceptable, and one request in a hundred waits 3 seconds. Fan out makes it worse, as in the tail latency numbers from the distributed systems phase: a page that makes 10 calls hits a slow one 9.6 percent of the time, and a page with 100 calls hits one 63.5 percent of the time.
 
-So record histograms. The SRE book suggests bucket boundaries that grow by a factor of about 3, such as 0 to 10 ms, 10 to 30, 30 to 100 and 100 to 300. A quantile estimated from buckets is as precise as the bucket is narrow.
+So record histograms. Bucket boundaries that grow by a factor of about 3 work well, such as 0 to 10 ms, 10 to 30, 30 to 100 and 100 to 300. A quantile estimated from buckets is as precise as the bucket is narrow.
 
 With those buckets, our median came out as 55 ms against a true 40 ms, the 99th percentile as 3,011 against 3,010, and the 99.9th as 9,301 against 7,484. Prometheus adds that averaging precomputed quantiles across instances is statistically meaningless, and quantiles should be computed from summed buckets.
 
 ### The Four Golden Signals
 
-If you have room to watch four things, the SRE book names them:
+If you have room to watch four things, these are the four:
 
 - **Latency**: The time to serve a request, with successful and failed requests measured apart, since a fast error can hide a slow problem
 - **Traffic**: The demand on the system, such as requests a second
@@ -181,7 +181,7 @@ For the registration day slowdown, the investigation goes like this:
 | 3 | Log | The wallet service's entries show lock waits on one hot row |
 | 4 | Change History | A deploy at 8:55 changed how the row is updated |
 
-The SRE book's chapter on troubleshooting adds two habits: form a hypothesis and test it, and ask what changed last, which is why dashboards mark deployments. The next topic, [SLIs, SLOs and Error Budgets](/system-design/slo), turns the metrics into targets, and [Alerting and Dashboards](/system-design/alerting) into actions.
+Troubleshooting adds two habits: form a hypothesis and test it, and ask what changed last, which is why dashboards mark deployments. The next topic, [SLIs, SLOs and Error Budgets](/system-design/slo), turns the metrics into targets, and [Alerting and Dashboards](/system-design/alerting) into actions.
 
 ## Key Points
 

@@ -41,9 +41,9 @@ When does the leader tell the client that a write is done? There are two answers
 
 PostgreSQL offers levels in `synchronous_commit`: wait for the standby to write the commit record to disk, or just to receive it, or to replay it so that queries can see it. Its `synchronous_standby_names` is empty by default, meaning no synchronous standbys.
 
-It can name the first n in a priority list or any n of a group. The documentation warns that commits can wait indefinitely if a synchronous standby crashes, so the list should name spares.
+It can name the first n in a priority list or any n of a group. Commits can wait indefinitely if a synchronous standby crashes, so the list should name spares.
 
-MySQL's semisynchronous mode makes the commit wait until at least one replica acknowledges receipt, and falls back to asynchronous after a timeout of 10,000 ms by default. The documentation notes that after a fallback, a crash can lose transactions, and says fully synchronous replication is not offered except in NDB Cluster.
+MySQL's semisynchronous mode makes the commit wait until at least one replica acknowledges receipt, and falls back to asynchronous after a timeout of 10,000 ms by default. After a fallback, a crash can lose transactions, and fully synchronous replication is not offered except in NDB Cluster.
 
 MongoDB's default write concern is a majority of the data bearing voting members, and a write acknowledged by the primary alone can be rolled back after a failover.
 
@@ -65,10 +65,10 @@ These runs promoted the follower that was furthest ahead. When we promoted a ran
 
 When the leader fails, a follower has to take over. The steps are the same everywhere: notice the failure, choose the most up to date follower, send writes to it, and turn the old leader into a follower when it returns. Each step has a way to go wrong.
 
-- **Noticing**: Detection is a guess, as in [Failure Detection and Gossip](/system-design/failure-detection). Patroni, a PostgreSQL manager, keeps a leader key in a store such as etcd with a lifetime of 30 seconds by default and a 10 second loop. MongoDB's election timeout defaults to 10 seconds, and its documentation puts the median time to elect a new primary at no more than 12 seconds. Google's Cloud SQL checks the primary once a second and reports about 60 seconds of unavailability during a failover
+- **Noticing**: Detection is a guess, as in [Failure Detection and Gossip](/system-design/failure-detection). Patroni, a PostgreSQL manager, keeps a leader key in a store such as etcd with a lifetime of 30 seconds by default and a 10 second loop. MongoDB's election timeout defaults to 10 seconds, and the median time to elect a new primary is no more than 12 seconds. Google's Cloud SQL checks the primary once a second and reports about 60 seconds of unavailability during a failover
 - **Choosing**: The new leader should be the follower with the most data. Patroni refuses to promote a follower more than 1,048,576 bytes behind by default, which bounds the data that an asynchronous failover can lose. Patroni's synchronous mode will not promote a follower unless it is certain to have the acknowledged transactions, and it prefers unavailable writes to lost ones
 - **Switching**: Clients and proxies have to find the new leader. Cloud SQL keeps a shared IP address so that clients reconnect with the same connection string
-- **The old leader**: When it returns, it may hold writes that no one else saw. PostgreSQL's documentation says something must tell it that it is no longer the primary, a practice called STONITH, and notes that without it both nodes can believe they are the primary and data is lost
+- **The old leader**: When it returns, it may hold writes that no one else saw. Something must tell it that it is no longer the primary, a practice called STONITH, and without it both nodes can believe they are the primary and data is lost
 
 ## Two Leaders
 
@@ -92,7 +92,7 @@ This is the kind of problem that [Consensus and Leader Election](/system-design/
 
 A follower that can't keep up, or goes offline, has to catch up from the log. The leader has to keep the log long enough. PostgreSQL's `wal_keep_size` defaults to 0, so a standby that falls too far behind may need a new base backup unless an archive exists.
 
-Replication slots avoid that by holding the log for each consumer, and, as the same documentation says, a slot can fill the disk, the warning from [Change Data Capture](/system-design/cdc). `max_slot_wal_keep_size` can cap it.
+Replication slots avoid that by holding the log for each consumer, and a slot can fill the disk, the warning from [Change Data Capture](/system-design/cdc). `max_slot_wal_keep_size` can cap it.
 
 Followers can lag even when they stay connected, which makes reads from them stale. The next topic, [Replication Lag](/system-design/replication-lag), covers how to live with that. Amazon RDS's read replicas are asynchronous and report a `ReplicaLag` metric, and its Multi-AZ mode keeps a separate synchronous standby that doesn't serve reads.
 

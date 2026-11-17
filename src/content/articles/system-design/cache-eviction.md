@@ -14,7 +14,7 @@ Entries leave a cache for three different reasons, and it helps to keep them apa
 
 Eviction is the one that has to choose among entries that are still good, so it is the one with a policy. In Redis, the cache is bounded by a `maxmemory` setting.
 
-Its documentation describes a policy named `noeviction` that evicts nothing and answers writes with an error once memory is full, which is usually the wrong choice for a cache.
+Redis has a policy named `noeviction` that evicts nothing and answers writes with an error once memory is full, which is usually the wrong choice for a cache.
 
 ## The Classic Policies
 
@@ -30,7 +30,7 @@ Each policy answers one question: which entry is the least likely to be needed a
 
 **LRU**, least recently used, bets that what was used lately will be used again soon. **LFU**, least frequently used, bets that what has been used often is popular.
 
-Bélády's algorithm is the best possible policy, and Wikipedia explains why nobody can run it: it needs to know future requests. But you can replay a recorded trace to find what it would have achieved, and then see how close a real policy gets.
+Bélády's algorithm is the best possible policy, and nobody can run it: it needs to know future requests. But you can replay a recorded trace to find what it would have achieved, and then see how close a real policy gets.
 
 To see the difference, we ran a small simulation. It has 10,000 listings and 200,000 requests, where popular listings are asked for far more often, with the chance of listing number k proportional to 1/k. The cache holds 500 entries, 5 percent of the listings:
 
@@ -65,13 +65,13 @@ So each simple policy has a blind spot, and real caches combine the two ideas:
 
 - **Segmented LRU**: New entries wait in a probationary part and move to a protected part only after a second hit, so a scan does not reach the protected part. Memcached's optional segmented LRU has hot, warm and cold queues, and evicts only from the cold one
 - **LFU with aging**: Redis keeps a small counter for each entry that decays over time, so yesterday's hits fade. The decay time is a setting, one minute by default
-- **Adaptive policies**: ARC balances recency and frequency as it runs. Its authors reported that it beat LRU on 23 real traces. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and its documentation reports hit rates close to optimal on its test traces
+- **Adaptive policies**: ARC balances recency and frequency as it runs. In its authors' tests it beat LRU on 23 real traces. Caffeine, a popular Java cache, uses W-TinyLFU, which admits a new entry only if its estimated frequency beats the one it would replace, and it reports hit rates close to optimal on its test traces
 
 You rarely implement these yourself. You choose among the policies your cache offers, and that is easier when you know what each is betting on.
 
 ## Approximate Is Fine
 
-Exact LRU needs a list in order of use that is updated on every read, which costs memory and time. Redis's documentation describes a shortcut: when it needs to evict, it samples a few random keys and removes the one used longest ago.
+Exact LRU needs a list in order of use that is updated on every read, which costs memory and time. Redis takes a shortcut: when it needs to evict, it samples a few random keys and removes the one used longest ago.
 
 The setting is `maxmemory-samples`, the page's example is 5, and it says that 10 gets very close to true LRU, for a little more CPU.
 
@@ -88,7 +88,7 @@ The `allkeys` policies choose from all entries, and the `volatile` ones only amo
 - **`volatile-ttl`**: When your code gives short TTLs to the entries that are best to drop
 - **`volatile-*` in general**: Mainly for one instance that holds both cached and permanent keys, though the page prefers two separate instances
 
-Redis also shows how to tell whether the policy works. The hit ratio is hits divided by hits plus misses. A low hit ratio together with many evicted keys suggests that the cache is evicting the wrong entries or is too small. Few evictions but many expired keys suggests the TTLs are too short.
+Telling whether the policy works is simple. The hit ratio is hits divided by hits plus misses. A low hit ratio together with many evicted keys suggests that the cache is evicting the wrong entries or is too small. Few evictions but many expired keys suggests the TTLs are too short.
 
 ## Size Matters More Than Policy
 

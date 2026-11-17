@@ -91,13 +91,13 @@ Jepsen's map groups the models by what they can do during a partition on an asyn
 | Sticky Availability | Read your writes, PRAM, causal | A client must keep using one server |
 | Unavailable | Sequential, linearizable, serializable | Some nodes can't make progress |
 
-This is why stronger models cost latency too. Azure Cosmos DB's documentation gives numbers for its levels: its strong level, which it describes as linearizable, reads from 2 of 4 replicas and so costs twice the request units of the weaker levels.
+This is why stronger models cost latency too. Azure Cosmos DB shows it in numbers: its strong level, which is linearizable, reads from 2 of 4 replicas and so costs twice the request units of the weaker levels.
 
 With several regions, strong writes take about twice the round trip between the two farthest regions plus 10 ms, and accounts that span more than 5,000 miles can't use it by default. The theory behind this trade is in [The CAP Theorem](/system-design/cap) and [PACELC](/system-design/pacelc).
 
 ## Models in Real Systems
 
-Documentation gives a way to compare:
+Here is a way to compare:
 
 - **etcd**: Reads are linearizable by default. A serializable read is an opt in that can be stale, and that avoids waiting on consensus, which trades freshness for speed
 - **Google Spanner**: Its default gives external consistency, behavior as if transactions ran serially in the order commits can be seen, which is what strict serializability means. Reads are strong by default, and a stale read at a chosen age is available, with 15 seconds called a reasonable value for performance

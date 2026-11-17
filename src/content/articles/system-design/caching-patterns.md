@@ -4,7 +4,7 @@
 
 ## Reading With Cache-Aside
 
-In **cache-aside**, also called lazy loading, the application does the work. It looks in the cache first, and on a miss it reads the database and puts the result in the cache for next time. Microsoft's Azure Architecture Center describes the same three steps:
+In **cache-aside**, also called lazy loading, the application does the work. It looks in the cache first, and on a miss it reads the database and puts the result in the cache for next time. It takes three steps:
 
 ```python
 def get_listing(listing_id):
@@ -18,25 +18,25 @@ def get_listing(listing_id):
     return listing
 ```
 
-This is the most common pattern, and AWS's caching guide lists why. Only data that is requested gets cached, so the cache doesn't fill with things nobody reads, and a failed cache node isn't fatal, since its replacement just causes misses until it refills.
+This is the most common pattern, for good reasons. Only data that is requested gets cached, so the cache doesn't fill with things nobody reads, and a failed cache node isn't fatal, since its replacement just causes misses until it refills.
 
 It has costs, too. A miss takes three trips: the cache read, the database read and the cache write. The data can also go stale, because nothing updates the cache when the database changes. The `ttl=60` in the code is the first defense: the entry expires after 60 seconds, and the next read refreshes it.
 
-One small detail in the code matters. If the database has no such listing, the function doesn't cache the empty result. Repeated lookups for ids that don't exist would then reach the database on each lookup. AWS's guide suggests caching a "not found" answer for a short time of its own, so the database isn't pestered.
+One small detail in the code matters. If the database has no such listing, the function doesn't cache the empty result. Repeated lookups for ids that don't exist would then reach the database on each lookup. A fix is to cache a "not found" answer for a short time of its own, so the database isn't pestered.
 
 ## Reading With Read-Through
 
 In **read-through**, the cache does the work. It is set up with a loader, a piece of code that knows how to fetch from the database.
 
-The application asks only the cache, and on a miss the cache calls the loader, stores the value and returns it. Ehcache's documentation describes it this way, and AWS calls a cache built like this an inline cache.
+The application asks only the cache, and on a miss the cache calls the loader, stores the value and returns it. A cache built like this is sometimes called an inline cache.
 
 The reads look the same from outside. The difference is who owns the miss logic. With read-through, the application code is shorter, and there is one place where duplicate misses for the same item can be merged into one database call, which Ehcache points out helps with the thundering herd, covered in [Cache Stampedes](/system-design/cache-stampedes).
 
-The price is that the cache must be able to reach the database, and the code path is harder to see. Microsoft's guide says to use cache-aside when the cache doesn't support read-through.
+The price is that the cache must be able to reach the database, and the code path is harder to see. Use cache-aside when the cache doesn't support read-through.
 
 ## Writing: Update, Then Invalidate
 
-When a seller lowers a price, the database changes and the cached copy is wrong. The simplest fix is to write to the database and then delete the cache entry, so the next read misses and loads the new value. Azure's guide shows this as the cache-aside write path, and says the order matters.
+When a seller lowers a price, the database changes and the cached copy is wrong. The simplest fix is to write to the database and then delete the cache entry, so the next read misses and loads the new value. This is the cache-aside write path, and the order matters.
 
 Deleting first looks tempting and goes wrong. Here is how a reader gets in between:
 
@@ -64,17 +64,17 @@ That is rare, and the TTL puts a limit on how long the mistake lives. [Cache Inv
 
 ## Writing: Write-Through
 
-In **write-through**, every write goes through the cache. The cache, or the code around it, updates both the database and the cache's copy before it reports success. AWS's guide gives the main benefit: the cache stays current after each write, so readers see the new price at once.
+In **write-through**, every write goes through the cache. The cache, or the code around it, updates both the database and the cache's copy before it reports success. The main benefit is that the cache stays current after each write, so readers see the new price at once.
 
-The costs, from the same guide, are that each write takes two trips, and that much of what gets written is not read, so the cache fills with unused entries.
+The costs are that each write takes two trips, and that much of what gets written is not read, so the cache fills with unused entries.
 
 A TTL or an eviction policy cleans these up, as in [Cache Eviction Policies](/system-design/cache-eviction). A cache node that is new or was replaced is also missing data until it is written again, so write-through is often combined with lazy loading.
 
-Microsoft's caching guidance says to use write-through only for data that is read often and needs to show a change right away. For the textbook app, that could be a listing's sold status, where a buyer should not be offered a book that is gone.
+Use write-through for data that is read often and needs to show a change right away. For the textbook app, that could be a listing's sold status, where a buyer should not be offered a book that is gone.
 
 ## Writing: Write-Behind
 
-In **write-behind**, also called write-back, the application writes only to the cache. The cache saves the change to the database later, usually in batches. Ehcache's documentation says the writing thread doesn't wait for the database, and Redis describes it as better write performance with simpler code.
+In **write-behind**, also called write-back, the application writes only to the cache. The cache saves the change to the database later, usually in batches. The writing thread doesn't wait for the database, which means better write performance with simpler code.
 
 The cost is the delay. For a while the cache holds changes that the database doesn't, so anything reading the database sees old data. And if the cache fails before the queue is saved, those writes can be lost.
 
@@ -98,7 +98,7 @@ Many views become one database write, which is the real gain: a hot counter that
 
 Real systems mix them. AWS's guide ends with the combination most teams use: lazy loading for reads, write-through or invalidation for updates, and a TTL on everything as a backstop. For the textbook app, that means cache-aside with a 60 second TTL for listing pages, delete on update for price changes, and write-behind for view counters.
 
-Azure's guide adds the limits of cache-aside: don't use it for sensitive data that should come from the source, and don't use it when most requests would miss, since the extra lookup then costs more than it saves.
+Cache-aside has limits: don't use it for sensitive data that should come from the source, and don't use it when most requests would miss, since the extra lookup then costs more than it saves.
 
 None of these patterns removes staleness completely. They decide how long it lasts and who is responsible for it, and the next topics cover removing entries and the trouble that arrives when many entries expire at once.
 

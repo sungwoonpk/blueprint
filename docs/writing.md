@@ -61,9 +61,19 @@ Do all of these after the last edit, every time:
 - Any table, chart or emphasis that is there just to be there?
 - Is every claim true? Check each fact, number and example against the sources once more, and fix anything that is wrong or misleading.
 
-## Sources
+## Sources and our own voice
 
-Read widely before writing, and keep only what most good sources agree is common and important. Learn the idea, then write it fresh. Never copy: no sentences taken as they are, no structure lifted from one article, and examples are made up so they are our own. Only formulas and definitions that are standard (Little's Law, Amdahl's law) stay as they are. Name the source in the text when a specific fact or number comes from one place, such as a paper or a postmortem, and list what was read when reporting.
+The words in blueprint are ours. We learn from the sources, understand them, and then explain the idea as if we had worked it out, with our own example, our own numbers and our own simulation. Rules:
+
+- **Where to learn**: Official documentation, papers, standards (RFCs), and the engineering articles of the company or institution that built the thing. Never Wikipedia, Reddit, Stack Overflow, Medium or any page that anyone can edit. Famous system design sites and books are for background and cross checking only, never for the structure or the words of a page.
+- **Read, don't relay**: Read the source yourself, then close it and write what you understood. If a fact can't be traced to a primary source, compute it ourselves or leave it out.
+- **No "site X says"**: Don't write "the Amazon S3 documentation describes", "according to Wikipedia", "the paper states" as a way of passing on a claim. State the idea in our voice. A source gets a few words only when it can't be avoided: a result that carries a name (the FLP result, the Dynamo paper's design), a quoted figure that no one else can produce (a company's own incident numbers), or a history that belongs to one paper. Keep it to a clause, never a paragraph of attributions.
+- **Our numbers first**: Prefer a number we measured or derived. When an outside figure is needed, give it plainly with the system or incident it belongs to.
+- **Reports list what was read**: When reporting a finished page, list the primary sources read, in the chat and not in the page.
+
+## Reads like a story
+
+A page is one story told in order, not a stack of facts. The reader should feel carried: each paragraph ends by raising the question the next one answers, and each section's first lines pick up exactly where the last one stopped. The running example (the textbook app) is the thread: a problem shows up in it, we try the obvious thing, it breaks in a way the reader can picture, and the next idea arrives as the fix. Lists, tables and diagrams serve the story at the point where it needs them, and they are introduced by a sentence and followed by a sentence about what they showed. Cut any section that is a catalog and not a step in the story.
 
 ## Building blocks
 

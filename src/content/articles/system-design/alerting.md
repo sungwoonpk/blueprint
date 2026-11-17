@@ -8,7 +8,7 @@ This topic is about telling the two apart, and then about the dashboards that a 
 
 ## What Deserves a Page
 
-Google's SRE book gives the test: an alert should be urgent and actionable, and a page that someone answers by running the same script each time is a sign that the response should be automated or the cause fixed. The Prometheus documentation, from the open source side, says the same thing in three rules:
+The test: an alert should be urgent and actionable, and a page that someone answers by running the same script each time is a sign that the response should be automated or the cause fixed. Three rules say it:
 
 - **Alert on symptoms**: Page on what users feel, such as high latency and errors, high in the stack, and use dashboards to find the cause
 - **Have as few alerts as possible**: Each one should relate to real user pain, with room for small blips
@@ -20,7 +20,7 @@ A system near capacity should alert, since it needs a human to prevent a later o
 
 ## Judging an Alert
 
-The SRE workbook names four properties by which to compare alert rules:
+Four properties compare alert rules:
 
 | Property | Question |
 | --- | --- |
@@ -118,13 +118,13 @@ Pages cost people. The SRE book's chapter on on-call sets numbers: at most 2 inc
 
 Paging should be flat over time with a median of 0 pages a day, and a component that pages daily is a warning sign. Response times are typically 5 minutes for user facing services and 30 minutes for less time sensitive ones.
 
-The book explains why this matters. Stress impairs deliberate reasoning and leads to shortcuts and confirmation bias, and low priority alerts that fire each hour make the on-call engineer less attentive to serious ones.
+Here is why this matters. Stress impairs deliberate reasoning and leads to shortcuts and confirmation bias, and low priority alerts that fire each hour make the on-call engineer less attentive to serious ones.
 
 The fixes are measurable goals, such as under 2 pages a shift, pages that match SLO threatening symptoms, grouping so that alerts and incidents are one to one and, in extreme cases, giving the pager back to the developers.
 
 ## Dashboards
 
-A dashboard is where the person goes next. Grafana's guidance names two methods that fit different layers:
+A dashboard is where the person goes next. Two methods fit different layers:
 
 - **RED, for services**: Rate, errors and duration for each service, from Tom Wilkie. It is a proxy for user happiness, and gives each team the same view, so engineers can be on call for code they didn't write
 - **USE, for machines**: Brendan Gregg's method checks utilization, saturation and errors for each resource, such as CPUs, memory, network and disks. He notes that 100 percent utilization usually marks a bottleneck, that more than about 70 percent can already hide bursts, that any saturation, meaning queued work, can be a problem, and that the method finds many server problems with little effort

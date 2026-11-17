@@ -10,7 +10,7 @@ Both questions are about a price. This topic is about how to find it, and how to
 
 The Azure Well-Architected guidance on cost makes a point that sets the tone: a cost optimized workload isn't necessarily a low cost workload. Its advice is to spend just what is needed to reach the highest return, and not to design beyond planned growth, since that lowers the return.
 
-The AWS cost pillar states its aim in similar terms: a workload that uses its resources fully, reaches the outcome at the lowest price and meets its functional requirements. The words that matter are the last ones. The requirements come first, and the cost is minimized under them.
+The aim, in similar terms: a workload that uses its resources fully, reaches the outcome at the lowest price and meets its functional requirements. The words that matter are the last ones. The requirements come first, and the cost is minimized under them.
 
 That means the targets have to be written down before the arithmetic starts. [SLIs, SLOs and Error Budgets](/system-design/slo) gives the targets, and this topic prices them.
 
@@ -33,7 +33,7 @@ The curve flattens because the delay that remained is mostly the service time it
 
 The right size depends on the target. If users need the 99th percentile under 100 ms, six servers meet it and the others add no speed. What they do buy is headroom for a failed server, a deploy or a surge, and that is a reliability purchase, not a speed one.
 
-Google's paper on tail latency states the same tension at a larger scale. Its abstract says the techniques it describes let a system run at higher utilization without a longer latency tail, avoiding wasteful overprovisioning.
+Google's work on tail latency shows the same tension at a larger scale: techniques exist to run a system at higher utilization without a longer latency tail, avoiding wasteful overprovisioning.
 
 The reason a slow tail matters at scale shows in simple arithmetic of our own: if each server is slow 1 percent of the time and a request fans out to 100 servers, the chance that at least one is slow is 1 minus 0.99 to the 100th power, about 63 percent. At that scale a slow tail costs real money to avoid.
 
@@ -50,15 +50,15 @@ The SRE book's chapter on embracing risk is direct about price. An incremental i
 
 The values for the other rows are our arithmetic from the year's 8,760 hours.
 
-The book gives a rule for deciding. Take a service with revenue of 1 million dollars and propose to move from 99.9 to 99.99 percent, an improvement of 0.09 percent. The value is 1 million times 0.0009, or 900 dollars, so the improvement is worth doing if it costs less than that, and not otherwise.
+A rule decides it. Take a service with revenue of 1 million dollars and propose to move from 99.9 to 99.99 percent, an improvement of 0.09 percent. The value is 1 million times 0.0009, or 900 dollars, so the improvement is worth doing if it costs less than that, and not otherwise.
 
 For the textbook app, if we assume revenue of 200,000 dollars a year, the same nine is worth 180 dollars a year. Few designs that add a nine cost that little, and the error budget is the tool for spending the nines that remain.
 
-Users also set a ceiling. The book notes that a user on a 99 percent reliable phone can't tell 99.99 from 99.999 percent service.
+Users also set a ceiling. A user on a 99 percent reliable phone can't tell 99.99 from 99.999 percent service.
 
 Its examples of paying for less are instructive too: a throughput oriented Bigtable cluster can cost as little as 10 to 50 percent of a low latency one, and ads that may be hundreds of milliseconds slower can be served from fewer locations, at lower cost.
 
-Redundancy follows the same logic. The Azure guidance on disaster recovery lists the options in order of price: a hot, active-active setup is the most expensive and recovers fastest, a cold one keeps just backups and images, and one that redeploys from code costs little while idle and takes the longest to recover. [Backups and Disaster Recovery](/system-design/backup-dr) covers the choice with recovery times attached.
+Redundancy follows the same logic. The options for disaster recovery come in order of price: a hot, active-active setup is the most expensive and recovers fastest, a cold one keeps just backups and images, and one that redeploys from code costs little while idle and takes the longest to recover. [Backups and Disaster Recovery](/system-design/backup-dr) covers the choice with recovery times attached.
 
 ## Spending to Save
 
@@ -77,11 +77,11 @@ The point holds beyond caching: a queue that flattens a peak, a [Caching Pattern
 
 ## Usage and Rate
 
-The FinOps Foundation splits the work in two. **Usage optimization** means using fewer resources to get an acceptable outcome, and **rate optimization** means paying a fair price for the resources that are needed. Its guidance generally puts usage first, since a commitment discount lowers the price of running resources and does not reduce how many are running.
+The work splits in two. **Usage optimization** means using fewer resources to get an acceptable outcome, and **rate optimization** means paying a fair price for the resources that are needed. Usage generally comes first, since a commitment discount lowers the price of running resources and does not reduce how many are running.
 
 The usage levers match this phase's topics:
 
-- **Right sizing**: Azure advises watching CPU, memory and storage, finding low or uneven use, and shrinking what is over allocated
+- **Right sizing**: Watch CPU, memory and storage, find low or uneven use, and shrink what is over allocated
 - **Scaling to demand**: [Autoscaling](/system-design/autoscaling) removes the capacity that the peak needed once it has passed
 - **Waste**: Decommission unused resources and delete data that is no longer needed
 - **Environments**: Non production environments can use fewer and smaller instances, and be created on demand, though they should still resemble production for the tests that matter

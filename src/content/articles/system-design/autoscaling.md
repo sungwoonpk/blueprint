@@ -6,15 +6,15 @@ It looks like a simple loop: measure the load, compare it with a target, add or 
 
 ## How a Scaler Decides
 
-The common design, in AWS and Kubernetes alike, is **target tracking**. The AWS documentation compares it to a thermostat: you pick a metric and a target, such as an average CPU utilization of 50 percent, and the service adds capacity above the target and removes it below. AWS creates and manages the alarms itself.
+The common design, in AWS and Kubernetes alike, is **target tracking**. It works like a thermostat: you pick a metric and a target, such as an average CPU utilization of 50 percent, and the service adds capacity above the target and removes it below. AWS creates and manages the alarms itself.
 
 Kubernetes' Horizontal Pod Autoscaler states the rule as a formula: the desired number of replicas is the current number times the ratio of the current metric to the desired one, rounded up. Its example is a current value of 200 against a desired 100, which doubles the replicas.
 
 With 4 servers at 90 percent CPU and a target of 60 percent, the desired count is 4 times 0.9 divided by 0.6, which is 6.
 
-Two details keep the loop calm. The Kubernetes documentation lists a tolerance of 10 percent, so a ratio close to 1 triggers no change, and a check runs at 15 second intervals.
+Two details keep the loop calm. Kubernetes uses a tolerance of 10 percent, so a ratio close to 1 triggers no change, and it checks every 15 seconds.
 
-AWS adds that a metric has to move in proportion to the number of instances. Average CPU does, because more servers share the same load. A total request count doesn't, since adding servers doesn't change how many requests arrive.
+A metric has to move in proportion to the number of instances. Average CPU does, because more servers share the same load. A total request count doesn't, since adding servers doesn't change how many requests arrive.
 
 Scaling out and scaling in are treated differently on purpose. AWS scales in more gradually than it scales out, to protect availability. Kubernetes defaults let a scale out add the larger of 4 pods or 100 percent of the current count at 15 second intervals, and hold scale in back for a window of 300 seconds.
 
@@ -29,7 +29,7 @@ A scaler reacts to a number that is already old. Between the demand and the new 
 | Launching the Server | Seconds to minutes, depending on the image |
 | Warm Up | Until the server is ready for full traffic |
 
-AWS describes warm up as a period during which a new instance is left out of the group's metrics, and during it scale in is blocked.
+Warm up is a period during which a new instance is left out of the group's metrics, and during it scale in is blocked.
 
 It isn't enabled by default, and the AWS page on a default warm up suggests starting around 300 seconds and tuning from there. Kubernetes has similar settings: pods that aren't ready are treated as still starting, and CPU samples are ignored for a period that defaults to 5 minutes.
 
@@ -60,7 +60,7 @@ It lost no requests and cost 10.8 server hours, which is 5.2 fewer than the fixe
 
 When the pattern is known, don't wait for the metric:
 
-- **Scheduled scaling**: An action sets the desired capacity at a time, once or on a recurring cron schedule. AWS uses UTC by default, allows named time zones that follow daylight saving, and notes that an action can run up to two minutes late. Schedules and dynamic policies can work together, with the dynamic policy acting inside the limits the schedule sets
+- **Scheduled scaling**: An action sets the desired capacity at a time, once or on a recurring cron schedule. AWS uses UTC by default, allows named time zones that follow daylight saving, and an action can run up to two minutes late. Schedules and dynamic policies can work together, with the dynamic policy acting inside the limits the schedule sets
 - **Predictive scaling**: AWS needs at least 24 hours of history, looks at up to 14 days, produces an hourly forecast for the next 48 hours and refreshes it at 6 hour intervals. It suggests running first in a mode that just forecasts, to judge the forecast, and in the scaling mode it adds capacity for expected rises but doesn't remove it, so dynamic policies still handle scale in
 
 A forecast suits a pattern that repeats, such as the daily rhythm of students. A one time event, like the first morning of a semester, is better served by a schedule that someone with knowledge of the calendar sets, which is the point of the inorganic demand in [Capacity Planning](/system-design/capacity-planning).
@@ -71,7 +71,7 @@ A metric that is noisy and a scaler that answers each wiggle produces **flapping
 
 We simulated a noisy load with a 6 minute wave over 2 hours, deciding at 15 second intervals. With no protection, the scaler made 252 changes. With a 5 minute stabilization window, in which it scales in to no lower than the highest recommendation of the window, it made 21.
 
-The Kubernetes documentation describes the window as approximately a rolling maximum, and it exists so that the autoscaler doesn't remove pods just to create the same number again a few moments later. The tolerance does a similar job at the small scale.
+The window works as approximately a rolling maximum, and it exists so that the autoscaler doesn't remove pods just to create the same number again a few moments later. The tolerance does a similar job at the small scale.
 
 In AWS the equivalents are the gradual scale in and the cooldown, which defaults to 300 seconds and applies to simple scaling policies, since target tracking can scale out without waiting for it.
 

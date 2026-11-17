@@ -21,11 +21,13 @@ Look at the right end of the table. At five nines a team has about 5 minutes a y
 
 ## How It is Measured
 
-Counting minutes works for a single machine, but a service with users everywhere is rarely fully up or fully down. Google's SRE book points out that time based availability usually isn't meaningful for global services, and that counting requests works better:
+Counting minutes works for a single machine. A service with users everywhere is rarely fully up or fully down, though: at any moment some users are fine while others get errors, so "minutes up" says little. Counting requests tells the truth more often:
 
 `availability = successful requests ÷ all requests`
 
-If the textbook app handles 10 million requests in a month and 10,000 fail, its availability is 99.9%. A failure here means a response that is an error, and a team can choose to count very slow responses too. Counting requests also fits real life better: a one hour outage at 3 AM costs a few requests, and the same hour during registration costs a great many. The monthly average hides that difference, but your users feel it. The idea of an error budget built on this is in [SLIs, SLOs and Error Budgets](/system-design/slo).
+If the textbook app handles 10 million requests in a month and 10,000 fail, its availability is 99.9%. A failure here means a response that is an error, and a team can choose to count very slow responses too.
+
+Counting requests also fits real life better: a one hour outage at 3 AM costs a few requests, and the same hour during registration costs a great many. The monthly average hides that difference, but your users feel it. The idea of an error budget built on this is in [SLIs, SLOs and Error Budgets](/system-design/slo).
 
 ## Parts Add Up
 
@@ -54,7 +56,9 @@ Availability is also a calculation across the parts of a system. In a chain wher
 <figcaption>Three parts at three nines make 99.7%, about 26 hours a year, and two parts at two nines make four nines</figcaption>
 </figure>
 
-A chain is weaker than its weakest part, and a little weaker with every part you add. Ten dependencies at 99.9% each give about 99.0%, so every extra service a request calls costs a little availability. Copies work the other way: two servers that are each up 99% of the time are both down together only 1% times 1%, or 0.01%, of the time, which is 99.99%.
+A chain is weaker than its weakest part, and a little weaker with every part you add. Ten dependencies at 99.9% each give about 99.0%, so every extra service a request calls costs a little availability.
+
+Copies work the other way: two servers that are each up 99% of the time are both down together only 1% times 1%, or 0.01%, of the time, which is 99.99%.
 
 That second number comes with two conditions. The copies have to fail independently, because two servers in one rack that lose power together count as one. And something has to notice a failure and move traffic to the healthy copy, which is the subject of [Redundancy and Failover](/system-design/redundancy-failover). The extra machinery is itself something that can break.
 
@@ -76,7 +80,9 @@ Halving the repair time is worth as much as doubling the time between failures, 
 
 ## How Many Nines Do You Need
 
-A common rule of thumb is that each extra nine costs about ten times more to build and run, because it takes more copies, more automation and people on call around the clock. It is a rough guide, not a price list. So the question is what the downtime costs you. Compare an hour of downtime, in lost sales, idle staff and angry users, with the cost of the next nine. If an hour of downtime costs a few hundred dollars, five nines isn't worth it.
+A common rule of thumb is that each extra nine costs about ten times more to build and run, because it takes more copies, more automation and people on call around the clock. It is a rough guide, not a price list.
+
+So the question is what the downtime costs you. Compare an hour of downtime, in lost sales, idle staff and angry users, with the cost of the next nine. If an hour of downtime costs a few hundred dollars, five nines isn't worth it.
 
 Three nines suits many services, and the higher levels tend to be reserved for infrastructure that other systems depend on, or for fields such as payments and healthcare. For the textbook app, an outage on registration day matters more than one on a Sunday night, so it can spend its effort on the days that count.
 

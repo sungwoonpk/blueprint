@@ -30,7 +30,7 @@ In the first, the order is saved and nobody hears about it: no receipt email, no
 
 The microservices.io pattern page makes the same point, and adds that publishing inside the transaction doesn't help, because the commit can still fail afterwards.
 
-A two phase commit across both systems is the textbook answer, which that page calls often unsupported or unwanted because it ties the service to both. We simulated 100,000 purchases with a 0.5 percent chance of a failure in the gap:
+A two phase commit across both systems is the textbook answer, but it is often unsupported or unwanted, because it ties the service to both. We simulated 100,000 purchases with a 0.5 percent chance of a failure in the gap:
 
 | Approach | Events Lost | Phantom Events | Duplicate Events |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ COMMIT;
 
 Both rows commit or neither does. The event can no longer be lost or invented, since it exists exactly when the order exists.
 
-Debezium's documentation uses a table of the same shape, with an id, the type of the aggregate, its id, the event type and a JSON payload. The AWS prescriptive guidance has a similar sample. The table behaves like a queue, as Debezium puts it: rows are only inserted.
+Debezium uses a table of the same shape, with an id, the type of the aggregate, its id, the event type and a JSON payload. The table behaves like a queue: rows are inserted and not updated.
 
 ## The Relay
 
@@ -71,7 +71,7 @@ Polling works with any SQL database. The AWS sample runs a scheduled job that re
 
 Debezium is a tool of this kind, and its outbox event router turns the inserts into messages, using the aggregate id as the message key so that events for one aggregate stay in one partition in order, as in [Partitions, Ordering and Consumer Groups](/system-design/ordering). The general technique is [Change Data Capture](/system-design/cdc), next in this phase.
 
-PostgreSQL provides the building blocks for log tailing, which its documentation calls logical decoding: it turns the log into a stream of row changes through a named replication slot. The docs carry a warning that matters for running it.
+PostgreSQL provides the building blocks for log tailing, called logical decoding: it turns the log into a stream of row changes through a named replication slot. There is a warning that matters for running it.
 
 A slot keeps the log it hasn't delivered, even with nobody connected, and in extreme cases that can fill the disk, so a slot that is no longer needed must be dropped.
 
@@ -79,7 +79,7 @@ A slot keeps the log it hasn't delivered, even with nobody connected, and in ext
 
 The relay can crash after publishing a row and before recording that it did. When it restarts, it publishes the row again. microservices.io says so directly, and that consumers must be idempotent, for instance by remembering the ids of messages they have handled. Our simulation shows the same, with about 500 duplicates per 100,000.
 
-The row's id makes this possible: Debezium's documentation says its `id` header can be used to remove duplicates. The techniques are those of [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees), and the AWS sample passes the row id as the deduplication id of a queue that supports it.
+The row's id makes this possible: Debezium puts it in an `id` header that can be used to remove duplicates. The techniques are those of [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees), and some queues accept the row id as a deduplication id.
 
 On the consumer side, Microsoft's guidance on the idempotent consumer calls the matching pattern the **inbox**. The consumer stores the message's key and does its work in one transaction, so a repeat finds the key and is skipped:
 
@@ -111,13 +111,13 @@ Microsoft's guide for Azure Cosmos DB, which expires event documents with a time
 
 ## Costs and Alternatives
 
-The outbox is a standard answer, and it still costs something. Each event is an extra row written and later read, and the atomic write reaches only as far as the database's own transactions: the Cosmos DB guide notes that the business document and its event must live in the same partition and container to be written together.
+The outbox is a standard answer, and it still costs something. Each event is an extra row written and later read, and the atomic write reaches only as far as the database's own transactions: in Cosmos DB, for example, the business document and its event must live in the same partition and container to be written together.
 
 The relay is one more piece to run and monitor, and a stalled relay means events pile up unseen, so watch the age of the oldest unpublished row. microservices.io lists the drawbacks as duplicates, ordering for polling, and database specific tools for log tailing, and one more: a developer can still forget to write the outbox row.
 
 Putting it behind one function that saves the change and the event together avoids that.
 
-Some databases skip the table. In DynamoDB, as the AWS guidance notes, a stream of table changes can feed a function that forwards new items, with no outbox table. And if a service's state is only a log of events, as in [Event Sourcing](/system-design/event-sourcing), then publishing the log is the outbox.
+Some databases skip the table. In DynamoDB, a stream of table changes can feed a function that forwards new items, with no outbox table. And if a service's state is only a log of events, as in [Event Sourcing](/system-design/event-sourcing), then publishing the log is the outbox.
 
 ## Key Points
 

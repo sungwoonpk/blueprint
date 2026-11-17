@@ -17,18 +17,18 @@ Each database reports lag in its own way, and each measure has traps:
 
 The three PostgreSQL columns mark stages: the standby has written the log, flushed it, or replayed it so that queries can see it. The replay figure is the one that matters for readers, since it approximates how long before a recent commit is visible on the standby.
 
-Typical lag depends on the design. Amazon Aurora replicas read the same storage volume as the writer, and its documentation says lag is usually much less than 100 milliseconds and rises during heavy writes. Replicas that copy a log, as in MySQL or PostgreSQL, depend on the network and on how fast they can apply it.
+Typical lag depends on the design. Amazon Aurora replicas read the same storage volume as the writer, and lag is usually much less than 100 milliseconds, rising during heavy writes. Replicas that copy a log, as in MySQL or PostgreSQL, depend on the network and on how fast they can apply it.
 
 ## Why It Grows
 
 A follower falls behind for ordinary reasons:
 
 - **A burst of writes**: The leader writes in parallel, and a follower may replay in a single thread. MySQL can run several applier threads, with a coordinator handing out transactions that don't conflict
-- **Long queries on the follower**: PostgreSQL's hot standby documentation explains that the standby can't skip log records, so when replay would remove rows that a query still needs, it either pauses replay or cancels the query. It waits up to `max_standby_streaming_delay`, 30 seconds by default, and a long running query can hold back the changes that other sessions see
+- **Long queries on the follower**: A PostgreSQL hot standby can't skip log records, so when replay would remove rows that a query still needs, it either pauses replay or cancels the query. It waits up to `max_standby_streaming_delay`, 30 seconds by default, and a long running query can hold back the changes that other sessions see
 - **Network and distance**: A cross region follower is behind by the transit time at the least
 - **A slow or overloaded follower**: It is the same as any other lagging consumer
 
-The documentation notes a trade: `hot_standby_feedback` tells the primary which rows the standby still needs, which prevents most cancellations and can cause bloat on the primary.
+There is a trade: `hot_standby_feedback` tells the primary which rows the standby still needs, which prevents most cancellations and can cause bloat on the primary.
 
 ## Three Strange Things a Reader Can See
 
@@ -44,7 +44,7 @@ We simulated 3 followers that are normally 20 ms behind and fall 3 seconds behin
 
 The first happens when the read lands on a follower that is in a behind period, and the second when one read hits a current follower and the next hits a lagging one. After 5 seconds, no read missed the write, since the behind periods in our model last 3 seconds.
 
-The third comes from sharding: if the question and the reply are stored in different partitions with different lag, the reply can appear first. Azure Cosmos DB calls the guarantee against this consistent prefix: reads do not see writes out of order, though they may lag.
+The third comes from sharding: if the question and the reply are stored in different partitions with different lag, the reply can appear first. The guarantee against this is called consistent prefix: reads do not see writes out of order, though they may lag.
 
 ## Fixing Your Own Writes
 
@@ -53,7 +53,7 @@ Several fixes are in use, and they trade complexity or load for correctness:
 - **Read from the leader for a while after a write**: GitLab's load balancer sends a user's reads to the primary for up to 30 seconds after the user writes, and goes back to replicas as soon as they have caught up. We calculated the cost for users who write once in 50 reads: with 5 seconds of stickiness, 9.5 percent of reads go to the leader, and with 30 seconds, 45.7 percent. The stickiness is a dial between safety and leader load
 - **Remember what the user has written**: Cosmos DB's session consistency gives each write a session token, which the client sends with reads. A replica serves the read if it has at least that version, and the client otherwise tries another. Aurora Global Database has a session mode in write forwarding in which reads wait until the session's own forwarded writes have reached the local region
 - **Use causal sessions**: MongoDB's sessions return times for each operation, and with majority read and write concerns they give four guarantees: read your writes, monotonic reads, monotonic writes and writes follow reads. With weaker settings, such as local reads and a write acknowledged by the primary alone, none of the four holds
-- **Mark the data as stale**: Facebook's memcache paper describes a remote marker for a key. A server that writes sets the marker in its region, writes to the master region, and deletes the cached key. A later read that finds no cache entry checks the marker, and if it exists, it goes to the master region instead of the possibly stale local database. The authors say they trade extra latency on a cache miss for a lower chance of stale reads, and note it is best effort
+- **Mark the data as stale**: Facebook's memcache uses a remote marker for a key. A server that writes sets the marker in its region, writes to the master region, and deletes the cached key. A later read that finds no cache entry checks the marker, and if it exists, it goes to the master region instead of the possibly stale local database. It trades extra latency on a cache miss for a lower chance of stale reads, and it is best effort
 
 ## Fixing Time Going Backwards
 

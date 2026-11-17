@@ -8,7 +8,7 @@ A timeout bounds each call. It doesn't stop the app from making the calls, one a
 
 ## Three States
 
-Michael Nygard described the pattern in *Release It!*, and Martin Fowler's note and the Azure documentation give the same picture, named after the switch in an electrical panel:
+Michael Nygard described the pattern in *Release It!*, named after the switch in an electrical panel:
 
 <figure class="diagram">
 <div class="flow">
@@ -41,7 +41,7 @@ The numbers in real libraries show how the knobs are set:
 
 Resilience4j also trips on slow calls: its slow call threshold is 60,000 ms by default, and its slow call rate is 100 percent, so slowness doesn't trip it unless the defaults are changed.
 
-Hystrix, Netflix's library, adds an execution timeout of 1,000 ms and a thread pool of 10 threads for each dependency by default. Its documentation notes that with 19 requests, the circuit doesn't trip even if each one fails, since the minimum volume of 20 hasn't been reached.
+Hystrix, Netflix's library, adds an execution timeout of 1,000 ms and a thread pool of 10 threads for each dependency by default. With 19 requests, the circuit doesn't trip even if each one fails, since the minimum volume of 20 hasn't been reached.
 
 The minimum volume matters. With 2 calls in a window and 1 failure, the failure rate is 50 percent, and a breaker that trips on that would flap on any quiet service.
 
@@ -67,11 +67,11 @@ That trade is the whole design. A short pause recovers sooner and tests the depe
 
 ## What Counts as a Failure
 
-The breaker is as good as its definition of failure. The Azure documentation lists points to decide:
+The breaker is as good as its definition of failure. Several points need a decision:
 
 - **Which errors count**: Timeouts, connection failures and 5xx responses count, and a 404 or a validation error is the caller's mistake, so it should not open the breaker
 - **Slow calls**: A dependency that answers in 10 seconds is failing for the caller, and Resilience4j can count calls above a duration
-- **Throttling signals**: A response that says "retry in a few minutes", such as HTTP 429 or 503, can open the breaker at once for that time, which Azure calls accelerated circuit breaking
+- **Throttling signals**: A response that says "retry in a few minutes", such as HTTP 429 or 503, can open the breaker at once for that time, sometimes called accelerated circuit breaking
 - **Weights**: Some errors can count more than others, as in Fowler's thresholds of 10 and 3
 
 Use one breaker for each dependency, or each independent part of it, such as each provider or shard, not one for a whole service. A single breaker across two payment providers stops both when one fails.
@@ -82,7 +82,7 @@ An open breaker needs a plan for the callers. Fowler suggests a fallback: queue 
 
 Operations need to see it. Log each state change, expose the state in metrics, alert when a breaker trips, and give operators a way to force it open or closed.
 
-Azure adds that the half open check can be a health probe and not a real request, so no user's request is spent on the test, and that rejected requests can be journaled and replayed later.
+The half open check can be a health probe and not a real request, so no user's request is spent on the test, and rejected requests can be journaled and replayed later.
 
 ## At the Edge of the Cluster
 
@@ -106,11 +106,11 @@ Not everyone likes them. The Amazon Builders' Library notes that circuit breaker
 
 It prefers a local token bucket for retries, which throttles retries without a state machine. Our simulation's 5.6 seconds of delay is the cost it means.
 
-Google's SRE book gives another way, **adaptive throttling**, in its chapter on overload. Each client keeps two counts over the last 2 minutes: the requests it attempted and the requests the backend accepted.
+Another way is **adaptive throttling**. Each client keeps two counts over the last 2 minutes: the requests it attempted and the requests the backend accepted.
 
 Once the requests exceed K times the accepts, with K at 2 by default, the client rejects new requests itself with a probability that rises as the gap grows, so the backend sees fewer calls and recovers.
 
-A lower K, such as 1.1, throttles more aggressively. There is no open state and no timer. The book adds that clients keep separate statistics for each criticality level, so important requests are throttled last.
+A lower K, such as 1.1, throttles more aggressively. There is no open state and no timer. Clients keep separate statistics for each criticality level, so important requests are throttled last.
 
 The mechanisms fit together:
 

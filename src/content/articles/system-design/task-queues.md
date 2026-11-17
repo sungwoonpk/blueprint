@@ -6,7 +6,7 @@ The textbook app's photo resizer is the example, and the interesting questions a
 
 ## A Task Is a Name and Arguments
 
-The Celery documentation describes the mechanism. A client publishes a message, a broker such as RabbitMQ, Redis or Amazon SQS delivers it, and a worker runs it.
+A client publishes a message, a broker such as RabbitMQ, Redis or Amazon SQS delivers it, and a worker runs it.
 
 The message carries the task's name and its arguments, and not the code. The worker looks the name up in its own list of tasks, so the workers must be running a version of the code that has that task:
 
@@ -30,9 +30,9 @@ def resize_photos(listing_id):
 resize_photos.delay(17)    # returns at once; a worker does the work
 ```
 
-Note what is passed: the listing's id, and not the listing. Both the Sidekiq and the Celery documentation advise this. Sidekiq stores its arguments as JSON in Redis, so it says to pass simple values like numbers and strings and to look objects up inside the job.
+Note what is passed: the listing's id, and not the listing. Task libraries advise this. Sidekiq stores its arguments as JSON in Redis, so pass simple values like numbers and strings and look objects up inside the job.
 
-The Celery guide adds the reason: an object passed in may be stale by the time the worker runs, and passing it invites races. The worker reads the current version itself.
+The reason: an object passed in may be stale by the time the worker runs, and passing it invites races. The worker reads the current version itself.
 
 The twelve factor app guidelines add the picture of how this is deployed. The application is split by process type, web processes for requests and worker processes for background jobs, and you scale by running more processes of the type that is behind. Workers are started and restarted by the platform, as in [Containers and Orchestration](/system-design/containers).
 
@@ -78,21 +78,21 @@ For sudden death, it relies on a queue that returns jobs when a worker disconnec
 
 A job that never finishes can hold a worker for a very long time. Celery has two limits: a `soft_time_limit` raises an exception inside the task, which the code can catch and clean up after, and a `time_limit` kills the worker's child process.
 
-Its documentation adds a warning that limits only catch code lacking its own timeouts, so network calls should still have their own, as in the retry advice of [Backpressure](/system-design/backpressure).
+A warning: limits only catch code lacking its own timeouts, so network calls should still have their own, as in the retry advice of [Backpressure](/system-design/backpressure).
 
-Celery's `rate_limit` caps how often a task starts, for example `"100/m"`. Two details from its documentation catch teams out. The limit applies to each worker instance, and isn't global, so ten workers run ten times the rate. And a rate limited task still occupies a prefetch slot, so such tasks belong on dedicated workers.
+Celery's `rate_limit` caps how often a task starts, for example `"100/m"`. Two details catch teams out. The limit applies to each worker instance, and isn't global, so ten workers run ten times the rate. And a rate limited task still occupies a prefetch slot, so such tasks belong on dedicated workers.
 
 ## Delays and Schedules
 
 A task can also be set to run later. In BullMQ you add a job with a `delay` in milliseconds, and it waits in a delayed set until the time passes and then moves to the waiting queue.
 
-The documentation says the timing isn't exact and depends on how busy the workers are. For "send the seller a reminder in an hour", that is fine. Tasks that repeat on a schedule, such as a nightly cleanup, have their own topic in [Job Schedulers](/system-design/job-schedulers).
+The timing isn't exact and depends on how busy the workers are. For "send the seller a reminder in an hour", that is fine. Tasks that repeat on a schedule, such as a nightly cleanup, have their own topic in [Job Schedulers](/system-design/job-schedulers).
 
 ## A Queue in the Database
 
 At the scale of the textbook app, a separate broker may be more than needed. PostgreSQL can act as a queue.
 
-The `SELECT` documentation describes `FOR UPDATE SKIP LOCKED` as meant for tables that behave like queues: rows that another worker has locked are skipped, which avoids contention, at the price of an inconsistent view that makes it unsuitable for general use. A worker claims one job like this:
+`FOR UPDATE SKIP LOCKED` is meant for tables that behave like queues: rows that another worker has locked are skipped, which avoids contention, at the price of an inconsistent view that makes it unsuitable for general use. A worker claims one job like this:
 
 ```sql
 BEGIN;
@@ -115,7 +115,7 @@ The costs are polling and extra load on the database, and a transaction held ope
 
 Libraries track where each job is. BullMQ's states include waiting, active, delayed, completed and failed, plus a few for priorities and parent jobs, and Celery's are pending, started, success, failure, retry and revoked.
 
-Results are optional and cost storage: Celery can keep return values in a result backend, and its documentation suggests `ignore_result=True` when nobody needs them. When the caller does need to learn the outcome, the answer is the status address of [When to Go Asynchronous](/system-design/when-async).
+Results are optional and cost storage: Celery can keep return values in a result backend, and `ignore_result=True` skips them when nobody needs them. When the caller does need to learn the outcome, the answer is the status address of [When to Go Asynchronous](/system-design/when-async).
 
 ## Key Points
 

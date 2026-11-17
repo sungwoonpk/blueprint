@@ -6,7 +6,7 @@ Which clock says that a view belongs to this minute? And how long should the job
 
 ## Two Clocks
 
-Each event has two times. The **event time** is when it happened, such as when the student tapped the book on the phone. The **processing time** is when the job sees it. Kafka's documentation notes that the gap can be milliseconds in a real time pipeline and hours or days in a batch one.
+Each event has two times. The **event time** is when it happened, such as when the student tapped the book on the phone. The **processing time** is when the job sees it. The gap can be milliseconds in a real time pipeline and hours or days in a batch one.
 
 The gap is not constant. Tyler Akidau, in his explanation of streaming systems, lists causes such as network congestion and a plane full of phones coming back online after airplane mode.
 
@@ -53,19 +53,19 @@ A window has a size, and sometimes a slide or a gap:
 <figcaption>Tumbling windows sit back to back, sliding windows overlap, and session windows wrap bursts of events</figcaption>
 </figure>
 
-The sources show the same shapes with their own numbers. Flink's documentation uses 5 minute tumbling windows, and Spark's guide uses 10 minute windows with a 5 minute slide, so each event falls into two.
+Typical settings are 5 minute tumbling windows, or 10 minute windows with a 5 minute slide, where each event falls into two.
 
 Azure Stream Analytics aligns windows to the zero hour, so a 5 minute tumbling window covers 12:00 to 12:05, and it caps window size at 7 days. Its session windows take a timeout and a maximum duration, so a burst that keeps going is still cut.
 
-The window is also tracked for each key. A minute of views for CS101 and a minute for MATH201 are separate windows, as Kafka Streams says, and they close at different times if their events arrive at different times.
+The window is also tracked for each key. A minute of views for CS101 and a minute for MATH201 are separate windows, and they close at different times if their events arrive at different times.
 
 ## When Is a Window Done?
 
 The window for 09:00 to 09:01 can't close at 09:01, since views from 09:00:58 may still be on their way. The job needs a signal that event time has progressed far enough. That signal is the watermark.
 
-The Dataflow paper from Google describes it as a lower bound on the event times the system has processed, often set by a heuristic, since a system can seldom know what a phone in a tunnel will send later.
+It is a lower bound on the event times the system has processed, often set by a heuristic, since a system can seldom know what a phone in a tunnel will send later.
 
-The common rule is a bounded delay: the watermark is the largest event time seen so far, minus a delay you choose. Flink, Spark and Azure Stream Analytics each describe it that way. In Flink it looks like this:
+The common rule is a bounded delay: the watermark is the largest event time seen so far, minus a delay you choose. Flink, Spark and Azure Stream Analytics work that way. In Flink it looks like this:
 
 ```java
 WatermarkStrategy
@@ -102,7 +102,7 @@ Engines offer a few answers, which can be combined:
 
 ## Early, On Time and Late Results
 
-The Dataflow paper adds a warning: a watermark is sometimes too fast, so late data shows up behind it, and sometimes too slow, since a single slow event can hold back the progress of the whole pipeline.
+A warning: a watermark is sometimes too fast, so late data shows up behind it, and sometimes too slow, since a single slow event can hold back the progress of the whole pipeline.
 
 Baseline lateness can be several minutes, so waiting for the watermark alone can give results later than a design that sends quick estimates and corrects them afterwards.
 
@@ -112,13 +112,13 @@ Its answer is triggers, which decide when to emit, separately from the watermark
 - **Accumulating**: Each result covers everything so far and replaces the previous one, which suits a consumer that overwrites a value
 - **Accumulating and retracting**: Each result comes with a retraction of the previous one, which suits a consumer that aggregates further downstream
 
-Engines differ on this. Azure Stream Analytics says its output follows the watermark alone, with no partial or revised results, so the engine's model decides which designs are possible.
+Engines differ on this. In Azure Stream Analytics the output follows the watermark alone, with no partial or revised results, so the engine's model decides which designs are possible.
 
 ## An Idle Input Stalls the Clock
 
 A job with many inputs, such as partitions, uses the smallest watermark among them. If one partition has no events, its clock doesn't move, and no window closes anywhere.
 
-Flink's documentation describes this and offers an idleness setting: an input silent for a set time, 1 minute in its example, stops holding the others back. Kafka Streams has a similar property, since its stream time moves when a record arrives.
+Flink offers an idleness setting: an input silent for a set time, 1 minute in its example, stops holding the others back. Kafka Streams has a similar property, since its stream time moves when a record arrives.
 
 Azure's version is that when an input is idle, the watermark follows the estimated arrival time minus the late arrival tolerance. A quiet partition at 3:00 AM is normal, so a job should have a plan for it.
 
