@@ -80,7 +80,7 @@ Retrying every failed charge would be a bug, and retries layered on retries can 
 The extra proxies are not free. Several costs add up:
 
 - **Resources**: Istio's published measurements for version 1.24 put a sidecar at about 0.20 of a CPU core and 60 MB of memory when handling 1,000 requests a second with mutual TLS. If 50 pods each did that, the proxies alone would use about 10 cores and 3 GB
-- **Latency**: each call passes through two proxies, one on each side. sidecars add overhead, especially latency
+- **Latency**: each call passes through two proxies, one on each side, so sidecars add overhead, especially latency
 - **Operations**: the mesh is another system to install, upgrade, secure and debug, and a failure in it affects every service
 - **Lifecycle friction**: in Istio's sidecar mode, adding a workload means labeling its namespace and restarting its pods
 

@@ -117,7 +117,7 @@ Cloud providers draw the same line: network layer attacks are handled at the pro
 
 - **Reduce the target**: let only the CDN reach your servers, hide their real addresses, and close unused ports and services, especially UDP ones
 - **Absorb at the edge**: a CDN or anycast network spreads an attack across many locations, the idea in [Global Traffic Routing](/system-design/global-routing), and has more capacity than you do. AWS Shield Standard defends against common layer 3 and 4 attacks at no extra charge, and Google Cloud Armor and Azure DDoS Protection offer always on protection for those layers
-- **Filter at layer 7**: a WAF plus rate limits. layer 7 protection needs a WAF, and Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top
+- **Filter at layer 7**: a WAF plus rate limits, since layer 7 protection needs a WAF, and Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top
 - **Scale, with a ceiling**: [autoscaling](/system-design/autoscaling) can absorb some load, and an attack can drive the bill up, which is why Shield Advanced lists cost protection among its features. Set a maximum
 - **Keep spare capacity and plans**: the headroom from [Redundancy and Failover](/system-design/redundancy-failover), and a plan written down before it's needed
 
