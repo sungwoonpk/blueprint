@@ -22,19 +22,21 @@ The last row is the useful one. The people who made a change are the ones who mo
 
 ## The Dual Write Trap
 
-The first design most teams write is a dual write: update the database, then update the index and the cache in the same piece of code. It looks fine and fails in three ways:
+The first design most teams write is a dual write: update the database, then update the index and the cache in the same piece of code. It looks fine and fails in three ways.
 
-- **A crash in between**: The process dies after the database commit and before the index call. The index is wrong, nobody is told, and it stays wrong until that listing changes again
-- **Reordering**: Two updates to one listing are sent to the index from different servers, and the older one arrives last. The index ends with the old value
-- **A failure that is hidden**: A timeout calling the index is caught and logged, and the user sees success
+A crash in between is the first. The process dies after the database commit and before the index call, so the index is wrong, nobody is told, and it stays wrong until that listing changes again.
+
+Reordering is the second: two updates to one listing are sent to the index from different servers, and the older one arrives last, so the index ends with the old value.
+
+The third is a hidden failure. A timeout calling the index is caught and logged, and the user sees success.
 
 There is no way to make a database and a search engine commit together without a protocol like the ones in [Two-Phase Commit](/system-design/two-phase-commit) and [Sagas](/system-design/sagas), and most indexes and caches can't take part. So don't try. Make the database the sole system written by the request, and let the other copies follow from its record of changes.
 
 ## Follow the Log
 
-The **transactional outbox** pattern, described on microservices.io, is the standard way. The sender stores the message in the database as part of the business transaction, in an outbox table, and a separate process relays it to the broker.
+The **transactional outbox** pattern is the standard way. The sender stores the message in the database as part of the business transaction, in an outbox table, and a separate process relays it to the broker.
 
-Its benefit is the guarantee that the message is sent exactly when the transaction commits, and in order. The relay has two forms: tailing the database's transaction log, or polling the table.
+That guarantees the message is sent exactly when the transaction commits, and in order. The relay has two forms: tailing the database's transaction log, or polling the table.
 
 The cost is that the relay can publish a message more than once, for instance when it crashes after publishing and before recording it. A message consumer must be idempotent, for example by tracking the identifiers of messages it has processed.
 
@@ -49,7 +51,7 @@ The cost is that the relay can publish a message more than once, for instance wh
 <figcaption>The request writes one place, and the other copies follow the record of changes</figcaption>
 </figure>
 
-Debezium, which reads the log, has a router for this pattern, and its documented outbox table has five columns:
+Debezium, a tool that reads the log, ships a router for this pattern, and its outbox table has five columns:
 
 | Column | Role |
 | --- | --- |
@@ -69,12 +71,13 @@ Just 4 percent of the deletes issued result in an actual invalidation, which is 
 
 ## Make Applying a Change Safe
 
-A log delivers each change at least once, and sometimes out of order across partitions or retries, so the consumer has to make applying a change safe:
+A log delivers each change at least once, and sometimes out of order across partitions or retries, so the consumer has to make applying a change safe.
 
-- **Carry a version**: Each change has a number that grows with each update of the listing, such as the row version or the log position
-- **Apply a newer one alone**: If the stored version is at least as high as the incoming one, ignore the message. A repeated or late message has no effect
-- **Treat deletes as versioned events**: A delete is a change with a version, remembered for a while, or a late old update can bring a deleted listing back
-- **Use the engine's help**: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. The variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care
+Carry a version: each change has a number that grows with each update of the listing, such as the row version or the log position. Apply a newer one alone: if the stored version is at least as high as the incoming one, ignore the message, so a repeated or late message has no effect.
+
+Treat deletes as versioned events. A delete is a change with a version, remembered for a while, or a late old update can bring a deleted listing back.
+
+And use the engine's help: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. The variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care.
 
 We simulated the three designs on 20,000 listings with 3 updates each. The assumptions are our own: 0.1 percent of updates lose their publish to a crash, 2 percent of the messages arrive out of order, and 1 percent are delivered twice. After the run we compared the index with the database:
 
@@ -101,7 +104,7 @@ The outbox alone doesn't fix it, since it brings duplicates and reordering. The 
 
 A cache entry is the most common derived copy, and the choice is to update it or to delete it.
 
-Facebook's paper chose delete, since deletes are idempotent: a repeated delete does no harm, while a repeated or reordered update can leave an old value in the cache. A delete makes the next read fetch from the database and fill the cache.
+Facebook's memcache deployment chose delete, since deletes are idempotent: a repeated delete does no harm, while a repeated or reordered update can leave an old value in the cache. A delete makes the next read fetch from the database and fill the cache.
 
 Races remain. Facebook's lease mechanism, a token that a client must present to fill a cache entry and that a delete invalidates, prevents a stale value from being set after a delete, and it limits how often a hot key goes to the database.
 
@@ -121,12 +124,13 @@ The usual remedy is to build a new index in the background from the source, then
 
 ## Repair What the Pipeline Misses
 
-Even a good pipeline drifts: a bug, a bad deploy, a dropped message past the retention of the broker. A second line of defense checks the copies against the source on a schedule:
+Even a good pipeline drifts: a bug, a bad deploy, a dropped message past the retention of the broker. A second line of defense checks the copies against the source on a schedule.
 
-- **Counts and checksums by range**: Compare the number of rows and a checksum for each range of ids, and look closer at the ranges that differ, the idea of the trees in [Repairing Replicas with Hinted Handoff and Merkle Trees](/system-design/repairing-replicas)
-- **Random sampling**: Each hour, read a sample of listings from the source and the copy and compare, and graph the share that differs
-- **A rebuild**: A script that rebuilds a copy from the source, run in a test regularly, so that it works on the day it is needed
-- **Metrics on the pipeline**: The age of the oldest change not yet applied, the number of messages waiting, and the mismatch rate from the sample
+Compare counts and checksums by range: the number of rows and a checksum for each range of ids, looking closer at the ranges that differ, the idea of the trees in [Repairing Replicas with Hinted Handoff and Merkle Trees](/system-design/repairing-replicas).
+
+Sample at random too, reading each hour a sample of listings from the source and the copy and graphing the share that differs.
+
+Keep a rebuild script that rebuilds a copy from the source, and run it in a test regularly so that it works on the day it is needed. And put metrics on the pipeline: the age of the oldest change not yet applied, the number of messages waiting, and the mismatch rate from the sample.
 
 The mismatch rate is the number that says whether the system is healthy. A rising rate means a bug is leaking changes, and a spike after a deploy points at the deploy.
 
