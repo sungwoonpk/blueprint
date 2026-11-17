@@ -93,18 +93,15 @@ In [From One Server to Many](/system-design/one-server-to-many), a load balancer
 <figcaption>Two ways to place the end of the TLS connection</figcaption>
 </figure>
 
-- **Ending at the load balancer** is the simpler choice: certificates live in one place, the web servers do less work, and the load balancer can read each request to route it. The cost is that traffic inside your network is not encrypted
-- **Encrypting to the web servers too** keeps traffic protected inside the network. The cost is a certificate on every server, more CPU, and harder debugging
+Ending at the load balancer is the simpler choice: certificates live in one place, the web servers do less work, and the load balancer can read each request to route it. The cost is that traffic inside your network is not encrypted. Encrypting to the web servers too keeps traffic protected inside the network, at the cost of a certificate on each server, more CPU, and harder debugging.
 
 Teams usually pick the second when the internal network isn't fully trusted, or when rules such as PCI DSS or HIPAA can call for it. When services should also prove their identity to each other, they use mutual TLS, covered in [Service Identity and Mutual TLS (mTLS)](/system-design/service-identity).
 
 ## What HTTPS Does Not Hide
 
-TLS protects the contents of a connection, and some things stay visible:
+TLS protects the contents of a connection, and some things stay visible.
 
-- **Which site you connect to**: the server name usually travels in the clear in the first message, and the address is visible too. Encrypted Client Hello is meant to close that gap, but it's still being rolled out
-- **Your DNS lookups**, unless the lookup itself is encrypted. See [How DNS Works](/system-design/dns)
-- **When, how much and how often you send**, which can still reveal a lot
+The site you connect to is visible: the server name usually travels in the clear in the first message, and the address is visible too. Encrypted Client Hello is meant to close that gap, but it's still being rolled out. Your DNS lookups are visible unless the lookup itself is encrypted, as in [How DNS Works](/system-design/dns). And when, how much and how often you send can still reveal a lot.
 
 And a certificate only proves a name, not that the owner is honest. A site with a valid certificate can still be a scam, or have bugs of its own.
 

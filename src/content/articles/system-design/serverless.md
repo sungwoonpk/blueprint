@@ -49,11 +49,9 @@ The number of environments running at once follows a simple formula: concurrency
 
 Lambda's default limit is 1,000 concurrent executions per Region, so that fits, and a quota increase raises it. Scaling isn't instant, though. Lambda can add 1,000 new environments every 10 seconds per function. A sudden jump, like registration at 9:00 AM, can outrun that, and requests beyond the limits are dropped.
 
-Different platforms make different choices here, and the differences matter:
+Different platforms make different choices here, and the differences matter.
 
-- **AWS Lambda**: one request per environment, which is simple and scales out widely
-- **Google Cloud Run**: runs a container, and one instance serves many requests at once, 80 by default and up to 1,000, so it needs fewer instances. It scales to zero when idle
-- **Azure Functions**: its newer Flex Consumption plan scales to zero and offers "always ready" instances to avoid slow starts
+AWS Lambda runs one request per environment, which is simple and scales out widely. Google Cloud Run runs a container, and one instance serves many requests at once, 80 by default and up to 1,000, so it needs fewer instances, and it scales to zero when idle. Azure Functions has a newer Flex Consumption plan that scales to zero and offers "always ready" instances to avoid slow starts.
 
 Every platform sets limits that shape what you can build there. These are AWS Lambda's:
 
@@ -83,12 +81,9 @@ When no environment is free, a new one has to be built: the code is downloaded, 
 <figcaption>A warm environment skips straight to the handler</figcaption>
 </figure>
 
-On AWS Lambda, cold starts happen in under 1% of invocations in production workloads, and last from under 100 ms to over a second. They are more common for rarely used functions and during sudden growth, since each new environment starts cold. The tools to reduce them:
+On AWS Lambda, cold starts happen in under 1% of invocations in production workloads, and last from under 100 ms to over a second. They are more common for rarely used functions and during sudden growth, since each new environment starts cold. The tools to reduce them.
 
-- **Provisioned concurrency**: keeps a set number of environments initialized and ready, and it is billed
-- **SnapStart**: starts new environments from a saved snapshot of an already initialized one. It is available for Java, Python and .NET, with some restrictions
-- **Minimum instances**: Cloud Run keeps a chosen number of instances warm, so the service doesn't scale all the way to zero
-- **A light startup**: less code to load and less work before the handler
+Provisioned concurrency keeps a set number of environments initialized and ready, and it is billed. SnapStart starts new environments from a saved snapshot of an already initialized one, and is available for Java, Python and .NET, with some restrictions. Cloud Run's minimum instances keep a chosen number of instances warm, so the service doesn't scale all the way to zero. And a light startup, with less code to load and less work before the handler, helps on any platform.
 
 The warm environment is also where a common bug comes from. Anything set up outside the handler stays alive between calls, which is useful and risky at once:
 
@@ -124,11 +119,9 @@ That is the pattern: serverless wins for spiky, rare or unpredictable work, and 
 
 ## The Limits of the Model
 
-Researchers at Berkeley, in a paper from 2018 titled "Serverless Computing: One Step Forward, Two Steps Back", listed weaknesses of the first generation of these services, and some still shape designs:
+Researchers at Berkeley, in a paper from 2018 titled "Serverless Computing: One Step Forward, Two Steps Back", listed weaknesses of the first generation of these services, and some still shape designs.
 
-- **Limited lifetimes**: a function can't run forever, so long jobs have to be split up or run elsewhere
-- **Slow data access**: functions can't be reached directly, so they pass data through storage. They measured about 108 ms to read 1 KB from S3, against about 290 microseconds for direct messaging, the gap from [Numbers Every Engineer Should Know](/system-design/numbers)
-- **Code goes to the data**: the model moves data to the code, which is costly for heavy data work
+Lifetimes are limited: a function can't run forever, so long jobs have to be split up or run elsewhere. Data access is slow, because functions can't be reached directly, so they pass data through storage, about 108 ms to read 1 KB from S3, against about 290 microseconds for direct messaging, the gap from [Numbers Every Engineer Should Know](/system-design/numbers). And the code goes to the data, since the model moves data to the code, which is costly for heavy data work.
 
 Other cautions: the provider's limits and prices are not yours to control, local testing doesn't match the cloud exactly, and a function that runs rarely pays startup latency on each call. One more detail worth knowing: on Azure an HTTP triggered function must answer within 230 seconds, whatever its own timeout says.
 

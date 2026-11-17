@@ -132,11 +132,13 @@ If you can't use Serializable, locking the seller's row first with `SELECT ... F
 
 ## Choosing a Level
 
-No level is right for all queries, so the choice is made by what a transaction does:
+No level is right for all queries, so the choice is made by what a transaction does.
 
-- **Read Committed**: The default, and a sound one when each statement stands alone. Single row updates, simple reads and statements like `views = views + 1` are fine here. It is a poor fit for logic that reads several things and then writes
-- **Repeatable Read**: Use it when many reads must agree with each other, such as a report that adds up totals from several tables. Mark it `READ ONLY` if it doesn't write. Transactions that write need to be ready to retry
-- **Serializable**: Use it when a rule spans rows and a bug would be costly, such as limits, balances or stock, and you would rather have the database catch a mistake than a person. Expect some retries, and keep transactions short and few
+Read Committed is the default, and a sound one when each statement stands alone. Single row updates, simple reads and statements like `views = views + 1` are fine here. It is a poor fit for logic that reads several things and then writes.
+
+Use Repeatable Read when many reads must agree with each other, such as a report that adds up totals from several tables. Mark it `READ ONLY` if it doesn't write. Transactions that write need to be ready to retry.
+
+Use Serializable when a rule spans rows and a bug would be costly, such as limits, balances or stock, and you would rather have the database catch a mistake than a person. Expect some retries, and keep transactions short and few.
 
 You set it per transaction with `BEGIN ISOLATION LEVEL ...`, or for a session or for the whole server through a setting. PostgreSQL's default is Read Committed, and InnoDB's is Repeatable Read, so an app that moves between them can behave differently with no code change.
 

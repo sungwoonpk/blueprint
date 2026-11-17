@@ -86,11 +86,15 @@ Latency isn't promised either. AWS's migration service promises no latency for i
 
 ## What Can Go Wrong
 
-- **A stalled reader fills the disk**: The database has to keep the log until its readers have taken it. In PostgreSQL a replication slot holds the log it hasn't delivered even with no consumer connected, and in extreme cases that can bring the server down. If the textbook app's database writes 5 MB of log a second, a connector that is down for 6 hours leaves 108 GB behind. SQL Server has the same shape, since its log can't be truncated until the capture job has read it
-- **A slow reader loses the log**: MySQL has the opposite risk. Binary logs expire after a set time, 30 days by default, and a consumer that falls further behind than that can't resume and needs a new snapshot
-- **Quiet tables hold the log back**: A connector that watches few busy tables rarely confirms its position. Debezium offers heartbeats, set with `heartbeat.interval.ms` and off by default, so that it reports progress even when no rows change
-- **Schema changes aren't events**: In PostgreSQL, logical decoding doesn't capture changes to the table definition, so a column change reaches consumers as a change in the shape of later events. Use the expand and contract steps from [Schema Migrations Without Downtime](/system-design/schema-migrations), and let consumers ignore fields they don't know
-- **Failover can lose the position**: A replication slot lives on the primary, so after a switch to a replica it may be missing. PostgreSQL 17 added slots that can be kept in sync on a standby, and older setups have to recreate the slot, which can mean a gap or a new snapshot
+A stalled reader fills the disk. The database has to keep the log until its readers have taken it. In PostgreSQL a replication slot holds the log it hasn't delivered even with no consumer connected, and in extreme cases that can bring the server down. If the textbook app's database writes 5 MB of log a second, a connector that is down for 6 hours leaves 108 GB behind. SQL Server has the same shape, since its log can't be truncated until the capture job has read it.
+
+MySQL has the opposite risk: a slow reader loses the log. Binary logs expire after a set time, 30 days by default, and a consumer that falls further behind than that can't resume and needs a new snapshot.
+
+Quiet tables hold the log back too. A connector that watches few busy tables rarely confirms its position, and Debezium offers heartbeats, set with `heartbeat.interval.ms` and off by default, so that it reports progress even when no rows change.
+
+Schema changes aren't events. In PostgreSQL, logical decoding doesn't capture changes to the table definition, so a column change reaches consumers as a change in the shape of later events. Use the expand and contract steps from [Schema Migrations Without Downtime](/system-design/schema-migrations), and let consumers ignore fields they don't know.
+
+And failover can lose the position. A replication slot lives on the primary, so after a switch to a replica it may be missing. PostgreSQL 17 added slots that can be kept in sync on a standby, and older setups have to recreate the slot, which can mean a gap or a new snapshot.
 
 Watch the lag in time and in bytes, and alert long before the disk is full.
 

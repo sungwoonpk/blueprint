@@ -6,11 +6,11 @@ It turns random writes into sequential ones and pays later, by merging files and
 
 ## The Write Path
 
-Patrick O'Neil and his colleagues described the idea in 1996. Today's version has a level in memory and sorted runs on disk below it. Cassandra's write path shows the steps, and RocksDB and LevelDB are alike:
+Patrick O'Neil and his colleagues described the idea in 1996. Today's version has a level in memory and sorted runs on disk below it. Cassandra's write path shows the steps, and RocksDB and LevelDB are alike.
 
-- **Log**: Each write is appended to a write-ahead log first, as in [Write-Ahead Logs](/system-design/write-ahead-logs), so a crash doesn't lose it
-- **Memtable**: The write also goes into a sorted structure in memory, a skip list by default in RocksDB, and reads can see it right away
-- **Flush**: When the memtable is full it is frozen, and a background thread writes it to disk as one sorted file, called an **SSTable**, for sorted string table. Writes carry on into a fresh memtable, and the old log is deleted
+First, each write is appended to a write-ahead log, as in [Write-Ahead Logs](/system-design/write-ahead-logs), so a crash doesn't lose it. The write also goes into a sorted structure in memory, the memtable, a skip list by default in RocksDB, and reads can see it right away.
+
+When the memtable is full it is frozen, and a background thread writes it to disk as one sorted file, called an **SSTable**, for sorted string table. Writes carry on into a fresh memtable, and the old log is deleted.
 
 An SSTable is immutable once written. Nothing edits it: an update is a new entry in a newer file, and a delete is a marker, called a **tombstone**, that hides older values. All the writing to disk is sequential, which suits both hard disks and SSDs.
 
@@ -66,12 +66,11 @@ Each strategy suits a workload: size tiered for write heavy loads, leveled for r
 
 ## The Costs That Show Up Later
 
-An LSM tree hides its bills until compaction runs:
+An LSM tree hides its bills until compaction runs.
 
-- **Space**: Old versions and tombstones stay until they are merged. A full universal compaction in RocksDB can temporarily need about twice the disk space
-- **Stalls**: If writes outrun compaction, the files pile up, and the system slows or stops writes on purpose. RocksDB has settings named `level0_slowdown_writes_trigger` and `level0_stop_writes_trigger` for this
-- **Spiky load**: Compaction uses disk and CPU in bursts, and it also churns the buffer cache, which hurts mixed read and write workloads
-- **Time data**: Cassandra's time window strategy groups files by time, so a whole expired window can be dropped at once, the same idea as the chunks in [Time Series Databases](/system-design/time-series)
+Space is the first bill: old versions and tombstones stay until they are merged, and a full universal compaction in RocksDB can temporarily need about twice the disk space. Stalls are the second. If writes outrun compaction, the files pile up, and the system slows or stops writes on purpose, with RocksDB settings named `level0_slowdown_writes_trigger` and `level0_stop_writes_trigger` for this.
+
+The load is spiky, since compaction uses disk and CPU in bursts and also churns the buffer cache, which hurts mixed read and write workloads. Time data helps in one case: Cassandra's time window strategy groups files by time, so a whole expired window can be dropped at once, the same idea as the chunks in [Time Series Databases](/system-design/time-series).
 
 ## LSM Tree or B-Tree
 
