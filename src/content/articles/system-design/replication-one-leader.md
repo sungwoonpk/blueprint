@@ -36,8 +36,7 @@ Redis uses a replication ID and an offset that grows with each byte of its strea
 
 When does the leader tell the client that a write is done? There are two answers, and they trade safety for speed.
 
-- **Asynchronous**: The leader commits, answers at once, and ships the log in the background. It is fast, and the writes still in flight when the leader dies are lost. This is the default in MySQL, PostgreSQL and Redis
-- **Synchronous**: The leader waits until a follower has the change. A single follower slows each commit, and a follower that stops answering can stall writes entirely
+With asynchronous replication, the leader commits, answers at once, and ships the log in the background. It is fast, and the writes still in flight when the leader dies are lost. This is the default in MySQL, PostgreSQL and Redis. With synchronous replication, the leader waits until a follower has the change. A single follower slows each commit, and a follower that stops answering can stall writes entirely.
 
 PostgreSQL offers levels in `synchronous_commit`: wait for the standby to write the commit record to disk, or just to receive it, or to replay it so that queries can see it. Its `synchronous_standby_names` is empty by default, meaning no synchronous standbys.
 
@@ -65,10 +64,13 @@ These runs promoted the follower that was furthest ahead. When we promoted a ran
 
 When the leader fails, a follower has to take over. The steps are the same everywhere: notice the failure, choose the most up to date follower, send writes to it, and turn the old leader into a follower when it returns. Each step has a way to go wrong.
 
-- **Noticing**: Detection is a guess, as in [Failure Detection and Gossip](/system-design/failure-detection). Patroni, a PostgreSQL manager, keeps a leader key in a store such as etcd with a lifetime of 30 seconds by default and a 10 second loop. MongoDB's election timeout defaults to 10 seconds, and the median time to elect a new primary is no more than 12 seconds. Google's Cloud SQL checks the primary once a second and reports about 60 seconds of unavailability during a failover
-- **Choosing**: The new leader should be the follower with the most data. Patroni refuses to promote a follower more than 1,048,576 bytes behind by default, which bounds the data that an asynchronous failover can lose. Patroni's synchronous mode will not promote a follower unless it is certain to have the acknowledged transactions, and it prefers unavailable writes to lost ones
-- **Switching**: Clients and proxies have to find the new leader. Cloud SQL keeps a shared IP address so that clients reconnect with the same connection string
-- **The old leader**: When it returns, it may hold writes that no one else saw. Something must tell it that it is no longer the primary, a practice called STONITH, and without it both nodes can believe they are the primary and data is lost
+Noticing is the first step, and detection is a guess, as in [Failure Detection and Gossip](/system-design/failure-detection). Patroni, a PostgreSQL manager, keeps a leader key in a store such as etcd with a lifetime of 30 seconds by default and a 10 second loop. MongoDB's election timeout defaults to 10 seconds, and the median time to elect a new primary is no more than 12 seconds. Google's Cloud SQL checks the primary once a second and reports about 60 seconds of unavailability during a failover.
+
+Choosing comes next. The new leader should be the follower with the most data. Patroni refuses to promote a follower more than 1,048,576 bytes behind by default, which bounds the data that an asynchronous failover can lose. Its synchronous mode won't promote a follower unless it is certain to have the acknowledged transactions, preferring unavailable writes to lost ones.
+
+Then switching: clients and proxies have to find the new leader. Cloud SQL keeps a shared IP address so that clients reconnect with the same connection string.
+
+Last is the old leader. When it returns, it may hold writes that no one else saw. Something must tell it that it is no longer the primary, a practice called STONITH, and without it both nodes can believe they are the primary and data is lost.
 
 ## Two Leaders
 

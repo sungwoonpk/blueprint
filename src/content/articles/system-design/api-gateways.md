@@ -4,12 +4,9 @@ After [When to Split into Microservices](/system-design/monoliths-microservices)
 
 ## Without a Gateway
 
-Suppose the phone app talks to each service directly. Here is what goes wrong:
+Suppose the phone app talks to each service directly. Here is what goes wrong.
 
-- **Clients learn the internals**: the app must know which service owns what, so splitting or merging services breaks every installed copy
-- **Many round trips**: a screen that needs data from three services makes three calls, and on a cellular connection each one is slow, as in [The Life of a Request](/system-design/life-of-a-request)
-- **Repeated work**: each service needs its own TLS setup, login check and rate limiting
-- **A wider attack surface**: each service is exposed to the internet
+Clients learn the internals: the app must know which service owns what, so splitting or merging services breaks each installed copy. There are many round trips, since a screen that needs data from three services makes three calls, and on a cellular connection each one is slow, as in [The Life of a Request](/system-design/life-of-a-request). Work is repeated, because each service needs its own TLS setup, login check and rate limiting. And the attack surface is wider, since each service is exposed to the internet.
 
 <figure class="diagram">
 <p class="rowname">Without a Gateway</p>
@@ -134,12 +131,11 @@ The pattern has costs: more services to run, some duplicated code, and an extra 
 
 ## Risks
 
-A gateway is powerful because everything passes through it, and that cuts both ways:
+A gateway is powerful because everything passes through it, and that cuts both ways.
 
-- **Single point of failure and bottleneck**: run several copies behind a load balancer, size them for peak and load test them
-- **Business logic creeping in**: the gateway should route and handle cross-cutting work, and leave the rest to services. One that grows rules about listings or payments turns into a monolith in the middle
-- **Bypass**: services should accept traffic only from the gateway, or the checks it does can be skipped
-- **Extra latency**: another hop adds time, usually small, but it counts against the budget in [Latency and Throughput](/system-design/latency-throughput)
+The gateway is a single point of failure and a bottleneck, so run several copies behind a load balancer, size them for peak and load test them. Business logic can creep in: the gateway should route and handle cross-cutting work, and leave the rest to services, and one that grows rules about listings or payments turns into a monolith in the middle.
+
+Services must not be bypassed, so they should accept traffic only from the gateway, or the checks it does can be skipped. And the extra hop adds latency, usually small, but it counts against the budget in [Latency and Throughput](/system-design/latency-throughput).
 
 ## Gateway, Load Balancer or Mesh
 

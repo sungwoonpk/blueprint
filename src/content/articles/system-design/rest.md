@@ -19,12 +19,9 @@ Content-Type: application/json
  "price": 45, "status": "available"}
 ```
 
-The client holds a snapshot. To change the listing it sends a request, and the next snapshot shows the result. A few habits keep the URLs predictable:
+The client holds a snapshot. To change the listing it sends a request, and the next snapshot shows the result. A few habits keep the URLs predictable.
 
-- **Plural nouns for collections**: `/listings` is the collection and `/listings/42` is one member
-- **Nesting for ownership**: `/listings/42/messages` holds the messages about one listing
-- **Shallow nesting**: one or two levels is readable, and `/users/7/listings/42/messages/9/replies` is a sign to give `/messages/9` its own URL
-- **Ids, not meanings, in the path**: `/listings/42` stays valid even if the title changes
+Use plural nouns for collections: `/listings` is the collection and `/listings/42` is one member. Nest for ownership, so `/listings/42/messages` holds the messages about one listing, but keep nesting shallow. One or two levels is readable, and `/users/7/listings/42/messages/9/replies` is a sign to give `/messages/9` its own URL. And put ids, not meanings, in the path, since `/listings/42` stays valid even if the title changes.
 
 ## One Listing From Start to Finish
 
@@ -109,12 +106,9 @@ The fixed shape of each URL is both a strength and a weakness. The phone's listi
 <figcaption>One screen, 21 requests: each round trip adds its own wait</figcaption>
 </figure>
 
-This is often called the **N+1** problem, one request plus one per item. Remember from [The Life of a Request](/system-design/life-of-a-request) that each round trip costs time. Done one after another, 21 calls at 60 ms each take over a second. Its opposite is just as common: **over-fetching**, where the response holds 30 fields and the screen shows two. Common fixes, from smallest to largest:
+This is often called the **N+1** problem, one request plus one per item. Remember from [The Life of a Request](/system-design/life-of-a-request) that each round trip costs time. Done one after another, 21 calls at 60 ms each take over a second. Its opposite is just as common: **over-fetching**, where the response holds 30 fields and the screen shows two. Common fixes, from smallest to largest.
 
-- **Embed what's usually needed**: `GET /listings?include=seller` returns each seller inside its listing
-- **Let the client pick fields**: `?fields=title,price` trims the response
-- **Add an endpoint shaped for the screen**: a backend built for one client, sometimes called a backend for frontend
-- **Change the style**: let the client describe exactly what it wants, as [GraphQL](/system-design/graphql) does, or use a leaner binary protocol, as in [RPC and gRPC](/system-design/rpc-grpc)
+One answer is to embed what's usually needed: `GET /listings?include=seller` returns each seller inside its listing. Another is to let the client pick fields, since `?fields=title,price` trims the response. A third is to add an endpoint shaped for the screen, a backend built for one client, sometimes called a backend for frontend. The last is to change the style: let the client describe exactly what it wants, as [GraphQL](/system-design/graphql) does, or use a leaner binary protocol, as in [RPC and gRPC](/system-design/rpc-grpc).
 
 [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) puts these side by side.
 

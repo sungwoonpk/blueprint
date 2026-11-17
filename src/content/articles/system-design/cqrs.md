@@ -21,10 +21,11 @@ Commands should describe a business task, such as `PostListing`, and not a low l
 
 ## Two Models, Two Stores
 
-The separation has two levels:
+The separation has two levels.
 
-- **Two models, one database**: The simplest form. The write model has the rules and the transactions, and the read model is a set of queries that return flat objects. It is a good starting point
-- **Two models, two stores**: Each side can use the technology and the scaling that suits it. A typical pair is a relational database for writes and a document database for reads, and other combinations of relational and NoSQL stores work on either side
+The simplest form is two models in one database. The write model has the rules and the transactions, and the read model is a set of queries that return flat objects. It is a good starting point.
+
+The fuller form is two models in two stores. Each side can use the technology and the scaling that suits it. A typical pair is a relational database for writes and a document database for reads, and other combinations of relational and NoSQL stores work on either side.
 
 With two stores, something must carry changes from one to the other.
 
@@ -43,7 +44,7 @@ With two stores, something must carry changes from one to the other.
 
 The read side is a **projection**, a table built from the events of the write side. Microsoft's pattern for it is called the materialized view, a prepopulated read model that can be thrown away and rebuilt from its sources.
 
-Chris Richardson's microservices.io calls it a view database, a copy built for reading and designed for one query or a group of them, kept current by subscribing to the events of the services that own the data.
+It is called a view database: a copy built for reading and designed for one query or a group of them, kept current by subscribing to the events of the services that own the data.
 
 ## What the Read Side Buys
 
@@ -96,12 +97,9 @@ Two stores mean the read side trails the write side, a delay called eventual con
 
 A seller who posts a listing and sees the next page 100 ms later would miss it in 60.8 percent of the posts. After 1 second, 0.65 percent still missed it, and after 2 seconds, 0.01 percent.
 
-The numbers depend on our assumed delay, and the shape holds: most readers see the change soon and a few see the old page. The usual remedies:
+The numbers depend on our assumed delay, and the shape holds: most readers see the change soon and a few see the old page. The usual remedies follow.
 
-- **Answer from the command**: The response to `PostListing` carries the new listing, and the page shows it without asking the read side
-- **Show pending work**: Udi Dahan, a well known advocate of the pattern, describes a user interface that lists the commands still being processed, so the user sees that the change was accepted
-- **Tell the user later**: A command that fails after it was accepted is reported by a notification, since it can't answer at once
-- **Read from the write side for a moment**: A common remedy of our own choosing, not from the sources: after a user's own write, serve that user's next read from the write store
+The response to `PostListing` can carry the new listing, so the page shows it without asking the read side. A user interface can show pending work, listing the commands still being processed, so the user sees that the change was accepted. A command that fails after it was accepted is reported by a notification, since it can't answer at once. And one more remedy is to read from the write side for a moment: after a user's own write, serve that user's next read from the write store.
 
 A similar point for commands: validate in the client where possible, so most commands succeed, and queue the rest. The design has to expect that a user may act on stale data and decide what happens then.
 
@@ -113,11 +111,9 @@ He says most of the cases he has met went badly, and advises using it in a part 
 
 He also names a lighter option: if just some queries are heavy, copy data to a reporting database and keep everything else as it was.
 
-The sources describe when the cost is worth it:
+The cost is worth it in a few cases.
 
-- **Many people changing the same data**: collaborative environments and task based screens
-- **Reads and writes with different needs**: Microsoft points to workloads that read much more than they write and need to scale separately
-- **Queries across services**: Richardson's problem is a query that needs data from several services that each own theirs. A view database is one answer, and he lists API composition, which calls the services and joins the results, as the alternative
+It pays when many people change the same data, as in collaborative environments and task based screens. It pays when reads and writes have different needs, such as workloads that read much more than they write and need to scale separately. And it pays for queries across services, where one query needs data from several services that each own theirs. A view database is one answer, and API composition, which calls the services and joins the results, is the alternative.
 
 Skip it when the domain and the rules are simple. In the textbook app, the listing search is a fit: many more reads than writes, and a shape that differs from the tables. The seller's profile page is a plain table that one model handles.
 
