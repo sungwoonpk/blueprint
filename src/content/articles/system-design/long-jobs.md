@@ -10,14 +10,15 @@ If the job's progress lives in a process's memory alone, each of those events lo
 
 ## Telling the Caller
 
-The interface comes first. The caller can't hold a connection for an hour, so the API accepts the work and answers later. The pattern is called asynchronous request reply:
+The interface comes first. The caller can't hold a connection for an hour, so the API accepts the work and answers later. The pattern is called asynchronous request reply, and it has a natural order.
 
-- **Accept**: The client sends the request, the API validates it, and returns 202 Accepted with a `Location` header for a status resource, and optionally `Retry-After` to say when to look. RFC 9110's 202 means the request was accepted for processing and the processing isn't complete
-- **Status**: A poll of the status resource returns 200 with a body that shows the state, while the work is pending. Useful fields: a status of pending, running, succeeded, failed or canceled, times of creation and last update, a percent complete, and an error in the problem details format
-- **Done**: When the work finishes, the status resource answers 303 See Other with the location of the result. Avoid 302, since some clients replay the original method on a redirect, which could repeat a POST
-- **Cancel**: A DELETE on the status resource cancels the work
-- **Safe retries**: An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work)
-- **Cleanup**: A retention policy removes old status resources, with an `Expires` header as a hint
+The client sends the request, the API validates it, and it returns 202 Accepted with a `Location` header for a status resource, and optionally `Retry-After` to say when to look. A 202 means that the request was accepted for processing and the processing isn't complete.
+
+The client then polls the status resource, which returns 200 with a body that shows the state while the work is pending. Useful fields are a status of pending, running, succeeded, failed or canceled, times of creation and last update, a percent complete, and an error in the problem details format.
+
+When the work finishes, the status resource answers 303 See Other with the location of the result. Avoid 302, since some clients replay the original method on a redirect, which could repeat a POST.
+
+The rest is housekeeping. A DELETE on the status resource cancels the work. An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work). A retention policy removes old status resources, with an `Expires` header as a hint.
 
 <figure class="diagram">
 <p class="rowname">Submit</p>
@@ -39,11 +40,11 @@ The interface comes first. The caller can't hold a connection for an hour, so th
 <figcaption>The async request and reply shape: accept now, report progress, point to the result when done</figcaption>
 </figure>
 
-Task libraries use the same life cycle. Celery's task states are pending, started, success, failure and retry, with revoked for a canceled task.
+Task libraries use the same life cycle. A task is pending, started, then a success or a failure, with a retry state in between and a revoked state for a canceled task.
 
-An unknown task id also reads as pending, started isn't reported unless the tracking option is turned on, and an application can define its own state, such as progress with a current and total count.
+Two quirks are worth knowing. An unknown task id also reads as pending, and the started state isn't reported unless the tracking option is turned on.
 
-A result backend stores the states, and results must eventually be fetched or forgotten, or backend resources aren't released.
+An application can define its own state, such as progress with a current and total count. The result backend stores the states, and results must eventually be fetched or forgotten, or its resources aren't released.
 
 ## Surviving a Crash: Save Progress
 
@@ -82,21 +83,19 @@ The steps that follow it must be safe to repeat, since a crash between finishing
 
 Writing checkpoints by hand for each job gets repetitive and error prone, and **workflow engines** take it over. They store the state of each run durably and resume it after any failure.
 
-Temporal's design is a good example. A workflow is ordinary code, and the system records each command and event in an event history.
+Temporal is a good example of the design. A workflow is ordinary code, and the system records each command and event in an event history. After a crash the engine doesn't restore memory: it runs the workflow code again from the start, feeding it the recorded history, so the code reaches the same point.
 
-After a crash the engine doesn't restore memory: it runs the workflow code again from the start, feeding it the recorded history, so the code reaches the same point. That requires the workflow code to be deterministic.
-
-Anything non deterministic, such as the current time, random numbers and network calls, goes through replay safe interfaces or through activities.
+That requires the workflow code to be deterministic, so anything that isn't, such as the current time, random numbers and network calls, goes through replay safe interfaces or through activities.
 
 The activities do the work with side effects, and their results are recorded, so on a replay an activity that finished isn't run again. Timers are recorded events and don't wait again. A workflow can keep running for years.
 
-The parts have documented defaults and limits:
+The defaults show how the parts are meant to be used. Activity retries start at an interval of 1 second with a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts, and a limit on the total retry time is better than a limit on attempts.
 
-- **Activity retries**: An initial interval of 1 second, a backoff coefficient of 2.0, a maximum interval of 100 times the initial one, and unlimited attempts by default; a limit on the total retry time is better than a limit on attempts
-- **Timeouts**: Each attempt has a start to close timeout, which should be set, and a heartbeat timeout tells the server that a long activity is alive. A heartbeat can also carry progress details that the next attempt reads, which is a checkpoint
-- **History size**: A hard limit of 51,200 events or 50 MB for an execution, with warnings after 10,240 events or 10 MB. A long workflow periodically continues as a new execution, with its state passed on, to stay under the limit
+Each attempt should have a start to close timeout, and a heartbeat timeout tells the server that a long activity is alive. A heartbeat can also carry progress details that the next attempt reads, which is a checkpoint.
 
-AWS Step Functions offers a managed form, described as state machines. A standard workflow runs for up to a year, with exactly once execution, unless retries are specified, and is billed by state transitions.
+The history has a ceiling: 51,200 events or 50 MB for an execution, with warnings after 10,240 events or 10 MB. A long workflow periodically continues as a new execution, with its state passed on, to stay under the limit.
+
+A managed form is a state machine service such as AWS Step Functions. A standard workflow runs for up to a year, with exactly once execution unless retries are specified, and is billed by state transitions.
 
 An express workflow runs for up to five minutes, with at least once delivery for asynchronous runs, and is billed by requests and duration.
 
@@ -106,7 +105,7 @@ Both embody ideas from earlier topics: [Timeouts, Retries and Backoff](/system-d
 
 ## Several Services, One Task
 
-When the workflow spans services, each with its own database, there is no transaction around the whole. [Sagas](/system-design/sagas) covered the answer: a sequence of local transactions with compensating actions for undo. The Azure and microservices.io descriptions add the choices:
+When the workflow spans services, each with its own database, there is no transaction around the whole. [Sagas](/system-design/sagas) covered the answer: a sequence of local transactions with compensating actions for undo. Two styles exist for running one:
 
 | Style | Strength | Weakness |
 | --- | --- | --- |
@@ -115,26 +114,27 @@ When the workflow spans services, each with its own database, there is no transa
 
 A saga has named parts: compensable steps that can be undone, a pivot step that is the point of no return, and retryable steps after it, which have to be idempotent.
 
-Its pattern on compensating transactions adds a caution: compensations can fail, so record progress, make each compensation an idempotent command, alert with details when a person is needed, and consider that offering an alternative may be better than undoing the whole task.
+Compensation needs a caution. A compensation can fail too, so record progress, make each compensation an idempotent command, alert with details when a person is needed, and consider that offering an alternative may be better than undoing the whole task.
 
-The Scheduler Agent Supervisor pattern shows how to build the recovery loop yourself:
+Building the recovery loop yourself has a known shape, with three roles. A scheduler arranges the steps, records each step's state and a deadline by which it must complete in a durable store, and calls the agents, usually through queues.
 
-- **Scheduler**: Arranges the steps, records each step's state and a deadline by which it must complete in a durable store, and calls the agents, usually through queues
-- **Agent**: Wraps one call to one service, does its own retries within the deadline, and passes a stable identifier on each retry so the other side can deduplicate
-- **Supervisor**: Runs periodically, looks in the store for steps past their deadline, and asks for recovery, while counting retries for each step. The state store doesn't distinguish a step that timed out from one that failed
-- **Recovery**: Either extend the deadline and retry, which needs idempotent steps, or undo the whole task with compensations
+An agent wraps one call to one service, does its own retries within the deadline, and passes a stable identifier on each retry so the other side can deduplicate.
 
-The pattern's own warnings are the ones to heed: retries multiply across layers, so one component should own the end to end retry budget, and there is no admission control, so a bounded queue or a cap on work in flight is needed. [Task Queues](/system-design/task-queues) covers the queue side.
+A supervisor runs periodically, looks in the store for steps past their deadline, and asks for recovery, while counting retries for each step. The state store can't tell a step that timed out from one that failed. Recovery then either extends the deadline and retries, which needs idempotent steps, or undoes the whole task with compensations.
+
+Two warnings come with the design. Retries multiply across layers, so one component should own the end to end retry budget. And the loop doesn't control admission, so a bounded queue or a cap on work in flight is needed. [Task Queues](/system-design/task-queues) covers the queue side.
 
 ## Operating Long Jobs
 
-- **Make state visible**: A job's status, last heartbeat and attempt count in a dashboard or a query, as in [Logs, Metrics and Traces](/system-design/observability), since a stuck job is invisible otherwise
-- **Time limits on each step**: Each step has a timeout, and each wait for a human has a deadline and an escalation
-- **Cancellation**: A way to stop a job that checks between steps, and releases what it held
-- **Backpressure**: A bound on running jobs, and fair scheduling between tenants, so a bulk export doesn't starve small ones
-- **Poison jobs**: A job that fails repeatedly goes to a dead letter queue with its history for a person to read, and doesn't retry forever
-- **Versioning**: A change to the workflow code while runs are in flight has to be compatible with the recorded histories, or the runs finish on the old version
-- **Deploys**: Workers stop taking new work, finish or checkpoint what they hold, and exit, which is the draining behavior of [Canary Releases and Other Deployment Strategies](/system-design/deployments)
+Long jobs need habits that short requests don't.
+
+Make state visible: a job's status, last heartbeat and attempt count in a dashboard or a query, as in [Logs, Metrics and Traces](/system-design/observability), since a stuck job is invisible otherwise. Put a time limit on each step, and a deadline and an escalation on each wait for a human.
+
+Give jobs a way to be canceled, one that checks between steps and releases what it held. Bound the number of running jobs and schedule fairly between tenants, so a bulk export doesn't starve small ones.
+
+A job that fails repeatedly goes to a dead letter queue with its history for a person to read, and doesn't retry forever.
+
+Two changes need care. Changing the workflow code while runs are in flight must stay compatible with the recorded histories, or the runs finish on the old version. And a deploy should let workers stop taking new work, finish or checkpoint what they hold, and exit, the draining behavior of [Canary Releases and Other Deployment Strategies](/system-design/deployments).
 
 ## Choosing a Tool
 
