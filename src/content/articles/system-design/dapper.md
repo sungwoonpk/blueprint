@@ -62,7 +62,7 @@ Privacy was handled by omission. Dapper stored the names of RPC methods and not 
 
 Tracing each request costs too much, so Dapper traces a fraction. The decision is made once, at the start of a request, and is carried with the trace context, so a trace is complete or absent and has no missing middle spans.
 
-The paper measured the cost on a web search cluster. When each request was traced, average latency rose by 16.3 percent and throughput fell by 1.48 percent.
+A measurement on a web search cluster shows the cost. When each request was traced, average latency rose by 16.3 percent and throughput fell by 1.48 percent.
 
 The cost fell as the sampling rate dropped: 9.40 percent at 1 in 2, 6.38 percent at 1 in 4, 4.12 percent at 1 in 8 and 2.12 percent at 1 in 16.
 
@@ -80,6 +80,15 @@ We did the arithmetic for the textbook app at its peak of 3,000 requests a secon
 | 1 in 1,000 | 10,800 | 675 | 10.5 |
 | 1 in 10,000 | 1,080 | 67.5 | 1.1 |
 | 1 in 100,000 | 108 | 6.8 | 0.1 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Traces captured an hour for a problem hitting 1 request in 1,000, by sampling rate">
+<div class="hbar peak"><span>Trace Each Request</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">10,800</span></div>
+<div class="hbar"><span>1 in 16</span><span class="track"><span class="fill" style="--w: 6.3%"></span></span><span class="value">675</span></div>
+<div class="hbar"><span>1 in 1,024</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">10.5</span></div>
+</div>
+<figcaption>Traces captured in an hour for a problem that hits 1 request in 1,000, at 3,000 requests a second, by sampling rate</figcaption>
+</figure>
 
 At peak traffic, a problem that touches 1 request in 1,000 still produces about 10 traces an hour at 1 in 1,024, enough to see its shape.
 

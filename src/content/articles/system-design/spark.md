@@ -48,7 +48,7 @@ It is flexible, and flexibility makes failure expensive. To survive a loss, a sy
 
 The RDD makes a trade. Its writes are coarse: a transformation applies one operation to many records, so a log of the operations is tiny compared with the data. Its reads can be fine, and an immutable dataset can serve as a lookup table.
 
-In return, RDDs give up fine grained updates, and the paper says so directly: they suit batch work that applies the same operation to a whole dataset, and they are a poor fit for a storage system behind a web app or a crawler that updates one record at a time. For those, a database is the tool.
+In return, RDDs give up fine grained updates, and the limit is real: they suit batch work that applies the same operation to a whole dataset, and they are a poor fit for a storage system behind a web app or a crawler that updates one record at a time. For those, a database is the tool.
 
 Immutability pays in other places too. Two copies of a slow task can run without interfering, so the backup tasks of MapReduce work here as well. And partitions that don't fit in memory spill to disk and the program slows down gracefully to the speed of a disk based system, and doesn't fall over.
 

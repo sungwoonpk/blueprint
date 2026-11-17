@@ -75,6 +75,15 @@ That makes the time during which a second failure matters very short, and we com
 | 1 hour | 0.011% | About 1 in 2,200 | About 8 in 100 million |
 | 1 day, a Whole Volume Copied | 0.27% | About 1 in 90 | About 4 in 100,000 |
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Chance of losing a read quorum during a zone outage for three repair times">
+<div class="hbar peak"><span>Repair in 1 Day</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">4 in 100,000</span></div>
+<div class="hbar"><span>Repair in 1 Hour</span><span class="track"><span class="fill" style="--w: 0.2%"></span></span><span class="value">8 in 100 million</span></div>
+<div class="hbar"><span>Repair in 10 s</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">6 in 10 trillion</span></div>
+</div>
+<figcaption>Chance of losing a read quorum during a zone outage by repair time, from our arithmetic, with the first bar to scale and the others too small to see</figcaption>
+</figure>
+
 Repair time is the lever. Making the unit smaller took the chance of losing a read quorum from about 4 in 100,000 to about 6 in 10 trillion, seven orders of magnitude.
 
 And the same design handles maintenance for free: patching a node, moving a hot segment and upgrading software are the same event as a short failure, done one zone at a time and one member of a group at a time.

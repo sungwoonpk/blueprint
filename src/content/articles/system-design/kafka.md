@@ -36,7 +36,7 @@ And a slow consumer doesn't slow the others, since each has its own offset. This
 
 It sounds slow to write each message to disk, and the design depends on three facts.
 
-Sequential disk access is fast and random access isn't. The documentation gives the order of magnitude: about 600 MB a second of linear writes on a set of ordinary drives, against about 100 KB a second of random writes. A log appends, so it uses the fast pattern.
+Sequential disk access is fast and random access isn't. The order of magnitude is large: about 600 MB a second of linear writes on a set of ordinary drives, against about 100 KB a second of random writes. A log appends, so it uses the fast pattern.
 
 The operating system's page cache does the caching. Kafka writes to the file system and lets the kernel keep recent data in memory, so reads of fresh data come from memory and the broker holds almost no cache of its own, which avoids the pauses of a large managed heap.
 
@@ -86,6 +86,16 @@ We measured the trade. A partition took 2,000 writes a second, followers took an
 | 5 ms | 9.9 | 0 |
 | 20 ms | 40.0 | 0 |
 | 100 ms | 172.9 | 0 |
+
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Acknowledged writes lost in a leader crash for four copy delays with acks 1">
+<div class="hbar"><span>1 ms Delay</span><span class="track"><span class="fill" style="--w: 1.1%"></span></span><span class="value">1.9</span></div>
+<div class="hbar"><span>5 ms Delay</span><span class="track"><span class="fill" style="--w: 5.7%"></span></span><span class="value">9.9</span></div>
+<div class="hbar"><span>20 ms Delay</span><span class="track"><span class="fill" style="--w: 23.1%"></span></span><span class="value">40.0</span></div>
+<div class="hbar peak"><span>100 ms Delay</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">172.9</span></div>
+</div>
+<figcaption>Acknowledged writes lost in a leader crash with acks 1, by follower copy delay, from our simulation, where the strictest setting lost zero</figcaption>
+</figure>
 
 With `acks=1`, the writes in flight to the followers at the moment of the crash are lost, and the count grows with the copy delay, since the leader answers before the copy. With `acks=-1`, a write is acknowledged when each in sync replica has it, so the new leader, taken from that set, has each acknowledged write.
 

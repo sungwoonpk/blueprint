@@ -65,6 +65,16 @@ We computed how often that happens. Say that each client that caches a file is u
 | 1,000 | 63.2% |
 | 10,000 | 99.995% |
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Chance that a write waits for a lease, by number of clients caching the file">
+<div class="hbar"><span>10 Clients</span><span class="track"><span class="fill" style="--w: 1%"></span></span><span class="value">1.0%</span></div>
+<div class="hbar"><span>100 Clients</span><span class="track"><span class="fill" style="--w: 9.5%"></span></span><span class="value">9.5%</span></div>
+<div class="hbar"><span>1,000 Clients</span><span class="track"><span class="fill" style="--w: 63.2%"></span></span><span class="value">63.2%</span></div>
+<div class="hbar peak"><span>10,000 Clients</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">99.995%</span></div>
+</div>
+<figcaption>Chance that a write waits for a lease when each caching client is unresponsive 0.1 percent of the time</figcaption>
+</figure>
+
 With a thousand clients, most writes wait, and the wait can be as long as the lease, 12 seconds by default. That is acceptable for configuration that changes rarely, which is Chubby's use, and it is the reason that a system with many cachers and frequent writes wants another design.
 
 ## What ZooKeeper Does Differently
@@ -105,7 +115,7 @@ We counted what the herd costs in wakeups. N clients wait, and the lock passes d
 
 The first column grows with the square of the number of waiters, which is N times N minus 1 over 2, and the second grows in a line. At a thousand waiters, the difference is half a million notifications against a thousand.
 
-The same pattern, a sorted list of ephemeral nodes and a watch on the predecessor, builds read and write locks, queues and leader elections, and the paper gives recipes for each.
+The same pattern, a sorted list of ephemeral nodes and a watch on the predecessor, builds read and write locks, queues and leader elections, and each has a standard recipe.
 
 ## Comparing the Two
 

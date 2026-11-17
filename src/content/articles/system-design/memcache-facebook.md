@@ -63,6 +63,14 @@ A hot key read 3,000 times a second and invalidated four times a second sent abo
 
 With one token for each 10 second window, the same key sent about 0.1 a second. The real system reported the same effect on the keys most prone to herds: a peak of 17,000 database queries a second without leases, and 1,300 with them.
 
+<figure class="chart">
+<div class="hbars" role="img" aria-label="Database queries a second for one hot key, with and without a lease">
+<div class="hbar peak"><span>No Lease</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">295</span></div>
+<div class="hbar"><span>With a Lease</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">0.1</span></div>
+</div>
+<figcaption>Average database queries a second for one hot key invalidated four times a second, from our model</figcaption>
+</figure>
+
 The price is waiting or staleness, and the system softens it. When a key is deleted, its old value sits in a short lived side structure, and a get can return the stale value marked as stale.
 
 Applications that can make progress with slightly old data, which most can since a cached value tends to be an older snapshot of the database, don't wait.
