@@ -24,15 +24,17 @@ Long polling improves on it: the server holds each request open until there is s
 
 ## Server-Sent Events
 
-Server-Sent Events are the plainest push mechanism. The client opens one HTTP request, the server answers with `Content-Type: text/event-stream` and keeps the response open, writing events as they happen. The WHATWG specification defines the format and the browser's `EventSource` API.
+Server-Sent Events are the plainest push mechanism. The client opens one HTTP request, the server answers with `Content-Type: text/event-stream` and keeps the response open, writing events as they happen. The browser's `EventSource` API does the reading.
 
-The wire format is a text stream, UTF-8, in lines:
+The wire format is a UTF-8 text stream, in lines. A `data` line carries the payload, and several data lines join with a line feed. An `event` line names the event, which is otherwise a `message`.
 
-- **Fields**: `data` carries the payload, and several data lines join with a line feed. `event` names the event, otherwise it is a `message`. `id` sets the last event id. `retry` sets the reconnection time in milliseconds
-- **Dispatch**: A blank line ends an event and dispatches it. An event cut off at the end of the stream is discarded
-- **Comments**: A line starting with a colon is ignored, and the specification advises sending one at about 15 second intervals to stop proxies from dropping the connection
-- **Reconnection**: `EventSource` reconnects by itself, after a delay the specification calls implementation defined, probably a few seconds. A response with status 204 tells the client to stop
-- **Resuming**: On reconnect the client sends a `Last-Event-ID` header with the last id it saw, so the server can replay what was missed. An event without an id inherits the previous one
+An `id` line sets the last event id, and `retry` sets the reconnection time in milliseconds. A blank line ends an event and dispatches it, and an event cut off at the end of the stream is discarded.
+
+A line starting with a colon is a comment and is ignored, which makes it a cheap heartbeat: send one about every 15 seconds to stop proxies from dropping the connection.
+
+Reconnection is built in. `EventSource` reconnects by itself, after a delay that is implementation defined, probably a few seconds, and a response with status 204 tells the client to stop.
+
+On reconnect the client sends a `Last-Event-ID` header with the last id it saw, so the server can replay what was missed. An event without an id inherits the previous one.
 
 The costs are the direction, since the client sends no data back on the stream and uses ordinary requests instead, and a browser limit. Over HTTP/1.1 a browser allows about 6 open connections per domain, shared across the tabs, and Chrome and Firefox treat this limit as won't fix.
 
@@ -40,17 +42,19 @@ Over HTTP/2 the limit is negotiated and defaults to 100 simultaneous streams. Fo
 
 ## WebSockets
 
-A WebSocket carries messages in both directions over one connection. RFC 6455 defines it. The connection starts as an ordinary HTTP request that asks to upgrade: the client sends `Upgrade: websocket`, `Connection: Upgrade` and a random `Sec-WebSocket-Key`, and the server answers `101 Switching Protocols` with a `Sec-WebSocket-Accept`.
+A WebSocket carries messages in both directions over one connection. The connection starts as an ordinary HTTP request that asks to upgrade: the client sends `Upgrade: websocket`, `Connection: Upgrade` and a random `Sec-WebSocket-Key`, and the server answers `101 Switching Protocols` with a `Sec-WebSocket-Accept`.
 
 That header is the base64 of the SHA-1 of the client's key joined with a fixed GUID, which proves that the server understood the protocol and wasn't a confused HTTP server. After the 101, the connection carries frames, not HTTP.
 
-From the specification and its summary: frames have types for text, binary, and the control frames close, ping and pong. A client masks each frame it sends, and a server doesn't. A ping must be answered with a pong, and a close frame is answered with a close, after which the connection ends.
+Frames have types for text, binary, and the control frames close, ping and pong. A client masks each frame it sends, and a server doesn't. A ping must be answered with a pong, and a close frame is answered with a close, after which the connection ends.
 
-WebSockets earn their place for two way, frequent traffic, such as chat or a live auction. They have costs that plain HTTP doesn't:
+WebSockets earn their place for two way, frequent traffic, such as chat or a live auction. They have costs that plain HTTP doesn't.
 
-- **Proxies**: `Upgrade` and `Connection` are hop by hop headers, so a proxy such as NGINX has to be told to pass them. NGINX closes a proxied connection that carries no data for 60 seconds by default, so the server should send ping frames or the timeout should be raised
-- **A different failure model**: No status codes per message, and no automatic reconnection or resumption in the protocol
-- **Libraries fill the gaps**: Socket.IO starts with long polling and upgrades to a WebSocket when possible, with a heartbeat in which the server pings at an interval of 25 seconds in its example handshake and the client must answer within 20, and a reconnection and buffering layer on top
+Proxies need care. `Upgrade` and `Connection` are hop by hop headers, so a proxy such as NGINX has to be told to pass them, and NGINX closes a proxied connection that carries no data for 60 seconds by default, so the server should send ping frames or the timeout should be raised.
+
+The failure model is different too: no status codes per message, and no automatic reconnection or resumption in the protocol. Libraries fill the gaps.
+
+Socket.IO, for one, starts with long polling and upgrades to a WebSocket when possible, adds a heartbeat in which the server pings at an interval of 25 seconds in its example handshake and the client must answer within 20, and puts a reconnection and buffering layer on top.
 
 ## Mobile Push
 
@@ -70,11 +74,13 @@ That is user space memory in one runtime, without the kernel's socket buffers or
 
 At 6.5 KB, a million connections would need about 6.5 GB for the idle state alone, our arithmetic. The practical limits are the file descriptor limit, which must be raised, and the memory.
 
-The usual design has three parts:
+The usual design has three parts.
 
-- **A gateway tier**: Servers that just hold connections, authenticate them and forward messages, sized by the number of connections
-- **A publish and subscribe bus**: Services publish events by topic or user, and each gateway subscribes for the users it holds. Socket.IO's Redis adapter is an example. A message for several clients goes to the local ones and is published to a Redis channel that the other servers receive. The adapter stores no keys in Redis, and if the Redis connection drops, messages reach the clients on the same server and no others
-- **A routing question**: To message one user, find which gateway holds them, or publish to a channel for that user. A table from user to gateway, with a time to live, does it, and a user with several devices has several entries
+A gateway tier holds the connections, authenticates them and forwards messages, and it is sized by the number of connections. Behind it sits a publish and subscribe bus: services publish events by topic or user, and each gateway subscribes for the users it holds. Socket.IO's Redis adapter is one example.
+
+A message for several clients goes to the local ones and is published to a Redis channel that the other servers receive. The adapter stores no keys in Redis, and if the Redis connection drops, messages reach the clients on the same server and no others.
+
+The third part is a routing question. To message one user, find which gateway holds them, or publish to a channel for that user. A table from user to gateway, with a time to live, does it, and a user with several devices has several entries.
 
 <figure class="diagram">
 <div class="flow">
@@ -95,13 +101,13 @@ A protocol with an upgrade step needs the requests of one session to reach one s
 
 ## Reliable Enough
 
-A push channel is at most once by default: a message sent while the connection was down is gone. For the textbook app a lost new message notice is a real problem, so the design needs resumption:
+A push channel is at most once by default: a message sent while the connection was down is gone. For the textbook app a lost new message notice is a real problem, so the design needs resumption.
 
-- **Ids on events**: Each event has an increasing id, as in SSE's `id` field
-- **A replay window**: The server keeps recent events for each user, and on reconnect the client says the last id it has
-- **A fallback to state**: If the gap is larger than the window, the client fetches the current state from the API, such as the inbox, and not the individual events
-- **Idempotent handling**: A replayed event may repeat one already shown, so clients ignore ids they have processed, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work)
-- **Liveness checks**: A dead connection can look open for a long time, so heartbeats, such as SSE comment lines or WebSocket pings, detect it
+Give each event an increasing id, as in the `id` field of SSE. The server keeps a replay window of recent events for each user, and on reconnect the client says the last id it has.
+
+If the gap is larger than the window, the client fetches the current state from the API, such as the inbox, and not the individual events.
+
+A replayed event may repeat one already shown, so clients ignore ids they have processed, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work). And since a dead connection can look open for a long time, heartbeats, such as SSE comment lines or WebSocket pings, detect it.
 
 How much history to keep depends on how long clients are away. We simulated clients that disconnect for 2 seconds to 10 minutes, with 20 events a second:
 
@@ -149,17 +155,17 @@ The exponential policy sent fewer attempts than the fixed one and took longer, s
 
 The lessons are to add jitter, to choose the first window from the number of clients and the accept rate and not from a habit, and to let the server help: shed new connections quickly with a `Retry-After`, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding), and drain gateways gradually during a deploy, as in [Canary Releases and Other Deployment Strategies](/system-design/deployments).
 
-The SSE specification's own default of a few seconds, with no jitter, is the policy that makes the worst case.
-
 ## Security
 
-A long lived connection has security questions of its own:
+A long lived connection has security questions of its own, and most start at the handshake.
 
-- **Authenticate on connect**: With a token that expires, and decide what happens when it expires during a long session, with a message that authenticates again or a forced reconnect, as in [OAuth and JWT](/system-design/oauth-jwt)
-- **Check the origin**: A browser sends an `Origin` header on the WebSocket handshake, and the server should refuse origins it doesn't expect, since WebSockets aren't covered by the usual same origin rules for requests
-- **Authorize each channel**: A subscription to a user's messages must be checked against the user, as in [Authentication and Authorization](/system-design/authn-authz)
-- **Limit what a client can send**: Message size, rate and count of subscriptions, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
-- **Trust the bus carefully**: Socket.IO's adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network
+Authenticate on connect, with a token that expires, and decide what happens when it expires during a long session: a message that authenticates again, or a forced reconnect, as in [OAuth and JWT](/system-design/oauth-jwt).
+
+Check the origin as well. A browser sends an `Origin` header on the WebSocket handshake, and the server should refuse origins it doesn't expect, since WebSockets aren't covered by the usual same origin rules for requests.
+
+After that, authorize each channel, because a subscription to a user's messages must be checked against the user, as in [Authentication and Authorization](/system-design/authn-authz). Limit what a client can send, in message size, rate and count of subscriptions, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
+
+Finally, trust the bus carefully. Socket.IO's adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network.
 
 ## Choosing
 
