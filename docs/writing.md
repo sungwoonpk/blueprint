@@ -120,4 +120,6 @@ A waterfall, for where time goes (see 1.9): a `chart` figure holding `waterfall`
 
 A dial between two ends (see 1.3): a `scale` holding a `line`, `dot` points placed with `style="--x: 40%"` whose label is a `span`, and an `ends` row with the two end labels.
 
+An array as cells, for algorithms (see Algorithms 1.1): a `diagram` figure holding `<div class="cells">` with one `<div class="cell">3<small>0</small></div>` per element, the small text being the index. Mark cells with `hl` (in play), `done` (settled), `bad` (wrong) or `dim` (ignored). Give a cell `data-ptr="i"` to label it with a pointer, and the row the class `ptrs` so the label has room. Cells shrink to fit a phone, so keep a row to about ten cells.
+
 Keep the HTML free of blank lines, or Markdown will break it apart. Styles live in `src/styles/article.css`.
