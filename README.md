@@ -4,7 +4,7 @@ A text-first study guide with one ordered roadmap per subject: **System Design**
 
 ## Status
 
-System Design is fully written: 9 phases and 187 topics. Algorithms has its roadmap of 11 phases and 137 topics, and its articles are being written in order: Phase 1, Foundations, is done. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. Home shows a slowly turning planet in the logo's colors, with one moon per subject circling it. The header has search across both subjects, a theme toggle and a menu for Home and the subjects. A topic without an article says "Coming soon."
+System Design is fully written: 9 phases and 187 topics. Algorithms has its roadmap of 11 phases and 137 topics, and its articles are being written in order: Phases 1 and 2, Foundations and Core Data Structures, are done. Each subject's front page shows its phases and groups; groups expand to show topics, and a search field filters the page as you type. Home shows a slowly turning planet in the logo's colors, with one moon per subject circling it. The header has search across both subjects, a theme toggle and a menu for Home and the subjects. A topic without an article says "Coming soon."
 
 ## Why this shape
 
