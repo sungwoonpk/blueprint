@@ -42,7 +42,7 @@ Take T(n) = 3n² + 10n + 7. From n = 11 on, 3n² ≤ T(n) ≤ 4n², so T(n) is �
 
 For small n the ratio is far above 4, so the bound fails there. The definition looks at large n, and n₀ says where "large" starts. A few readings of the notation cause confusion.
 
-- **O is a ceiling, not a measurement**: a linear algorithm is also O(n²), which is true and useless. People who write O(n²) usually mean the tight Θ(n²)
+- **O is a ceiling, not a measurement**: a linear algorithm is also O(n²), which is true and useless. People who write O(n²) often mean the tight Θ(n²)
 - **O is not "worst case"**: it bounds a function, and which function (best, average or worst case running time) is a separate choice, taken up in [Best, Average and Worst Cases](/algorithms/best-average-worst)
 - **The log base doesn't matter**: log₂ n is about 3.3 times log₁₀ n, a constant, so we write log n
 
@@ -120,7 +120,7 @@ Second, insertion sort is O(n²) and merge sort is O(n log n), yet on short list
 | 64 | 41 | 33 |
 | 256 | 609 | 165 |
 
-The lines cross at around 40 items. Many library sorts use this fact and hand short stretches to insertion sort, as [How Standard Library Sorts Work](/algorithms/library-sorts) explains. Big O also ignores effects like how well the data fits in the processor's cache.
+The two sorts trade places at around 40 items. Many library sorts use this fact and hand short stretches to insertion sort, as [How Standard Library Sorts Work](/algorithms/library-sorts) explains. Big O also ignores effects like how well the data fits in the processor's cache.
 
 So Big O tells you which algorithm wins as inputs grow, and a measurement tells you who wins at the size you actually have. Knowing the sizes in advance is the subject of [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints).
 

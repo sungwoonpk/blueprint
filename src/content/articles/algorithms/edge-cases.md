@@ -10,7 +10,7 @@ In 2006, Joshua Bloch of Google wrote about a bug in binary search. The code had
 int mid = (low + high) / 2;
 ```
 
-For two numbers in the middle of an array, this is fine. But the sum `low + high` is computed first, in a 32 bit integer, which holds values up to 2,147,483,647. In a very large array, the sum goes past that limit and wraps around to a negative number.
+For ordinary array sizes this is fine. But the sum `low + high` is computed first, in a 32 bit integer, which holds values up to 2,147,483,647. In a very large array, the sum goes past that limit and wraps around to a negative number.
 
 ```text
 low             = 1,500,000,000

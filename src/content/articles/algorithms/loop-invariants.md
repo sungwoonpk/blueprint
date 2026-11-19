@@ -64,7 +64,7 @@ In the first, the starting value is wrong. Someone sets `best = 0`, thinking of 
 best = 0                  # should be prices[0]
 ```
 
-Initialization fails right away: best is 0, but the lowest of the first price is `prices[0]`. On `[24, 18, 31, 15, 22]` the function returns 0, a price no listing has.
+Initialization fails right away: best is 0, but the invariant says it should be the lowest of the first price, which is `prices[0]`. On `[24, 18, 31, 15, 22]` the function returns 0, a price no listing has.
 
 In the second, the loop stops early.
 
