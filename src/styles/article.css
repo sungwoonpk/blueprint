@@ -400,6 +400,16 @@
   opacity: 0.5;
 }
 
+/* A node to look at ("hl"): outlined in the term color. */
+.prose .node.hl {
+  color: var(--term);
+  box-shadow: inset 0 0 0 2px var(--term);
+}
+
+.prose .node.hl small {
+  color: var(--term);
+}
+
 /* A dial: a line between two ends with labeled points on it. Each point's
    place is set inline (style="--x: 40%"). */
 .prose .scale {
