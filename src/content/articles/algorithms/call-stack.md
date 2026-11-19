@@ -44,14 +44,14 @@ Python's limit can be raised with `sys.setrecursionlimit`. On Python 3.13, raisi
 The memory a recursion uses is its **maximum depth** times the frame size, not the number of calls it makes. These two ideas give different numbers.
 
 - `total` on a list of n scores goes n calls deep, so it needs O(n) stack space, even though a loop needs O(1)
-- `ways(35)` from the previous topic makes about 30 million calls, but it is never more than about 35 calls deep, because each call finishes before the next one starts. Its stack space is O(n) and its time is exponential
+- `ways(35)` from the previous topic makes about 30 million calls, but it stays about 35 calls deep at most, because each call finishes before the next one starts. Its stack space is O(n) and its time is exponential
 - A recursion that halves the input each time, like merge sort or binary search, goes about log n deep, which is small even for a billion items
 
 A recursion over a balanced structure stays shallow. A recursion over a lopsided structure, like a list or a tree that is one long chain, goes as deep as the input is long. That is where overflows come from in practice.
 
 ## Tail Calls
 
-A **tail call** is a call that is the last thing a function does, with nothing left to do afterward. In that case the caller's frame is no longer needed, and a language could reuse it. The accumulator version of `total` is written that way.
+A **tail call** is a call that is the last thing a function does, with no work left afterward. In that case the caller's frame is no longer needed, and a language could reuse it. The accumulator version of `total` is written that way.
 
 ```python
 def total(scores, i=0, acc=0):
@@ -76,12 +76,12 @@ When a recursion could run deep, you have three honest options.
 - Keep your own stack in a list and loop over it, which [Turning Recursion into Iteration](/algorithms/recursion-to-iteration) walks through
 - Change the shape of the recursion so the depth is small, which is what dividing the input in half does
 
-A stack overflow in production often means an input arrived that nobody tested, like a list of a million items or a tree that is a single chain. Testing deep inputs is part of [Edge Cases and Testing](/algorithms/edge-cases).
+A stack overflow in production often means an input arrived that the tests did not cover, like a list of a million items or a tree that is a single chain. Testing deep inputs is part of [Edge Cases and Testing](/algorithms/edge-cases).
 
 ## Key Points
 
 - A call stack holds one frame for each pending call, and the frames leave in the reverse order they arrived
 - Stack memory is limited, so recursion depth is limited, with very different caps in Python, Node, C and Go
 - A recursion's space cost is its maximum depth, not its number of calls
-- A tail call can reuse its frame in some languages, such as Scheme, but Python doesn't, and C compilers only might
+- A tail call can reuse its frame in some languages, such as Scheme, but Python doesn't, and C compilers might
 - If the depth can grow with the input, use a loop, your own stack, or a recursion that halves the problem

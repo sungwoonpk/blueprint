@@ -2,7 +2,7 @@
 
 You are standing in a long line at the registrar's office, and you can't see the front. How many people are ahead of you? You tap the person in front and ask them. They tap the person in front of them and ask the same thing. The question travels up the line until it reaches the first person, who answers 0. Then each person adds one and passes the answer back.
 
-Nobody in that line counted the whole line. Each person did one small job and trusted the answer they were handed. That is the whole idea of recursion.
+No single person in that line counted the whole line. Each person did one small job and trusted the answer they were handed. That is the whole idea of recursion.
 
 ## Three Parts of a Recursive Solution
 
@@ -25,9 +25,9 @@ def total(scores):
 
 ## Trust the Smaller Answer
 
-The hardest habit is to stop tracing. When you write the recursive step, assume the call on the smaller input already works, and ask only: given a correct answer for the smaller problem, how do I build the answer for this one?
+The hardest habit is to stop tracing. When you write the recursive step, assume the call on the smaller input already works, and ask: given a correct answer for the smaller problem, how do I build the answer for this one?
 
-For `total`, the assumption is that `total(scores[1:])` correctly returns the sum of the rest. Then the answer for the whole list is the first score plus that. Nothing else is needed, and unrolling the calls in your head only gets in the way.
+For `total`, the assumption is that `total(scores[1:])` correctly returns the sum of the rest. Then the answer for the whole list is the first score plus that. That is enough, and unrolling the calls in your head tends to get in the way.
 
 This is not hand waving. It is the same induction that proves a loop correct in [Proving Correctness with Loop Invariants](/algorithms/loop-invariants): the base case is where the induction starts, and the reduction assumes the claim for smaller inputs and proves it for this one. The recursion is correct if two things hold.
 
@@ -54,7 +54,7 @@ The same shape appears in [Solving Tree Problems with Recursion](/algorithms/tre
 
 ## When Smaller Problems Overlap
 
-Not every recursion has a free ride. Take a staircase of n steps that you climb one or two at a time. How many different ways are there to reach the top? The last move was one step or two, so the ways to reach step n are the ways to reach n − 1 plus the ways to reach n − 2.
+Some recursions repeat work. Take a staircase of n steps that you climb one or two at a time. How many different ways are there to reach the top? The last move was one step or two, so the ways to reach step n are the ways to reach n − 1 plus the ways to reach n − 2.
 
 ```python
 def ways(n):
@@ -95,13 +95,13 @@ At four steps the repeat is a small waste. It doesn't stay small, because the nu
 | 30 | 1,346,269 | 2,692,537 | 0.14 s |
 | 35 | 14,930,352 | 29,860,703 | 1.5 s |
 
-For 35 steps there are only 36 different questions, `ways(0)` through `ways(35)`, yet the code asks about 30 million. Remembering each answer after the first time cuts the work to 36 computations. The same function with a small cache took 14 microseconds on our machine. That idea is the subject of [From Recursion to Dynamic Programming](/algorithms/recursion-to-dp).
+For 35 steps there are just 36 different questions, `ways(0)` through `ways(35)`, yet the code asks about 30 million. Remembering each answer after the first time cuts the work to 36 computations. The same function with a small cache took 14 microseconds on our machine. That idea is the subject of [From Recursion to Dynamic Programming](/algorithms/recursion-to-dp).
 
 ## How Recursion Goes Wrong
 
 Three mistakes show up again and again.
 
-- **No base case**: the calls never reach a smallest instance. Python raises a `RecursionError` at its default limit of 1,000 calls, and other languages raise a stack overflow. See [The Call Stack and Recursion Depth](/algorithms/call-stack) for why
+- **No base case**: the calls don't reach a smallest instance. Python raises a `RecursionError` at its default limit of 1,000 calls, and other languages raise a stack overflow. See [The Call Stack and Recursion Depth](/algorithms/call-stack) for why
 - **No progress**: the call receives an instance that isn't smaller, such as `total(scores)` instead of `total(scores[1:])`, so the question circles forever
 - **Overlapping calls**: each call is correct and the answer is right, but the same subproblem is solved many times, as with `ways`
 
@@ -113,6 +113,6 @@ Any recursion can also be rewritten as a loop with an explicit stack, as [Turnin
 
 - A recursive solution has a base case, a reduction to a smaller instance of the same problem, and a way to combine the answers
 - Write the recursive step by assuming the smaller call is correct, which is the induction hypothesis in disguise
-- Each call must get a strictly smaller input, or the calls never reach the base case
+- Each call must get a strictly smaller input, or the calls don't reach the base case
 - Recursion fits nested and tree shaped inputs, where the number of levels isn't known in advance
 - Two calls on overlapping smaller problems can repeat work exponentially, which counting calls reveals

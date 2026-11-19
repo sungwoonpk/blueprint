@@ -39,7 +39,7 @@ Cases can differ by more than a constant. **Insertion sort** takes each item and
 <figcaption>Comparisons made by insertion sort on 1,000 items, counted in our run (random order is the mean of 20 shuffles)</figcaption>
 </figure>
 
-A sorted list needs one comparison per item, so the best case is linear. A reversed list makes every item slide all the way, which gives n(n − 1)/2 comparisons, so the worst case is quadratic. A random list lands near n²/4, about half the worst case, and still quadratic.
+A sorted list needs one comparison per item, so the best case is linear. A reversed list makes each item slide to the front, which gives n(n − 1)/2 comparisons, so the worst case is quadratic. A random list lands near n²/4, about half the worst case, and still quadratic.
 
 The same code, on inputs of the same size, falls into two different growth classes. Quoting one number for the algorithm would hide that.
 
@@ -47,7 +47,7 @@ The same code, on inputs of the same size, falls into two different growth class
 
 The worst case is a promise that holds for any input. The average case is a promise about typical inputs, and it depends on an assumption: what is typical? Think of it as a game: an adversary picks the input to hurt you, and if your bound holds even then, it holds for any input.
 
-That adversary is not imaginary. A hash table is expected to insert n keys in about n steps, because keys spread across buckets. If many keys land in the same bucket, each insert has to walk past the others. We forced that in Python with keys that all share one hash value.
+That adversary is not imaginary. A hash table is expected to insert n keys in about n steps, because keys spread across buckets. If many keys land in the same bucket, each insert has to walk past the others. We forced that in Python with keys that share one hash value.
 
 | Keys Inserted | Ordinary Keys | All Keys Collide |
 | --- | --- | --- |
@@ -58,7 +58,9 @@ That adversary is not imaginary. A hash table is expected to insert n keys in ab
 
 The ordinary column roughly doubles when the input doubles, and the colliding column quadruples: a linear algorithm turned quadratic by the choice of input.
 
-In 2003, Crosby and Wallach showed this was a practical attack. Programs that keep outside data in hash tables, among them Perl, the Squid proxy and the Bro intrusion detection system, could be pushed into their worst case by input an attacker chose. In their Bro experiment, tens of thousands of crafted packets cost about 45 minutes of processor time, against under one minute for random ones. In December 2011 the same weakness was reported across many languages and web frameworks, since a web server puts request parameters into a hash table. Python made its string hashes random by default in version 3.3, so an attacker can't predict which keys collide.
+In 2003, Crosby and Wallach showed this was a practical attack. Programs that keep outside data in hash tables, among them Perl, the Squid proxy and the Bro intrusion detection system, could be pushed into their worst case by input an attacker chose. In their Bro experiment, tens of thousands of crafted packets cost about 45 minutes of processor time, against under one minute for random ones.
+
+In December 2011 the same weakness was reported across many languages and web frameworks, since a web server puts request parameters into a hash table. Python made its string hashes random by default in version 3.3, so an attacker can't predict which keys collide.
 
 Sorting has its own version. Quick sort with the first item as its pivot makes about 11,000 comparisons on a random list of 1,000, and 499,500 on the same list already sorted. [Quick Sort](/algorithms/quick-sort) shows how choosing the pivot at random leaves no input that is reliably cruel.
 
@@ -69,11 +71,11 @@ The average case is useful when you know the inputs, or when you control the ran
 - **Randomized algorithms**: the algorithm flips its own coins, so the average is over our choices and not over the input. A randomized quick sort is expected to take n log n steps on any input, and an adversary can't pick one that beats the coin flips. See [Randomized Algorithms](/algorithms/randomized)
 - **Amortized cost**: the average is over a sequence of operations on one structure and needs no assumption about inputs. Appending to a dynamic array occasionally copies the whole array, yet the average cost for each append stays constant. See [Amortized Analysis](/algorithms/amortized-analysis)
 
-When you read that an algorithm is O(n log n), ask which case. For a sort, ask whether that is the worst case or only the typical one, and what input triggers the worst.
+When you read that an algorithm is O(n log n), ask which case. For a sort, ask whether that is the worst case or just the typical one, and what input triggers the worst.
 
 ## Key Points
 
 - The same code can cost different amounts on different inputs of the same size, so best, average and worst cases are separate functions of n
 - Big O is not a case. Each case has its own bound, and best and worst can even fall into different growth classes, as with insertion sort
-- The worst case is the default guarantee because it assumes nothing about the input, and some inputs come from an attacker
+- The worst case is the default guarantee because it makes no assumption about the input, and some inputs come from an attacker
 - The average case needs a model of the input, while randomized and amortized analysis bring the average under our control

@@ -21,7 +21,9 @@ The routine has four moves, and each one is a small calculation.
 
 **Read the limits.** Find the size of the input, called n. If there are several sizes, such as the vertices and edges of a graph or the rows and columns of a grid, note each one.
 
-**Budget the steps.** Count how many basic steps a computer can do in the time you have. We timed a bare loop that does a few arithmetic operations in each step. Compiled C ran about a billion steps per second, and Python ran about ten million. A real step does more than that, such as reading memory and branching, so a safer plan is 100 million steps for compiled code and 10 million for plain Python.
+**Budget the steps.** Count how many basic steps a computer can do in the time you have. We timed a bare loop that does a few arithmetic operations in each step. Compiled C ran about a billion steps per second, and Python ran about ten million.
+
+A real step does more than that, such as reading memory and branching, so a safer plan is 100 million steps for compiled code and 10 million for plain Python.
 
 **Pick a complexity.** Find which growth rates keep the total step count under the budget for your n.
 
@@ -49,7 +51,7 @@ The table is rough on purpose. Constants matter, and one step can be heavier tha
 
 Once you know the target, the constraints work like clues.
 
-- **n up to about 10 or 20**: the problem may expect you to try everything, so think of [Backtracking](/algorithms/backtracking) or [Subsets as Bitmasks](/algorithms/bitmask-subsets)
+- **n up to about 10 or 20**: the problem may expect you to try all the possibilities, so think of [Backtracking](/algorithms/backtracking) or [Subsets as Bitmasks](/algorithms/bitmask-subsets)
 - **n up to a few thousand**: a quadratic table is fine, which often means a two dimensional dynamic programming table
 - **n up to a few hundred thousand or a million**: aim for O(n) or O(n log n), so sorting, heaps or a hash table
 - **A value limit near 10⁹ or 10¹⁸**: the algorithm cannot loop over the values, so look for halving, as in [Binary Search on the Answer](/algorithms/binary-search-on-answer), or a formula
@@ -57,11 +59,11 @@ Once you know the target, the constraints work like clues.
 
 ## Reading the Rest of the Limits
 
-The input size isn't the only number that matters.
+There are more limits to read than the input size.
 
 - **Value ranges**: a sum of 100,000 values up to a billion is about 10¹⁴, which doesn't fit in a 32 bit integer, whose maximum is 2,147,483,647. Python integers don't overflow, but languages like Java and C++ do. See [Edge Cases and Testing](/algorithms/edge-cases)
 - **Memory limits**: ten million 64 bit values take 80 MB, which may be more than you are allowed
-- **Total size across test cases**: when a problem runs many test cases, the limit often applies to the sum of all of them, not to each case on its own
+- **Total size across test cases**: when a problem runs many test cases, the limit often applies to the total across them, not to each case on its own
 - **Special structure**: a guarantee that the input is sorted, or that values are distinct, can be exactly the fact a faster algorithm needs
 
 In an interview there may be no printed limits. Ask for them: how many items, how large the values, and whether the data fits in memory. The answer to one question can change which algorithm is reasonable.

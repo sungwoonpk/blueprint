@@ -23,14 +23,14 @@ Four properties separate an algorithm from a vague plan:
 
 - **Precise**: each step is clear enough for a machine to carry out, so "spot the duplicates" is a wish and "compare two IDs" is a step
 - **Finite**: on any valid input, it stops
-- **Correct**: the output is right for each valid input, not only for the inputs you tried
+- **Correct**: the output is right for each valid input, not just for the inputs you tried
 - **Efficient**: it finishes using a sensible amount of time and memory
 
 The first two are easy to check by reading. The last two take real work, and they are the two questions to ask of any algorithm.
 
 ## Two Algorithms for One Problem
 
-The first method follows how a person would start: compare every ID with every ID after it.
+The first method follows how a person would start: compare each ID with the IDs after it.
 
 ```python
 def has_duplicate_pairs(ids):
@@ -78,9 +78,9 @@ On `[4021, 3377, 3377, 5150]` it returns `True`, and on `[1, 2, 3]` it returns `
 <figcaption>The neighbor check compares cells 0 and 1, then 1 and 2. It does not compare the two 3377s, so it returns False</figcaption>
 </figure>
 
-The method only works when equal IDs happen to be adjacent. This roster has a duplicate and the method misses it, so it is a wrong algorithm for the problem. Sort the list first and the idea becomes correct, as [Sorting as a First Step](/algorithms/sorting-first) shows.
+The method works just when equal IDs happen to be adjacent. This roster has a duplicate and the method misses it, so it is a wrong algorithm for the problem. Sort the list first and the idea becomes correct, as [Sorting as a First Step](/algorithms/sorting-first) shows.
 
-Testing can show that a method is wrong, but a handful of passing tests can't show that it is right, because the inputs are endless. A **correctness proof** covers all of them at once. The usual tool is induction, and for loops it takes the form of a loop invariant, the subject of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants). The two correct methods above can each be proved that way.
+Testing can show that a method is wrong, but a handful of passing tests can't show that it is right, because the inputs are endless. A **correctness proof** covers them at once. The usual tool is induction, and for loops it takes the form of a loop invariant, the subject of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants). The two correct methods above can each be proved that way.
 
 ## Fast Enough to Use
 

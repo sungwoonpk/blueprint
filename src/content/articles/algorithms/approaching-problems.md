@@ -47,7 +47,7 @@ These examples become tests later, and doing them by hand often shows the patter
 
 ## Plan: Start with the Obvious Solution
 
-Before looking for a clever idea, find any correct one. Try every pair and stop at the first that works.
+Before looking for a clever idea, find any correct one. Try each pair and stop at the first that works.
 
 ```python
 def pair_for_budget_slow(prices, budget):
@@ -92,14 +92,14 @@ def pair_for_budget(prices, budget):
 
 The order inside the loop matters. The check comes before the book is added, so a book can't be paired with itself, while an earlier book with the same price can still be found. That is why `[30, 20, 30]` works and `[30]` doesn't.
 
-Check it with the loop invariant from [Proving Correctness with Loop Invariants](/algorithms/loop-invariants): before looking at position `j`, `seen` holds the books at positions below `j`, and none of them pairs with another to make the budget. If a pair existed, it would end at some position `j`, and its earlier book would be in `seen` when we got there.
+Check it with the loop invariant from [Proving Correctness with Loop Invariants](/algorithms/loop-invariants): before looking at position `j`, `seen` holds the books at positions below `j`, and no two of them add up to the budget. If a pair existed, it would end at some position `j`, and its earlier book would be in `seen` when we got there.
 
 ## Look Back
 
 The last phase turns a solution into a skill. Ask these questions about the result.
 
 - **Does it pass the examples?** Run the four from the table, and compare with the slow version on many small random inputs. We did that on 20,000 random cases and the two agreed
-- **What does it cost?** One pass, so O(n) time, and the dictionary may hold every price, so O(n) space. On 20,000 prices with no pair it took about 1 millisecond, against 4.9 seconds for the brute force
+- **What does it cost?** One pass, so O(n) time, and the dictionary may hold a price for each book, so O(n) space. On 20,000 prices with no pair it took about 1 millisecond, against 4.9 seconds for the brute force
 - **Is there another way?** Sorting the prices and moving two pointers in from both ends is one, and [Two Pointers](/algorithms/two-pointers) covers it
 - **What carries over?** Remembering what you have seen so that a later item can find it is a pattern, and it appears again in prefix sums and in dynamic programming
 

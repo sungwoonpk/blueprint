@@ -1,4 +1,4 @@
-> **Big O notation** describes how the time or memory an algorithm needs grows as its input grows, keeping only the part that dominates for large inputs.
+> **Big O notation** describes how the time or memory an algorithm needs grows as its input grows, keeping the part that dominates for large inputs.
 
 In [What is an Algorithm?](/algorithms/what-is-an-algorithm), doubling the roster made the pair method four times slower and the set method twice as slow. The seconds came from one laptop and one language. Another machine would print other seconds but show the same pattern. Big O is the vocabulary for that pattern.
 
@@ -40,7 +40,7 @@ Take T(n) = 3n² + 10n + 7. From n = 11 on, 3n² ≤ T(n) ≤ 4n², so T(n) is �
 <figcaption>T(n) divided by n². The dashed lines are 4 and 3, and the dotted line marks n = 11, where the ratio drops under 4</figcaption>
 </figure>
 
-For small n the ratio is far above 4, so the bound fails there. The definition only cares about large n, and n₀ says where "large" starts. A few readings of the notation cause confusion.
+For small n the ratio is far above 4, so the bound fails there. The definition looks at large n, and n₀ says where "large" starts. A few readings of the notation cause confusion.
 
 - **O is a ceiling, not a measurement**: a linear algorithm is also O(n²), which is true and useless. People who write O(n²) usually mean the tight Θ(n²)
 - **O is not "worst case"**: it bounds a function, and which function (best, average or worst case running time) is a separate choice, taken up in [Best, Average and Worst Cases](/algorithms/best-average-worst)
@@ -101,7 +101,7 @@ Four rules cover most cases.
 
 ## Memory Counts Too
 
-**Space complexity** is the same idea applied to memory: how much extra memory the algorithm needs as n grows, not counting the input itself. The pair method keeps a couple of counters, so it is O(1). The set method may store every ID, so it is O(n). In our run, a set of a million IDs added about 34 MB on top of the list holding them.
+**Space complexity** is the same idea applied to memory: how much extra memory the algorithm needs as n grows, not counting the input itself. The pair method keeps a couple of counters, so it is O(1). The set method may store each ID, so it is O(n). In our run, a set of a million IDs added about 34 MB on top of the list holding them.
 
 The set method buys its speed with memory, a trade you will make again and again. Recursion also uses memory, which we meet in [The Call Stack and Recursion Depth](/algorithms/call-stack).
 
@@ -126,8 +126,8 @@ So Big O tells you which algorithm wins as inputs grow, and a measurement tells 
 
 ## Key Points
 
-- Count steps instead of seconds, then keep only how the count grows: drop constants and smaller terms
-- O is an upper bound, Ω a lower bound and Θ a tight bound, and none of them means "worst case" on its own
+- Count steps instead of seconds, then keep how the count grows: drop constants and smaller terms
+- O is an upper bound, Ω a lower bound and Θ a tight bound, and which case they describe is a separate choice
 - Loops give the growth: sequential steps add, nested loops multiply, and halving gives log n
 - Space complexity counts extra memory, and a faster algorithm often spends memory to save time
 - Big O hides constants, so it predicts large inputs well and small inputs poorly

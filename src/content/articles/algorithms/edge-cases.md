@@ -1,6 +1,6 @@
 > An **edge case** is an input at the boundary of what a program is meant to handle, such as an empty list, a single item, duplicates or the largest allowed value. Bugs gather at the edges, so testing them is how you find what typical inputs miss.
 
-You can prove a loop correct and still ship a bug. The proof covers an idealized program. The program that runs has limits the proof never mentioned, and the edges of the input are where those limits show.
+You can prove a loop correct and still ship a bug. The proof covers an idealized program. The program that runs has limits the proof did not mention, and the edges of the input are where those limits show.
 
 ## The Midpoint That Broke
 
@@ -10,7 +10,7 @@ In 2006, Joshua Bloch of Google wrote about a bug in binary search. The code had
 int mid = (low + high) / 2;
 ```
 
-For two numbers in the middle of an array, this is fine. But the sum `low + high` is computed first, in a 32 bit integer, which holds values only up to 2,147,483,647. In a very large array, the sum goes past that limit and wraps around to a negative number.
+For two numbers in the middle of an array, this is fine. But the sum `low + high` is computed first, in a 32 bit integer, which holds values up to 2,147,483,647. In a very large array, the sum goes past that limit and wraps around to a negative number.
 
 ```text
 low             = 1,500,000,000
@@ -30,7 +30,7 @@ int mid = low + (high - low) / 2;
 
 We tried this on a pretend array of 2³⁰ + 5 items, using 32 bit arithmetic. The original line produced the index −1,073,741,824 and the fixed line found the target. On an array of a thousand items, both worked.
 
-The lesson isn't that the proof was wrong. The proof treated integers as unbounded, and the machine didn't. Python's integers don't overflow, so the same line is safe in Python, but the idea carries to every language with fixed width numbers.
+The lesson isn't that the proof was wrong. The proof treated integers as unbounded, and the machine didn't. Python's integers don't overflow, so the same line is safe in Python, but the idea carries to languages with fixed width numbers.
 
 ## Where Edge Cases Hide
 
@@ -54,9 +54,9 @@ A few of these are less obvious than they look.
 
 You don't have to rely on memory for the list. Three habits find edges on their own.
 
-- **Reread the statement for what it leaves open.** The questions from [How to Approach a Problem](/algorithms/approaching-problems), such as whether an item can be used twice or what happens when nothing matches, are edge cases waiting to be asked
-- **Check the ends of every loop.** The invariant of a loop says what is true at the start and at the end, and the first and last iterations are where off by one errors live
-- **Push each value to its extremes.** Ask for the smallest, the largest, the empty, the equal and the sorted case of every input. Constraints from [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints) tell you how big the largest case is
+- **Reread the statement for what it leaves open.** The questions from [How to Approach a Problem](/algorithms/approaching-problems), such as whether an item can be used twice or what happens when no item matches, are edge cases waiting to be asked
+- **Check the ends of each loop.** The invariant of a loop says what is true at the start and at the end, and the first and last iterations are where off by one errors live
+- **Push each value to its extremes.** Ask for the smallest, the largest, the empty, the equal and the sorted case of each input. Constraints from [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints) tell you how big the largest case is
 
 ## Writing Tests
 
@@ -83,7 +83,7 @@ The test names say which edge each one covers, so a failure reads like a sentenc
 
 ## Letting the Computer Invent Inputs
 
-Hand written tests only cover what you thought of. A **property test** states something that should hold for all inputs of a kind, then runs it on many generated inputs, including awkward ones. Libraries such as Hypothesis for Python do the generating, and they report a small failing input when a property breaks.
+Hand written tests cover just what you thought of. A **property test** states something that should hold for any input of a kind, then runs it on many generated inputs, including awkward ones. Libraries such as Hypothesis for Python do the generating, and they report a small failing input when a property breaks.
 
 For a sorting function, a first property is that the output is in order. It isn't enough on its own, because a function that returns an empty list satisfies it. A second property is that the output holds the same items as the input.
 
@@ -105,14 +105,14 @@ Another kind of generated check is to compare a fast solution against the slow, 
 
 ## Proof and Tests Together
 
-Neither tool is enough alone. A proof speaks about all inputs, but only for the program as modeled, and the binary search proof didn't model overflow. Tests run the real program on the real machine, but only on the inputs they try, and no test suite covers an endless input space.
+Neither tool is enough alone. A proof speaks about any input, but for the program as modeled, and the binary search proof didn't model overflow. Tests run the real program on the real machine, but just on the inputs they try, and no test suite covers an endless input space.
 
 Together they cover each other's gaps. Use the invariant to understand why the algorithm works, the checklist to find the inputs where the real machine disagrees with the model, and tests to keep fixed bugs from returning.
 
 ## Key Points
 
 - Edge cases sit at the boundaries of the input: empty, single, duplicate, extreme, and out of the expected shape
-- The midpoint bug lasted years because a proof assumed unbounded integers while the machine used 32 bit ones, and it showed only on huge arrays
+- The midpoint bug lasted years because a proof assumed unbounded integers while the machine used 32 bit ones, and it showed up on huge arrays
 - Find edges by rereading the problem statement, checking the ends of loops and pushing each value to its extremes
 - Turn edges into named unit tests, and use property tests or a brute force comparison to try inputs you wouldn't think of
 - Proofs and tests answer different questions, and a trustworthy algorithm has both

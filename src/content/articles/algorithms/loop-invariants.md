@@ -1,6 +1,6 @@
 > A **loop invariant** is a statement about a loop's variables that is true each time the loop condition is checked. Proving it holds from start to finish is how we prove a loop correct.
 
-A few passing tests can't prove that a method works on any input, as [What is an Algorithm?](/algorithms/what-is-an-algorithm) showed. Loops make this hard in a specific way: a loop runs as many times as the input is long, so there are endless runs to reason about. A loop invariant lets us cover all of them with three small checks.
+A few passing tests can't prove that a method works on any input, as [What is an Algorithm?](/algorithms/what-is-an-algorithm) showed. Loops make this hard in a specific way: a loop runs as many times as the input is long, so there are endless runs to reason about. A loop invariant lets us cover them with three small checks.
 
 ## One Loop, Three Checks
 
@@ -49,7 +49,7 @@ Writing the invariant is the creative step. A reliable way to find it is to ask 
 
 After one iteration, best is the lowest of two prices. After two, of three. So after `i - 1` iterations, it is the lowest of the first `i`. The statement has to land between two extremes.
 
-- **Too weak**: "best is one of the prices" is true throughout, but when the loop ends it says nothing about being the lowest
+- **Too weak**: "best is one of the prices" is true throughout, but when the loop ends it does not tell us the price is the lowest
 - **Too strong**: "best is the lowest of the whole list" is what we want at the end, but it is false at the start, so initialization fails
 
 A good invariant is true at the start, survives the loop body, and is strong enough to give the answer when the loop stops.
@@ -72,13 +72,13 @@ In the second, the loop stops early.
 while i < len(prices) - 1:    # should be len(prices)
 ```
 
-Initialization and maintenance both hold, so the loop is fine while it runs. Termination fails: when `i` reaches the last position, the invariant covers all prices except the last, so it can't promise the lowest of all of them. On `[24, 18, 31, 22, 15]` the function returns 18 and misses the 15.
+Initialization and maintenance both hold, so the loop is fine while it runs. Termination fails: when `i` reaches the last position, the invariant covers the prices before the last, so it can't promise the lowest overall. On `[24, 18, 31, 22, 15]` the function returns 18 and misses the 15.
 
 Off by one errors often look like this. Reading the invariant tells you which cases the loop has covered and which it hasn't.
 
 ## A Window That Shrinks
 
-Not every invariant says "the part I've seen is done." In binary search, it says where the answer must be. The list is sorted, and we look for a price in it.
+An invariant doesn't have to say "the part I've seen is done." In binary search, it says where the answer must be. The list is sorted, and we look for a price in it.
 
 ```python
 def contains(a, target):
