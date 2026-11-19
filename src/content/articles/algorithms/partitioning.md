@@ -1,12 +1,14 @@
 > **Partitioning with three pointers** rearranges an array in one pass into three groups, items smaller than a value, items equal to it and items larger, using three indexes that keep the groups apart. It is known as the Dutch national flag problem.
 
-A student club orders T-shirts, and the pile on the table is a jumble of small, medium and large. You want them sorted into three stacks, in place, looking at each shirt only once. A general sort would do it, but there are only three kinds, and that is a lot of structure to waste. The same one-pass idea also repairs the quick sort from [Quick Sort](/algorithms/quick-sort), which slowed to O(n²) when many keys were equal.
+A student club orders T-shirts, and the pile on the table is a jumble of small, medium and large. You want them sorted into three stacks, in place, looking at each shirt only once.
+
+A general sort would do it, but there are only three kinds, and that is a lot of structure to waste. The same one-pass idea also repairs the quick sort from [Quick Sort](/algorithms/quick-sort), which slowed to O(n²) when many keys were equal.
 
 ## Three Groups, Three Pointers
 
 Edsger Dijkstra posed this as sorting the colors of the Dutch flag, red, white and blue, into three bands. Take a value `v` as the middle group. The goal is an array that reads: everything less than `v`, then everything equal to `v`, then everything greater.
 
-Keep three indexes, `lt`, `i` and `gt`, so that the array always has four regions.
+Keep three indexes, `lt`, `i` and `gt`, so that the array has four regions at each step.
 
 | Region | Items There |
 | --- | --- |
@@ -78,7 +80,9 @@ def three_way_partition(a, v):
     return lt, gt
 ```
 
-The loop ends when `i` passes `gt`, when the unseen region is empty and the other three regions cover the whole array. Each pass either advances `i` or shrinks the unseen region from the right, so the loop takes at most n passes and does no more than one swap per pass: O(n) time and O(1) extra memory. On a million items coded 0, 1 and 2, each item was examined exactly once and the partition made 666,686 swaps. We checked the three groups, and that no item was lost, on 5,000 random arrays.
+The loop ends when `i` passes `gt`, when the unseen region is empty and the other three regions cover the whole array. Each pass either advances `i` or shrinks the unseen region from the right, so the loop takes at most n passes and does no more than one swap per pass: O(n) time and O(1) extra memory.
+
+On a million items coded 0, 1 and 2, each item was examined exactly once and the partition made 666,686 swaps. We checked the three groups, and that no item was lost, on 5,000 random arrays.
 
 ## Sorting Three Kinds in One Pass
 

@@ -1,6 +1,8 @@
 > A **prefix sum** array stores, for each position, the total of all items before it. With it, the sum of any stretch of the original array is one subtraction, so it answers range sum queries in O(1) after an O(n) setup.
 
-The library keeps the visitor count for each day of the semester, and the dean asks questions all week: how many visitors came between day 12 and day 40, and between day 3 and day 90, and between day 50 and day 51. Each question is a sum over a stretch of days. Adding up the stretch from scratch costs as many steps as the stretch is long, which is fine for one question and expensive for thousands. The answers share almost all of their work, and prefix sums are how to reuse it.
+The library keeps the visitor count for each day of the semester, and the dean asks questions all week: how many visitors came between day 12 and day 40, and between day 3 and day 90, and between day 50 and day 51.
+
+Each question is a sum over a stretch of days. Adding up the stretch from scratch costs as many steps as the stretch is long, which is fine for one question and expensive for thousands. The answers share almost all of their work, and prefix sums are how to reuse it.
 
 ## Running Totals
 

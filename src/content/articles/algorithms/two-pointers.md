@@ -1,10 +1,14 @@
 > The **two pointers** technique walks through an array with two indexes at once, so that each step lets you rule something out. Because each pointer only moves one way, the whole walk takes O(n) steps and replaces a search over all pairs.
 
-In [How to Approach a Problem](/algorithms/approaching-problems), finding two books that add up to a gift card kept a hash map of every price seen. If the prices are already sorted, there is a quieter way that needs no extra memory: put one finger on the cheapest book and one on the most expensive, and move them toward each other. This is the first of the array techniques in this phase, and it comes in two shapes.
+In [How to Approach a Problem](/algorithms/approaching-problems), finding two books that add up to a gift card kept a hash map of every price seen.
+
+If the prices are already sorted, there is a quieter way that needs no extra memory: put one finger on the cheapest book and one on the most expensive, and move them toward each other. This is the first of the array techniques in this phase, and it comes in two shapes.
 
 ## Pointers from Both Ends
 
-The prices on the shelf are 1, 3, 4, 6, 8, 11 and 15 dollars, and the gift card is worth 14. Look at the cheapest and the most expensive: 1 + 15 = 16. That is too much, and it tells you something. The 15 can't be part of the answer, because even paired with the cheapest book it overshoots, and any other partner costs at least as much as the cheapest. So discard 15 and move the right pointer in.
+The prices on the shelf are 1, 3, 4, 6, 8, 11 and 15 dollars, and the gift card is worth 14. Look at the cheapest and the most expensive: 1 + 15 = 16. That is too much, and it tells you something.
+
+The 15 can't be part of the answer, because even paired with the cheapest book it overshoots, and any other partner costs at least as much as the cheapest. So discard 15 and move the right pointer in.
 
 <figure class="diagram">
 <p class="rowname">1 + 15 = 16 is too big, so drop 15</p>
@@ -55,7 +59,9 @@ def pair_with_sum(a, target):
     return None
 ```
 
-The invariant, in the sense of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants), is that if a matching pair exists, it lies inside `lo..hi`. When the sum is too small, `a[lo]` is paired with the largest item in the window and still falls short, so no partner works, and removing it loses nothing. The argument for `hi` is the mirror image. Each step moves a pointer, the pointers meet after at most n − 1 steps, and the loop is O(n).
+The invariant, in the sense of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants), is that if a matching pair exists, it lies inside `lo..hi`. When the sum is too small, `a[lo]` is paired with the largest item in the window and still falls short, so no partner works, and removing it loses no answer.
+
+The argument for `hi` is the mirror image. Each step moves a pointer, the pointers meet after at most n − 1 steps, and the loop is O(n).
 
 We compared it with the pair-by-pair search when no pair exists, the slowest case. On 20,000 prices the pair-by-pair version took 4.73 s and the two pointers took 1.09 ms. On a million sorted items the two pointers took 129 ms.
 
@@ -95,7 +101,9 @@ def remove_duplicates(a):
     return write
 ```
 
-For 1, 1, 2, 2, 2, 3, 5, 5 it leaves 1, 2, 3, 5 at the front and returns 4. The invariant is that `a[0..write-1]` holds the distinct values seen so far, in order. The read pointer always stays at or ahead of the write pointer, so nothing is overwritten before it has been read. The pass is O(n) time and O(1) extra memory. A sorted copy through a set would take O(n) extra memory instead.
+For 1, 1, 2, 2, 2, 3, 5, 5 it leaves 1, 2, 3, 5 at the front and returns 4. The invariant is that `a[0..write-1]` holds the distinct values seen so far, in order.
+
+The read pointer stays at or ahead of the write pointer, so no item is overwritten before it has been read. The pass is O(n) time and O(1) extra memory. A sorted copy through a set would take O(n) extra memory instead.
 
 The same pattern compacts any array by a rule, for example moving all zeros to the end or dropping items that fail a test. It also underlies the merge step in [Merge Sort](/algorithms/merge-sort), where one pointer walks each sorted list.
 

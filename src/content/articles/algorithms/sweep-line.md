@@ -1,6 +1,8 @@
 > A **sweep line** solves a problem by sorting its important points, such as where intervals start and end, and then moving an imaginary line across them in order while keeping a running state. It answers questions about overlap and coverage in O(n log n), even when the positions are huge.
 
-The campus has six study group bookings. Each one reserves a room from a start hour to an end hour: 1 to 5, 2 to 6, 4 to 8, 7 to 9, 8 to 12 and 10 to 13. How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
+The campus has six study group bookings. Each one reserves a room from a start hour to an end hour: 1 to 5, 2 to 6, 4 to 8, 7 to 9, 8 to 12 and 10 to 13.
+
+How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
 
 ## Starts and Ends as Events
 
@@ -65,9 +67,13 @@ The invariant is that after processing the events up to a time, `count` is the n
 
 ## The Order of Simultaneous Events
 
-When an end and a start have the same time, the order matters. Two back-to-back bookings, 9 to 10 and 10 to 11, don't share a room at the same moment, since the first ends exactly as the second begins. With the ends processed first, the counter drops to 0 before it rises again, and the answer for 9 to 10, 10 to 11 and 11 to 12 is 1. If the start came first, the counter would briefly say 2, and the answer would be wrong.
+When an end and a start have the same time, the order matters. Two back-to-back bookings, 9 to 10 and 10 to 11, don't share a room at the same moment, since the first ends exactly as the second begins.
 
-Sorting the pairs `(time, delta)` puts −1 before +1 at the same time, which gives the half open behavior for free. We ran the version that processes starts first on those three bookings, and it said 2 instead of 1. If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
+With the ends processed first, the counter drops to 0 before it rises again, and the answer for 9 to 10, 10 to 11 and 11 to 12 is 1. If the start came first, the counter would briefly say 2, and the answer would be wrong.
+
+Sorting the pairs `(time, delta)` puts −1 before +1 at the same time, which gives the half open behavior for free. We ran the version that processes starts first on those three bookings, and it said 2 instead of 1.
+
+If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
 
 ## When the Positions Are Huge
 

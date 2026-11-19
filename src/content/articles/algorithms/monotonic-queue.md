@@ -1,6 +1,8 @@
-> A **monotonic queue** is a double-ended queue kept in sorted order, so its front always holds the largest (or smallest) value in a sliding window. Items that can never be the answer again are dropped from the back, and items that left the window are dropped from the front.
+> A **monotonic queue** is a double-ended queue kept in sorted order, so its front holds the largest (or smallest) value in a sliding window. Items that can never be the answer again are dropped from the back, and items that left the window are dropped from the front.
 
-A service logs its response time every second, and an alert needs the slowest response in the last 60 seconds, updated every second. The [fixed window](/algorithms/fixed-window) can add and subtract to keep a running sum, but a maximum can't be updated that way: when the slowest request leaves the window, the next slowest has to be known, and the window's sum doesn't carry that. Scanning the whole window each second costs O(k). We can do better.
+A service logs its response time every second, and an alert needs the slowest response in the last 60 seconds, updated every second.
+
+The [fixed window](/algorithms/fixed-window) can add and subtract to keep a running sum, but a maximum can't be updated that way: when the slowest request leaves the window, the next slowest has to be known, and the window's sum doesn't carry that. Scanning the whole window each second costs O(k). We can do better.
 
 ## Keep Only the Contenders
 
@@ -41,7 +43,9 @@ Here is a run on 4, 2, 12, 3, 8, 5, 1, 7 with a window of 3. The deque is shown 
 | 6 | 1 | 8, 5, 1 | 8 |
 | 7 | 7 | 7 | 7 |
 
-At position 2, the 12 pops both smaller items, since they sit in the window but will never be the maximum. At position 5, the front of the deque is the 12 from position 2, which has now slid out of the window of positions 3 to 5, so it is popped and the 8 becomes the maximum. At position 7 the 7 pops the 1 and the 5. The front, the 8 from position 4, has slid out of the window of positions 5 to 7, so it is popped too.
+At position 2, the 12 pops both smaller items, since they sit in the window but will never be the maximum. At position 5, the front of the deque is the 12 from position 2, which has now slid out of the window of positions 3 to 5, so it is popped and the 8 becomes the maximum.
+
+At position 7 the 7 pops the 1 and the 5. The front, the 8 from position 4, has slid out of the window of positions 5 to 7, so it is popped too.
 
 The invariant is that the deque holds the positions inside the window whose values are larger than everything after them in the window, so the front is the maximum. We compared it with taking the maximum of each window on 4,000 random arrays.
 
@@ -83,7 +87,7 @@ def best_stretch_at_most_k(a, k):
     return best
 ```
 
-The front of the deque is always the smallest prefix within reach, so each step is O(1) amortized. We compared this function with trying every stretch of at most k items on 4,000 random arrays.
+The front of the deque is the smallest prefix within reach, so each step is O(1) amortized. We compared this function with trying every stretch of at most k items on 4,000 random arrays.
 
 The same shape appears in some dynamic programming problems, where the best value for position `i` depends on the best of the last k positions, and a monotonic queue turns an O(n × k) recurrence into O(n). [Linear DP on Sequences](/algorithms/linear-dp) shows the setup.
 

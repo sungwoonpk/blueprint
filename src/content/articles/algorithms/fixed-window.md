@@ -1,6 +1,8 @@
 > A **fixed size sliding window** looks at k consecutive items at a time and moves one step along the array. Instead of recomputing each window from scratch, it updates the previous answer by adding the item that enters and removing the one that leaves.
 
-The library counts visitors each day, and the director wants the busiest stretch of seven days in the semester. Each stretch is a window of 7 consecutive days. There are about a hundred windows in a semester and 7 numbers to add in each. That is easy. Now picture a sensor that logs a reading every second for a year, with a window of one hour. Adding up each window from scratch is a real cost, and the windows overlap almost completely. That overlap is the thing to use.
+The library counts visitors each day, and the director wants the busiest stretch of seven days in the semester. Each stretch is a window of 7 consecutive days. There are about a hundred windows in a semester and 7 numbers to add in each.
+
+That is easy. Now picture a sensor that logs a reading every second for a year, with a window of one hour. Adding up each window from scratch is a real cost, and the windows overlap almost completely. That overlap is the thing to use.
 
 ## Slide, Don't Recompute
 
@@ -64,7 +66,9 @@ def best_window_sum(a, k):
     return best
 ```
 
-The first window costs k steps and each of the remaining n − k windows costs a constant, so the total is O(n). Recomputing each window costs O(n × k). We tried it on 100,000 daily counts with a window of 1,000 days: sliding took 5.5 ms and recomputing took 319 ms, about 58 times more. The gap is the window size, so it grows with k. We compared the sliding version with brute force on 4,000 random arrays.
+The first window costs k steps and each of the remaining n − k windows costs a constant, so the total is O(n). Recomputing each window costs O(n × k).
+
+We tried it on 100,000 daily counts with a window of 1,000 days: sliding took 5.5 ms and recomputing took 319 ms, about 58 times more. The gap is the window size, so it grows with k. We compared the sliding version with brute force on 4,000 random arrays.
 
 The invariant is that `window` holds the sum of the k items ending at index `i`. It is true after the first window is added, and each pass of the loop keeps it true by swapping one item for another.
 
@@ -100,7 +104,9 @@ A window maximum can't be updated that simply, because removing the leaving item
 
 ## A Floating Point Caution
 
-With integers, adding and subtracting is exact. With decimals, each addition and subtraction rounds a little, and the rounding errors pile up as the window slides. We ran a window of 1,000 values over a million decimals. The rolling sum ended 2.7 × 10⁻⁵ away from the sum recomputed directly for the last window. That is a small relative error, but it keeps growing with more steps. If the exact value matters, recompute the sum from time to time, or use a summation routine such as `math.fsum` for each window.
+With integers, adding and subtracting is exact. With decimals, each addition and subtraction rounds a little, and the rounding errors pile up as the window slides. We ran a window of 1,000 values over a million decimals.
+
+The rolling sum ended 2.7 × 10⁻⁵ away from the sum recomputed directly for the last window. That is a small relative error, but it keeps growing with more steps. If the exact value matters, recompute the sum from time to time, or use a summation routine such as `math.fsum` for each window.
 
 ## Choosing the Window Size
 

@@ -36,7 +36,9 @@ The shortest stretch is the last two days, 4 and 3 hours, and the function retur
 
 ## Why It Is O(n)
 
-The loops look nested, a `while` inside a `for`, which suggests O(n²). It isn't. The left pointer only moves forward and never past the right pointer, so it advances at most n times in total over the whole run. The right pointer advances n times. The work is at most 2n steps, however the shrinking is spread over the iterations. This is an amortized argument, the same style as in [Amortized Analysis](/algorithms/amortized-analysis): a single pass of the outer loop may do a lot of shrinking, but the total across the pass is bounded.
+The loops look nested, a `while` inside a `for`, which suggests O(n²). It isn't. The left pointer only moves forward and never past the right pointer, so it advances at most n times in total over the whole run. The right pointer advances n times.
+
+The work is at most 2n steps, however the shrinking is spread over the iterations. This is an amortized argument, the same style as in [Amortized Analysis](/algorithms/amortized-analysis): a single pass of the outer loop may do a lot of shrinking, but the total across the pass is bounded.
 
 We timed it against checking every start position with a loop that stops at the first success. On 20,000 numbers with a hard target, the window took 1.0 ms and the brute force took 4.42 s. At 5,000 numbers they took 0.2 ms and 0.30 s, so the gap widens quickly as the array grows. We also compared the function with brute force on 4,000 random arrays.
 
@@ -56,13 +58,17 @@ def longest_unique(s):
     return best
 ```
 
-Here the left end jumps in one move instead of shrinking one step at a time, because a dictionary remembers where each character last appeared. For `abcabcbb` the answer is 3 and for `pwwkew` it is 3 as well. We compared it with trying every substring on 4,000 random strings. The dictionary is the hash map from [Hash Maps and Hash Sets](/algorithms/hash-maps-sets), and a set works too if the left end moves one step at a time.
+Here the left end jumps in one move instead of shrinking one step at a time, because a dictionary remembers where each character last appeared. For `abcabcbb` the answer is 3 and for `pwwkew` it is 3 as well.
+
+We compared it with trying every substring on 4,000 random strings. The dictionary is the hash map from [Hash Maps and Hash Sets](/algorithms/hash-maps-sets), and a set works too if the left end moves one step at a time.
 
 ## When the Window Works, and When It Doesn't
 
 The method relies on one property: growing the window can only push the condition one way, and shrinking pushes it the other way. With positive numbers, taking in an item raises the total and dropping one lowers it. That is what lets the left end move forward without ever needing to go back.
 
-Negative numbers break it. With the days 5, −4 and 6 and a goal of 6, the right answer is the single day 6, a window of length 1. Our window version returned 3. It recorded the whole window, whose total is 7, then dropped the 5, which left a total of 2. That is below the goal, so it stopped shrinking. Dropping the −4 as well would have raised the total to 6, but the loop assumed that dropping items can only lower the total. That holds for positive numbers and fails for negative ones.
+Negative numbers break it. With the days 5, −4 and 6 and a goal of 6, the right answer is the single day 6, a window of length 1. Our window version returned 3. It recorded the whole window, whose total is 7, then dropped the 5, which left a total of 2.
+
+That is below the goal, so it stopped shrinking. Dropping the −4 as well would have raised the total to 6, but the loop assumed that dropping items can only lower the total. That holds for positive numbers and fails for negative ones.
 
 For arrays with negative numbers there are other tools: [Prefix Sums with Hash Maps](/algorithms/prefix-sums-hash-maps) handles exact sums, and [Kadane's Algorithm for Maximum Subarrays](/algorithms/kadane) handles the largest sum.
 

@@ -4,7 +4,9 @@ A university's course catalog lists, for each course, one prerequisite: CS301 re
 
 ## Two Walkers
 
-Send two walkers down the chain from the start. The **slow** one takes one step at a time and the **fast** one takes two. If the chain ends, the fast walker reaches the end first and there is no loop. If there is a loop, both walkers end up circling inside it, and the fast one gains one position on the slow one with each round. A gap that shrinks by one each round must reach zero, so they meet. This is **Floyd's cycle detection**, nicknamed the tortoise and the hare.
+Send two walkers down the chain from the start. The **slow** one takes one step at a time and the **fast** one takes two. If the chain ends, the fast walker reaches the end first and there is no loop.
+
+If there is a loop, both walkers end up circling inside it, and the fast one gains one position on the slow one with each round. A gap that shrinks by one each round must reach zero, so they meet. This is **Floyd's cycle detection**, nicknamed the tortoise and the hare.
 
 Here is a chain where F points back to C, so C, D, E and F form a loop and A and B lead into it.
 
@@ -48,11 +50,15 @@ def has_cycle(head):
     return False
 ```
 
-The loop ends in one of two ways. If a node has no next, the chain ended and the answer is no. If the walkers land on the same node, the answer is yes. For a tail of t nodes and a loop of c nodes, they meet after at most t + c steps. We checked that bound for all combinations of t and c below 40, and we matched the function against a version that records visited nodes on 3,000 random chains.
+The loop ends in one of two ways. If a node has no next, the chain ended and the answer is no. If the walkers land on the same node, the answer is yes.
+
+For a tail of t nodes and a loop of c nodes, they meet after at most t + c steps. We checked that bound for all combinations of t and c below 40, and we matched the function against a version that records visited nodes on 3,000 random chains.
 
 ## What It Saves
 
-The obvious method keeps a set of visited nodes and stops on a repeat. It works but needs memory for each node. We built a chain of a million nodes with a loop. The fast and slow version took 12 ms and no extra memory. The visited set version took 449 ms and about 70 MB. The two pointer version answered the same question without extra memory, which matters when the structure is huge or when you are not allowed to mark nodes.
+The obvious method keeps a set of visited nodes and stops on a repeat. It works but needs memory for each node. We built a chain of a million nodes with a loop. The fast and slow version took 12 ms and no extra memory.
+
+The visited set version took 449 ms and about 70 MB. The two pointer version answered the same question without extra memory, which matters when the structure is huge or when you are not allowed to mark nodes.
 
 ## Finding Where the Loop Starts
 

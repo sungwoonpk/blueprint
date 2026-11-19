@@ -1,6 +1,8 @@
 > Combining **prefix sums with a hash map** finds stretches of an array with a given total, even when the array has negative numbers. Each running total is checked against a dictionary of the totals seen earlier, so one pass finds every stretch.
 
-The cafeteria card of a student goes up with deposits and down with purchases. The daily changes in dollars are 2, 4, −2, 1, 3 and 2, and the student asks: over how many stretches of consecutive days did the balance change by exactly +5? The [variable window](/algorithms/variable-window) can't answer this, because the numbers include a negative one, and a negative number breaks its rule that growing the window only raises the total. A different view of the same problem works.
+The cafeteria card of a student goes up with deposits and down with purchases. The daily changes in dollars are 2, 4, −2, 1, 3 and 2, and the student asks: over how many stretches of consecutive days did the balance change by exactly +5?
+
+The [variable window](/algorithms/variable-window) can't answer this, because the numbers include a negative one, and a negative number breaks its rule that growing the window only raises the total. A different view of the same problem works.
 
 ## A Stretch Is a Difference of Two Prefixes
 
@@ -22,7 +24,7 @@ def count_subarrays_with_sum(a, k):
     return count
 ```
 
-The map starts with `{0: 1}`, which stands for the empty prefix. Without it, a stretch that begins at the first day would never be counted, since there would be no earlier total of 0 to match.
+The map starts with `{0: 1}`, which stands for the empty prefix. Without it, a stretch that begins at the first day would not be counted, since there would be no earlier total of 0 to match.
 
 Here is the run on 2, 4, −2, 1, 3, 2 with k = 5.
 

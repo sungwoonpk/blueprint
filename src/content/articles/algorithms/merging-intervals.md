@@ -34,11 +34,15 @@ The `max` matters. A later interval can sit entirely inside the last merged one,
 <figcaption>Five bookings on a timeline from 0 to 20 and the three merged stretches they become</figcaption>
 </figure>
 
-The invariant is that `merged` holds disjoint stretches, in order, covering exactly what the intervals seen so far cover, and the last one is the only one a later interval could touch. Sorting costs O(n log n) and the sweep O(n). We checked the function on 4,000 random lists by comparing which points are covered before and after, and that the merged stretches are separated by gaps. Merging a million intervals took 0.82 s in Python.
+The invariant is that `merged` holds disjoint stretches, in order, covering exactly what the intervals seen so far cover, and the last one is the only one a later interval could touch. Sorting costs O(n log n) and the sweep O(n).
+
+We checked the function on 4,000 random lists by comparing which points are covered before and after, and that the merged stretches are separated by gaps. Merging a million intervals took 0.82 s in Python.
 
 ## Deciding What Counts as Overlap
 
-Whether touching ends merge depends on what the interval means. A booking from 1 to 3 and another from 3 to 5 might be one continuous block of the lab, or two back-to-back bookings with a handover. The code above treats the ends as included, so (1, 3) and (3, 5) merge to (1, 5). To keep them apart, as with bookings that end exactly when the next one begins, compare with `<` instead of `<=`. Write the convention down. It is the sort of detail from [Edge Cases and Testing](/algorithms/edge-cases) that changes answers at the boundaries.
+Whether touching ends merge depends on what the interval means. A booking from 1 to 3 and another from 3 to 5 might be one continuous block of the lab, or two back-to-back bookings with a handover. The code above treats the ends as included, so (1, 3) and (3, 5) merge to (1, 5).
+
+To keep them apart, as with bookings that end exactly when the next one begins, compare with `<` instead of `<=`. Write the convention down. It is the sort of detail from [Edge Cases and Testing](/algorithms/edge-cases) that changes answers at the boundaries.
 
 ## Finding the Free Time
 

@@ -1,6 +1,8 @@
 > A **monotonic stack** is a stack that is kept in sorted order, with values only rising or only falling from bottom to top. Items that can no longer matter are popped before a new one is pushed, which answers questions like "what is the next larger value?" for every position in one pass.
 
-The weather app wants to tell students how many days they must wait for a warmer day. For the daily highs 20, 18, 22, 17, 16, 19, 25 and 21, the answer for day 0 is 2, since day 2 is the first with more than 20 degrees. Checking forward from each day until a warmer one turns up is easy to write. On a long run of falling temperatures, every day scans to the end, and the cost is O(n²).
+The weather app wants to tell students how many days they must wait for a warmer day. For the daily highs 20, 18, 22, 17, 16, 19, 25 and 21, the answer for day 0 is 2, since day 2 is the first with more than 20 degrees.
+
+Checking forward from each day until a warmer one turns up is easy to write. On a long run of falling temperatures, every day scans to the end, and the cost is O(n²).
 
 ## Days That Are Still Waiting
 
@@ -33,7 +35,7 @@ Here is the run on the eight days.
 
 On day 2, the 22 pops day 1 (waited 1 day) and day 0 (waited 2 days). On day 6, the 25 pops days 5 and 2, which waited 1 and 4 days. Days 6 and 7 never find a warmer day, so their answer stays 0. The final answer is 2, 1, 4, 2, 1, 1, 0, 0.
 
-The stack is **monotonic** because the temperatures of the days on it always fall from bottom to top. A new day that is cooler than the top gets pushed without disturbing anything, and a warmer day pops until the order is restored. That is the invariant: the stack holds exactly the days that haven't seen a warmer day yet, in falling order of temperature.
+The stack is **monotonic** because the temperatures of the days on it fall from bottom to top. A new day that is cooler than the top gets pushed without disturbing anything, and a warmer day pops until the order is restored. That is the invariant: the stack holds exactly the days that haven't seen a warmer day yet, in falling order of temperature.
 
 ## Why It Is O(n)
 

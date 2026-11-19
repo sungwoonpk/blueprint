@@ -1,6 +1,8 @@
 > A **difference array** records only where values change, not the values themselves. To add a number to a whole stretch of an array, you change two entries of the difference array, and one running total at the end turns it back into the final array.
 
-The campus rents out study rooms by the day. A reservation reserves one room from day `l` to day `r`, and over the semester there are thousands of them. At the end, the office wants to know how many rooms are booked on each day. The obvious way adds 1 to every day in every reservation. A month-long reservation touches 30 entries, and a semester-long one touches 120. If there are as many reservations as days, that adds up to a lot of work for something that should be simple: each reservation has just a start and an end.
+The campus rents out study rooms by the day. A reservation reserves one room from day `l` to day `r`, and over the semester there are thousands of them. At the end, the office wants to know how many rooms are booked on each day.
+
+The obvious way adds 1 to every day in every reservation. A month-long reservation touches 30 entries, and a semester-long one touches 120. If there are as many reservations as days, that adds up to a lot of work for something that should be simple: each reservation has just a start and an end.
 
 ## Record the Edges
 
@@ -80,7 +82,9 @@ The same method answers other overlap questions:
 
 ## Two Dimensions
 
-In a grid, an update adds a value to a rectangle. Change four corner entries of a difference grid, plus `v` at the top left, minus `v` just past the right edge and just past the bottom edge, and plus `v` at the bottom right corner past both. A two dimensional running total then fills in the rectangle. The four terms mirror the four terms of the rectangle sum in [Prefix Sums for Range Queries](/algorithms/prefix-sums), as they should for an inverse.
+In a grid, an update adds a value to a rectangle. Change four corner entries of a difference grid, plus `v` at the top left, minus `v` just past the right edge and just past the bottom edge, and plus `v` at the bottom right corner past both.
+
+A two dimensional running total then fills in the rectangle. The four terms mirror the four terms of the rectangle sum in [Prefix Sums for Range Queries](/algorithms/prefix-sums), as they should for an inverse.
 
 ## Pitfalls
 

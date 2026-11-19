@@ -1,6 +1,8 @@
 > **Kadane's algorithm** finds the stretch of consecutive items with the largest sum in one pass. At each item it decides whether to extend the best stretch ending at the previous item or to start a new stretch here.
 
-A food truck records its net result for each day, gains and losses together: 3, −4, 2, −1, 6, −7 and 5 dollars. The owner wants to know the best run of consecutive days, the one with the largest total. Looking at every pair of start and end days works. For a year of data there are about 66,000 stretches, and for ten years there are millions. The question looks like it needs that search. It doesn't.
+A food truck records its net result for each day, gains and losses together: 3, −4, 2, −1, 6, −7 and 5 dollars. The owner wants to know the best run of consecutive days, the one with the largest total.
+
+Looking at every pair of start and end days works. For a year of data there are about 66,000 stretches, and for ten years there are millions. The question looks like it needs that search. It doesn't.
 
 ## Extend or Restart
 
@@ -75,13 +77,17 @@ For the days above it returns (7, 2, 4). We compared both versions with trying e
 
 ## The Cost
 
-The loop reads each item once, so the algorithm is O(n) time and O(1) extra memory. Checking every stretch with a running sum is O(n²). On 5,000 numbers, Kadane's algorithm took 0.23 ms and the quadratic version took 0.44 s, about 1,900 times longer, and the gap grows with the size of the array. The algorithm is named for J. B. Kadane, who is credited with it in Jon Bentley's *Programming Pearls*, where the problem was popularized.
+The loop reads each item once, so the algorithm is O(n) time and O(1) extra memory. Checking every stretch with a running sum is O(n²).
+
+On 5,000 numbers, Kadane's algorithm took 0.23 ms and the quadratic version took 0.44 s, about 1,900 times longer, and the gap grows with the size of the array. The algorithm is named for J. B. Kadane, who is credited with it in Jon Bentley's *Programming Pearls*, where the problem was popularized.
 
 The speed is also the best possible. Every item can matter to the answer, so any method has to look at each one, and O(n) can't be beaten.
 
 ## What If Everything Is Negative
 
-For −5, −2 and −9, what is the best stretch? The code returns −2, the least bad single day, because it insists on at least one day. Some problems allow an empty stretch and expect 0 in this case. The change is one line: start `best` and `cur` at 0 and let `cur = max(0, cur + x)`. Decide which version the problem means and write it down. This is the kind of question to ask in the "understand the problem" step of [How to Approach a Problem](/algorithms/approaching-problems).
+For −5, −2 and −9, what is the best stretch? The code returns −2, the least bad single day, because it insists on at least one day. Some problems allow an empty stretch and expect 0 in this case.
+
+The change is one line: start `best` and `cur` at 0 and let `cur = max(0, cur + x)`. Decide which version the problem means and write it down. This is the kind of question to ask in the "understand the problem" step of [How to Approach a Problem](/algorithms/approaching-problems).
 
 ## A Second View: Prefix Sums
 

@@ -4,7 +4,9 @@ A campus has lockers numbered from 1 up, and the office keeps an unsorted list o
 
 ## A Value Names Its Slot
 
-Suppose the list has n entries, and we care about the values from 1 to n. Value v has a natural home at index v − 1: locker 1 in slot 0, locker 2 in slot 1, and so on. Walk through the list, and whenever an entry is not at home, swap it into its home slot, which sends whatever lived there to the current position. Repeat until the current entry is home, or can't go anywhere because it is out of range or its home already holds a copy.
+Suppose the list has n entries, and we care about the values from 1 to n. Value v has a natural home at index v − 1: locker 1 in slot 0, locker 2 in slot 1, and so on.
+
+Walk through the list, and whenever an entry is not at home, swap it into its home slot, which sends whatever lived there to the current position. Repeat until the current entry is home, or can't go anywhere because it is out of range or its home already holds a copy.
 
 When this finishes, every value in 1 to n that was present sits in its home. Slots that don't hold their own value are the gaps, so the first slot `i` where `a[i] != i + 1` shows that locker `i + 1` is free.
 
@@ -62,7 +64,9 @@ The second half of the condition, `a[a[i] - 1] != a[i]`, matters. If the home sl
 
 ## Why It Is Linear
 
-There is a loop inside a loop again, and again the cost is amortized. Every swap puts one value into its final home, where it stays, and a value in its home is never moved again. There are at most n values that can be at home, so there are at most n swaps in total, whatever the order. The scan costs n more. On a million entries our run did 999,985 swaps, just under n.
+There is a loop inside a loop again, and again the cost is amortized. Every swap puts one value into its final home, where it stays, and a value in its home is not moved again.
+
+There are at most n values that can be at home, so there are at most n swaps in total, whatever the order. The scan costs n more. On a million entries our run did 999,985 swaps, just under n.
 
 We compared the function with a version that builds a set, on 5,000 random lists including negative numbers, zeros and duplicates. Both returned the same answers. For 3, 4, −1, 1 it returns 2, for 1, 2, 0 it returns 3, and for 7, 8, 9 it returns 1.
 
