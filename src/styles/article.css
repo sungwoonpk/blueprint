@@ -309,6 +309,27 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* Guide lines on a line chart: "bound" is a dashed reference value, "mark" a
+   dotted vertical line at a point worth noticing. */
+.prose .line .bound,
+.prose .line .mark {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.8;
+}
+
+.prose .line .mark {
+  stroke-dasharray: 1 4;
+  stroke-linecap: round;
+}
+
+.prose .cells + .rowname {
+  margin-top: 10px;
+}
+
 /* Packets in a row (class "packets" keeps them in a row on phones too). A packet
    can be "lost" (red) or "wait" (faded, held up behind a lost one). A node can
    also be "hot" (red), such as the bottleneck of a chain. */
