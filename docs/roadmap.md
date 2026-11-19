@@ -2,7 +2,7 @@
 
 Each subject has one data file, `src/data/system-design.ts` and `src/data/algorithms.ts`, and `src/data/subjects.ts` lists the subjects. The shared shape and helpers (numbering, grouping) are in `src/lib/roadmap.ts`.
 
-- Two levels: **phase** > **topic**. Phases are few (9), topics are many. Every topic has a `group`; on the roadmap a phase shows its groups and each group expands.
+- Two levels: **phase** > **topic**. Phases are few (9 to 11), topics are many. Every topic has a `group`; on the roadmap a phase shows its groups and each group expands.
 - A topic has a stable `slug`, a `title` and an optional `group`. The group only clusters topics under a small heading inside a phase.
 - Display numbers (`1.1`, `1.2`, ...) are computed from order. Reordering never breaks a link, because URLs use the slug (`/<subject>/<slug>`).
 - Slugs are unique. Rename a title freely, but avoid changing a slug once an article exists.
@@ -29,17 +29,21 @@ Design exercises and interview practice, and reading progress. There is one road
 
 ## The Algorithms phases
 
-1. **Foundations**: what an algorithm is, Big O, recursion, and how to approach a problem (reading constraints, edge cases).
-2. **Core Data Structures**: arrays and strings, linked lists, stacks and queues, then hashing (hash tables are built from arrays and linked lists), and designing your own structures.
-3. **Searching and Sorting**: binary search (including on the answer), comparison and linear time sorts, quickselect.
-4. **Array Techniques** (they work on strings too): two pointers and the sliding windows built on them, rearranging in place, prefix sums and maximum subarrays, monotonic structures, intervals, matrices.
-5. **Trees and Heaps**: binary trees, search trees, heaps (top K, two heaps, merging K lists), tries, segment and Fenwick trees.
-6. **Design Strategies**: brute force and backtracking, divide and conquer, greedy, randomness.
-7. **Graphs**: traversal, structure (topological sort, union-find), shortest paths, spanning trees, advanced graphs.
-8. **Math, Strings and Bits**: number theory and combinatorics, string matching (rolling hashes need modular arithmetic, so math comes first), bit manipulation.
-9. **Dynamic Programming**: fundamentals, classic problems, and advanced forms (interval, tree, bitmask, state machine, digit).
+The reader is a computer science student in the later years of a degree, or an engineer early in a career: someone who should know what a senior algorithms course covers and what coding interviews test. See [decision 0007](decisions/0007-algorithms-roadmap-revised.md).
 
-The order follows what a learner needs next: complexity and recursion before anything that uses them; data structures before the techniques that run on them; strategies before graphs, because graph algorithms are those strategies applied (DFS is backtracking, Dijkstra and Prim are greedy); bits and modular arithmetic before dynamic programming, which uses both.
+1. **Foundations**: what an algorithm is, proving it correct, measuring it with Big O, recursion, and how to approach a problem.
+2. **Core Data Structures**: arrays (with amortized analysis, which needs the dynamic array as its example), strings and matrices, linked lists, stacks and queues (with turning recursion into an explicit stack), hashing, and combining structures.
+3. **Sorting and Searching**: the classic sorts, the n log n lower bound and the linear time sorts that sidestep it, how real library sorts work, then binary search, which needs sorted data.
+4. **Array Techniques** (they work on strings too): two pointers and sliding windows, rearranging in place, prefix sums and maximum subarrays, monotonic structures, intervals.
+5. **Trees and Heaps**: binary trees, search trees and ordered maps, heaps (top K, two heaps, merging K lists), and the range query trees that extend prefix sums (Fenwick before segment trees).
+6. **Design Strategies**: exhaustive search, divide and conquer with recurrences, greedy with its proofs, randomness.
+7. **Graphs**: traversal, structure, shortest paths, spanning trees, advanced graphs, flows and matching.
+8. **Bits and Math**: how integers are stored and bit manipulation, then number theory and combinatorics.
+9. **Strings**: pattern matching (rolling hashes need modular arithmetic, so math comes first), then indexes over text: tries and suffix arrays.
+10. **Dynamic Programming**: fundamentals (from recursion to memoization to tables, then states, reconstruction and recognizing a DP problem), classic problems, advanced forms.
+11. **Hard Problems**: P and NP, reductions, NP-completeness, and what to do when no fast algorithm is known: exact exponential algorithms, approximation, heuristics.
+
+The order follows what a learner needs next. Correctness, complexity and recursion come before anything that uses them; data structures before the techniques that run on them; sorting before binary search, which needs sorted input. Strategies come before graphs, because graph algorithms are those strategies applied (DFS is backtracking, Dijkstra and Prim are greedy, Bellman-Ford is dynamic programming). Bits and math come before strings and dynamic programming, which use them (rolling hashes, counting modulo a prime, bitmask states). Dynamic programming comes late because it draws on most of what came before it (trees, DAGs, strings, bits) and is the hardest step for most learners. Hard problems come last, since coping with them uses backtracking, greedy and dynamic programming together.
 
 ## Why this order
 

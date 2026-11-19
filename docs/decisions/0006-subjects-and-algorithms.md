@@ -9,3 +9,5 @@
 **Costs:** System Design URLs moved from `/topics/<slug>` to `/system-design/<slug>` (no articles or links existed yet). The home page is now a redirect.
 
 **Alternatives:** A separate site per subject (duplicated code and design), or one combined roadmap (the subjects do not share an order).
+
+**Later:** The Algorithms roadmap was revised in [decision 0007](0007-algorithms-roadmap-revised.md).
