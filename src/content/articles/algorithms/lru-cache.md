@@ -23,7 +23,9 @@ A cache needs two operations, and both should be fast.
 - **get(key)** returns the cached value and marks that item as the most recently used
 - **put(key, value)** stores an item, marks it as most recent, and if the cache is over capacity, removes the least recently used item
 
-Each job needs a different structure. To find an item by key quickly, use a hash map. To know which item is oldest, and to move an item to "newest" after a use, you need an ordering that can be edited quickly. A list kept in order of use fits, but an array makes a move O(n), and a singly linked list can't unlink a node without its predecessor. A [doubly linked list](/algorithms/linked-lists) can: given a node, it removes it and relinks it at the front in O(1).
+Each job needs a different structure. To find an item by key quickly, use a hash map. To know which item is oldest, and to move an item to "newest" after a use, you need an ordering that can be edited quickly.
+
+A list kept in order of use fits, but an array makes a move O(n), and a singly linked list can't unlink a node without its predecessor. A [doubly linked list](/algorithms/linked-lists) can: given a node, it removes it and relinks it at the front in O(1).
 
 The way to get both is to use the two together. The list keeps the order of use, with the most recent at the front and the least recent at the back. The hash map maps each key to its node in the list, so the node is reached without walking.
 
@@ -111,7 +113,9 @@ We ran this against a second implementation built on Python's `OrderedDict`, on 
 
 ## What the Libraries Give You
 
-Writing it once is the way to understand it. In real code, use the library. Python's `OrderedDict` is a hash map that remembers order and can move a key to the end in O(1), so it is nearly all of an LRU cache by itself, with `move_to_end` on each use and `popitem` to evict. Java's `LinkedHashMap` can be built in access order, and its `removeEldestEntry` hook lets a subclass drop the oldest item when the map grows past a limit.
+Writing it once is the way to understand it. In real code, use the library. Python's `OrderedDict` is a hash map that remembers order and can move a key to the end in O(1), so it is nearly all of an LRU cache by itself, with `move_to_end` on each use and `popitem` to evict.
+
+Java's `LinkedHashMap` can be built in access order, and its `removeEldestEntry` hook lets a subclass drop the oldest item when the map grows past a limit.
 
 For caching the results of a function, Python's `functools.lru_cache` does the whole job in one line.
 
@@ -132,7 +136,7 @@ Its implementation is the same structure: a dictionary from keys to links in a c
 
 ## Exact LRU Isn't Always Used
 
-Strict LRU has a cost. Every read changes the list, which in a cache shared by many threads means taking a lock on each read, and each entry carries two extra pointers. Large systems often approximate it instead.
+Strict LRU has a cost. Each read changes the list, which in a cache shared by many threads means taking a lock on each read, and each entry carries two extra pointers. Large systems often approximate it instead.
 
 Redis, an in-memory database, doesn't track exact recency. When it needs to evict, it samples a few random keys and removes the one that has gone unused the longest. Its documentation says the exact version would cost more memory, and that sampling about ten keys gets very close to true LRU. PostgreSQL's buffer manager uses a related idea, a clock sweep with a small usage counter for each page.
 
@@ -147,7 +151,7 @@ Sampling is cheap, and we tested how well it works on the same course requests.
 
 Looking at five random items recovered nearly all of the benefit of exact LRU, with no list and no pointers to maintain.
 
-LRU also has a weakness. A single pass over a huge set of items, such as a scan through every course, pushes out the popular items that were being reused, even though the scan items will never be requested again. Systems guard against it in different ways, and some prefer to count how often an item is used and not only how recently, a policy called least frequently used.
+LRU also has a weakness. A single pass over a huge set of items, such as a scan through every course, pushes out the popular items that were being reused, even though the scan items won't be requested again. Systems guard against it in different ways, and some prefer to count how often an item is used and not only how recently, a policy called least frequently used.
 
 ## Key Points
 

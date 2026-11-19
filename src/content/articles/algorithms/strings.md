@@ -38,7 +38,7 @@ José's problem is the third row. "José" can be written with the single code po
 
 ## What Counts as a Character
 
-When someone says "character", they may mean a byte, a code point, or what a reader perceives as one letter. These disagree, so an algorithm has to say which one it works on. A reverse function that flips code points will put an accent in front of the wrong letter: reversing "café" written with a combining accent gives the accent first, attached to nothing sensible.
+When someone says "character", they may mean a byte, a code point, or what a reader perceives as one letter. These disagree, so an algorithm has to say which one it works on. A reverse function that flips code points will put an accent in front of the wrong letter: reversing "café" written with a combining accent gives the accent first, attached to the wrong place.
 
 Most algorithm problems quietly assume the simplest case, such as lowercase English letters. State that assumption, and the algorithm stays honest about where it applies.
 
@@ -58,7 +58,7 @@ The form now sees both spellings as the same name. Normalization turns a messy c
 
 ## Strings Are Usually Immutable
 
-In Python, Java, Go and JavaScript, a string can't be changed in place. Assigning to `name[0]` is an error in Python, and any change builds a new string. That makes strings safe to share and to use as keys, since nothing can alter them under a [hash table](/algorithms/hash-tables). The price is that changing one costs a copy.
+In Python, Java, Go and JavaScript, a string can't be changed in place. Assigning to `name[0]` is an error in Python, and any change builds a new string. That makes strings safe to share and to use as keys, since they can't change under a [hash table](/algorithms/hash-tables). The price is that changing one costs a copy.
 
 The price shows up when building a string piece by piece. Joining n single characters with `+=` copies the growing string each time, so the total work is quadratic. We measured it, with and without a second reference to the string:
 
@@ -69,7 +69,7 @@ The price shows up when building a string piece by piece. Joining n single chara
 | 200,000 | 6.6 ms | 403 ms | 2.6 ms |
 | 400,000 | 13 ms | 1,215 ms | 5.4 ms |
 
-The simple loop looks linear because CPython has a shortcut that grows a string in place when nothing else refers to it. Hold on to the old string for a moment and the shortcut disappears: doubling the length makes the loop three to six times slower. The shortcut is a detail of one implementation, and Python's style guide, PEP 8, tells you not to rely on it and to use `join` instead.
+The simple loop looks linear because CPython has a shortcut that grows a string in place when no other reference to it exists. Hold on to the old string for a moment and the shortcut disappears: doubling the length makes the loop three to six times slower. The shortcut is a detail of one implementation, and Python's style guide, PEP 8, tells you not to rely on it and to use `join` instead.
 
 The dependable way is to collect the pieces in a list and join them once, which copies each character one time.
 

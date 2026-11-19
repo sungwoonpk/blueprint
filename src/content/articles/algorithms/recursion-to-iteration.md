@@ -4,7 +4,7 @@ Recursion has a ceiling, as [The Call Stack and Recursion Depth](/algorithms/cal
 
 ## When the Recursion Is a Loop in Disguise
 
-The simplest case is a **tail call**, where the recursive call is the last thing the function does. Nothing is waiting for the result, so the function can replace its own arguments and start again. Here is binary search written recursively.
+The simplest case is a **tail call**, where the recursive call is the last thing the function does. No work is waiting for the result, so the function can replace its own arguments and start again. Here is binary search written recursively.
 
 ```python
 def contains_rec(a, target, lo=0, hi=None):
@@ -36,7 +36,9 @@ def contains_loop(a, target):
     return False
 ```
 
-This is the loop from [Proving Correctness with Loop Invariants](/algorithms/loop-invariants). The invariant there plays the role of the recursive function's precondition: it describes what must be true each time the function is entered or the loop condition is checked. The base case becomes the loop condition, and the recursive call becomes the update of `lo` and `hi`. We ran both versions against Python's own membership test on 2,000 random lists and every target from −1 to 50, and all three agreed.
+This is the loop from [Proving Correctness with Loop Invariants](/algorithms/loop-invariants). The invariant there plays the role of the recursive function's precondition: it describes what must be true each time the function is entered or the loop condition is checked.
+
+The base case becomes the loop condition, and the recursive call becomes the update of `lo` and `hi`. We ran both versions against Python's own membership test on 2,000 random lists and every target from −1 to 50, and all three agreed.
 
 ## The General Method: Your Own Stack
 
@@ -72,7 +74,9 @@ def annotate_sizes(root):
                                + sum(s["total"] for s in folder["folders"]))
 ```
 
-The first time a folder is popped, it pushes itself back marked as done, and then its subfolders on top of it. The subfolders are popped and finished first, so by the time the folder is popped again, every subfolder already has its `total`. The flag is the **resume point**, the part of a call frame that says where to continue. In general, an entry on your own stack is a copy of what the call stack would have held: the arguments, plus a marker for how far the call has got.
+The first time a folder is popped, it pushes itself back marked as done, and then its subfolders on top of it. The subfolders are popped and finished first, so by the time the folder is popped again, every subfolder already has its `total`.
+
+The flag is the **resume point**, the part of a call frame that says where to continue. In general, an entry on your own stack is a copy of what the call stack would have held: the arguments, plus a marker for how far the call has got.
 
 We compared this against the recursive version on 300 random trees, and every folder's total matched. On the 1,000,000 chain it finished, where the recursive version fails.
 

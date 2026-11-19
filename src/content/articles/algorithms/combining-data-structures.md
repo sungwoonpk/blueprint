@@ -1,6 +1,8 @@
 > **Combining data structures** means building a new structure from two or more existing ones, so that each operation uses the part that does it fastest, and the parts are kept in agreement.
 
-Each structure so far is good at some things and bad at others. An array reads by position, a hash table finds by key, a linked list removes a node you hold, and a stack gives the most recent item. Real problems often need operations from several of these at once. [Building an LRU Cache](/algorithms/lru-cache) already did it with a hash map and a linked list. This page turns that into a method, with three more examples.
+Each structure so far is good at some things and bad at others. An array reads by position, a hash table finds by key, a linked list removes a node you hold, and a stack gives the most recent item.
+
+Real problems often need operations from several of these at once. [Building an LRU Cache](/algorithms/lru-cache) already did it with a hash map and a linked list. This page turns that into a method, with three more examples.
 
 ## The Ingredients
 
@@ -69,7 +71,9 @@ Removing from the middle of an array shifts everything after it, which is O(n). 
 <figcaption>The order changes, which doesn't matter for a set. The index map must record that d now lives at position 1</figcaption>
 </figure>
 
-The hash map is what makes this safe: it says where each member lives, and the move updates one entry. The two structures agree if `index[x] == i` exactly when `items[i] == x`, and every method has to keep that true. We checked it after every step in 3,000 random sequences of adds and removes against a plain Python set. On 100,000 members, picking one at random by copying the set to a tuple first took 0.40 ms, and `RandomSet` took 0.19 µs, about 2,000 times less.
+The hash map is what makes this safe: it says where each member lives, and the move updates one entry. The two structures agree if `index[x] == i` exactly when `items[i] == x`, and every method has to keep that true.
+
+We checked it after every step in 3,000 random sequences of adds and removes against a plain Python set. On 100,000 members, picking one at random by copying the set to a tuple first took 0.40 ms, and `RandomSet` took 0.19 µs, about 2,000 times less.
 
 ## Example: A Stack That Knows Its Minimum
 

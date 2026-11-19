@@ -73,7 +73,7 @@ Amortization is a worst case statement about a sequence. It holds even if an adv
 
 What it does not promise is that each individual operation is fast. We timed a million appends to a Python list, one at a time. The median append took 83 ns, including the timer's own overhead, and the slowest took 241 µs, nearly 3,000 times the median. Not every slow one is a resize, since the machine also has other work to do, but resizes are among them.
 
-For most programs that doesn't matter. For something that must answer within a fixed time on every request, such as a trading system or a game's frame loop, one slow append can matter. The usual fix is to reserve the capacity up front, as `new ArrayList<>(n)` does in Java and `make([]T, 0, n)` does in Go, so the array never has to grow.
+For most programs that doesn't matter. For something that must answer within a fixed time on each request, such as a trading system or a game's frame loop, one slow append can matter. The usual fix is to reserve the capacity up front, as `new ArrayList<>(n)` does in Java and `make([]T, 0, n)` does in Go, so the array doesn't have to grow.
 
 ## Counting in Binary
 
@@ -112,5 +112,5 @@ The quarter rule leaves a gap between the grow and shrink thresholds, so after a
 - Amortized cost averages over a sequence of operations on one structure, with no probability and no assumption about inputs
 - Dynamic array appends are O(1) amortized because resizes copy fewer than 2n items in total, which spreads to under 3 steps for each append
 - Three common proofs are the total count, coins saved on items, and a potential balance for the whole structure
-- Amortized O(1) still allows an occasional slow operation, which matters when every response has a deadline
+- Amortized O(1) still allows an occasional slow operation, which matters when each response has a deadline
 - Resizing rules need a gap between the grow and shrink thresholds, or alternating operations copy the whole structure each time

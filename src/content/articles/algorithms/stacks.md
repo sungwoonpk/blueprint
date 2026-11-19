@@ -16,9 +16,11 @@ A stack offers few operations on purpose. You can push an item, pop the top one,
 <figcaption>A pop returns C and leaves B on top. Items below the top can't be reached without popping what is above them</figcaption>
 </figure>
 
-An array makes a good stack. Python's list does it with `append` to push and `pop` to pop, and both work at the end of the list, where there is no shifting. A linked list works too, with the top at the head, so push and pop touch only the first node. In Java, the `Stack` class is a legacy one, and the documentation recommends a `Deque` such as `ArrayDeque` for stack work. [Queues and Deques](/algorithms/queues-deques) says more about that.
+An array makes a good stack. Python's list does it with `append` to push and `pop` to pop, and both work at the end of the list, where there is no shifting.
 
-The restriction is the point. Code that only pushes and pops tells the reader that items are used in reverse order of arrival, and nothing else about the contents is needed.
+A linked list works too, with the top at the head, so push and pop touch only the first node. In Java, the `Stack` class is a legacy one, and the documentation recommends a `Deque` such as `ArrayDeque` for stack work. [Queues and Deques](/algorithms/queues-deques) says more about that.
+
+The restriction is the point. Code that only pushes and pops tells the reader that items are used in reverse order of arrival, and no other detail about the contents is needed.
 
 ## Example: Matching Brackets
 
@@ -46,7 +48,9 @@ Here is the failing input `([)]`, step by step.
 | [ | Push | ( [ |
 | ) | Pop gives [, which is not the partner of ) | Stop, not balanced |
 
-The invariant is that the stack holds the opening brackets that have not been closed yet, in the order they were opened, and the most recent is on top. A closer has to match the most recent open bracket, which is exactly the top. Two cases need the final checks. A closer with an empty stack has nothing to match, so the code returns false before popping. Leftover openers at the end mean something never closed, so the result is `not stack`.
+The invariant is that the stack holds the opening brackets that have not been closed yet, in the order they were opened, and the most recent is on top. A closer has to match the most recent open bracket, which is exactly the top.
+
+Two cases need the final checks. A closer with an empty stack has nothing to match, so the code returns false before popping. Leftover openers at the end mean something was not closed, so the result is `not stack`.
 
 We checked the function against a different method, deleting adjacent matching pairs again and again until none are left, on 20,000 random strings, and the two agreed on all of them. The stack version does one pass, so it is O(n) time, with O(n) memory in the worst case, such as a string of only openers.
 
@@ -98,7 +102,9 @@ def eval_postfix(tokens):
 
 ## Where Stacks Hide
 
-Stacks run underneath many algorithms. The pending calls of a recursion live on a stack of frames, as [The Call Stack and Recursion Depth](/algorithms/call-stack) describes. [Depth-First Search](/algorithms/depth-first-search) can be written with an explicit stack in place of recursion, and [Turning Recursion into Iteration](/algorithms/recursion-to-iteration) shows how. Backtracking keeps a stack of choices to undo. Later in this roadmap, [Monotonic Stack](/algorithms/monotonic-stack) uses a stack kept in sorted order to answer "what is the next larger value" for every position in one pass.
+Stacks run underneath many algorithms. The pending calls of a recursion live on a stack of frames, as [The Call Stack and Recursion Depth](/algorithms/call-stack) describes. [Depth-First Search](/algorithms/depth-first-search) can be written with an explicit stack in place of recursion, and [Turning Recursion into Iteration](/algorithms/recursion-to-iteration) shows how.
+
+Backtracking keeps a stack of choices to undo. Later in this roadmap, [Monotonic Stack](/algorithms/monotonic-stack) uses a stack kept in sorted order to answer "what is the next larger value" for every position in one pass.
 
 ## Key Points
 

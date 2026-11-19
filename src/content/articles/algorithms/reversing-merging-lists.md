@@ -25,9 +25,11 @@ Two pointers walk the list. `curr` marks the first node not yet handled, and `pr
 | 2 | Ben | Cy | Ben, Ana | Cy |
 | 3 | Cy | None | Cy, Ben, Ana | (empty) |
 
-The table is a loop invariant, in the sense of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants): at each check of the loop condition, the part reversed so far, followed by the part still to do in its original order, hold all the nodes, each one once. At the start, the reversed part is empty. Each pass moves one node from the second part to the front of the first. When `curr` is `None`, the second part is empty and `prev` heads the whole reversed list.
+The table is a loop invariant, in the sense of [Proving Correctness with Loop Invariants](/algorithms/loop-invariants): at each check of the loop condition, the part reversed so far, followed by the part still to do in its original order, hold all the nodes, each one once.
 
-The loop touches each node once, so it takes O(n) time, and it keeps three pointers, so it needs O(1) extra memory. The empty list and the one node list work without special cases: the loop never runs, or runs once, and `prev` is right either way.
+At the start, the reversed part is empty. Each pass moves one node from the second part to the front of the first. When `curr` is `None`, the second part is empty and `prev` heads the whole reversed list.
+
+The loop touches each node once, so it takes O(n) time, and it keeps three pointers, so it needs O(1) extra memory. The empty list and the one node list work without special cases: the loop doesn't run, or runs once, and `prev` is right either way.
 
 ## Reversing with Recursion
 

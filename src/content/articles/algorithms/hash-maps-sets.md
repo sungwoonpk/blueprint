@@ -37,7 +37,9 @@ d[True] = "bool"
 print(d)                 # {1: 'bool'}
 ```
 
-Second, changing a key's contents after inserting it breaks the table. We stored a `Student` object whose hash comes from its name, then changed the name. The table still held the entry under the old hash, but a lookup now computed a new hash and went to a different slot. The entry was lost: `s in reg` was `False`, a new `Student("Ana")` was not found either, and the dictionary still reported one entry. If a class defines equality by its contents, keep those contents fixed while it is a key.
+Second, changing a key's contents after inserting it breaks the table. We stored a `Student` object whose hash comes from its name, then changed the name. The table still held the entry under the old hash, but a lookup now computed a new hash and went to a different slot.
+
+The entry was lost: `s in reg` was `False`, a new `Student("Ana")` was not found either, and the dictionary still reported one entry. If a class defines equality by its contents, keep those contents fixed while it is a key.
 
 ## Three Everyday Patterns
 

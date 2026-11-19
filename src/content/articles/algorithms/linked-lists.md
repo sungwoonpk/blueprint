@@ -4,7 +4,7 @@ A seminar is full, so the department keeps a waitlist. Students join at the back
 
 ## Nodes and Pointers
 
-An array finds items by position. A linked list finds them by following arrows. Each node holds a value and a pointer to the next node, the list keeps a pointer to the first node, called the **head**, and the last node points to nothing.
+An array finds items by position. A linked list finds them by following arrows. Each node holds a value and a pointer to the next node, the list keeps a pointer to the first node, called the **head**, and the last node points to no node at all.
 
 <figure class="diagram">
 <div class="flow">
@@ -125,13 +125,15 @@ Then there is where the nodes live. An array's neighbors are neighbors in memory
 
 The same list, with the same arrows, went from 3 ms to a full second after its nodes were scattered. A list that has lived through many inserts and deletes looks more like the last row than the middle one.
 
-The advantage on edits is not as clear as it seems either. Inserting at a random position needs the position first, and a linked list finds it by walking. We inserted 20,000 items at random positions in a list of 100,000. The array shifted items with a block copy and took 162 ms. The linked list walked to each position and took 1,426 ms, nearly nine times longer, even though its nodes sat in mostly sequential memory. Rust's documentation for its own linked list gives similar advice: reach for a vector or a ring buffer first, because array based containers are usually faster and use less memory.
+The advantage on edits is not as clear as it seems either. Inserting at a random position needs the position first, and a linked list finds it by walking. We inserted 20,000 items at random positions in a list of 100,000. The array shifted items with a block copy and took 162 ms.
+
+The linked list walked to each position and took 1,426 ms, nearly nine times longer, even though its nodes sat in mostly sequential memory. Rust's documentation for its own linked list gives similar advice: reach for a vector or a ring buffer first, because array based containers are usually faster and use less memory.
 
 ## Where Linked Lists Win
 
 Linked lists earn their place when you already hold the node and want to edit around it, or when other code holds pointers to nodes that shouldn't move.
 
-- **Edit at a node you hold**: unlink it or insert next to it in O(1), with no search. A cache that moves the most recently used entry to the front does this on every access, as in [Building an LRU Cache](/algorithms/lru-cache)
+- **Edit at a node you hold**: unlink it or insert next to it in O(1), with no search. A cache that moves the most recently used entry to the front does this on each access, as in [Building an LRU Cache](/algorithms/lru-cache)
 - **Stable addresses**: nodes stay where they are when others are added or removed, so a pointer to one stays valid
 - **Several lists at once**: the Linux kernel embeds the link fields inside its own structures, so one object can sit on several lists and no separate node has to be allocated. Its documentation warns about poor locality too, and calls a plain array the better choice where one would do
 - **Joining lists**: connecting the end of one list to the head of another is a pointer change
