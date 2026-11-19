@@ -343,6 +343,36 @@
   gap: 8px;
 }
 
+/* A call stack: frames in a column, newest on top ("hl"), each with its call on
+   the left and what it is waiting for on the right. They stay in a column on a
+   phone, and the note wraps under the call when the frame is narrow. */
+.prose .frames {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.prose .frames .node {
+  flex-flow: row wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 14px;
+  width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+.prose .frames .node code {
+  font-size: 14px;
+}
+
+.prose .frames .node.hl {
+  color: var(--term);
+  box-shadow: inset 0 0 0 2px var(--term);
+}
+
 /* A tree drawn level by level: each level is a "flow packets tree" row of
    small nodes that stays on one line, even on a phone. Keep a row to four. */
 .prose .flow.tree {
