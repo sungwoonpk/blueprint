@@ -343,6 +343,18 @@
   gap: 8px;
 }
 
+/* A tree drawn level by level: each level is a "flow packets tree" row of
+   small nodes that stays on one line, even on a phone. Keep a row to four. */
+.prose .flow.tree {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.prose .flow.tree .node {
+  padding: 8px 6px;
+  font-size: 13px;
+}
+
 .prose .node.lost,
 .prose .node.hot {
   color: var(--bad);
