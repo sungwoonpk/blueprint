@@ -86,7 +86,9 @@ def merge_sort(a):
     return merge(merge_sort(a[:mid]), merge_sort(a[mid:]))
 ```
 
-Correctness is an induction. A list of zero or one item is sorted, which is the base case. For a longer list, assume each half comes back sorted, so the only thing left to show is that merging two sorted lists gives a sorted list containing both. The merge has a loop invariant: the output so far holds the smallest items taken from both lists, in order, and nothing left in either list is smaller than the last one taken. When one list runs out, the rest of the other list is already in order, so appending it finishes the job.
+Correctness is an induction. A list of zero or one item is sorted, which is the base case. For a longer list, assume each half comes back sorted, so the only thing left to show is that merging two sorted lists gives a sorted list containing both.
+
+The merge has a loop invariant: the output so far holds the smallest items taken from both lists, in order, and nothing left in either list is smaller than the last one taken. When one list runs out, the rest of the other list is already in order, so appending it finishes the job.
 
 The `<=` in the merge is deliberate. When the two front items are equal, it takes the left one first, so equal items keep their original order. That makes merge sort **stable**, a property used in [Stable Sorts and Custom Comparators](/algorithms/stable-sorts-comparators). We checked it on records with repeated keys, along with correctness against Python's `sorted` on 3,000 random lists.
 
@@ -118,7 +120,9 @@ Doubling the size quadrupled the insertion sort and a bit more than doubled the 
 
 Merge sort's weak point is memory. The merge builds a new list, so it needs extra space proportional to n, where insertion sort needs only a few variables. Our version also copies with slices, which costs time but not growth: it adds a constant factor and no extra levels.
 
-Merge sort is easy to improve. Skip the merge when the largest item of the left half is not greater than the smallest of the right, since the halves are already in order, which makes a sorted list cost O(n). Sort tiny pieces with insertion sort instead of recursing down to single items, which is the approach in [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) and saves some of the overhead. Both ideas appear in real library sorts.
+Merge sort is easy to improve. Skip the merge when the largest item of the left half is not greater than the smallest of the right, since the halves are already in order, which makes a sorted list cost O(n).
+
+Sort tiny pieces with insertion sort instead of recursing down to single items, which is the approach in [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) and saves some of the overhead. Both ideas appear in real library sorts.
 
 Merge sort can also avoid recursion by working bottom up, as the figure did: merge pairs, then groups of two, then four, doubling the width until one group remains.
 

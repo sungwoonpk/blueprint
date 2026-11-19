@@ -1,6 +1,8 @@
 > **Quick sort** picks one item as the **pivot**, rearranges the list so smaller items come before it and larger ones after it, and then sorts each side the same way. It sorts in place and takes O(n log n) time on average, though a poor choice of pivot can cost O(n²).
 
-[Merge sort](/algorithms/merge-sort) does its clever work on the way back up, when it merges. Quick sort turns that around and does the work on the way down. Pick one student as a reference, send everyone shorter to the left and everyone taller to the right, and the reference student is already standing where they belong. Then repeat for each group. The idea is from Tony Hoare in 1959, and its ideas run through the sorts in many standard libraries.
+[Merge sort](/algorithms/merge-sort) does its clever work on the way back up, when it merges. Quick sort turns that around and does the work on the way down.
+
+Pick one student as a reference, send the shorter ones to the left and the taller ones to the right, and the reference student is already standing where they belong. Then repeat for each group. The idea is from Tony Hoare in 1959, and its ideas run through the sorts in many standard libraries.
 
 ## Partition, Then Recurse
 
@@ -61,7 +63,9 @@ Everything happens inside the one array, so quick sort needs no extra list the w
 
 ## Why the Pivot Matters
 
-The cost depends on how evenly each partition splits the list. If each pivot lands near the middle, the list halves at each level and the total is O(n log n), like merge sort. If each pivot is the smallest or largest item, one side is empty and the other has the rest of the items. Then the work is (n − 1) + (n − 2) + … + 1, which is O(n²), and the recursion goes n levels deep.
+The cost depends on how evenly each partition splits the list. If each pivot lands near the middle, the list halves at each level and the total is O(n log n), like merge sort.
+
+If each pivot is the smallest or largest item, one side is empty and the other has the rest of the items. Then the work is (n − 1) + (n − 2) + … + 1, which is O(n²), and the recursion goes n levels deep.
 
 That worst case is easy to hit with a naive pivot. With the last item as the pivot, an already sorted list is the worst input, because the last item is the largest each time. We counted the comparisons on 1,000 items under three rules.
 
@@ -73,13 +77,19 @@ That worst case is easy to hit with a naive pivot. With the last item as the piv
 
 The last item is fine on random data and a disaster on sorted data, which is a common kind of real input. On 10,000 sorted items it made about 50 million comparisons and went 9,999 levels deep. A recursive version crashed with Python's recursion limit on 2,000 sorted items, a case of [The Call Stack and Recursion Depth](/algorithms/call-stack).
 
-A **random pivot** removes the problem. The bad inputs don't disappear, but the algorithm can't be steered to a bad pivot, so no input is reliably slow. The expected number of comparisons is about the same for sorted, reversed and random lists: 10,476, 10,585 and 10,716 above. The **median of three**, which takes the middle value of the first, middle and last items, is cheaper on random and sorted data here. Its worse showing on reversed data shows that it swaps one bad pattern for another.
+A **random pivot** removes the problem. The bad inputs don't disappear, but the algorithm can't be steered to a bad pivot, so no input is reliably slow. The expected number of comparisons is about the same for sorted, reversed and random lists: 10,476, 10,585 and 10,716 above.
+
+The **median of three**, which takes the middle value of the first, middle and last items, is cheaper on random and sorted data here. Its worse showing on reversed data shows that it swaps one bad pattern for another.
 
 ## Why Randomness Works
 
-The expected cost has a short argument. In the sorted order of the list, call the items z₁ through zₙ. Two items are compared only if one of them is chosen as a pivot while both are still in the same group, and each pair is compared at most once, since a pivot is removed from later groups. Items zᵢ and zⱼ stay together until the first pivot that falls between them in sorted order, and they are compared only if that pivot is zᵢ or zⱼ itself, which has probability 2 out of the j − i + 1 items in that range.
+The expected cost has a short argument. In the sorted order of the list, call the items z₁ through zₙ. Two items are compared only if one of them is chosen as a pivot while both are still in the same group, and each pair is compared at most once, since a pivot is removed from later groups.
 
-Adding that up over all pairs gives about 2n ln n comparisons, or 1.39 n log₂ n, with a smaller correction term. For 10,000 items, the exact expression is 155,772, and the average of 20 runs of our random pivot version was 155,349. That is about 17% more comparisons than n log₂ n, and more than merge sort's 0.9 n log₂ n. Quick sort still wins in many settings because each step is cheap: it scans memory in order, moves items in place and allocates nothing. In pure Python on 200,000 random items, our quick sort took 0.20 s against 0.29 s for our merge sort.
+Items zᵢ and zⱼ stay together until the first pivot that falls between them in sorted order, and they are compared only if that pivot is zᵢ or zⱼ itself, which has probability 2 out of the j − i + 1 items in that range.
+
+Adding that up over all pairs gives about 2n ln n comparisons, or 1.39 n log₂ n, with a smaller correction term. For 10,000 items, the exact expression is 155,772, and the average of 20 runs of our random pivot version was 155,349. That is about 17% more comparisons than n log₂ n, and more than merge sort's 0.9 n log₂ n.
+
+Quick sort still wins in many settings because each step is cheap: it scans memory in order, moves items in place and allocates no new arrays. In pure Python on 200,000 random items, our quick sort took 0.20 s against 0.29 s for our merge sort.
 
 ## Making It Robust
 

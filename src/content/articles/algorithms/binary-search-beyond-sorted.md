@@ -1,6 +1,8 @@
 > Binary search doesn't need a sorted array. It needs a yes or no question about positions whose answer is **no** for a while and then **yes** for the rest. Wherever you can ask such a question, you can find the switch point in about log₂ n steps.
 
-A test started failing sometime during the last 1,000 commits. Nobody knows which commit broke it, and checking one means building the project and running the test. The commits aren't a sorted array of numbers. But the question "does the test fail at this commit?" has the shape binary search needs: it is no for the early commits and yes from the breaking commit onward, since once the bug is in, it stays in. Check the middle commit, and half of the history is ruled out.
+A test started failing sometime during the last 1,000 commits. Nobody knows which commit broke it, and checking one means building the project and running the test. The commits aren't a sorted array of numbers.
+
+But the question "does the test fail at this commit?" has the shape binary search needs: it is no for the early commits and yes from the breaking commit onward, since once the bug is in, it stays in. Check the middle commit, and half of the history is ruled out.
 
 ## The Yes or No Question
 
@@ -19,7 +21,9 @@ def first_true(lo, hi, pred):
     return lo
 ```
 
-This is the half open loop from [Binary Search](/algorithms/binary-search), with the comparison replaced by a question. The invariant is the same: the first true position always lies between `lo` and `hi`. The question is the only thing that changes from problem to problem, and the array was only one way to ask it. The lower bound is the special case `pred(i) = a[i] >= x`, which gave `first_true` the same answer as Python's `bisect_left` on our example list.
+This is the half open loop from [Binary Search](/algorithms/binary-search), with the comparison replaced by a question. The invariant is the same: the first true position lies between `lo` and `hi`.
+
+The question is the only thing that changes from problem to problem, and the array was only one way to ask it. The lower bound is the special case `pred(i) = a[i] >= x`, which gave `first_true` the same answer as Python's `bisect_left` on our example list.
 
 Go builds its standard search on exactly this shape: `sort.Search(n, f)` returns the first index where `f` is true, and its documentation says `f` must be false for a prefix and true for the rest.
 
@@ -59,7 +63,9 @@ def search_rotated(a, target):
     return -1
 ```
 
-We checked both against brute force on 4,000 random rotated arrays and every target in range, and they matched. The method has a limit: it needs distinct values. In 2, 2, 2, 0, 2 the question is true everywhere, because every item is at most the last item, so it returns index 0 and the minimum is at index 3. With repeated values a stretch of equal items hides which side you are on, and the search can't throw half away safely. Binary search is only as good as the monotone question.
+We checked both against brute force on 4,000 random rotated arrays and every target in range, and they matched. The method has a limit: it needs distinct values. In 2, 2, 2, 0, 2 the question is true everywhere, because every item is at most the last item, so it returns index 0 and the minimum is at index 3.
+
+With repeated values a stretch of equal items hides which side you are on, and the search can't throw half away safely. Binary search is only as good as the monotone question.
 
 ## Finding a Peak
 

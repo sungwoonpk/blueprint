@@ -59,7 +59,9 @@ If you are handed an unstable sort and need stability, attach each item's origin
 
 ## Writing Comparators
 
-Python's sorts take a key function: it maps each item to a value, and the sort compares those values. The key function is called once for each item, which is cheaper than calling a comparison for each pair. Other languages use a **comparator** instead, a function of two items that returns a negative number if the first comes first, zero if they tie and a positive number if the second comes first. Python can use one through `functools.cmp_to_key`.
+Python's sorts take a key function: it maps each item to a value, and the sort compares those values. The key function is called once for each item, which is cheaper than calling a comparison for each pair.
+
+Other languages use a **comparator** instead, a function of two items that returns a negative number if the first comes first, zero if they tie and a positive number if the second comes first. Python can use one through `functools.cmp_to_key`.
 
 Here is the grade-descending, name-ascending order in Go, which takes a comparator. The sort is `slices.SortFunc`, and a stable variant, `slices.SortStableFunc`, is available.
 

@@ -81,13 +81,15 @@ We counted the comparisons Python's `sorted` made on 100,000 items in several sh
 <figcaption>Comparisons for each item when Python sorts 100,000 items, counted in our run</figcaption>
 </figure>
 
-On random data the count was 1,531,851, about 1% above the minimum log₂(n!) from [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound), so Timsort loses almost nothing there. On sorted or reversed data, and on a list of equal items, it made n − 1 comparisons, just enough to see that the list is one run. Even a list with 1% of its values replaced took under two comparisons for each item.
+On random data the count was 1,531,851, about 1% above the minimum log₂(n!) from [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound), so Timsort gives up very little there. On sorted or reversed data, and on a list of equal items, it made n − 1 comparisons, just enough to see that the list is one run. Even a list with 1% of its values replaced took under two comparisons for each item.
 
 Time follows the same shape. Sorting a million integers took 178 ms when random, 3.2 ms when already ascending, 4.3 ms when descending and 13.7 ms when 1% had been replaced.
 
 ## The Quick Sort Family
 
-When equal items don't need to keep their order, libraries often prefer a quick sort hybrid. The Java standard library sorts arrays of primitives such as `int` with a dual-pivot quicksort, since equal integers can't be told apart and stability means nothing. Objects go to a merge based sort, which the documentation requires to be stable. Go's `sort` package has used pattern-defeating quicksort since Go 1.19. It switches to heapsort when too many partitions are unbalanced, which guards the worst case, the safeguard described in [Quick Sort](/algorithms/quick-sort). Rust's unstable sort works the same way: it combines quick sort's typical speed with heapsort as a fallback, and runs in linear time on sorted or reversed input.
+When equal items don't need to keep their order, libraries often prefer a quick sort hybrid. The Java standard library sorts arrays of primitives such as `int` with a dual-pivot quicksort, since equal integers can't be told apart and stability means nothing. Objects go to a merge based sort, which the documentation requires to be stable.
+
+Go's `sort` package has used pattern-defeating quicksort since Go 1.19. It switches to heapsort when too many partitions are unbalanced, which guards the worst case, the safeguard described in [Quick Sort](/algorithms/quick-sort). Rust's unstable sort works the same way: it combines quick sort's typical speed with heapsort as a fallback, and runs in linear time on sorted or reversed input.
 
 | Language | What the Standard Sort Uses |
 | --- | --- |

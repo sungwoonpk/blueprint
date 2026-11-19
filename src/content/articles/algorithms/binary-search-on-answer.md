@@ -58,7 +58,9 @@ For the list above and k = 3, the range is 21 to 76. Here are the limits the sea
 
 Six checks gave the answer, 28. A limit of 27 needs four sessions, and 28 needs three, so 28 is the smallest limit that works. We compared the result with a brute force search over every way to cut the list, on 3,000 random lists, and the two agreed on all of them.
 
-The cost is the number of checks times the cost of one check. The range has size at most the total number of pages, and halving it takes about log₂ of that many steps. For a reading list of a million chapters with 1,000 sessions, the range was about 501 million wide and the search needed 29 checks, each a pass over the list, 0.8 seconds in all. There was no need to look at the exponentially many ways to split the list.
+The cost is the number of checks times the cost of one check. The range has size at most the total number of pages, and halving it takes about log₂ of that many steps.
+
+For a reading list of a million chapters with 1,000 sessions, the range was about 501 million wide and the search needed 29 checks, each a pass over the list, 0.8 seconds in all. There was no need to look at the exponentially many ways to split the list.
 
 ## Why the Check Has to Be Monotone
 

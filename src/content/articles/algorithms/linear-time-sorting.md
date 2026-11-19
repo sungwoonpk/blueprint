@@ -73,7 +73,9 @@ On a million records with grades 0 to 100, our counting sort took 0.09 s and `so
 
 ## When the Range Is Too Large
 
-Counting sort's cost includes k, and a big range is expensive even when n is small. We sorted 1,000 numbers drawn from 0 to 9,999,999. Counting sort had to build and scan ten million counters and took 462 ms. `sorted` took 0.06 ms, more than 7,000 times faster. Counting sort is the right tool when the range is comparable to the number of items or smaller, and the wrong tool for wide ranges. The next idea widens its reach.
+Counting sort's cost includes k, and a big range is expensive even when n is small. We sorted 1,000 numbers drawn from 0 to 9,999,999. Counting sort had to build and scan ten million counters and took 462 ms.
+
+`sorted` took 0.06 ms, more than 7,000 times faster. Counting sort is the right tool when the range is comparable to the number of items or smaller, and the wrong tool for wide ranges. The next idea widens its reach.
 
 ## Radix Sort
 
@@ -132,7 +134,9 @@ def radix_sort(nums, base=10):
     return nums
 ```
 
-With d digits in base r, radix sort makes d passes of counting sort, each O(n + r), for O(d(n + r)) in total. The base is a choice. Using base 256 splits a 32 bit number into four byte-sized digits, so four passes with 256 counters each, and the counters fit in the processor's cache. If the numbers are at most about n to a fixed power, the number of digits stays constant and the sort is O(n). If the numbers can be astronomically large compared with n, the digit count grows and the advantage disappears.
+With d digits in base r, radix sort makes d passes of counting sort, each O(n + r), for O(d(n + r)) in total. The base is a choice. Using base 256 splits a 32 bit number into four byte-sized digits, so four passes with 256 counters each, and the counters fit in the processor's cache.
+
+If the numbers are at most about n to a fixed power, the number of digits stays constant and the sort is O(n). If the numbers can be astronomically large compared with n, the digit count grows and the advantage disappears.
 
 We timed this in C, sorting random 32 bit integers with four passes of 8 bits against the standard library's `qsort`.
 
@@ -168,7 +172,9 @@ def bucket_sort(values):
     return out
 ```
 
-When the values are uniform, each bucket holds about one value, and the sorting inside buckets costs a constant amount for each item in expectation, so the whole sort is O(n) on average. The risk is that the evenness assumption fails. We timed the sort above on 80,000 values. Spread evenly, it took 13 ms. With all values squeezed into the first thousandth of the range, a thousand values piled into each bucket, and it took 766 ms, about 60 times longer. The sort gets no benefit from the buckets when they are unbalanced.
+When the values are uniform, each bucket holds about one value, and the sorting inside buckets costs a constant amount for each item in expectation, so the whole sort is O(n) on average. The risk is that the evenness assumption fails. We timed the sort above on 80,000 values.
+
+Spread evenly, it took 13 ms. With all values squeezed into the first thousandth of the range, a thousand values piled into each bucket, and it took 766 ms, about 60 times longer. The sort gets no benefit from the buckets when they are unbalanced.
 
 ## Choosing
 

@@ -53,7 +53,7 @@ For 1,000 items the bound is 8,530 comparisons, and for a million it is 18,488,8
 
 The factorial is awkward to work with, but it is easy to bound from below. Half of the factors in n! are at least n/2, so n! ≥ (n/2)^(n/2), and taking logs gives log₂(n!) ≥ (n/2) log₂(n/2), which is on the order of n log n. A sharper estimate is log₂(n!) ≈ n log₂ n − 1.44n. For 1,000 items, n log₂ n is 9,966 and the estimate gives 8,523, close to the exact 8,530.
 
-So every comparison sort takes Ω(n log n) comparisons in the worst case, and the same is true on average over random orderings. It also holds for randomized algorithms. The argument never looks at how the algorithm decides what to compare, only that it can learn nothing else about the input.
+So every comparison sort takes Ω(n log n) comparisons in the worst case, and the same is true on average over random orderings. It also holds for randomized algorithms. The argument doesn't look at how the algorithm decides what to compare, only that it can learn nothing else about the input.
 
 ## How Close Merge Sort Gets
 

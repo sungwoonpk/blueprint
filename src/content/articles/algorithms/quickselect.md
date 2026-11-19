@@ -8,7 +8,9 @@ The **selection problem** is to find the item that would sit at index k if the l
 
 Sorting solves it in O(n log n). The minimum needs only one pass, O(n), and that can't be improved, because an algorithm that skips an item can't know whether the skipped item was the smallest. The same argument gives a lower bound of Ω(n) for any k. So the question is whether the median can be found in about n steps, closer to the minimum than to a sort.
 
-It can, using the partitioning step from [Quick Sort](/algorithms/quick-sort). After a partition around a pivot, the pivot sits at its final index p. If p equals k, the pivot is the answer. If k is smaller, the answer is somewhere on the left, and if k is larger, somewhere on the right. The other side never needs to be looked at again. It is binary search over an unsorted list, where the pivot plays the role of the midpoint.
+It can, using the partitioning step from [Quick Sort](/algorithms/quick-sort). After a partition around a pivot, the pivot sits at its final index p. If p equals k, the pivot is the answer.
+
+If k is smaller, the answer is somewhere on the left, and if k is larger, somewhere on the right. The other side doesn't need to be looked at again. It is binary search over an unsorted list, where the pivot plays the role of the midpoint.
 
 ## A Walkthrough
 
@@ -82,7 +84,9 @@ def quickselect(a, k):
             lo = p + 1
 ```
 
-The loop has the invariant that the item we want is at index k when the list is sorted, and index k is inside `lo..hi`. Partitioning keeps that true: everything left of `p` is smaller and everything right is larger, so the target lies on the side that contains k. It rearranges `a` as it goes, so pass a copy if the original order matters. We compared the result with `sorted(x)[k]` on 5,000 random lists with repeated values, and the two matched on all of them.
+The loop has the invariant that the item we want is at index k when the list is sorted, and index k is inside `lo..hi`. Partitioning keeps that true: everything left of `p` is smaller and everything right is larger, so the target lies on the side that contains k.
+
+It rearranges `a` as it goes, so pass a copy if the original order matters. We compared the result with `sorted(x)[k]` on 5,000 random lists with repeated values, and the two matched on all of them.
 
 ## Why It Is Linear on Average
 

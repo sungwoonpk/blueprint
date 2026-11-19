@@ -92,7 +92,9 @@ The invariant is the same as for selection sort in one respect and different in 
 
 The work depends on how far items slide. An **inversion** is a pair of items that is out of order, such as 5 before 2. Each shift in the inner loop removes exactly one inversion, so the number of shifts equals the number of inversions, and the comparisons are those plus about one for each item. A sorted list has none, and a reversed list has the most, n(n − 1)/2.
 
-We counted for 1,000 items: 999 comparisons for a sorted list, 240,400 for a random one and 499,500 for a reversed one. The same pattern shows on a list that is almost sorted. We took 10,000 sorted items and swapped 100 pairs a short distance apart. That created 2,104 inversions, and insertion sort made 12,103 comparisons, about 1.2 for each item. It is **adaptive**: its cost follows how disordered the input is. It is also stable, since it never moves an item past an equal one.
+We counted for 1,000 items: 999 comparisons for a sorted list, 240,400 for a random one and 499,500 for a reversed one. The same pattern shows on a list that is almost sorted. We took 10,000 sorted items and swapped 100 pairs a short distance apart.
+
+That created 2,104 inversions, and insertion sort made 12,103 comparisons, about 1.2 for each item. It is **adaptive**: its cost follows how disordered the input is. It is also stable, since it doesn't move an item past an equal one.
 
 ## Bubble Sort
 

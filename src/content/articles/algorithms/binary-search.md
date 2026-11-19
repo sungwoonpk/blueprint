@@ -77,11 +77,13 @@ def contains(a, target):
 
 The invariant is that, if the target is in the list, it is in positions `lo` to `hi`. The window starts as the whole list, and each step shrinks it without losing the target. An empty window means the target isn't there.
 
-Binary search has a reputation for off by one bugs, and many come from mixing two conventions. In this form, the window includes both ends, so the loop runs while `lo <= hi` and the updates skip the middle with `mid + 1` and `mid - 1`. The form in the next section keeps the window half open and updates with `hi = mid`. Combining parts of the two makes a loop that doesn't end or misses the last item.
+Binary search has a reputation for off by one bugs, and many come from mixing two conventions. In this form, the window includes both ends, so the loop runs while `lo <= hi` and the updates skip the middle with `mid + 1` and `mid - 1`.
+
+The form in the next section keeps the window half open and updates with `hi = mid`. Combining parts of the two makes a loop that doesn't end or misses the last item.
 
 ## Lower and Upper Bound
 
-With duplicate values, `contains` returns whichever copy it happens to land on. A sharper question has one answer: where would this value go? The **lower bound** of x is the first position whose item is at least x. The **upper bound** is the first position whose item is greater than x. Both can be the length of the list when nothing qualifies.
+With duplicate values, `contains` returns whichever copy it happens to land on. A sharper question has one answer: where would this value go? The **lower bound** of x is the first position whose item is at least x. The **upper bound** is the first position whose item is greater than x. Both can be the length of the list when no item qualifies.
 
 ```python
 def lower_bound(a, x):
@@ -107,9 +109,11 @@ def upper_bound(a, x):
     return lo
 ```
 
-For the list 1, 3, 3, 3, 7, 9, the lower bound of 3 is 1 and the upper bound is 4, so the count of 3s is 4 − 1 = 3. The lower bound of 4 is 4, which is where a 4 would be inserted. The lower bound of 10 is 6, the length of the list. To test whether x is present, check that the lower bound is inside the list and that the item there equals x.
+For the list 1, 3, 3, 3, 7, 9, the lower bound of 3 is 1 and the upper bound is 4, so the count of 3s is 4 − 1 = 3. The lower bound of 4 is 4, which is where a 4 would be inserted.
 
-This form always returns a position, even for a missing value, and its loop has a simple shape: the answer stays in `lo..hi`, and the window shrinks until the two meet. Libraries are built on it. We checked both against Python's `bisect` and against `in` on 5,000 random lists.
+The lower bound of 10 is 6, the length of the list. To test whether x is present, check that the lower bound is inside the list and that the item there equals x.
+
+This form returns a position even for a missing value, and its loop has a simple shape: the answer stays in `lo..hi`, and the window shrinks until the two meet. Libraries are built on it. We checked both against Python's `bisect` and against `in` on 5,000 random lists.
 
 | Language | Function | What It Returns |
 | --- | --- | --- |
