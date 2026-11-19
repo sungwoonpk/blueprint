@@ -122,4 +122,6 @@ A dial between two ends (see 1.3): a `scale` holding a `line`, `dot` points plac
 
 An array as cells, for algorithms (see Algorithms 1.1): a `diagram` figure holding `<div class="cells">` with one `<div class="cell">3<small>0</small></div>` per element, the small text being the index. Mark cells with `hl` (in play), `done` (settled), `bad` (wrong) or `dim` (ignored). Give a cell `data-ptr="i"` to label it with a pointer, and the row the class `ptrs` so the label has room. Cells shrink to fit a phone, so keep a row to about ten cells.
 
+A node can also carry `hl` to be outlined in the term color, and `hot` to be red. A tree drawn level by level uses one `<div class="flow packets tree">` for each level, with at most four small nodes in a row (see Algorithms 1.5). A call stack or a list of frames, newest on top, is `<div class="frames">` holding `node` items (see Algorithms 1.6). A line chart can carry dashed `bound` lines and a dotted `mark` line.
+
 Keep the HTML free of blank lines, or Markdown will break it apart. Styles live in `src/styles/article.css`.
