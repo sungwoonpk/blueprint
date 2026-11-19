@@ -8,13 +8,13 @@ The routine has four moves, and each one is a small calculation.
 
 <figure class="diagram">
 <div class="flow">
-<div class="node">Read the Limits<small>find n</small></div>
+<div class="node">Read Limits<small>find n</small></div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node">Budget the Steps<small>how many fit</small></div>
+<div class="node">Budget Steps<small>how many fit</small></div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node">Pick a Complexity<small>what stays under</small></div>
+<div class="node">Pick Growth<small>stay under</small></div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node">Choose a Technique<small>what has that cost</small></div>
+<div class="node">Choose Method<small>that cost</small></div>
 </div>
 <figcaption>From the constraints to a target complexity</figcaption>
 </figure>
