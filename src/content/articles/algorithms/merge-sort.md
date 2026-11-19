@@ -96,13 +96,13 @@ The recursion tree has a level for each halving: a list of n items is cut to n/2
 
 We counted the comparisons the merge step makes, for lists whose length is a power of two, so every split is even.
 
-| Items | n log₂ n | Random Order | Already Sorted | Reversed |
-| --- | --- | --- | --- | --- |
-| 1,024 | 10,240 | 8,940 | 5,120 | 5,120 |
-| 16,384 | 229,376 | 208,674 | 114,688 | 114,688 |
-| 262,144 | 4,718,592 | 4,386,947 | 2,359,296 | 2,359,296 |
+| Items | Random | Sorted or Reversed | Random Divided by n log₂ n |
+| --- | --- | --- | --- |
+| 1,024 | 8,940 | 5,120 | 0.87 |
+| 16,384 | 208,674 | 114,688 | 0.91 |
+| 262,144 | 4,386,947 | 2,359,296 | 0.93 |
 
-Every count lies between half of n log₂ n and n log₂ n. A sorted or reversed list is the cheap case at exactly half, because in each merge one side runs out first and the other side is appended without comparisons. Random data needs about 0.9 of n log₂ n.
+Every count lies between half of n log₂ n and n log₂ n, which for the first row is 5,120 to 10,240. A sorted or reversed list is the cheap case at exactly half, because in each merge one side runs out first and the other side is appended without comparisons. Random data needs about 0.9 of n log₂ n.
 
 The gap over insertion sort grows quickly. We sorted random lists in Python with both.
 
