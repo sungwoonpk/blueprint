@@ -628,6 +628,20 @@
   margin-top: 12px;
 }
 
+/* A board: several rows of cells stacked as a grid, with no room for an index
+   under each cell. Cells stay square and a little smaller. */
+.prose .cells.board {
+  padding-bottom: 0;
+}
+
+.prose .cells.board + .cells.board {
+  margin-top: 6px;
+}
+
+.prose .cells.board .cell {
+  max-width: 44px;
+}
+
 .prose .cell {
   position: relative;
   display: flex;
