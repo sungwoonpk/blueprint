@@ -642,6 +642,11 @@
   max-width: 44px;
 }
 
+.prose .cell.wall {
+  background: color-mix(in srgb, var(--muted) 45%, var(--bg));
+  box-shadow: none;
+}
+
 .prose .cell {
   position: relative;
   display: flex;
