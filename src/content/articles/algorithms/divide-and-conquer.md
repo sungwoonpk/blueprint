@@ -79,7 +79,7 @@ Saving one of four recursive calls changes the growth rate, not just a constant.
 | 256 | 65,536 | 6,561 |
 | 1,024 | 1,048,576 | 59,049 |
 
-At 1,024 bits the three product version does 18 times fewer. Each time the size doubles, the four product count multiplies by 4 and the three product count by 3. Three products on half-size inputs gives n^(log₂ 3), about n^1.585.
+At 1,024 bits the three product version does 18 times fewer. Each time the size doubles, the four product count multiplies by 4 and the three product count by 3. Three products on half-size inputs gives n<sup>log₂ 3</sup>, about n<sup>1.585</sup>.
 
 ## Timing It
 
@@ -129,6 +129,6 @@ Strassen's method multiplies two matrices by splitting each into four blocks and
 
 - Divide and conquer splits a problem into smaller independent subproblems, solves each recursively, and combines the answers
 - The cost comes from the number of subproblems, how much smaller they are, and the divide and combine work
-- Splitting a product into four half-size products gave n², but Karatsuba's identity needs only three, which gives about n^1.585
+- Splitting a product into four half-size products gave n², but Karatsuba's identity needs only three, which gives about n<sup>1.585</sup>
 - Our counts and timings showed 4 times more work per doubling for four products and 3 times for three
 - Stop the recursion at a base case well above the smallest size, since stopping at 64 bits was 400 times faster than going to 1 bit
