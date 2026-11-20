@@ -69,9 +69,9 @@ def path(nxt, u, v):
     return route
 ```
 
-The `nxt` table stores only the first step of each route. To list the route, take that first step and repeat from there, which is what `path` does. On the campus, the chart comes out as follows.
+The `nxt` table stores only the first step of each route. To list the route, take that first step and repeat from there, which is what `path` does. On the campus, the chart comes out as follows, with the buildings numbered as in [Representing Graphs](/algorithms/representing-graphs): Dorm 0, Quad 1, Library 2, Hall 3, Lab 4, Cafe 5 and Gym 6.
 
-| From | Dorm | Quad | Library | Hall | Lab | Cafe | Gym |
+| From | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Dorm | 0 | 3 | 7 | 12 | 10 | 5 | 8 |
 | Quad | 3 | 0 | 4 | 9 | 7 | 2 | 7 |
