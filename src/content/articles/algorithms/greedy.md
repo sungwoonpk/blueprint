@@ -6,7 +6,7 @@ Now move to a country whose coins are 1, 5, 10, 20, 25 and 50. The same rule giv
 
 ## The Greedy Idea
 
-Greedy trades thoroughness for speed. [Brute Force](/algorithms/brute-force) looks at every candidate, and [Backtracking](/algorithms/backtracking) tries a choice and takes it back if it fails. A greedy algorithm makes each choice once, by a rule, and moves on. There is nothing to undo, so a typical greedy solution is a sort or a heap followed by one pass, and costs O(n log n).
+Greedy trades thoroughness for speed. [Brute Force](/algorithms/brute-force) looks at every candidate, and [Backtracking](/algorithms/backtracking) tries a choice and takes it back if it fails. A greedy algorithm makes each choice once, by a rule, and moves on. There is no choice to undo, so a typical greedy solution is a sort or a heap followed by one pass, and costs O(n log n).
 
 The risk is clear: a choice that looks best now might block something better later. The skill is telling when that can't happen.
 
@@ -41,15 +41,19 @@ def greedy_coins(coins, amount):
 
 We compared this with an exact table, built the way [Memoization and Tabulation](/algorithms/memoization-tabulation) will describe, for every amount from 1 to 10,000. For the coins 1, 5, 10 and 25, the two agreed on all of them. The euro cent coins, 1, 2, 5, 10, 20 and 50, showed no failure up to 1,000 either.
 
-Then we drew 2,000 random coin systems, each with a 1-cent coin and three others between 2 and 30. Greedy failed on some amount up to 200 in 1,782 of them, or 89%. The pleasant systems we use every day are the exception, and the rule alone says nothing about whether a given set of coins is one of them.
+Then we drew 2,000 random coin systems, each with a 1-cent coin and three others between 2 and 30. Greedy failed on some amount up to 200 in 1,782 of them, or 89%. The pleasant systems we use every day are the exception, and the rule alone doesn't say whether a given set of coins is one of them.
 
 ## When It Doesn't: The Courier Again
 
 The delivery route from [Pruning the Search Space](/algorithms/pruning) has a natural greedy rule: from the current stop, drive to the nearest stop not yet visited. It takes one pass and finds a route instantly.
 
-We ran it on 200 random instances of 10 stops and compared with the exact answer from the pruned search. The nearest stop rule found the shortest route in only 17 of them. On average its route was 11.7% longer, and the worst was 44.8% longer. The rule is cheap and decent, which is why the pruning article used it to get a first good route, but it is a heuristic: there is no guarantee that it is optimal.
+We ran it on 200 random instances of 10 stops and compared with the exact answer from the pruned search. The nearest stop rule found the shortest route in only 17 of them. On average its route was 11.7% longer, and the worst was 44.8% longer.
 
-Knapsack shows another failure. Choose items with weights and values to fit a bag of limited size, and take items in order of value per unit of weight. We tried this on 2,000 random instances of 10 items, with the bag holding half the total weight, and checked each against all 1,024 subsets. The rule fell short of the best value in 684 of them, 34%, by 3.9% on average when it was wrong and 15.5% at worst. The best-ratio item can leave an awkward gap that nothing else fills.
+The rule is cheap and decent, which is why the pruning article used it to get a first good route, but it is a heuristic: there is no guarantee that it is optimal.
+
+Knapsack shows another failure. Choose items with weights and values to fit a bag of limited size, and take items in order of value per unit of weight. We tried this on 2,000 random instances of 10 items, with the bag holding half the total weight, and checked each against all 1,024 subsets.
+
+The rule fell short of the best value in 684 of them, 34%, by 3.9% on average when it was wrong and 15.5% at worst. The best-ratio item can leave an awkward gap that no other item fills.
 
 If the items could be cut, so that you may take part of one, the same rule would be optimal, because any space left over is filled by a piece of the next item and nothing is wasted. The 0/1 version has no such fix, and a different method is needed, as in [From Recursion to Dynamic Programming](/algorithms/recursion-to-dp).
 

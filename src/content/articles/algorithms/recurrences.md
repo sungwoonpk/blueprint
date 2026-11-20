@@ -10,7 +10,9 @@ Read three numbers off a divide and conquer algorithm.
 - **b**: the factor by which the input shrinks in each of those calls
 - **c**: the exponent of the work done outside the calls, which is n<sup>c</sup>
 
-Merge sort makes 2 calls on halves and does n work to merge, so a = 2, b = 2 and c = 1. The running time T(n) is the cost of the two calls plus the merge, which is written T(n) = 2 T(n / 2) + n. Binary search makes 1 call on half the input with constant work, so T(n) = T(n / 2) + 1, and the four product multiplication is T(n) = 4 T(n / 2) + n. We assume a constant cost for the smallest input.
+Merge sort makes 2 calls on halves and does n work to merge, so a = 2, b = 2 and c = 1. The running time T(n) is the cost of the two calls plus the merge, which is written T(n) = 2 T(n / 2) + n.
+
+Binary search makes 1 call on half the input with constant work, so T(n) = T(n / 2) + 1, and the four product multiplication is T(n) = 4 T(n / 2) + n. We assume a constant cost for the smallest input.
 
 ## The Recursion Tree
 
@@ -40,7 +42,9 @@ Each level is the previous one multiplied by the same ratio r = a / b<sup>c</sup
 <figcaption>Work on each level of the recursion tree for n = 1,024, with b = 2 and c = 1. With a = 1 the root dominates, with a = 2 the levels are equal, and with a = 3 the levels grow toward the leaves</figcaption>
 </figure>
 
-With a = 1 each level has half the work of the one above, so the total is less than twice the root: the running time is Θ(n). With a = 2 every level costs n, and there are about log₂ n levels, so the total is n log n. With a = 3 each level costs 1.5 times the one above, so the bottom level, the leaves, is the heaviest and holds a constant share of the total, about a third here.
+With a = 1 each level has half the work of the one above, so the total is less than twice the root: the running time is Θ(n). With a = 2 every level costs n, and there are about log₂ n levels, so the total is n log n.
+
+With a = 3 each level costs 1.5 times the one above, so the bottom level, the leaves, is the heaviest and holds a constant share of the total, about a third here.
 
 The leaves are easy to count. The tree has log<sub>b</sub> n levels, so the number of leaves is a<sup>log<sub>b</sub> n</sup>, which equals n<sup>log<sub>b</sub> a</sup>. That exponent, log<sub>b</sub> a, is the number to compare with c.
 

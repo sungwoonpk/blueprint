@@ -59,7 +59,9 @@ Sometimes there is a fifth step, to show that no optimal solution can do strictl
 
 A student wants to attend as many classes as possible, and no two chosen classes may overlap. The greedy rule is to take the class that finishes first, then the next class that starts after it, and so on. The details are in [Greedy Scheduling](/algorithms/greedy-scheduling). The claim to prove is that some optimal schedule includes the class f that finishes first.
 
-Let X be any optimal schedule that lacks f, and let g be the first class in X to finish. Since f finishes no later than g, and the other classes in X start after g finishes, f doesn't conflict with any of them. Replace g with f. The new schedule has the same size and no conflicts, so it is also optimal, and it contains f. From there the same argument applies to the classes that start after f finishes.
+Let X be any optimal schedule that lacks f, and let g be the first class in X to finish. Since f finishes no later than g, and the other classes in X start after g finishes, f doesn't conflict with any of them.
+
+Replace g with f. The new schedule has the same size and no conflicts, so it is also optimal, and it contains f. From there the same argument applies to the classes that start after f finishes.
 
 We tested this step on 300 random instances of 8 classes. For each optimal schedule that lacked f, we swapped f for its first class to finish. All 562 of those schedules stayed conflict free and kept their size.
 
@@ -75,7 +77,9 @@ Take the 0/1 knapsack from [When Greedy Choices Work](/algorithms/greedy), with 
 | B | 20 | 100 | 5 |
 | C | 30 | 120 | 4 |
 
-The best ratio rule takes A, then B, then can't fit C, for a value of 160. The best choice is B and C, with a value of 220. To exchange B for A in the optimal solution, A would have to fill B's place, but A weighs 10 less, so 10 units of space go unused and the value drops to 180. The swap isn't free, so the argument has no way to go through.
+The best ratio rule takes A, then B, then can't fit C, for a value of 160. The best choice is B and C, with a value of 220. To exchange B for A in the optimal solution, A would have to fill B's place, but A weighs 10 less, so 10 units of space go unused and the value drops to 180.
+
+The swap isn't free, so the argument has no way to go through.
 
 Weighted scheduling gives a similar failure. A class of value 100 from time 0 to 10 conflicts with two classes of value 1 each at times 1 to 2 and 3 to 4. Earliest finish takes the two small ones, for 2, while the long class is worth 100. Here the swapped classes have different values, so the exchange isn't neutral.
 

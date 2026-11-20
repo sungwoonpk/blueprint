@@ -6,7 +6,9 @@ A pair that disagrees is an **inversion**, and counting inversions is a measure 
 
 ## What an Inversion Is
 
-In a list `a`, an inversion is a pair of positions i < j with a[i] > a[j]. The list 3, 1, 4, 2, 5 has three: (3, 1), (3, 2) and (4, 2). A sorted list has none. A reversed list of n items has all n(n − 1) / 2 pairs inverted. A random list lands halfway between, near n(n − 1) / 4: the mean of 20 random lists of 1,000 items was 249,432, against a predicted 249,750.
+In a list `a`, an inversion is a pair of positions i < j with a[i] > a[j]. The list 3, 1, 4, 2, 5 has three: (3, 1), (3, 2) and (4, 2). A sorted list has none. A reversed list of n items has all n(n − 1) / 2 pairs inverted.
+
+A random list lands halfway between, near n(n − 1) / 4: the mean of 20 random lists of 1,000 items was 249,432, against a predicted 249,750.
 
 The same count shows up in other places. Insertion sort moves an item left past exactly the larger items before it, so its number of shifts equals the number of inversions. We confirmed that on 500 random lists, duplicates included. That is why insertion sort is fast on nearly sorted input, as [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) showed.
 
@@ -57,7 +59,9 @@ We compared the function with brute force, with insertion sort's shift count, an
 | 100,000 | about 160 s (estimate) | 0.15 s |
 | 1,000,000 | about 4.5 hours (estimate) | 1.8 s |
 
-The Fenwick tree version, from [Fenwick Trees](/algorithms/fenwick-trees), also does the job in O(n log n), and it took 1.8 s on a million items as well. It reads each item in turn and asks how many earlier items are larger. Divide and conquer wins when the combine step can reuse a sorted order. Other counts follow the same plan: to count pairs with a[i] > 2 × a[j], run a two pointer pass over the two sorted halves before merging them. We checked that variant against brute force on 300 random lists.
+The Fenwick tree version, from [Fenwick Trees](/algorithms/fenwick-trees), also does the job in O(n log n), and it took 1.8 s on a million items as well. It reads each item in turn and asks how many earlier items are larger. Divide and conquer wins when the combine step can reuse a sorted order.
+
+Other counts follow the same plan: to count pairs with a[i] > 2 × a[j], run a two pointer pass over the two sorted halves before merging them. We checked that variant against brute force on 300 random lists.
 
 ## The Closest Pair of Points
 
@@ -71,7 +75,9 @@ The reliable split is a vertical line through the median x, with half the points
 
 The remaining question is whether a pair with one point on each side is closer than δ. If it is, both of its points are within δ of the dividing line. So only the points in a strip of width 2δ around the line matter.
 
-Sort the strip points by y. For each, compare only with the points above it that are less than δ higher. The key fact is that only a few points can be there. Take the rectangle of width 2δ and height δ above a point, and cut it into eight squares with sides of δ / 2. Two points on the same side of the line are at least δ apart, and a square that small has a diagonal shorter than δ, so each square holds at most one point. The rectangle holds at most 7 other points, so the number of comparisons per point is a constant.
+Sort the strip points by y. For each, compare only with the points above it that are less than δ higher. The key fact is that only a few points can be there. Take the rectangle of width 2δ and height δ above a point, and cut it into eight squares with sides of δ / 2.
+
+Two points on the same side of the line are at least δ apart, and a square that small has a diagonal shorter than δ, so each square holds at most one point. The rectangle holds at most 7 other points, so the number of comparisons per point is a constant.
 
 <figure class="diagram">
 <div class="cells board">
@@ -119,7 +125,7 @@ def solve(px, py):
     return d
 ```
 
-The points are sorted by x and by y once, at the start. Each call splits the y order into the two halves by a single pass, so nobody sorts again. Sorting the strip at every level would cost an extra log factor. With this version each call does linear work plus two half-size calls, which is T(n) = 2 T(n / 2) + n, or O(n log n).
+The points are sorted by x and by y once, at the start. Each call splits the y order into the two halves by a single pass, so no sorting is repeated. Sorting the strip at every level would cost an extra log factor. With this version each call does linear work plus two half-size calls, which is T(n) = 2 T(n / 2) + n, or O(n log n).
 
 ## How It Performs
 
@@ -136,7 +142,9 @@ Doubling the points multiplied the brute force time by 4 and the divide and conq
 
 ## What Is Known About It
 
-The O(n log n) method is due to Shamos in 1975. Ben-Or in 1983 and Yao in 1989 showed that in the quadratic decision tree model, where each test compares a quadratic expression in the coordinates with zero, any method needs Ω(n log n) tests. That still leaves room: Rabin showed in 1976 that randomization and hashing can find the closest pair in expected linear time, and a note by Fortune and Hopcroft observed that this escapes the lower bound because it uses the floor function, which the model doesn't allow. [Randomized Algorithms](/algorithms/randomized) covers the technique of using randomness in this way.
+The O(n log n) method is due to Shamos in 1975. Ben-Or in 1983 and Yao in 1989 showed that in the quadratic decision tree model, where each test compares a quadratic expression in the coordinates with zero, any method needs Ω(n log n) tests.
+
+That still leaves room: Rabin showed in 1976 that randomization and hashing can find the closest pair in expected linear time, and a note by Fortune and Hopcroft observed that this escapes the lower bound because it uses the floor function, which the model doesn't allow. [Randomized Algorithms](/algorithms/randomized) covers the technique of using randomness in this way.
 
 ## The Common Idea
 

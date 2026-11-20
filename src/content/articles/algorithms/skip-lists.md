@@ -12,7 +12,9 @@ That perfect pattern has a flaw: inserting an item shifts everyone's position an
 
 ## Levels by Coin Flips
 
-When an item is inserted, it starts at level 1. Flip a coin: on heads, it also joins level 2, and flip again to see whether it joins level 3, and so on. With a fair coin, p = 1/2, half of the items stay at level 1, a quarter reach level 2, and an eighth reach level 3. Other values of p work too, with p as the chance of heads. Each level is a sorted list of the items tall enough to be in it, and each item has one forward pointer for each level it belongs to.
+When an item is inserted, it starts at level 1. Flip a coin: on heads, it also joins level 2, and flip again to see whether it joins level 3, and so on. With a fair coin, p = 1/2, half of the items stay at level 1, a quarter reach level 2, and an eighth reach level 3.
+
+Other values of p work too, with p as the chance of heads. Each level is a sorted list of the items tall enough to be in it, and each item has one forward pointer for each level it belongs to.
 
 We built a skip list of 65,536 keys with p = 1/2 and counted heights: 49.8% of the nodes were level 1, then 25.2%, 12.4%, 6.2% and 3.1% for the next four, close to the halving pattern. On 100,000 keys the average number of pointers per node was 2.00, which is 1 / (1 − p), and with p = 1/4 it was 1.33.
 
@@ -43,7 +45,9 @@ def _random_level(self):
 
 Start at the top level of the list's header. Move right while the next key on this level is smaller than the target. When the next key is the target or larger, drop down one level and repeat. At level 1, the next item is either the target or proof that it is missing.
 
-For 19 in the picture: on level 3, the next key after the start is 9, which is smaller, so move there. The next on level 3 is 25, which is larger, so drop to level 2. From 9 the next is 17, so move, then 21 is larger, so drop to level 1. From 17 the next item is 19. Found. A plain list needs 7 steps to reach 19 here, and the skip list needed 6 comparisons, a gap that widens fast as the list grows.
+For 19 in the picture: on level 3, the next key after the start is 9, which is smaller, so move there. The next on level 3 is 25, which is larger, so drop to level 2. From 9 the next is 17, so move, then 21 is larger, so drop to level 1.
+
+From 17 the next item is 19. Found. A plain list needs 7 steps to reach 19 here, and the skip list needed 6 comparisons, a gap that widens fast as the list grows.
 
 ```python
 def contains(self, key):
@@ -99,7 +103,9 @@ Each tenfold increase adds roughly 5 to 8 comparisons for p = 1/2, which is what
 
 Order of insertion doesn't matter, because the heights come from coin flips and not from the keys. We inserted 100,000 keys in sorted order, the input that turns a plain search tree into a chain, as in [Binary Search Trees](/algorithms/binary-search-trees). The mean search cost was 33.8 comparisons, the same as for random order.
 
-The spread is small too. We searched for each of 65,536 keys once. The mean was 33.4 comparisons and the maximum was 62, less than twice the mean. Pugh's analysis puts the chance of a search taking more than three times the expected cost below one in 200 million for p = 1/2 and 4,096 keys. The guarantee assumes that nobody can see the node heights, otherwise deleting all the nodes above level 1 would ruin the structure.
+The spread is small too. We searched for each of 65,536 keys once. The mean was 33.4 comparisons and the maximum was 62, less than twice the mean. Pugh's analysis puts the chance of a search taking more than three times the expected cost below one in 200 million for p = 1/2 and 4,096 keys.
+
+The guarantee assumes that nobody can see the node heights, otherwise deleting all the nodes above level 1 would ruin the structure.
 
 ## Ordered Operations
 
@@ -117,13 +123,17 @@ def range(self, lo, hi):                            # keys with lo <= key < hi
         node = node.next[0]
 ```
 
-The cost is one search plus the number of keys returned. Redis uses this idea for its sorted sets: the documentation says they are implemented with both a skip list and a hash table, so adding an element is an O(log N) operation, and listing members in order needs no sorting. In Java, `ConcurrentSkipListMap` is a sorted map built as a concurrent skip list. Its documentation promises expected average log(n) time for `containsKey`, `get`, `put` and `remove`, and says insertion, removal, update and access can safely run at the same time on several threads.
+The cost is one search plus the number of keys returned. Redis uses this idea for its sorted sets: the documentation says they are implemented with both a skip list and a hash table, so adding an element is an O(log N) operation, and listing members in order needs no sorting.
+
+In Java, `ConcurrentSkipListMap` is a sorted map built as a concurrent skip list. Its documentation promises expected average log(n) time for `containsKey`, `get`, `put` and `remove`, and says insertion, removal, update and access can safely run at the same time on several threads.
 
 ## In Practice
 
 Concurrency is a real strength. An update changes a few nearby pointers, while a balanced tree rotation can touch a whole path, so updates by different threads rarely collide. Pugh's paper describes algorithms for many processors to update a skip list at once that are much simpler than concurrent balanced trees.
 
-In Python the picture is mixed. With 100,000 random keys and p = 1/4, building our skip list took 0.20 s and a sorted list with `bisect.insort` took 0.76 s, since every insert shifts part of the list. But 100,000 searches took 0.21 s in the skip list against 0.02 s for `bisect` on the list, because the list's search runs in C. In the 1990 paper's own timings, on hardware of that day, insertion into a skip list was about 1.5 times faster than into an optimized AVL tree and 3 times faster than a 2–3 tree, with similar search times.
+In Python the picture is mixed. With 100,000 random keys and p = 1/4, building our skip list took 0.20 s and a sorted list with `bisect.insort` took 0.76 s, since every insert shifts part of the list. But 100,000 searches took 0.21 s in the skip list against 0.02 s for `bisect` on the list, because the list's search runs in C.
+
+In the 1990 paper's own timings, on hardware of that day, insertion into a skip list was about 1.5 times faster than into an optimized AVL tree and 3 times faster than a 2–3 tree, with similar search times.
 
 ## Key Points
 

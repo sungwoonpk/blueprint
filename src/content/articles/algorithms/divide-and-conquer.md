@@ -1,6 +1,6 @@
 > **Divide and conquer** solves a problem by splitting it into smaller subproblems of the same kind, solving each one recursively, and combining their answers. It pays off when the pieces are independent and the cost of splitting and combining is small next to the cost of the whole problem.
 
-A cryptography library multiplies two numbers of 1,024 bits, and a lot of those multiplications happen every second. The method from school multiplies every digit of one number by every digit of the other, so it takes about n² small multiplications for n digits. In 1956 Kolmogorov conjectured that nothing could do better. Four years later Karatsuba showed that it could.
+A cryptography library multiplies two numbers of 1,024 bits, and a lot of those multiplications happen every second. The method from school multiplies every digit of one number by every digit of the other, so it takes about n² small multiplications for n digits. In 1956 Kolmogorov conjectured that no method could do better. Four years later Karatsuba showed that it could.
 
 The trick is a good example of divide and conquer, and it shows why the approach is worth knowing.
 
@@ -92,7 +92,9 @@ We timed the two functions on random numbers, with a base case of 64 bits.
 | 65,536 | 178 ms | 17.7 ms | 1.3 ms |
 | 131,072 | 713 ms | 53 ms | 4.0 ms |
 
-Doubling the bits multiplied the four product time by 3.95 to 4.03, and the three product time by 2.95 to 3.01. That is the 4 and the 3 from the counts. The built-in `*` is faster than both because it is written in C, and its time also grows about 3 times per doubling at these sizes. The reason is in the CPython source: its integer multiplication switches from the school method to Karatsuba when both numbers have more than 70 internal digits, which are 30 bits each in the usual build, or about 2,100 bits.
+Doubling the bits multiplied the four product time by 3.95 to 4.03, and the three product time by 2.95 to 3.01. That is the 4 and the 3 from the counts. The built-in `*` is faster than both because it is written in C, and its time also grows about 3 times per doubling at these sizes.
+
+The reason is in the CPython source: its integer multiplication switches from the school method to Karatsuba when both numbers have more than 70 internal digits, which are 30 bits each in the usual build, or about 2,100 bits.
 
 ## Where to Stop Dividing
 

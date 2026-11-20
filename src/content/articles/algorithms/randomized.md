@@ -1,6 +1,6 @@
 > A **randomized algorithm** uses random choices so that its behavior depends on luck instead of on the input. A **Las Vegas** algorithm always gives the right answer and takes a random amount of time. A **Monte Carlo** algorithm takes a bounded amount of time and is wrong with a small probability, which repeating it makes tiny.
 
-A quick sort that always picks the first item as its pivot is fast on shuffled data. Feed it a list that is already sorted, and every pivot is the smallest item left, so each pass peels off one item. On 2,000 sorted items it made 1,999,000 comparisons, which is every pair, while the same function on shuffled data needed about 24,600.
+A quick sort that picks the first item as its pivot is fast on shuffled data. Feed it a list that is already sorted, and every pivot is the smallest item left, so each pass peels off one item. On 2,000 sorted items it made 1,999,000 comparisons, which is every pair, while the same function on shuffled data needed about 24,600.
 
 The input was legal, and perhaps common. Someone who knows which pivot you pick can find an input that is bad for you. Randomness takes that power away.
 
@@ -48,7 +48,9 @@ def probably_equal(A, B, C):
     return ABr == Cr                          # False is certain, True is probable
 ```
 
-The "at least half" claim has a short proof. If C is wrong, then D = AB − C has a nonzero entry, say D[i][j]. The i-th entry of Dr is D[i][j] × r[j] plus a sum of terms that don't involve r[j]. Fix the other coordinates of r. Of the two possible values of r[j], at most one makes that sum equal zero, so at most half of the vectors r let the wrong C pass.
+The "at least half" claim has a short proof. If C is wrong, then D = AB − C has a nonzero entry, say D[i][j]. The i-th entry of Dr is D[i][j] × r[j] plus a sum of terms that don't involve r[j].
+
+Fix the other coordinates of r. Of the two possible values of r[j], at most one makes that sum equal zero, so at most half of the vectors r let the wrong C pass.
 
 We tried it on 150 by 150 matrices. The full product took 69 ms and one check took 2.1 ms. We made a C with a single wrong entry and ran 3,000 tries for each number of checks. One check missed the error about half the time, as the bound allows, and repeating the check with fresh random vectors shrinks that quickly.
 
@@ -59,7 +61,9 @@ We tried it on 150 by 150 matrices. The full product took 69 ms and one check to
 | 5 | 2.9% | 3.1% |
 | 10 | 0.1% | 0.098% |
 
-This is the one-sided error of a Monte Carlo algorithm. A "different" answer is always right, since the two vectors really did differ. An "equal" answer is probably right, and after k independent checks the chance that it is wrong is at most 2⁻ᵏ. Thirty checks give odds of about one in a billion at a cost of 90 matrix-vector products, about 90 n² steps, which beats the n³ of a full product once n is large.
+This is the one-sided error of a Monte Carlo algorithm. A "different" answer is always right, since the two vectors really did differ. An "equal" answer is probably right, and after k independent checks the chance that it is wrong is at most 2⁻ᵏ.
+
+Thirty checks give odds of about one in a billion at a cost of 90 matrix-vector products, about 90 n² steps, which beats the n³ of a full product once n is large.
 
 Repeating an algorithm to push down its error is called **amplification**. Karger's contraction algorithm for the minimum cut of a graph is a classic user of it: a single run finds the minimum cut with probability at least 2 / (n(n − 1)), which is small, and repeating it c × n(n − 1) / 2 × ln n times brings the chance of failure below 1 / nᶜ.
 

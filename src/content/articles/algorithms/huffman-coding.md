@@ -70,7 +70,9 @@ On our message the merges go like this.
 <figcaption>The code tree built by the merges. Outlined nodes are the symbols, and the other nodes are merged counts. Frequent symbols end up near the top</figcaption>
 </figure>
 
-Reading the paths with 0 for left gives A = 0, B = 10, C = 110, E = 1110 and D = 1111. The message now costs 10 × 1 + 6 × 2 + 4 × 3 + 2 × 4 + 3 × 4 = 54 bits, against 75 for the fixed length code, an average of 2.16 bits per symbol. With a heap the whole construction takes O(n log n) for n symbols.
+Reading the paths with 0 for left gives A = 0, B = 10, C = 110, E = 1110 and D = 1111. The message now costs 10 × 1 + 6 × 2 + 4 × 3 + 2 × 4 + 3 × 4 = 54 bits, against 75 for the fixed length code, an average of 2.16 bits per symbol.
+
+With a heap the whole construction takes O(n log n) for n symbols.
 
 ## Why It Is Optimal
 
@@ -114,7 +116,9 @@ def canonical_codes(lengths):                 # symbol -> code length, symbols i
     return codes
 ```
 
-The specification's example gives the letters A to H the lengths 3, 3, 3, 3, 3, 2, 4 and 4. The function returns F = 00, then A = 010, B = 011, C = 100, D = 101, E = 110, and G = 1110, H = 1111, exactly the table in RFC 1951. For our five symbols it reorders D and E to 1110 and 1111, with the same lengths and the same total.
+The specification's example gives the letters A to H the lengths 3, 3, 3, 3, 3, 2, 4 and 4. The function returns F = 00, then A = 010, B = 011, C = 100, D = 101, E = 110, and G = 1110, H = 1111, exactly the table in RFC 1951.
+
+For our five symbols it reorders D and E to 1110 and 1111, with the same lengths and the same total.
 
 The specification also requires that codes not exceed certain maximum lengths, which complicates computing the lengths from the counts. Our 19 bit codes for symbols seen once show why a limit is needed.
 

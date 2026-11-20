@@ -1,6 +1,8 @@
 > **Backtracking** builds a solution one decision at a time and checks the partial solution after each decision. When a partial solution can't be finished, it undoes the last decision and tries the next one. It is brute force that stops walking down a road as soon as the road is blocked.
 
-The eight queens puzzle asks for eight queens on a chessboard with no two attacking each other. A queen attacks along its row, its column and both diagonals. The puzzle is old enough that Gauss wrote about it in a letter, and the method he described is the one we use here: place the queens one row at a time, trying the squares of a row from left to right, and keep a square only if the queens already placed don't attack it.
+The eight queens puzzle asks for eight queens on a chessboard with no two attacking each other. A queen attacks along its row, its column and both diagonals.
+
+The puzzle is old enough that Gauss wrote about it in a letter, and the method he described is the one we use here: place the queens one row at a time, trying the squares of a row from left to right, and keep a square only if the queens already placed don't attack it.
 
 That method is backtracking, and the puzzle is a good place to learn it.
 
@@ -34,7 +36,9 @@ def queens(n):
 
 Squares on the same diagonal share a value of r − c, and squares on the other diagonal share r + c, so three sets answer "is this square attacked?" in constant time. Checking against the earlier queens one by one would also work and costs up to r steps.
 
-The invariant is that when `place(r)` starts, the first r queens are in different columns and on different diagonals, and the sets describe them exactly. The last line of the loop body restores the sets to what they were before the choice. Skipping part of that undo is a common bug, and the symptom is a search that finds fewer solutions than exist. With the line that removes the second diagonal left out, our version found 0, 1, 0, 1 and 0 solutions for boards 4 to 8, instead of 2, 10, 4, 40 and 92.
+The invariant is that when `place(r)` starts, the first r queens are in different columns and on different diagonals, and the sets describe them exactly. The last line of the loop body restores the sets to what they were before the choice. Skipping part of that undo is a common bug, and the symptom is a search that finds fewer solutions than exist.
+
+With the line that removes the second diagonal left out, our version found 0, 1, 0, 1 and 0 solutions for boards 4 to 8, instead of 2, 10, 4, 40 and 92.
 
 <figure class="diagram">
 <p class="rowname">Dead End</p>
@@ -66,7 +70,9 @@ The invariant is that when `place(r)` starts, the first r queens are in differen
 <figcaption>On a 4 by 4 board, queens at the first column of row 1 and the third column of row 2 leave no safe square in row 3, so the search backs up. Starting from the second column instead leads to a complete board</figcaption>
 </figure>
 
-On the 4 by 4 board the search starts with a queen in column 1 of row 1. Row 2 has two attacked squares, so the queen goes in column 3, and then row 3 has no safe square at all. The search takes that queen off and tries column 4 in row 2, which leads to a dead end one row later. After exhausting row 2 it takes back the first queen and starts again with column 2, which reaches the board in the figure. In total it made 17 calls to `place` to find the 2 solutions of the 4 by 4 board.
+On the 4 by 4 board the search starts with a queen in column 1 of row 1. Row 2 has two attacked squares, so the queen goes in column 3, and then row 3 has no safe square at all. The search takes that queen off and tries column 4 in row 2, which leads to a dead end one row later.
+
+After exhausting row 2 it takes back the first queen and starts again with column 2, which reaches the board in the figure. In total it made 17 calls to `place` to find the 2 solutions of the 4 by 4 board.
 
 ## The Pattern
 
@@ -112,7 +118,9 @@ def first(r):
     return False
 ```
 
-The work needed to find one answer is much less predictable than the total. We counted calls for one solution: 114 for n = 8, 262 for n = 12, 10,053 for n = 16 and 199,636 for n = 20. Then n = 26 took 397,700 calls and n = 28 took 3 million, and n = 30 took 56 million calls, about a minute in Python. The order in which columns are tried decides how soon the search hits a good region, and a small change in n can change the luck.
+The work needed to find one answer is much less predictable than the total. We counted calls for one solution: 114 for n = 8, 262 for n = 12, 10,053 for n = 16 and 199,636 for n = 20. Then n = 26 took 397,700 calls and n = 28 took 3 million, and n = 30 took 56 million calls, about a minute in Python.
+
+The order in which columns are tried decides how soon the search hits a good region, and a small change in n can change the luck.
 
 ## Other Problems With the Same Shape
 

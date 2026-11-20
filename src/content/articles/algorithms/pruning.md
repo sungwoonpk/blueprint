@@ -51,15 +51,19 @@ At 8 stops the prune removes less than half of the calls. At 12 it removes 97%, 
 
 ## Find a Good Answer Early
 
-The prune is only as strong as the best route found so far. At the start there is none, so nothing is cut. Finding a good route early makes the cut sharper for the rest of the search.
+The prune is only as strong as the best route found so far. At the start there is none, so no branch can be cut. Finding a good route early makes the cut sharper for the rest of the search.
 
-The last column of the table tries the nearest unvisited stop first at each step. The first complete route is then the greedy nearest neighbor route, which is decent, and later branches are compared against it. That took the 12 stop search from 3.56 million calls to 2.68 million, 25% fewer, with the same answers. Seeding `best` with the nearest neighbor length in advance gave exactly the same counts, because the ordered search already finds that route first.
+The last column of the table tries the nearest unvisited stop first at each step. The first complete route is then the greedy nearest neighbor route, which is decent, and later branches are compared against it. That took the 12 stop search from 3.56 million calls to 2.68 million, 25% fewer, with the same answers.
+
+Seeding `best` with the nearest neighbor length in advance gave exactly the same counts, because the ordered search already finds that route first.
 
 The general lesson is that the order of the options is a free choice. A prune compares against what you have, so try the most promising options first.
 
 ## Bound the Rest, Too
 
-The cost so far ignores the stops that remain, and each of them has to be left by some road. A road out of stop u costs at least the cheapest road that leaves u, so a better bound adds up those cheapest roads. For the current stop and each stop not yet visited, take its cheapest outgoing road. Every complete route extending this path has one outgoing road for each of those stops, so no route can be shorter than the cost so far plus that sum.
+The cost so far ignores the stops that remain, and each of them has to be left by some road. A road out of stop u costs at least the cheapest road that leaves u, so a better bound adds up those cheapest roads.
+
+For the current stop and each stop not yet visited, take its cheapest outgoing road. Every complete route extending this path has one outgoing road for each of those stops, so no route can be shorter than the cost so far plus that sum.
 
 ```python
 min_out = [min(d[u][v] for v in range(n) if v != u) for u in range(n)]
@@ -78,23 +82,29 @@ A running total makes the sum cost O(1) per call: start with the sum for all sto
 
 The columns show calls, with nearest first ordering in both. The larger the instance, the more the stronger bound pays. It can also cost more per call, and a bound that takes a lot of time to compute can lose to a weaker one. Textbooks build the bound for this problem from a minimum spanning tree of the unvisited stops, which takes more work per call than our sum of cheapest roads.
 
-How far does it go? On five random instances of 18 stops, the search took between 0.9 and 41 seconds. Brute force would need about five years at our measured speed. The spread is wide, about 44 times between the easiest and hardest of five, because the saving depends on how early a good route shows up. The worst case is still exponential, so this is a faster exhaustive search, not a different class of problem.
+How far does it go? On five random instances of 18 stops, the search took between 0.9 and 41 seconds. Brute force would need about five years at our measured speed. The spread is wide, about 44 times between the easiest and hardest of five, because the saving depends on how early a good route shows up.
+
+The worst case is still exponential, so this is a faster exhaustive search, not a different class of problem.
 
 ## Choose the Most Constrained Decision First
 
-Pruning can also come from the order of decisions. In Sudoku, any empty cell can be filled next. If the search always takes the first empty cell, it might pick one with six possible digits. If it takes the cell with the fewest possible digits, there are fewer branches, and a cell with no possible digit shows up as a dead end immediately.
+Pruning can also come from the order of decisions. In Sudoku, any empty cell can be filled next. If the search takes the first empty cell each time, it might pick one with six possible digits. If it takes the cell with the fewest possible digits, there are fewer branches, and a cell with no possible digit shows up as a dead end immediately.
 
 We built eight random puzzles with 55 blank cells each and solved them both ways, counting calls. Filling cells in board order took between 212 and 72,097 calls, 84,071 in total. Choosing the cell with the fewest options took between 56 and 406 calls, 920 in total, about 90 times fewer. The rule of thumb is to fail early: make the choice most likely to run out of options first.
 
 ## A Prune Must Be Safe
 
-A bound that is too eager turns an exact search into a guess. To see this, we pruned a route as soon as its cost reached 90% of the best, on the theory that such routes are unlikely to win. On 200 random instances of 9 stops, that returned a route longer than the true shortest on 12 of them, up to 4.9% longer. The search was faster, but it no longer answered the question asked.
+A bound that is too eager turns an exact search into a guess. To see this, we pruned a route as soon as its cost reached 90% of the best, on the theory that such routes are unlikely to win.
+
+On 200 random instances of 9 stops, that returned a route longer than the true shortest on 12 of them, up to 4.9% longer. The search was faster, but it no longer answered the question asked.
 
 Two habits keep a prune safe. State the claim it relies on, such as "distances aren't negative, so extending can't shorten a route". That claim fails if negative values are possible, and the prune then breaks silently. And compare the pruned search with a brute force on small random inputs, as in [Edge Cases and Testing](/algorithms/edge-cases).
 
 ## Symmetry
 
-Equivalent branches can be cut too. A route and its reverse have the same length when distances are symmetric, which halves the routes. For N-Queens on an even board, a mirror image of a solution is also a solution, so the first queen only needs to try the left half of its row, and the count is doubled. That gave 46 solutions for n = 8 with 1,029 calls, against 92 solutions and 2,057 calls for the full search. For n = 10 and 12 it again halved the solutions and nearly halved the calls.
+Equivalent branches can be cut too. A route and its reverse have the same length when distances are symmetric, which halves the routes. For N-Queens on an even board, a mirror image of a solution is also a solution, so the first queen only needs to try the left half of its row, and the count is doubled.
+
+That gave 46 solutions for n = 8 with 1,029 calls, against 92 solutions and 2,057 calls for the full search. For n = 10 and 12 it again halved the solutions and nearly halved the calls.
 
 ## Key Points
 

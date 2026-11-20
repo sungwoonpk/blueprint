@@ -61,7 +61,7 @@ Counting like this is the reading of constraints from [Reading Constraints to Pi
 
 Brute force has a bad reputation, and some of it is deserved. It still earns its place in four situations.
 
-- **The input is small**: a few thousand candidates cost nothing, and simple code has fewer places to hide a bug
+- **The input is small**: a few thousand candidates cost little, and simple code has fewer places to hide a bug
 - **It is the specification**: a brute force is the clearest statement of what the answer means, which is why we checked the fast solutions in this series against one on random inputs
 - **It is a test oracle**: when you write a clever solution, a slow and obviously correct one makes the test for it, as in [Edge Cases and Testing](/algorithms/edge-cases)
 - **It is the first step**: in an interview or a design review, state the brute force and its cost, and then improve on it, as [How to Approach a Problem](/algorithms/approaching-problems) suggests
@@ -70,7 +70,9 @@ The mistake is to stop there when the numbers say it won't finish. A solution wh
 
 ## Fewer Candidates Before a Cleverer Algorithm
 
-Often the first improvement is to notice candidates that never needed to be generated. We already fixed the depot as the start, which turned n! into (n − 1)!. Another saving comes from symmetry: when distances are the same in both directions, a route and its reverse have the same length, so only one of each pair needs to be scored. Keeping only the routes whose first stop has a smaller label than the last halves the work.
+Often the first improvement is to notice candidates that never needed to be generated. We already fixed the depot as the start, which turned n! into (n − 1)!. Another saving comes from symmetry: when distances are the same in both directions, a route and its reverse have the same length, so only one of each pair needs to be scored.
+
+Keeping only the routes whose first stop has a smaller label than the last halves the work.
 
 ```python
 for order in itertools.permutations(range(1, n)):

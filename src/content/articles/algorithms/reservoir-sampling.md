@@ -17,7 +17,7 @@ def shuffle(a):
 
 The invariant is that after the step for position i, the item there was chosen uniformly from the i + 1 items that remained, and positions i through the end are settled. The choices made were n × (n − 1) × ... × 2 in number, which is n!, and each sequence of choices gives a different permutation. Every permutation arises from exactly one sequence of choices, so each has probability 1 / n!.
 
-For items A, B and C, the first step chooses among 3 positions and the second among 2, giving 6 equally likely sequences and 6 different orders. Nothing is repeated and nothing is missing.
+For items A, B and C, the first step chooses among 3 positions and the second among 2, giving 6 equally likely sequences and 6 different orders. No order is repeated and none is missing.
 
 ## The Tempting Wrong Version
 
@@ -50,7 +50,7 @@ We also ran 2.4 million Fisher–Yates shuffles of 4 items and compared the coun
 
 ## A Limit Set by the Generator
 
-A shuffle can only produce as many orders as its generator has states. Python's `random` uses the Mersenne Twister, whose period is 2¹⁹⁹³⁷ − 1. The documentation notes that the largest list for which all orders fit within that period has length 2,080. We checked it: 2,080! is about 2¹⁹⁹³², which is below the period, and 2,081! is above it. For longer lists, most orders can never be produced, however fair the shuffle is.
+A shuffle can only produce as many orders as its generator has states. Python's `random` uses the Mersenne Twister, whose period is 2¹⁹⁹³⁷ − 1. The documentation notes that the largest list for which all orders fit within that period has length 2,080. We checked it: 2,080! is about 2¹⁹⁹³², which is below the period, and 2,081! is above it. For longer lists, most orders can't be produced, however fair the shuffle is.
 
 ## Sampling From a Stream
 
@@ -73,7 +73,9 @@ def reservoir(stream, k):
     return sample
 ```
 
-The new item enters with probability k / t, which is right for a fair sample of t items. An item already inside survives the step with probability 1 − (k / t) × (1 / k) = (t − 1) / t, because it is replaced only if the new item enters and picks its slot. If it was in the sample with probability k / (t − 1), it is still there with probability k / (t − 1) × (t − 1) / t = k / t. So after every item, each item seen so far is in the reservoir with probability k / t.
+The new item enters with probability k / t, which is right for a fair sample of t items. An item already inside survives the step with probability 1 − (k / t) × (1 / k) = (t − 1) / t, because it is replaced only if the new item enters and picks its slot.
+
+If it was in the sample with probability k / (t − 1), it is still there with probability k / (t − 1) × (t − 1) / t = k / t. So after every item, each item seen so far is in the reservoir with probability k / t.
 
 We checked this on a stream of 10 items with k = 3, using 300,000 runs. Each item was in the sample about 30% of the time, which is 3 / 10, between 29.9% and 30.1%. Each of the 120 possible 3-item subsets appeared about equally often, with a chi-square of 107, under the 5% limit of about 146.
 
@@ -87,7 +89,9 @@ The reservoir changes less than the loop suggests. By the same probability, item
 
 If most items are dropped, drawing a random number for each one is wasted. A faster method draws how many items to skip before the next one enters. Vitter's Algorithm Z does this and runs in O(k(1 + log(N / k))) expected time, which his paper proves is the best possible up to a constant factor, since that is the number of items that enter.
 
-We wrote a skip based version, which draws the next skip from a distribution that depends on k and on a running value updated at each replacement. We checked it against the same tests, with a chi-square of 110 on the subset counts. On a stream of 10 million items with k = 10, Algorithm R took 2.04 s and the skip version took 0.16 s. The stream is still read to the end, but random numbers are drawn only a few hundred times.
+We wrote a skip based version, which draws the next skip from a distribution that depends on k and on a running value updated at each replacement. We checked it against the same tests, with a chi-square of 110 on the subset counts.
+
+On a stream of 10 million items with k = 10, Algorithm R took 2.04 s and the skip version took 0.16 s. The stream is still read to the end, but random numbers are drawn only a few hundred times.
 
 ## Which Tool to Use
 

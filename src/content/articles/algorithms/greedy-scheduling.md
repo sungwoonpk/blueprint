@@ -1,6 +1,8 @@
 > **Greedy scheduling** solves three classic problems by sorting on the right key and sweeping once. Choose the earliest finishing request to fit the most requests into one room, the earliest starting request to open the fewest rooms for all of them, and the earliest deadline to keep the worst delay as small as possible.
 
-A conference center has one hall and a list of booking requests, each with a start and an end time. Three different questions can be asked of the same list. How many requests can the hall accept if it is the only hall? How many halls are needed if every request must be accepted? And if the requests are tasks in a queue with deadlines, how should they be ordered so that nothing runs too late?
+A conference center has one hall and a list of booking requests, each with a start and an end time. Three different questions can be asked of the same list. How many requests can the hall accept if it is the only hall?
+
+How many halls are needed if every request must be accepted? And if the requests are tasks in a queue with deadlines, how should they be ordered so that no task runs too late?
 
 Each has a short greedy answer, and each depends on choosing the right thing to sort by.
 
@@ -76,7 +78,9 @@ On the six requests it opens hall 1 for A. B starts at 9, while A is still runni
 | 1 | A, E |
 | 2 | B, C, D, F |
 
-Why does it match the depth? A new hall number d opens only when the request, call it j, finds all d − 1 existing halls busy. Each of those busy halls holds a request that ends after j starts, and each started no later than j, because requests are processed in order of start. Together with j that is d requests in progress at the moment j starts, so the depth is at least d.
+Why does it match the depth? A new hall number d opens only when the request, call it j, finds all d − 1 existing halls busy. Each of those busy halls holds a request that ends after j starts, and each started no later than j, because requests are processed in order of start.
+
+Together with j that is d requests in progress at the moment j starts, so the depth is at least d.
 
 We checked that the heap method used exactly the depth in halls on 1,000 random sets of 30 requests. The order matters: placing the same requests in random order into the first hall that fits used more halls than the depth on 272 of the 1,000 sets. A million random requests needed 13 halls and took 0.79 s.
 
@@ -91,7 +95,9 @@ def order_by_deadline(tasks):                 # tasks are (time, deadline)
     return sorted(tasks, key=lambda t: t[1])
 ```
 
-Here the proof is again an exchange. Idle time never helps, so assume none. If a task j with a later deadline runs right before a task i with an earlier deadline, swap them. Task i now finishes sooner, so it is no later than before. Task j now finishes at the time i used to finish, so its lateness becomes that time minus its deadline. Since j's deadline is not earlier than i's, that is at most what i's lateness was before. The largest lateness doesn't grow, and each swap removes one out of order pair, so the sorted order is at least as good as any other.
+Here the proof is again an exchange. Idle time doesn't help, so assume none. If a task j with a later deadline runs right before a task i with an earlier deadline, swap them. Task i now finishes sooner, so it is no later than before. Task j now finishes at the time i used to finish, so its lateness becomes that time minus its deadline.
+
+Since j's deadline is not earlier than i's, that is at most what i's lateness was before. The largest lateness doesn't grow, and each swap removes one out of order pair, so the sorted order is at least as good as any other.
 
 We tested 1,000 random instances of 7 tasks against all 5,040 orders. Earliest deadline first matched the best order every time. Shortest task first matched it in only 52 instances, and ordering by slack, the deadline minus the time, matched it in 669.
 
@@ -109,6 +115,6 @@ Small changes to the problem can break these rules. If each request has a value 
 
 - To fit the most requests into one hall, sort by finish time and take each request that starts after the last one chosen ends
 - Earliest finish was optimal on 1,000 of 1,000 random sets, while earliest start managed only 563 and shortest first 936
-- To use the fewest halls, process by start time with a min-heap of halls by end time, which always uses exactly the depth, the most requests in progress at once
+- To use the fewest halls, process by start time with a min-heap of halls by end time, which uses exactly the depth, the most requests in progress at once
 - To minimize the largest lateness, run tasks by earliest deadline, which matched the best of all 5,040 orders on 1,000 instances
 - Each is O(n log n), dominated by the sort, and each proof is an exchange argument

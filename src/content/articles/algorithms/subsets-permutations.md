@@ -12,7 +12,9 @@ Telling these apart is the first step of an exhaustive search, because they diff
 | Which k people are on the team? | Combination | C(n, k) | 6 for k = 2 |
 | In what order do they speak? | Permutation | n! | 24 |
 
-A subset is a yes or no for each person, so there are 2 × 2 × 2 × 2 = 16. The empty team is one of them. A combination fixes the size, and {A, B} and {B, A} are the same team, so it counts each team once. A permutation counts {A, B} and {B, A} as different, which is why 4! = 24 is so much larger than the 6 teams of two.
+A subset is a yes or no for each person, so there are 2 × 2 × 2 × 2 = 16. The empty team is one of them. A combination fixes the size, and {A, B} and {B, A} are the same team, so it counts each team once.
+
+A permutation counts {A, B} and {B, A} as different, which is why 4! = 24 is so much larger than the 6 teams of two.
 
 ## Subsets: Include or Skip
 
@@ -107,14 +109,16 @@ We checked all three functions against the standard library on every input size 
 
 If the input has equal items, say A, A and B, the permutation code above treats the two A's as different and prints each answer twice. There are 3 distinct orders, AAB, ABA and BAA, instead of 3! = 6.
 
-The fix is to sort the items first and, at each position, skip an item that equals the one before it unless that earlier one is already in use. The effect is that equal items are always placed in the same left to right order.
+The fix is to sort the items first and, at each position, skip an item that equals the one before it unless that earlier one is already in use. The effect is that equal items are placed in the same left to right order every time.
 
 ```python
 if i > 0 and items[i] == items[i - 1] and not used[i - 1]:
     continue                                # a twin was tried here already
 ```
 
-Subsets and combinations use a similar test. After sorting, skip an item at the same level if it equals the previous one that was tried at that level. For A, A and B this gives { }, {A}, {A, A}, {A, A, B}, {A, B}, {B}, which is 6 distinct subsets, not 8. We compared both repaired versions with `set(itertools...)` on 300 random lists of up to 7 items with values from 0 to 3, and they matched.
+Subsets and combinations use a similar test. After sorting, skip an item at the same level if it equals the previous one that was tried at that level. For A, A and B this gives { }, {A}, {A, A}, {A, A, B}, {A, B}, {B}, which is 6 distinct subsets, not 8.
+
+We compared both repaired versions with `set(itertools...)` on 300 random lists of up to 7 items with values from 0 to 3, and they matched.
 
 ## The Standard Library
 
