@@ -760,7 +760,7 @@
 /* A graph drawing: an inline SVG whose viewBox fits the drawing, so it scales
    with the page. Edges (line or path) are "e", nodes "n" (a rounded box) with
    a label "t" and an optional small line "s", weights "w". Edges and nodes take
-   hl (in play), done (settled), bad or dim. Directed edges carry a marker
+   hl (in play), done (settled), bad or dim, and an edge can also be dash. Directed edges carry a marker
    from the "ah" family defined inside the svg. */
 .prose .graph svg {
   display: block;
@@ -794,6 +794,11 @@
 
 .prose .graph .e.dim {
   opacity: 0.25;
+}
+
+.prose .graph .e.dash {
+  stroke-dasharray: 5 5;
+  stroke-width: 1.8;
 }
 
 .prose .graph .n {
