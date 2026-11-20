@@ -22,26 +22,26 @@ The Gym's neighbors are the Dorm and the Cafe, both seen, so the search backs up
 <line class="e dash" x1="222.0" y1="38.0" x2="318.0" y2="78.0"/>
 <line class="e hl" x1="258.0" y1="140.0" x2="318.0" y2="78.0"/>
 <rect class="n hl" x="18" y="94" width="44" height="28" rx="14"/>
-<text class="t hl" x="40" y="105">Dorm</text>
-<text class="s" x="40" y="117">1</text>
+<text class="t hl" x="40" y="103">Dorm</text>
+<text class="s" x="40" y="115">1</text>
 <rect class="n done" x="96" y="38" width="44" height="28" rx="14"/>
-<text class="t done" x="118" y="49">Quad</text>
-<text class="s" x="118" y="61">2</text>
+<text class="t done" x="118" y="47">Quad</text>
+<text class="s" x="118" y="59">2</text>
 <rect class="n done" x="194" y="24" width="56" height="28" rx="14"/>
-<text class="t done" x="222" y="35">Library</text>
-<text class="s" x="222" y="47">3</text>
+<text class="t done" x="222" y="33">Library</text>
+<text class="s" x="222" y="45">3</text>
 <rect class="n done" x="296" y="64" width="44" height="28" rx="14"/>
-<text class="t done" x="318" y="75">Hall</text>
-<text class="s" x="318" y="87">7</text>
+<text class="t done" x="318" y="73">Hall</text>
+<text class="s" x="318" y="85">7</text>
 <rect class="n done" x="238" y="126" width="40" height="28" rx="14"/>
-<text class="t done" x="258" y="137">Lab</text>
-<text class="s" x="258" y="149">4</text>
+<text class="t done" x="258" y="135">Lab</text>
+<text class="s" x="258" y="147">4</text>
 <rect class="n done" x="118" y="136" width="44" height="28" rx="14"/>
-<text class="t done" x="140" y="147">Cafe</text>
-<text class="s" x="140" y="159">5</text>
+<text class="t done" x="140" y="145">Cafe</text>
+<text class="s" x="140" y="157">5</text>
 <rect class="n done" x="46" y="174" width="40" height="28" rx="14"/>
-<text class="t done" x="66" y="185">Gym</text>
-<text class="s" x="66" y="197">6</text>
+<text class="t done" x="66" y="183">Gym</text>
+<text class="s" x="66" y="195">6</text>
 </svg>
 <figcaption>Depth-first search from the Dorm. The small number is the order of discovery, the bright edges are the search tree, and the dashed edges lead back to a building already seen</figcaption>
 </figure>

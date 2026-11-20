@@ -11,7 +11,7 @@ Our campus has seven buildings and nine paths. A path that can be walked both wa
 The **degree** of a vertex is how many edges touch it. The Dorm has degree 2, and the Quad has degree 3. Adding up the degrees of the whole campus gives 18, which is twice the 9 edges, since each edge has two ends. That holds for any undirected graph, and it matters later because it bounds the work of walking all edges.
 
 <figure class="diagram graph">
-<svg viewBox="0 0 360 224" role="img" aria-label="A map of seven campus buildings joined by nine paths, each labeled with its walking time in minutes">
+<svg viewBox="0 0 360 212" role="img" aria-label="A map of seven campus buildings joined by nine paths, each labeled with its walking time in minutes">
 <line class="e" x1="40.0" y1="108.0" x2="118.0" y2="52.0"/>
 <text class="w" x="79.0" y="80.0">3</text>
 <line class="e" x1="40.0" y1="108.0" x2="66.0" y2="188.0"/>
