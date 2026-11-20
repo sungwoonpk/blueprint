@@ -51,7 +51,9 @@ That rule keeps the height logarithmic. Let F(h) be the fewest nodes an AVL tree
 
 The fewest nodes grows exponentially with the height, so the height grows only logarithmically with the nodes. A tree of 1,000,000 nodes can be at most 27 levels tall, against the ideal of about 20.
 
-After an insert, only the nodes on the path from the new leaf up to the root can become unbalanced, and each skew can grow to at most 2. Walk up from the new leaf and fix the lowest unbalanced node with one or two rotations. If a node leans right by 2 and its right child leans right or is even, one left rotation fixes it. If the right child leans left, rotate that child right first, then rotate the node left. The mirror cases handle a left lean.
+After an insert, only the nodes on the path from the new leaf up to the root can become unbalanced, and each skew can grow to at most 2. Walk up from the new leaf and fix the lowest unbalanced node with one or two rotations.
+
+If a node leans right by 2 and its right child leans right or is even, one left rotation fixes it. If the right child leans left, rotate that child right first, then rotate the node left. The mirror cases handle a left lean.
 
 ```python
 def height(n):
@@ -100,13 +102,17 @@ def insert(n, key):
 
 Each node stores its height, and `update` recomputes it after a change. The recursion rebuilds the path from the leaf upward, calling `rebalance` at each node. Inserting 1, 2 and 3 in order, which would have made a chain, ends with 2 at the top and 1 and 3 beneath it after a single left rotation. We checked the order, the stored heights and the skew rule at every node on 1,500 random inputs.
 
-We measured the effect on the input that ruined the plain tree. Inserting 100,000 keys in sorted order gave an AVL tree of height 16, with 99,983 rotations in all, about one for each insert, in 0.41 s. The plain tree on sorted keys was quadratic: 2,000, 4,000 and 8,000 sorted inserts took 0.05 s, 0.21 s and 0.81 s. For random keys, a plain tree of 200,000 keys was 45 levels tall and an AVL tree was 20, but the AVL took more time to build, 0.89 s against 0.34 s, since it does extra work to stay balanced.
+We measured the effect on the input that ruined the plain tree. Inserting 100,000 keys in sorted order gave an AVL tree of height 16, with 99,983 rotations in all, about one for each insert, in 0.41 s. The plain tree on sorted keys was quadratic: 2,000, 4,000 and 8,000 sorted inserts took 0.05 s, 0.21 s and 0.81 s.
+
+For random keys, a plain tree of 200,000 keys was 45 levels tall and an AVL tree was 20, but the AVL took more time to build, 0.89 s against 0.34 s, since it does extra work to stay balanced.
 
 ## Red-Black Trees and Others
 
 Other schemes trade the strictness of balance for cheaper repairs. A **red-black tree** colors nodes red or black and keeps rules that limit how unevenly the colors can stack, which keeps the height under 2 log₂ n. It is a binary form of a 2-3 tree, a perfectly balanced tree whose nodes hold one or two keys.
 
-An update to a red-black tree needs at most a couple of rotations: the Linux kernel's documentation says at most two for an insert and three for a delete, a bounded cost per update. Lookups are slightly slower than in an AVL tree because the tree can be a bit taller. The kernel uses them for I/O scheduling, timers and memory areas, and Java's `TreeMap` is a red-black tree with log n guaranteed for lookup, insert and remove.
+An update to a red-black tree needs at most a couple of rotations: the Linux kernel's documentation says at most two for an insert and three for a delete, a bounded cost per update.
+
+Lookups are slightly slower than in an AVL tree because the tree can be a bit taller. The kernel uses them for I/O scheduling, timers and memory areas, and Java's `TreeMap` is a red-black tree with log n guaranteed for lookup, insert and remove.
 
 AVL trees keep the tightest balance and so give the fastest lookups, and red-black trees give cheaper updates. Either one is a fine choice, and the guarantee is the same in kind: O(log n) in the worst case.
 

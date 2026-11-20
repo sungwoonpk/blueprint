@@ -1,10 +1,10 @@
-> A **heap** is a complete binary tree stored in an array, where every parent is no larger than its children (a min-heap) or no smaller (a max-heap). A **priority queue** is the structure it implements: add items in any order, and always take the one with the highest priority next.
+> A **heap** is a complete binary tree stored in an array, where every parent is no larger than its children (a min-heap) or no smaller (a max-heap). A **priority queue** is the structure it implements: add items in any order, and take the one with the highest priority next.
 
 The registrar's help desk serves students in order of urgency, not arrival: a student locked out of an exam portal is helped before one asking about a parking permit. New requests arrive all day, and each time a desk frees up, the most urgent waiting request must be found fast. Sorting the whole list after each arrival is wasteful. A heap keeps just enough order that the most urgent item is always on top.
 
 ## One Rule, Stored in an Array
 
-In a **min-heap**, each node is less than or equal to both of its children. Nothing is said about how a node compares with its siblings or cousins, so a heap is only partly sorted. The rule still guarantees one thing: the smallest item is at the root.
+In a **min-heap**, each node is less than or equal to both of its children. The rule says nothing about how a node compares with its siblings or cousins, so a heap is only partly sorted. The rule still guarantees one thing: the smallest item is at the root.
 
 The tree is complete, so it fits in an array with no links, as in [Binary Trees](/algorithms/binary-trees): the children of position `i` are at `2i + 1` and `2i + 2`, and its parent is at `(i − 1) // 2`.
 
@@ -80,7 +80,9 @@ class MinHeap:
         return top
 ```
 
-Starting from the heap above, pushing 0 puts it at the end, and it floats up through 5 and 3 and 1 to the root, ending as `0, 1, 2, 3, 9, 8, 7, 5`. Popping returns 0 and moves the 5 from the end to the top, where it sinks back down to give `1, 3, 2, 5, 9, 8, 7`. Peeking at the minimum is O(1), and push and pop are O(log n). We pushed random numbers into the heap and popped them all, and the results came out sorted on 2,000 random lists.
+Starting from the heap above, pushing 0 puts it at the end, and it floats up through 5 and 3 and 1 to the root, ending as `0, 1, 2, 3, 9, 8, 7, 5`.
+
+Popping returns 0 and moves the 5 from the end to the top, where it sinks back down to give `1, 3, 2, 5, 9, 8, 7`. Peeking at the minimum is O(1), and push and pop are O(log n). We pushed random numbers into the heap and popped them all, and the results came out sorted on 2,000 random lists.
 
 ## Building a Heap
 
@@ -93,7 +95,9 @@ The surprise is that this is O(n) in total. Half of the nodes are leaves and nee
 | 1,000 | 2.20 per item | 1.87 per item |
 | 100,000 | 2.28 per item | 1.88 per item |
 
-Heapify stays under about 2 comparisons per item however large the input grows, and Python's `heapq.heapify` is documented as linear. On random data the pushes were also cheap, because a random item rarely floats far. The cost is worse on adversarial input: pushing numbers in descending order, so each new one is the smallest so far, cost 8.0 comparisons per item at 1,000 items and 14.7 at 100,000, close to log₂ n. For a million numbers, `heapify` took 18 ms and pushing one by one took 44 ms.
+Heapify stays under about 2 comparisons per item however large the input grows, and Python's `heapq.heapify` is documented as linear. On random data the pushes were also cheap, because a random item rarely floats far.
+
+The cost is worse on adversarial input: pushing numbers in descending order, so each new one is the smallest so far, cost 8.0 comparisons per item at 1,000 items and 14.7 at 100,000, close to log₂ n. For a million numbers, `heapify` took 18 ms and pushing one by one took 44 ms.
 
 ## Priority Queues in Practice
 
@@ -113,7 +117,9 @@ for priority, task in [(2, "b"), (1, "a"), (2, "c"), (1, "d")]:
 
 The counter also fixes a crash. When two entries have the same priority, Python compares the next field, and if the tasks can't be compared, it raises an error. We saw `'<' not supported between instances of 'dict' and 'dict'` until the counter went in.
 
-A heap isn't good at everything. Finding an arbitrary item or removing one from the middle takes O(n), since only the top is easy to reach. To change the priority of a waiting task, the usual trick is **lazy deletion**: mark the old entry as removed, push a new one, and skip removed entries when they reach the top. Go's `container/heap` takes the other route, keeping each item's position so that an update can repair the heap in O(log n).
+A heap isn't good at everything. Finding an arbitrary item or removing one from the middle takes O(n), since only the top is easy to reach.
+
+To change the priority of a waiting task, the usual trick is **lazy deletion**: mark the old entry as removed, push a new one, and skip removed entries when they reach the top. Go's `container/heap` takes the other route, keeping each item's position so that an update can repair the heap in O(log n).
 
 | Operation | Cost |
 | --- | --- |

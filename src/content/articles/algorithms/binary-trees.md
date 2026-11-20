@@ -74,7 +74,9 @@ A **perfect** tree has every level full, so each level doubles: 1 node, then 2, 
 | 10 | 2,047 | 1,024 |
 | 20 | 2,097,151 | 1,048,576 |
 
-Two million nodes fit in a tree only 20 steps tall. The other extreme is a chain, where each node has one child, which is just a linked list with height n − 1. For any tree with n nodes the height lies between those two ends: at least ⌊log₂ n⌋ and at most n − 1. We checked that by listing every shape of binary tree for n up to 8, which come to 1, 2, 5, 14, 42, 132, 429 and 1,430 shapes, and the shortest and tallest of each size matched.
+Two million nodes fit in a tree only 20 steps tall. The other extreme is a chain, where each node has one child, which is just a linked list with height n − 1. For any tree with n nodes the height lies between those two ends: at least ⌊log₂ n⌋ and at most n − 1.
+
+We checked that by listing every shape of binary tree for n up to 8, which come to 1, 2, 5, 14, 42, 132, 429 and 1,430 shapes, and the shortest and tallest of each size matched.
 
 A tree is **balanced** when its height stays close to log₂ n, however loosely that is defined. [Balanced Trees and Ordered Maps](/algorithms/balanced-trees) shows how to keep a tree balanced as it changes.
 

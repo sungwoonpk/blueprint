@@ -1,10 +1,14 @@
 > A **Fenwick tree**, also called a binary indexed tree, stores partial sums of an array so that both changing one value and asking for a prefix sum take O(log n) steps. It is a compact array that behaves like a tree.
 
-The library's visitor counts are no longer a finished history. The count for today keeps changing as people walk in, and the dean still asks for the total over any stretch of days. [Prefix sums](/algorithms/prefix-sums) answer each question in O(1), but one change to a day's count invalidates every running total after it, and repairing them costs O(n). Scanning the days for each question costs O(n) too. A Fenwick tree makes both operations cost O(log n).
+The library's visitor counts are no longer a finished history. The count for today keeps changing as people walk in, and the dean still asks for the total over any stretch of days.
+
+[Prefix sums](/algorithms/prefix-sums) answer each question in O(1), but one change to a day's count invalidates every running total after it, and repairing them costs O(n). Scanning the days for each question costs O(n) too. A Fenwick tree makes both operations cost O(log n).
 
 ## Each Slot Covers a Block
 
-The idea is to store, in each slot, the sum of a block of days ending at that slot, and to choose the blocks so that any prefix is a few blocks laid end to end. Slots are numbered from 1. The block that slot `k` covers has a length equal to the **lowest set bit** of `k`, the value of the rightmost 1 in its binary form, which Python can compute as `k & -k`.
+The idea is to store, in each slot, the sum of a block of days ending at that slot, and to choose the blocks so that any prefix is a few blocks laid end to end.
+
+Slots are numbered from 1. The block that slot `k` covers has a length equal to the **lowest set bit** of `k`, the value of the rightmost 1 in its binary form, which Python can compute as `k & -k`.
 
 | Slot | Binary | Lowest Bit | Days Covered |
 | --- | --- | --- | --- |

@@ -1,6 +1,8 @@
-> A **running median** is the median of a stream of numbers, kept up to date as each new number arrives. Two heaps do it: a max-heap holds the lower half and a min-heap holds the upper half, with sizes kept within one of each other, so the median is always at one of the tops.
+> A **running median** is the median of a stream of numbers, kept up to date as each new number arrives. Two heaps do it: a max-heap holds the lower half and a min-heap holds the upper half, with sizes kept within one of each other, so the median is at one of the tops.
 
-A monitoring dashboard shows the median response time of all requests so far, updated with every request. The median, the middle value when the numbers are sorted, is calmer than the average, since one very slow request can't drag it far. But the dashboard can't re-sort a million numbers after each new request, and it can't remember a sorted list that is expensive to insert into. It needs a structure where the middle is always within reach.
+A monitoring dashboard shows the median response time of all requests so far, updated with every request. The median, the middle value when the numbers are sorted, is calmer than the average, since one very slow request can't drag it far.
+
+But the dashboard can't re-sort a million numbers after each new request, and it can't remember a sorted list that is expensive to insert into. It needs a structure where the middle is within reach.
 
 ## The Costs of the Easy Ways
 

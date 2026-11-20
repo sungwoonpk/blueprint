@@ -1,6 +1,8 @@
 > The **lowest common ancestor** of two nodes in a rooted tree is the deepest node that has both of them below it. Finding it answers questions about where two things in a hierarchy first come together.
 
-Two employees file a complaint against each other, and the company needs the lowest manager who is above them both, the person with the authority to settle it. In a file system, the deepest folder that holds two files is their common home. In both, the question is the same: start from two nodes and go up until the paths meet. A node counts as its own ancestor, so the lowest common ancestor of a manager and one of their reports is the manager.
+Two employees file a complaint against each other, and the company needs the lowest manager who is above them both, the person with the authority to settle it. In a file system, the deepest folder that holds two files is their common home.
+
+In both, the question is the same: start from two nodes and go up until the paths meet. A node counts as its own ancestor, so the lowest common ancestor of a manager and one of their reports is the manager.
 
 ## Walk Up Together
 
@@ -17,7 +19,9 @@ def lca_walk(parent, depth, a, b):
     return a
 ```
 
-This needs, for each node, its parent and its depth. Both come from one traversal of the tree, as in [Preorder, Inorder and Postorder Traversals](/algorithms/depth-first-traversals). The invariant is that the answer is an ancestor of both current nodes at every step, and the loop ends at the first shared one. On the seven letter tree used in this phase, with D at the top, B and F below it, and A, C under B and E, G under F, here are some answers.
+This needs, for each node, its parent and its depth. Both come from one traversal of the tree, as in [Preorder, Inorder and Postorder Traversals](/algorithms/depth-first-traversals). The invariant is that the answer is an ancestor of both current nodes at every step, and the loop ends at the first shared one.
+
+On the seven letter tree used in this phase, with D at the top, B and F below it, and A, C under B and E, G under F, here are some answers.
 
 | Pair | Lowest Common Ancestor | Steps Between Them |
 | --- | --- | --- |
@@ -49,7 +53,9 @@ For a tree with 50 at the root, 30 and 70 below it, 20 and 40 under 30, and 60 a
 
 ## Many Questions on a Tall Tree
 
-With a tall tree and many queries, walking is slow. We built a tree of 100,000 nodes with a chain of 50,000 and a leaf attached to each chain node, so it is 50,000 levels deep, and asked for the lowest common ancestor of random pairs of leaves. Walking took 54 ms for 200 queries, about 0.27 ms each. The way to do better is to pay once for a table that lets a query jump.
+With a tall tree and many queries, walking is slow. We built a tree of 100,000 nodes with a chain of 50,000 and a leaf attached to each chain node, so it is 50,000 levels deep, and asked for the lowest common ancestor of random pairs of leaves.
+
+Walking took 54 ms for 200 queries, about 0.27 ms each. The way to do better is to pay once for a table that lets a query jump.
 
 **Binary lifting** stores, for every node, its ancestor 1 step up, 2 steps up, 4 steps up, 8 and so on. The ancestor 2^j steps up is the ancestor 2^(j−1) steps up from the ancestor 2^(j−1) steps up, so each row of the table comes from the row before.
 
@@ -88,7 +94,9 @@ The table has about log₂ n rows of n entries, so building it costs O(n log n) 
 
 ## Faster Still, and Offline
 
-There are other methods with different tradeoffs. Writing down the nodes in the order a depth-first walk passes through them, once on the way down and again on each return, gives a list in which the answer for two nodes is the shallowest node between their first appearances. That turns the question into a range minimum, which can be answered in O(1) after O(n log n) preprocessing. When all the questions are known in advance, an offline method with union-find, covered in [Union-Find](/algorithms/union-find), answers them in one traversal.
+There are other methods with different tradeoffs. Writing down the nodes in the order a depth-first walk passes through them, once on the way down and again on each return, gives a list in which the answer for two nodes is the shallowest node between their first appearances.
+
+That turns the question into a range minimum, which can be answered in O(1) after O(n log n) preprocessing. When all the questions are known in advance, an offline method with union-find, covered in [Union-Find](/algorithms/union-find), answers them in one traversal.
 
 A rough guide:
 

@@ -2,7 +2,7 @@
 
 A service runs on eight servers, and each server writes its log in timestamp order. For an incident review, the team wants one log with all the events in time order. Each file is already sorted, so sorting the combined pile throws that information away. Merging two sorted lists is a single pass, as in [Merge Sort](/algorithms/merge-sort) and [Reversing and Merging Linked Lists](/algorithms/reversing-merging-lists). The question is what to do with eight.
 
-## One Front Item per List
+## One Front Item for Each List
 
 The two list merge compares the two front items and takes the smaller. With k lists, the next item to output is the smallest among k front items. Scanning all k fronts costs k steps for each output item, O(N × k) for N items. A heap keeps the fronts so that the smallest is on top: take it, then push the next item from that same list.
 
@@ -49,7 +49,7 @@ The invariant is that the heap holds exactly one item for each list that isn't u
 
 ## The Cost
 
-The heap never has more than k items, so each push and pop is O(log k). With N items in total, the merge costs O(N log k), against O(N log N) for sorting the pile and O(N × k) for scanning the fronts. For k = 2 it is the ordinary merge, and for k = 8 the heap is only 3 levels deep. The only extra memory is the heap, O(k), plus the output.
+The heap holds at most k items, so each push and pop is O(log k). With N items in total, the merge costs O(N log k), against O(N log N) for sorting the pile and O(N × k) for scanning the fronts. For k = 2 it is the ordinary merge, and for k = 8 the heap is only 3 levels deep. The only extra memory is the heap, O(k), plus the output.
 
 The same merge can run in rounds, merging pairs of lists, then pairs of results, as merge sort does, which is also O(N log k) and needs no heap. A heap is simpler when the lists arrive as streams.
 
@@ -64,7 +64,9 @@ Here is a surprise from measuring. We merged a million random numbers split into
 | 256 | 348 ms | 306 ms | 73 ms |
 | 4,096 | 501 ms | 633 ms | 109 ms |
 
-Sorting the pile was the fastest everywhere, even though its bound is worse. The reason is that Python's sort looks for runs, stretches that are already in order, and merges them in C, as [How Standard Library Sorts Work](/algorithms/library-sorts) explained. The concatenation of k sorted lists is k runs, so the sort merges those runs, two at a time, with far less overhead per item than our loop. The O(N log k) bound is real but the constant factors favor the library.
+Sorting the pile was the fastest everywhere, even though its bound is worse. The reason is that Python's sort looks for runs, stretches that are already in order, and merges them in C, as [How Standard Library Sorts Work](/algorithms/library-sorts) explained.
+
+The concatenation of k sorted lists is k runs, so the sort merges those runs, two at a time, with far less overhead per item than our loop. The O(N log k) bound is real but the constant factors favor the library.
 
 So why use a heap merge? Because of memory and timing. The sort needs every item in memory at once. The heap merge reads each list a bit at a time, so it works on lists too large to load and can start producing output before the inputs end.
 

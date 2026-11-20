@@ -1,6 +1,8 @@
 > **Depth-first traversal** visits every node of a tree by going all the way down one branch before moving to the next. The three classic orders, **preorder**, **inorder** and **postorder**, differ only in when a node is visited compared with its two subtrees.
 
-In [Stacks](/algorithms/stacks), the postfix expression `3 4 + 2 *` was evaluated with one stack and no brackets. Write the same arithmetic as a tree, with the operator above its two operands, and the expression `(3 + 4) × 2` becomes a multiplication whose left child is an addition. Reading that tree in three different orders gives three ways of writing the expression, and one of them is the postfix form. The orders are worth knowing as a set.
+In [Stacks](/algorithms/stacks), the postfix expression `3 4 + 2 *` was evaluated with one stack and no brackets. Write the same arithmetic as a tree, with the operator above its two operands, and the expression `(3 + 4) × 2` becomes a multiplication whose left child is an addition.
+
+Reading that tree in three different orders gives three ways of writing the expression, and one of them is the postfix form. The orders are worth knowing as a set.
 
 ## Three Moments to Visit
 
@@ -112,7 +114,9 @@ The stack holds at most the height of the tree, so the memory is O(height): abou
 
 ## Which Orders Pin Down a Tree
 
-If you are given only a traversal, can you rebuild the tree? It depends on which one. For the two-node trees with a child on the left and with a child on the right, preorder is 1, 2 for both, and postorder is 2, 1 for both, so those two orders can't tell the shapes apart. Inorder differs, 2, 1 for the left child and 1, 2 for the right child. In general, preorder with inorder, or postorder with inorder, determines the tree when the values are distinct. Preorder with postorder doesn't. [Building and Serializing Trees](/algorithms/building-serializing-trees) uses this.
+If you are given only a traversal, can you rebuild the tree? It depends on which one. For the two-node trees with a child on the left and with a child on the right, preorder is 1, 2 for both, and postorder is 2, 1 for both, so those two orders can't tell the shapes apart.
+
+Inorder differs, 2, 1 for the left child and 1, 2 for the right child. In general, preorder with inorder, or postorder with inorder, determines the tree when the values are distinct. Preorder with postorder doesn't. [Building and Serializing Trees](/algorithms/building-serializing-trees) uses this.
 
 ## Key Points
 

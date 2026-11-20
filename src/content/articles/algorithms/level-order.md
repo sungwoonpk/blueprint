@@ -1,6 +1,8 @@
 > **Level order traversal** visits a tree one level at a time: the root, then all of its children, then all of their children. It uses a queue, and it reaches the nodes nearest the root first.
 
-A company's org chart is a tree, and the head of HR wants it printed by rank: the CEO, then the vice presidents, then the directors, then everyone below. The depth-first orders from [Preorder, Inorder and Postorder Traversals](/algorithms/depth-first-traversals) don't do that. They follow one branch to the bottom before they touch the next, so a director from the first department comes out before a vice president of the second. To print by rank, a tree has to be read across, not down.
+A company's org chart is a tree, and the head of HR wants it printed by rank: the CEO, then the vice presidents, then the directors, then the staff below them. The depth-first orders from [Preorder, Inorder and Postorder Traversals](/algorithms/depth-first-traversals) don't do that.
+
+They follow one branch to the bottom before they touch the next, so a director from the first department comes out before a vice president of the second. To print by rank, a tree has to be read across, not down.
 
 ## A Queue Reads Across
 
@@ -38,7 +40,9 @@ def level_order(root):
     return levels
 ```
 
-For the seven letters it returns `[['D'], ['B', 'F'], ['A', 'C', 'E', 'G']]`. The invariant is that at the start of each round the queue holds all the nodes of one depth and nothing else. Each node is queued and removed once, so the traversal is O(n). We checked the levels against depths computed another way on 1,000 random trees. The queue is the one from [Queues and Deques](/algorithms/queues-deques), and a plain list's `pop(0)` would make this quadratic.
+For the seven letters it returns `[['D'], ['B', 'F'], ['A', 'C', 'E', 'G']]`. The invariant is that at the start of each round the queue holds all the nodes of one depth and nothing else.
+
+Each node is queued and removed once, so the traversal is O(n). We checked the levels against depths computed another way on 1,000 random trees. The queue is the one from [Queues and Deques](/algorithms/queues-deques), and a plain list's `pop(0)` would make this quadratic.
 
 ## What Reading by Levels Gives You
 

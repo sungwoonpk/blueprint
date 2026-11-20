@@ -33,7 +33,9 @@ This is **top-down** information flow, and it matches a preorder traversal. Many
 
 ## Returning More Than One Thing
 
-The harder case is when the answer for a node depends on facts that the parent doesn't need. Take the **diameter**, the number of edges on the longest path between any two nodes. The longest path that bends at a node goes down its left side and down its right side, so its length is the left height plus the right height plus 2. The longest path overall bends at some node, so the answer is the largest of these values over all nodes.
+The harder case is when the answer for a node depends on facts that the parent doesn't need. Take the **diameter**, the number of edges on the longest path between any two nodes.
+
+The longest path that bends at a node goes down its left side and down its right side, so its length is the left height plus the right height plus 2. The longest path overall bends at some node, so the answer is the largest of these values over all nodes.
 
 The recursion has to return the height, since the parent needs it, and also look at the path through this node. It can hand back the height and record the best path in a variable outside the call.
 
@@ -97,7 +99,9 @@ def is_balanced(root):
     return check(root) is not None
 ```
 
-On a balanced tree of 200,000 nodes the slow version took 171 ms and the one pass version took 15 ms. The slow one costs about n log n, because heights are recomputed at each level, and the one pass costs n, with an early exit as soon as an imbalance shows. We checked that both agree on 1,500 random trees. The lesson is general: when a function needs a fact that the recursion already computes, return the fact.
+On a balanced tree of 200,000 nodes the slow version took 171 ms and the one pass version took 15 ms. The slow one costs about n log n, because heights are recomputed at each level, and the one pass costs n, with an early exit as soon as an imbalance shows.
+
+We checked that both agree on 1,500 random trees. The lesson is general: when a function needs a fact that the recursion already computes, return the fact.
 
 ## When the Tree Is Tall
 

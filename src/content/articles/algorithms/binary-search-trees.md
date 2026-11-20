@@ -1,6 +1,8 @@
 > A **binary search tree** keeps its keys ordered so that, at every node, smaller keys are in the left subtree and larger keys in the right. Search, insert and delete each follow one path from the root, so their cost is the height of the tree.
 
-The registrar keeps student IDs, and new students are added all the time. A sorted array finds an ID in log n steps, but adding one shifts the array. A hash table adds and finds in constant time, but its IDs have no order, so "who is the next ID after 4021?" needs a scan. A binary search tree sits in the middle: it grows one node at a time, finds an ID by a short walk, and keeps the IDs in order.
+The registrar keeps student IDs, and new students are added all the time. A sorted array finds an ID in log n steps, but adding one shifts the array.
+
+A hash table adds and finds in constant time, but its IDs have no order, so "who is the next ID after 4021?" needs a scan. A binary search tree sits in the middle: it grows one node at a time, finds an ID by a short walk, and keeps the IDs in order.
 
 ## The Ordering Rule
 
@@ -74,7 +76,7 @@ Deleting is the delicate operation, since the hole must be filled without breaki
 - **One child**: replace the node with that child
 - **Two children**: replace the node's key with the **successor**, the smallest key in its right subtree, and delete that successor from the right subtree, where it has at most one child
 
-The successor is the next larger key, so it fits between everything on the left and everything on the right. This is Hibbard's method. One side effect is known: always taking the successor, and never the predecessor, tends to make the tree lean over time under many deletes and inserts.
+The successor is the next larger key, so it fits between everything on the left and everything on the right. This is Hibbard's method. One side effect is known: taking the successor every time, and the predecessor never, tends to make the tree lean over time under many deletes and inserts.
 
 ```python
 def delete(node, key):

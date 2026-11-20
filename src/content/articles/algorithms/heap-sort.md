@@ -30,7 +30,7 @@ def heap_sort(a):
         sink(0, end)
 ```
 
-Here is the run on 5, 3, 8, 1, 9, 2, 7. The first row is the heap after phase 1, and each later row is the array after one swap and repair. The sorted tail grows from the right.
+Here is the run on 5, 3, 8, 1, 9, 2, 7. The first row is the heap after the building phase, and each later row is the array after one swap and repair. The sorted tail grows from the right.
 
 <figure class="diagram">
 <p class="rowname">Max-heap built</p>
@@ -95,11 +95,15 @@ Heap sort uses nearly twice the minimum number of comparisons that any compariso
 
 Heap sort isn't stable. The swaps move items long distances, which can reorder equal ones. On the records (2, a), (2, b), (2, c) and (1, d), sorted by their number, heap sort returned (1, d), (2, c), (2, b), (2, a), with the three equal items in reverse order. When ties matter, use merge sort, as in [Stable Sorts and Custom Comparators](/algorithms/stable-sorts-comparators).
 
-It is also slower than quick sort and merge sort in practice, even though its bound is as good. On 200,000 random numbers in Python, our versions took 0.45 s for heap sort, 0.28 s for merge sort and 0.21 s for quick sort. Several things add up. It makes more comparisons. It jumps between a parent and children that are far apart in the array, which is hard on the processor's cache, where quick sort scans neighbors. And it does extra work to sink each swapped item all the way back down.
+It is also slower than quick sort and merge sort in practice, even though its bound is as good. On 200,000 random numbers in Python, our versions took 0.45 s for heap sort, 0.28 s for merge sort and 0.21 s for quick sort. Several things add up.
+
+It makes more comparisons. It jumps between a parent and children that are far apart in the array, which is hard on the processor's cache, where quick sort scans neighbors. And it does extra work to sink each swapped item all the way back down.
 
 ## Where Heap Sort Earns Its Place
 
-If it is rarely the fastest, why learn it? Its guarantee and its small memory make it useful as a safety net. Quick sort is fast on typical data but can slow down to O(n²) on a bad run of pivots. A library can watch for that, and when a sort goes badly, switch to heap sort for the rest, which caps the worst case at O(n log n) with no extra memory. Go's sort package falls back to heapsort after too many unbalanced partitions, and Rust's unstable sort does the same, as [How Standard Library Sorts Work](/algorithms/library-sorts) mentioned.
+If it is rarely the fastest, why learn it? Its guarantee and its small memory make it useful as a safety net. Quick sort is fast on typical data but can slow down to O(n²) on a bad run of pivots.
+
+A library can watch for that, and when a sort goes badly, switch to heap sort for the rest, which caps the worst case at O(n log n) with no extra memory. Go's sort package falls back to heapsort after too many unbalanced partitions, and Rust's unstable sort does the same, as [How Standard Library Sorts Work](/algorithms/library-sorts) mentioned.
 
 The underlying idea, a sort built from a priority queue, also generalizes. If you need only the largest k items, you don't have to finish the sort. Stop after k rounds, or keep a small heap, which is [Top K Elements](/algorithms/top-k).
 

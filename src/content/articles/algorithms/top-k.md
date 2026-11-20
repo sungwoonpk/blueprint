@@ -1,6 +1,6 @@
 > The **top K elements** problem asks for the k largest (or smallest) items of a collection. A small heap of size k answers it in one pass over the data in O(n log k) time and O(k) memory, without sorting everything.
 
-A service logs the response time of each of a million requests, and the on-call engineer wants the ten slowest. Sorting the whole log would work, but it does a huge amount of ordering that nobody needs: the order of the 999,990 requests that were not slow. And for a log still being written, sorting means keeping every entry. The better question is what the engineer needs to remember as the log streams by.
+A service logs the response time of each of a million requests, and the on-call engineer wants the ten slowest. Sorting the whole log would work, but it does a huge amount of ordering that nobody asked for: the order of the 999,990 requests that were not slow. And for a log still being written, sorting means keeping every entry. The better question is what the engineer needs to remember as the log streams by.
 
 ## Keep Only the Best So Far
 
@@ -32,7 +32,9 @@ Here is the run for the three largest of 4, 9, 2, 7, 5, 8 and 1.
 | 8 | Beats 5, replace it | 7, 8, 9 |
 | 1 | Not above 7, skip | 7, 8, 9 |
 
-The invariant is that the heap holds the k largest items among those seen so far. An item that is not larger than the heap's smallest can never be in the final answer, since k items already beat it. The cost for each item is a comparison with the top, and for items that get in, a replacement costing O(log k). So the pass is O(n log k) at worst. The heap only ever holds k items, which matters for streams: we ran a million values through a generator with k = 100, and the extra memory peaked at about 4 KB, where sorting the same stream used 36 MB.
+The invariant is that the heap holds the k largest items among those seen so far. An item that is not larger than the heap's smallest can never be in the final answer, since k items already beat it. The cost for each item is a comparison with the top, and for items that get in, a replacement costing O(log k).
+
+So the pass is O(n log k) at worst. The heap only ever holds k items, which matters for streams: we ran a million values through a generator with k = 100, and the extra memory peaked at about 4 KB, where sorting the same stream used 36 MB.
 
 ## Faster Than the Worst Case Suggests
 
@@ -62,7 +64,9 @@ We timed all of them on a million random numbers, along with Python's `heapq.nla
 | 1,000 | 126 ms | 23 ms | 9 ms | 93 ms |
 | 100,000 | 127 ms | 110 ms | 221 ms | 95 ms |
 
-For small k the heap wins by a wide margin, and the library function, which is written in C, wins by more. As k grows toward n, the advantage fades: at k = 100,000 the library's heap method was slower than sorting. So a sensible default is `nlargest` for small k, `sorted` for large k, and `max` for the single largest. Quickselect is the best choice when k is a big fraction of n and the data is in memory.
+For small k the heap wins by a wide margin, and the library function, which is written in C, wins by more. As k grows toward n, the advantage fades: at k = 100,000 the library's heap method was slower than sorting.
+
+So a sensible default is `nlargest` for small k, `sorted` for large k, and `max` for the single largest. Quickselect is the best choice when k is a big fraction of n and the data is in memory.
 
 ## Variations
 
@@ -79,7 +83,7 @@ Check what the problem says about ties and about k larger than n. If the data ha
 ## Key Points
 
 - To find the k largest, keep a min-heap of k candidates and let each new item replace the smallest one if it is bigger
-- The cost is O(n log k) time and O(k) memory, and the data can be a stream that never fits in memory
+- The cost is O(n log k) time and O(k) memory, and the data can be a stream too large for memory
 - On random input only about k ln(n / k) items get into the heap, so the pass is close to n comparisons
 - For small k the heap beats sorting by an order of magnitude, and for k near n sorting or quickselect is better
 - The same structure answers smallest k, the kth largest in a stream, and the most frequent items

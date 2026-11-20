@@ -29,7 +29,9 @@ The tree is complete, so it lives in an array with no links, as in [Binary Trees
 
 An update changes a leaf, then recomputes each ancestor from its two children on the way to the root, a path of about log₂ n nodes.
 
-A query for days `l` to `r` starts at the two leaves and climbs. At each level, if the left end is a right child, its node belongs to the answer, so take it and step right. If the right end is a left child, take its node and step left. Then both ends move up to their parents. The nodes taken are blocks that tile the range exactly, and there are at most two for each level.
+A query for days `l` to `r` starts at the two leaves and climbs. At each level, if the left end is a right child, its node belongs to the answer, so take it and step right.
+
+If the right end is a left child, take its node and step left. Then both ends move up to their parents. The nodes taken are blocks that tile the range exactly, and there are at most two for each level.
 
 ```python
 class SegTree:
@@ -67,7 +69,7 @@ The invariant is that `t[k]` holds the combination of the block under node `k`, 
 
 ## Any Combinable Operation
 
-Nothing in the tree depends on addition. It needs a way to combine two block answers, and an **identity**, the answer for an empty block, which the query uses for the pieces it hasn't found yet. The operation must be associative, meaning that combining in any grouping gives the same result.
+The tree doesn't depend on addition. It needs a way to combine two block answers, and an **identity**, the answer for an empty block, which the query uses for the pieces it hasn't found yet. The operation must be associative, meaning that combining in any grouping gives the same result.
 
 | Question | Combine | Identity |
 | --- | --- | --- |
