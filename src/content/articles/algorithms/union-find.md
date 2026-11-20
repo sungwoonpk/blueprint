@@ -47,21 +47,31 @@ Number the buildings 0 to 6 as in [Representing Graphs](/algorithms/representing
 
 At step 4 the Lab's group, rooted at the Cafe, absorbs the Hall's group, rooted at the Library, and the Library now points to the Cafe. After step 6 there is one group, and the Cafe is its root.
 
-<figure class="diagram">
-<div class="flow packets tree">
-<div class="node hl">Cafe</div>
-</div>
-<div class="flow packets tree">
-<div class="node">Lab</div>
-<div class="node">Library</div>
-<div class="node">Dorm</div>
-<div class="node">Gym</div>
-</div>
-<div class="flow packets tree">
-<div class="node">Hall</div>
-<div class="node">Quad</div>
-</div>
-<figcaption>The forest after all six cables. Each building points up to its parent, and the Cafe, outlined, is the representative of the one group</figcaption>
+<figure class="diagram graph">
+<svg viewBox="0 0 360 190" role="img" aria-label="The forest after six cables, with an arrow from each building to its parent. Lab, Library, Dorm and Gym point to the Cafe, Hall points to Library, and Quad points to Dorm. The Cafe is the root.">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head " d="M0 0L10 5L0 10z"/></marker><marker id="ah-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head -hl" d="M0 0L10 5L0 10z"/></marker><marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head -bad" d="M0 0L10 5L0 10z"/></marker><marker id="ah-done" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head -done" d="M0 0L10 5L0 10z"/></marker></defs>
+<line class="e" x1="69.0" y1="81.5" x2="153.0" y2="39.5" marker-end="url(#ah)"/>
+<line class="e" x1="149.1" y1="77.0" x2="169.7" y2="43.0" marker-end="url(#ah)"/>
+<line class="e" x1="226.4" y1="77.0" x2="195.5" y2="43.0" marker-end="url(#ah)"/>
+<line class="e" x1="297.0" y1="82.0" x2="207.0" y2="38.9" marker-end="url(#ah)"/>
+<line class="e" x1="140.0" y1="143.0" x2="140.0" y2="109.0" marker-end="url(#ah)"/>
+<line class="e" x1="240.0" y1="143.0" x2="240.0" y2="109.0" marker-end="url(#ah)"/>
+<rect class="n hl" x="156" y="12" width="48" height="28" rx="14"/>
+<text class="t hl" x="180" y="26">Cafe</text>
+<rect class="n" x="28" y="78" width="40" height="28" rx="14"/>
+<text class="t " x="48" y="92">Lab</text>
+<rect class="n" x="110" y="78" width="60" height="28" rx="14"/>
+<text class="t " x="140" y="92">Library</text>
+<rect class="n" x="216" y="78" width="48" height="28" rx="14"/>
+<text class="t " x="240" y="92">Dorm</text>
+<rect class="n" x="298" y="78" width="40" height="28" rx="14"/>
+<text class="t " x="318" y="92">Gym</text>
+<rect class="n" x="118" y="144" width="44" height="28" rx="14"/>
+<text class="t " x="140" y="158">Hall</text>
+<rect class="n" x="218" y="144" width="44" height="28" rx="14"/>
+<text class="t " x="240" y="158">Quad</text>
+</svg>
+<figcaption>The group after all six cables, with an arrow from each building to its parent. The Cafe, outlined, is the root and names the group</figcaption>
 </figure>
 
 The Dorm and the Hall became connected at step 5: `find(Dorm)` goes Dorm to Cafe, `find(Hall)` goes Hall to Library to Cafe, and the roots match. No search ran. The `find` for the Quad would walk Quad, Dorm, Cafe, and while it does, the line in `find` makes the Quad point at the Cafe directly, so the next walk is shorter.

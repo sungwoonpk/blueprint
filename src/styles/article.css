@@ -649,6 +649,10 @@
   font-size: 11px;
 }
 
+.prose .cells.board .cell.done {
+  background: color-mix(in srgb, var(--term) 28%, var(--bg));
+}
+
 .prose .cell.wall {
   background: color-mix(in srgb, var(--muted) 45%, var(--bg));
   box-shadow: none;
