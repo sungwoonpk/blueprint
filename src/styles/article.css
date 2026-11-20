@@ -756,3 +756,118 @@
   border-radius: 0 0 16px 16px;
   background: var(--surface);
 }
+
+/* A graph drawing: an inline SVG whose viewBox fits the drawing, so it scales
+   with the page. Edges (line or path) are "e", nodes "n" (a rounded box) with
+   a label "t" and an optional small line "s", weights "w". Edges and nodes take
+   hl (in play), done (settled), bad or dim. Directed edges carry a marker
+   from the "ah" family defined inside the svg. */
+.prose .graph svg {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.prose .graph .e {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.prose .graph .e.hl,
+.prose .graph .e.done {
+  stroke: var(--term);
+  stroke-width: 3;
+  opacity: 1;
+}
+
+.prose .graph .e.bad {
+  stroke: var(--bad);
+  stroke-width: 3;
+  opacity: 1;
+}
+
+.prose .graph .e.dim {
+  opacity: 0.25;
+}
+
+.prose .graph .n {
+  fill: var(--bg);
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.prose .graph .n.hl {
+  fill: color-mix(in srgb, var(--term) 10%, var(--bg));
+  stroke: var(--term);
+  stroke-width: 2.5;
+}
+
+.prose .graph .n.done {
+  fill: color-mix(in srgb, var(--term) 16%, var(--bg));
+  stroke: var(--term);
+}
+
+.prose .graph .n.bad {
+  stroke: var(--bad);
+  stroke-width: 2.5;
+}
+
+.prose .graph .n.dim,
+.prose .graph .t.dim {
+  opacity: 0.4;
+}
+
+.prose .graph text {
+  font-family: var(--font-sans);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.prose .graph .t {
+  fill: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.prose .graph .t.hl,
+.prose .graph .t.done {
+  fill: var(--term);
+}
+
+.prose .graph .t.bad {
+  fill: var(--bad);
+}
+
+.prose .graph .s {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.prose .graph .w {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.prose .graph .head {
+  fill: var(--muted);
+}
+
+.prose .graph .head.-hl,
+.prose .graph .head.-done {
+  fill: var(--term);
+}
+
+.prose .graph .head.-bad {
+  fill: var(--bad);
+}

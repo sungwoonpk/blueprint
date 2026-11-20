@@ -127,3 +127,5 @@ A board (a chessboard, a grid) is several `cells` rows with the extra class `boa
 A node can also carry `hl` to be outlined in the term color, and `hot` to be red. A tree drawn level by level uses one `<div class="flow packets tree">` for each level, with at most four small nodes in a row (see Algorithms 1.5). A call stack or a list of frames, newest on top, is `<div class="frames">` holding `node` items (see Algorithms 1.6). A line chart can carry dashed `bound` lines and a dotted `mark` line.
 
 Keep the HTML free of blank lines, or Markdown will break it apart. Styles live in `src/styles/article.css`.
+
+A graph (vertices joined by edges) is a `figure` with the classes `diagram graph` holding one inline SVG, drawn by a small script rather than by hand: edges are `line` or `path` elements with the class `e`, each vertex a rounded `rect.n` with a label `text.t`, and weights `text.w`. Give an edge or vertex `hl` (in play), `done` (settled), `bad` or `dim`. A directed edge ends in a `marker` arrow. Size the `viewBox` to the drawing and keep it about 360 units wide, so the labels stay readable on a phone (see Algorithms 7.1).
