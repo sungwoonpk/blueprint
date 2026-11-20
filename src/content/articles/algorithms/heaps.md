@@ -1,6 +1,6 @@
 > A **heap** is a complete binary tree stored in an array, where every parent is no larger than its children (a min-heap) or no smaller (a max-heap). A **priority queue** is the structure it implements: add items in any order, and take the one with the highest priority next.
 
-The registrar's help desk serves students in order of urgency, not arrival: a student locked out of an exam portal is helped before one asking about a parking permit. New requests arrive all day, and each time a desk frees up, the most urgent waiting request must be found fast. Sorting the whole list after each arrival is wasteful. A heap keeps just enough order that the most urgent item is always on top.
+The registrar's help desk serves students in order of urgency, not arrival: a student locked out of an exam portal is helped before one asking about a parking permit. New requests arrive all day, and each time a desk frees up, the most urgent waiting request must be found fast. Sorting the whole list after each arrival is wasteful. A heap keeps just enough order that the most urgent item stays on top.
 
 ## One Rule, Stored in an Array
 
