@@ -24,7 +24,7 @@ Each student ranks the labs, and each lab ranks the students, best first.
 
 Take the placement Ana in Vision, Ben in Theory, Chi in Systems and Dev in Security. Every student has a lab, so as a pairing it is complete. But Ben ranks Vision second and Theory fourth, and Vision ranks Ben first and Ana second. Ben and Vision form a **blocking pair**: each prefers the other to what the placement gave.
 
-A **stable matching** is a complete matching with no blocking pair. Nobody has an incentive to leave. The question is whether one always exists, and how to find it.
+A **stable matching** is a complete matching with no blocking pair. No pair has a reason to break away. The question is whether one always exists, and how to find it.
 
 ## Proposals and Holding Offers
 

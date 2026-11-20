@@ -74,7 +74,7 @@ In Python, with the standard library sort running in C and the loop in Python, t
 | 100,000 | 599,999 | 0.09 s | 0.24 s | 85% |
 | 400,000 | 2,399,999 | 0.45 s | 1.24 s | 98% |
 
-The stop at V − 1 edges saved a little on small graphs and almost nothing on large ones, because the last few buildings are connected only by the expensive edges at the end of the order. The asymptotics still put the sort first, since the loop's cost per edge is nearly constant, while the sort grows faster than the edge count.
+The stop at V − 1 edges saved a little on small graphs and almost nothing on large ones. We kept each graph in one piece by adding a chain of heavy edges, and a few vertices were reachable only through them, so the loop had to read nearly to the end of the order. The asymptotics still put the sort first, since the loop's cost per edge is nearly constant, while the sort grows faster than the edge count.
 
 The table is a reminder that constants decide which part is bigger at a given size.
 
