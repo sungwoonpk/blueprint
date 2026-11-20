@@ -148,7 +148,7 @@ We verified both claims on 300 random networks of up to 8 vertices with capaciti
 
 For larger networks we used random links with capacities from 1 to 100, plus a source tied to 50 random points and a sink tied to 50 others, at capacity 1,000.
 
-| Vertices | Links | Maximum Flow | Augmentations | Time |
+| Vertices | Links | Flow | Paths | Time |
 | --- | --- | --- | --- | --- |
 | 1,000 | 5,096 | 12,092 | 603 | 0.25 s |
 | 5,000 | 25,092 | 10,357 | 747 | 1.53 s |

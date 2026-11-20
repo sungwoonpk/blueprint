@@ -99,13 +99,13 @@ In the MST, the Library is 3 + 4 = 7 minutes from the Dorm, which happens to equ
 
 With a binary heap, every edge is pushed at most once from each end, and each heap operation costs O(log E), so the total is O(E log V). Our counts on random graphs with 5 edges for each vertex show a good share of the pushes ending in a skip.
 
-| Vertices | Edges | Pushes | Skipped on Removal | Prim | Kruskal |
-| --- | --- | --- | --- | --- | --- |
-| 10,000 | 59,999 | 59,987 | 37,643 | 0.08 s | 0.03 s |
-| 100,000 | 599,999 | 599,987 | 411,800 | 1.08 s | 0.35 s |
-| 400,000 | 2,399,999 | 2,399,991 | 1,949,942 | 5.83 s | 1.67 s |
+| Vertices | Pushes | Skipped | Prim | Kruskal |
+| --- | --- | --- | --- | --- |
+| 10,000 | 60 K | 38 K | 0.08 s | 0.03 s |
+| 100,000 | 600 K | 412 K | 1.08 s | 0.35 s |
+| 400,000 | 2.4 M | 1.9 M | 5.83 s | 1.67 s |
 
-Both ran in O(E log V) and found trees of the same total weight. In our Python test, Kruskal was about 3 times faster on these sparse graphs, since it sorts in C and the loop is short, while Prim does a heap operation for every edge.
+On the 100,000 vertex graph, 411,800 of the 599,987 pushes were skipped when they came out of the heap. Both ran in O(E log V) and found trees of the same total weight. In our Python test, Kruskal was about 3 times faster on these sparse graphs, since it sorts in C and the loop is short, while Prim does a heap operation for every edge.
 
 Dense graphs reverse that. We built complete graphs with random weights and ran three versions on them. One is a version of Prim that keeps, for each outside vertex, the cheapest edge into the tree, and scans that array for the smallest, with no heap. It takes O(V²).
 
