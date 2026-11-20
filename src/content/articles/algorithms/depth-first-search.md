@@ -131,7 +131,9 @@ On 300 random directed graphs, 8,988 edges in all, each kind matched its interva
 
 In an undirected graph, the picture is simpler, because there are no cross edges. A vertex that finished before u started would have found u through their shared edge and made it a descendant. So each edge joins a vertex to one of its ancestors, and we verified that on 300 random undirected graphs. The edges that aren't in the tree are back edges, seen from their lower end.
 
-On the campus, the three dashed edges are back edges: the Gym to the Dorm, the Cafe to the Quad, and the Hall to the Library. Each one closes a loop, such as Quad, Library, Lab, Cafe and back to the Quad. A graph with V vertices in one piece has V − 1 tree edges, so the other E − V + 1 edges, three here, are all back edges, and each is a cycle. [Connected Components and Cycles](/algorithms/components-cycles) builds on this.
+On the campus, the three dashed edges are back edges: the Gym to the Dorm, the Cafe to the Quad, and the Hall to the Library. Each one closes a loop, such as Quad, Library, Lab, Cafe and back to the Quad.
+
+A graph with V vertices in one piece has V − 1 tree edges, so the other E − V + 1 edges, three here, are all back edges, and each is a cycle. [Connected Components and Cycles](/algorithms/components-cycles) builds on this.
 
 ## How Deep Is Deep?
 
