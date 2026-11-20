@@ -642,6 +642,13 @@
   max-width: 44px;
 }
 
+.prose .cells.board.sm .cell {
+  height: 26px;
+  max-width: 26px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
 .prose .cell.wall {
   background: color-mix(in srgb, var(--muted) 45%, var(--bg));
   box-shadow: none;
