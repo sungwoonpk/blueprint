@@ -40,13 +40,13 @@ Each level is the previous one multiplied by the same ratio r = a / b<sup>c</sup
 <figcaption>Work on each level of the recursion tree for n = 1,024, with b = 2 and c = 1. With a = 1 the root dominates, with a = 2 the levels are equal, and with a = 3 the levels grow toward the leaves</figcaption>
 </figure>
 
-With a = 1 each level has half the work of the one above, so the total is less than twice the root: the running time is Θ(n). With a = 2 every level costs n, and there are about log₂ n levels, so the total is n log n. With a = 3 each level costs 1.5 times the one above, so the bottom level, which is the leaves, outweighs all the others combined.
+With a = 1 each level has half the work of the one above, so the total is less than twice the root: the running time is Θ(n). With a = 2 every level costs n, and there are about log₂ n levels, so the total is n log n. With a = 3 each level costs 1.5 times the one above, so the bottom level, the leaves, is the heaviest and holds a constant share of the total, about a third here.
 
 The leaves are easy to count. The tree has log<sub>b</sub> n levels, so the number of leaves is a<sup>log<sub>b</sub> n</sup>, which equals n<sup>log<sub>b</sub> a</sup>. That exponent, log<sub>b</sub> a, is the number to compare with c.
 
 ## The Three Cases
 
-This is the **master theorem** for recurrences of the form T(n) = a T(n / b) + Θ(n<sup>c</sup>), where a ≥ 1, b > 1 and c ≥ 0.
+This is the **master theorem** for recurrences of the form T(n) = a T(n / b) + Θ(n<sup>c</sup>), where a ≥ 1, b ≥ 2 and c ≥ 0.
 
 | Compare | Heaviest Part | Running Time |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ Every ratio is nearly flat as n grows by a factor of a thousand, so each claimed
 
 Some recurrences fall outside the form, and the recursion tree still works.
 
-- **Work that isn't a power of n**: 2 T(n / 2) + n / log₂ n has levels that are neither equal nor a geometric series. Summing them gives Θ(n log log n). We computed it, and T(n) divided by n log₂ log₂ n stayed near 0.71 from n = 2<sup>10</sup> to 2<sup>40</sup>, while T(n) divided by n log₂ n kept falling, from 0.24 to 0.09
+- **Work that isn't a power of n**: 2 T(n / 2) + n / log₂ n has levels that are neither equal nor a geometric series. Summing them gives Θ(n log log n). We computed it, and T(n) divided by n log₂ log₂ n stayed between 0.71 and 0.73 from n = 2<sup>10</sup> to 2<sup>40</sup>, while T(n) divided by n log₂ n kept falling, from 0.24 to 0.09
 - **Pieces of unequal size**: T(n) = T(n / 3) + T(2n / 3) + n has branches of different depths. Every complete level still adds up to n, and there are about log<sub>3/2</sub> n of them, so the answer is Θ(n log n). Our computed ratio to n log₂ n stayed between 1.11 and 1.15 from 2<sup>10</sup> to 2<sup>26</sup>
 - **Shrinking by subtraction**: T(n) = T(n − 1) + n is a chain, not a tree, and it adds up to n(n + 1) / 2, so Θ(n²), like insertion sort. T(n) = 2 T(n − 1) + 1 gives 2ⁿ − 1, which we confirmed for n up to 7, the moves of the towers of Hanoi puzzle
 
