@@ -2,7 +2,7 @@
 
 A service logs its response time every second, and an alert needs the slowest response in the last 60 seconds, updated every second.
 
-The [fixed window](/algorithms/fixed-window) can add and subtract to keep a running sum, but a maximum can't be updated that way: when the slowest request leaves the window, the next slowest has to be known, and the window's sum doesn't carry that. Scanning the whole window each second costs O(k). We can do better.
+The window of [Fixed Size Sliding Window](/algorithms/fixed-window) can add and subtract to keep a running sum, but a maximum can't be updated that way: when the slowest request leaves the window, the next slowest has to be known, and the window's sum doesn't carry that. Scanning the whole window each second costs O(k). We can do better.
 
 ## Keep Only the Contenders
 
@@ -51,7 +51,7 @@ The invariant is that the deque holds the positions inside the window whose valu
 
 ## Why It Is O(n)
 
-Each position is pushed once and popped at most once, from the back or from the front. That is at most 2n deque operations, the same argument as the [monotonic stack](/algorithms/monotonic-stack) and the amortized reasoning of [Amortized Analysis](/algorithms/amortized-analysis). The window size doesn't appear in the cost.
+Each position is pushed once and popped at most once, from the back or from the front. That is at most 2n deque operations, the same argument as in [Monotonic Stack](/algorithms/monotonic-stack) and the amortized reasoning of [Amortized Analysis](/algorithms/amortized-analysis). The window size doesn't appear in the cost.
 
 We timed it on 200,000 values with a window of 1,000.
 
