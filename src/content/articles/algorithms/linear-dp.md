@@ -35,7 +35,7 @@ def decode_ways(s):
 
 For 11106, the counts are 1, 1, 2, 3, 2, 2. At the fourth digit, 0, there is no single reading, so only the pair 10 counts, and ways(4) = ways(2) = 2. At the fifth digit, 6, the pair 06 isn't a letter, so only the single digit counts.
 
-The whole string can be read 2 ways: AAJF and KJF. The strings 226 gives 3, and 100 gives 0, since after the 1 there are two 0s and 00 is not a letter.
+The whole string can be read 2 ways: AAJF and KJF. The string 226 gives 3, and 100 gives 0, since after the 1 there are two 0s and 00 is not a letter.
 
 We compared the function with a search that tries every reading, on 2,000 random strings of up to 14 digits, many with 0s. The counts agreed on every one. When every digit is 1, the count follows the Fibonacci numbers: 8 for 5 digits, 89 for 10 digits and 2,504,730,781,961 for 60 digits. A search listing every reading would never finish on that last one, while the table takes 60 steps.
 
