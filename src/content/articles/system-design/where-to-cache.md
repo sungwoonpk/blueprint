@@ -50,19 +50,13 @@ A request passes through several places that can hold a copy, from the user's de
 <figcaption>Each layer is a chance to answer before the next one</figcaption>
 </figure>
 
-Moving along the path, a cache gets farther from the user and closer to the data, and each layer has its own character.
+Moving along the path, a cache gets farther from the user and closer to the data, and each layer has its own character:
 
-The browser cache is private to one user, so it can hold personalized responses. It is the fastest layer, since the request stays on the device, and it is also out of your control: you can't delete what a browser has stored, which is why files get new names when they change. See [How HTTP Works](/system-design/http).
-
-The CDN is a shared cache near the users that serves many people with one copy. It is a managed cache, since you can purge it through an API, and storing personalized content in a shared cache risks showing it to the wrong person. See [Content Delivery Networks (CDNs)](/system-design/cdn).
-
-Server memory is a cache inside each web server's process. It is quick and low risk, often the first thing a team tries. Its weaknesses are that each server holds its own copy, so two servers can answer differently, a new server starts empty, and memory per server is limited.
-
-A shared cache is a separate fleet, such as Redis or Memcached, that the servers read together. This makes answers more consistent, keeps a deploy from emptying the cache and keeps the database load from growing with the number of servers.
-
-The costs are another fleet to run and one more network hop, and the cache can be less available than the database it protects.
-
-Finally, the database keeps recently used pages in memory, a cache you get without writing any code. It helps repeated queries, but each one still reaches the database and uses its connections and CPU.
+- **Browser cache**: private to one user, so it can hold personalized responses. It is the fastest layer, since the request stays on the device, and it is also out of your control: you can't delete what a browser has stored, which is why files get new names when they change. See [How HTTP Works](/system-design/http)
+- **CDN**: a shared cache near the users that serves many people with one copy. It is a managed cache, since you can purge it through an API, and storing personalized content in a shared cache risks showing it to the wrong person. See [Content Delivery Networks (CDNs)](/system-design/cdn)
+- **Server memory**: a cache inside each web server's process. It is quick and low risk, often the first thing a team tries. Its weaknesses are that each server holds its own copy, so two servers can answer differently, a new server starts empty, and memory per server is limited
+- **Shared cache**: a separate fleet, such as Redis or Memcached, that the servers read together. This makes answers more consistent, keeps a deploy from emptying the cache and keeps the database load from growing with the number of servers. The costs are another fleet to run and one more network hop, and the cache can be less available than the database it protects
+- **Database memory**: the database keeps recently used pages in memory, a cache you get without writing any code. It helps repeated queries, but each one still reaches the database and uses its connections and CPU
 
 A good habit is to combine the two middle layers: a small cache in each server, backed by the shared cache, with the database as the last stop. The small one keeps the app working if the shared cache can't be reached.
 
@@ -92,13 +86,13 @@ A cache brings one warning above the others, called **modal behavior**: a servic
 
 At a 90 percent hit ratio it sees 300, which is fine. If the cache restarts, the full 3,000 requests a second fall through at once, the database is overwhelmed, and the outage is far worse than the cache's.
 
-The defenses are three habits. Test without the cache, to confirm the service survives, perhaps by shedding some load, when the cache is empty or gone.
+Three habits defend against it:
 
-Expect cold starts: a new server or a flushed cache sends a burst of misses to the database, and merging duplicate requests for the same item into one helps. See [Cache Stampedes](/system-design/cache-stampedes).
+- **Test without the cache**: confirm the service survives, perhaps by shedding some load, when the cache is empty or gone
+- **Expect cold starts**: a new server or a flushed cache sends a burst of misses to the database, and merging duplicate requests for the same item into one helps. See [Cache Stampedes](/system-design/cache-stampedes)
+- **Choose expiry on purpose**: staleness, size and eviction are hard to pick once and forget, so measure the hit ratio, the misses and the load that reaches the database. See [Cache Eviction Policies](/system-design/cache-eviction) and [Cache Invalidation](/system-design/cache-invalidation)
 
-And choose expiry on purpose. Staleness, size and eviction are hard to pick once and forget, so measure the hit ratio, the misses and the load that reaches the database. See [Cache Eviction Policies](/system-design/cache-eviction) and [Cache Invalidation](/system-design/cache-invalidation).
-
-When one failing part drags another down, the effect is called a [Cascading Failures](/system-design/cascading-failures), and an overloaded database behind a failed cache is a common start.
+When one failing part drags another down, the effect is a cascading failure, covered in [Cascading Failures](/system-design/cascading-failures), and an overloaded database behind a failed cache is a common start.
 
 ## Key Points
 
