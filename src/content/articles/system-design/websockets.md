@@ -81,9 +81,11 @@ async def chat(ws, user):
         await publish(msg["listing"], msg)   # tell all watchers
 ```
 
-Underneath, a message travels as one or more **frames**. The ones worth knowing are.
+Underneath, a message travels as one or more **frames**. The ones worth knowing:
 
-Text and binary frames carry your data, with text encoded as UTF-8. Ping and pong are small control frames used to check that the other side is alive. A close frame starts a polite shutdown, in which each side sends one and then the connection ends.
+- **Text and binary frames** carry your data, with text encoded as UTF-8
+- **Ping and pong** are small control frames used to check that the other side is alive
+- **A close frame** starts a polite shutdown, in which each side sends one and then the connection ends
 
 When a connection ends with no close frame at all, because a phone left coverage or a process crashed, browsers report close code 1006. A normal close is 1000, and 1001 means a side is going away, for example a server shutting down.
 
@@ -127,25 +129,20 @@ The usual fix is a **publish and subscribe** layer. Each server subscribes to th
 
 Slack's real time messaging uses gateway servers that hold the WebSockets, and channel servers, chosen by hashing the channel id, that forward each message to each gateway that has a subscriber. Discord reached 5 million concurrent users with one session process per WebSocket, up to about 500,000 sessions on one Erlang virtual machine, and most of the rest comes down to publish and subscribe.
 
-Long lived connections create operational wrinkles too.
+Long lived connections create operational wrinkles too:
 
-Capacity comes first. Each connected user holds a connection and some memory, so 100,000 users means 100,000 connections. The estimate belongs in [Estimating Capacity](/system-design/estimation), and servers have to be built for many idle connections, as with long polling and SSE.
-
-Load is uneven too. Connections stay put, so after adding servers, the old ones keep their connections and the new ones start nearly empty until clients reconnect. A load balancer has to understand the upgrade, and many of them, such as the AWS Application Load Balancer, support WebSockets natively.
-
-Deploys are the sharpest edge. Restarting a server drops each user on it at the same moment, and they reconnect at once. Both Discord and Slack have seen reconnect surges overload parts of their systems, so spreading reconnects with random delays is part of the design, not an afterthought.
+- **Capacity**: each connected user holds a connection and some memory, so 100,000 users means 100,000 connections. The estimate belongs in [Estimating Capacity](/system-design/estimation), and servers have to be built for many idle connections, as with long polling and SSE
+- **Uneven load**: connections stay put, so after adding servers, the old ones keep their connections and the new ones start nearly empty until clients reconnect. A load balancer has to understand the upgrade, and many of them, such as the AWS Application Load Balancer, support WebSockets natively
+- **Deploys**: this is the sharpest edge. Restarting a server drops each user on it at the same moment, and they reconnect at once. Both Discord and Slack have seen reconnect surges overload parts of their systems, so spreading reconnects with random delays is part of the design, not an afterthought
 
 ## Locking It Down
 
-A WebSocket is a door that stays open, so check who comes in, and what they say.
+A WebSocket is a door that stays open, so check who comes in, and what they say:
 
-Start with the Origin. Browsers send the page's origin during the handshake, and the server can refuse origins it doesn't trust. It matters when login rides on cookies, since otherwise a script on another site could open a connection as the user. Other clients can send any Origin they like, so it isn't a login.
-
-Authenticate the connection itself, with the cookie sent in the handshake or a short lived token sent as the first message, and keep tokens out of the URL, since URLs end up in logs. See [Authentication and Authorization](/system-design/authn-authz).
-
-Then check each message. A connection that was allowed to join one chat isn't allowed to write to another, and the server decides on each message, because the client is outside your control, as in [How Clients and Servers Talk](/system-design/client-server).
-
-Finally, limit what arrives, with a maximum message size and a message rate for each connection. The browser's WebSocket has no way to push back on a flood of messages, so a busy sender can overwhelm a page, and a server needs its own limits for the same reason.
+- **The Origin**: browsers send the page's origin during the handshake, and the server can refuse origins it doesn't trust. It matters when login rides on cookies, since otherwise a script on another site could open a connection as the user. Other clients can send any Origin they like, so it isn't a login
+- **Who is connecting**: authenticate the connection itself, with the cookie sent in the handshake or a short lived token sent as the first message, and keep tokens out of the URL, since URLs end up in logs. See [Authentication and Authorization](/system-design/authn-authz)
+- **Each message**: a connection that was allowed to join one chat isn't allowed to write to another, and the server decides on each message, because the client is outside your control, as in [How Clients and Servers Talk](/system-design/client-server)
+- **What arrives**: set a maximum message size and a message rate for each connection. The browser's WebSocket has no way to push back on a flood of messages, so a busy sender can overwhelm a page, and a server needs its own limits for the same reason.
 
 ## Choosing a Way to Stay Up to Date
 
