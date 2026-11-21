@@ -115,9 +115,9 @@ In one benchmark of reading 1,000 keys from a table spread over 100 servers, a h
 
 The natural reaction to a timeout is to retry, and retries carry a risk. Retries are selfish, since each one asks for more of a service that may already be struggling.
 
-His example is a stack five layers deep in which each layer retries three times. A failure at the bottom then multiplies into 243 times the load on the database, just when it can least take it.
+An example from Amazon's Builders' Library is a stack five layers deep in which each layer retries three times. A failure at the bottom then multiplies into 243 times the load on the database, just when it can least take it.
 
-His advice is to retry at one layer, back off with random jitter, retry operations that are safe to repeat, and set timeouts from the latency the dependency normally shows, such as the level that 0.1 percent of calls exceed.
+Its advice is to retry at one layer, back off with random jitter, retry operations that are safe to repeat, and set timeouts from the latency the dependency normally shows, such as the level that 0.1 percent of calls exceed.
 
 These are the subject of [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and of [Cascading Failures](/system-design/cascading-failures) in the next phase.
 
