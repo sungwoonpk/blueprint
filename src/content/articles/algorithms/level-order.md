@@ -8,7 +8,29 @@ They follow one branch to the bottom before they touch the next, so a director f
 
 A queue serves items in arrival order. If every node adds its children to the back of a queue when it is visited, the nodes come out in order of depth: all the nodes at depth 1 were queued before any node at depth 2, because they were queued by the root, and depth 2 nodes are queued by their parents later.
 
-Here is the seven letter tree from the previous article and the queue as each node is visited.
+Here is the seven letter tree from the previous article, drawn by levels.
+
+<figure class="diagram">
+<p class="rowname">Level 0</p>
+<div class="flow packets tree">
+<div class="node">D</div>
+</div>
+<p class="rowname">Level 1</p>
+<div class="flow packets tree">
+<div class="node">B</div>
+<div class="node">F</div>
+</div>
+<p class="rowname">Level 2</p>
+<div class="flow packets tree">
+<div class="node">A</div>
+<div class="node">C</div>
+<div class="node">E</div>
+<div class="node">G</div>
+</div>
+<figcaption>The seven letter tree with one row for each level. Level order reads the rows from top to bottom and each row from left to right, giving D, B, F, A, C, E, G</figcaption>
+</figure>
+
+The queue changes as each node is visited like this.
 
 | Visit | Queue After |
 | --- | --- |

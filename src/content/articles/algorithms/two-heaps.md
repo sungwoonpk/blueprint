@@ -4,6 +4,18 @@ A monitoring dashboard shows the median response time of all requests so far, up
 
 But the dashboard can't re-sort a million numbers after each new request, and it can't remember a sorted list that is expensive to insert into. It needs a structure where the middle is within reach.
 
+<figure class="diagram">
+<div class="cells">
+<div class="cell done">4</div>
+<div class="cell done">5</div>
+<div class="cell hl">8</div>
+<div class="cell hl">9</div>
+<div class="cell">9</div>
+<div class="cell">12</div>
+</div>
+<figcaption>The numbers after the last arrival, in sorted order. The lower half, 4, 5 and 8, sits in the max-heap and the upper half, 9, 9 and 12, in the min-heap. The median is the average of the two tops, the outlined 8 and 9, which is 8.5</figcaption>
+</figure>
+
 ## The Costs of the Easy Ways
 
 Keeping all values in a sorted list lets you read the middle in O(1), but each insert shifts items, which costs O(n). Recomputing the median from scratch costs O(n log n) per step with a sort, or O(n) with the method of [Quickselect](/algorithms/quickselect), which is still too much at every step.

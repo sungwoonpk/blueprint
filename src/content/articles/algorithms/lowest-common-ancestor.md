@@ -23,6 +23,23 @@ This needs, for each node, its parent and its depth. Both come from one traversa
 
 On the seven letter tree used in this phase, with D at the top, B and F below it, and A, C under B and E, G under F, here are some answers.
 
+<figure class="diagram">
+<div class="flow packets tree">
+<div class="node">D</div>
+</div>
+<div class="flow packets tree">
+<div class="node">B</div>
+<div class="node">F</div>
+</div>
+<div class="flow packets tree">
+<div class="node hl">A</div>
+<div class="node">C</div>
+<div class="node hl">E</div>
+<div class="node">G</div>
+</div>
+<figcaption>The seven letter tree. Climbing from A and from E, the two walks first meet at D, the lowest common ancestor of the outlined pair. For A and C the walks meet at B</figcaption>
+</figure>
+
 | Pair | Lowest Common Ancestor | Steps Between Them |
 | --- | --- | --- |
 | A and C | B | 2 |
