@@ -138,7 +138,7 @@ def merge_sort_bottom_up(a):
     return a
 ```
 
-Merge sort reads its data from start to end, which makes it a good fit for [linked lists](/algorithms/linked-lists), where merging needs no extra space, and for data on disk, where sequential reading is far faster than jumping around. For arrays that fit in memory, its main competitor is [Quick Sort](/algorithms/quick-sort), which sorts in place and is often faster in practice, but gives up the worst case guarantee.
+Merge sort reads its data from start to end, which makes it a good fit for the lists of [Singly and Doubly Linked Lists](/algorithms/linked-lists), where merging needs no extra space, and for data on disk, where sequential reading is far faster than jumping around. For arrays that fit in memory, its main competitor is [Quick Sort](/algorithms/quick-sort), which sorts in place and is often faster in practice, but gives up the worst case guarantee.
 
 ## Key Points
 
