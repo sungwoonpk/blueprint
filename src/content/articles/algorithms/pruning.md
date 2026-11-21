@@ -39,21 +39,21 @@ def shortest(d):
     return best[0]
 ```
 
-The invariant behind the prune is that every complete route starting with this path costs at least `cost`. If that is no better than `best`, the whole subtree below can be skipped. We checked the answers against full enumeration on random instances of 8, 9 and 10 stops, and then counted the calls. The numbers are averages over 10 random instances for each size.
+The invariant behind the prune is that every complete route starting with this path costs at least `cost`. If that is no better than `best`, the whole subtree below can be skipped. We checked the answers against full enumeration on random instances of 8, 9 and 10 stops, and then counted the calls. The stops are random points in a square, and the numbers are averages over 10 random instances for 8 and 10 stops and 6 for 12 stops.
 
 | Stops | Full Search | Pruned | Nearest First |
 | --- | --- | --- | --- |
-| 8 | 13,700 | 7,700 | 7,100 |
-| 10 | 986,000 | 181,000 | 152,000 |
-| 12 | 108.5 million | 3.56 million | 2.68 million |
+| 8 | 13,700 | 7,300 | 6,500 |
+| 10 | 986,000 | 210,000 | 168,000 |
+| 12 | 108.5 million | 6.06 million | 4.69 million |
 
-At 8 stops the prune removes less than half of the calls. At 12 it removes 97%, and the saving grows with the size because a bigger tree has more room to cut.
+At 8 stops the prune removes less than half of the calls. At 12 it removes 94%, and the saving grows with the size because a bigger tree has more room to cut.
 
 ## Find a Good Answer Early
 
 The prune is only as strong as the best route found so far. At the start there is none, so no branch can be cut. Finding a good route early makes the cut sharper for the rest of the search.
 
-The last column of the table tries the nearest unvisited stop first at each step. The first complete route is then the greedy nearest neighbor route, which is decent, and later branches are compared against it. That took the 12 stop search from 3.56 million calls to 2.68 million, 25% fewer, with the same answers.
+The last column of the table tries the nearest unvisited stop first at each step. The first complete route is then the greedy nearest neighbor route, which is decent, and later branches are compared against it. That took the 12 stop search from 6.06 million calls to 4.69 million, 23% fewer, with the same answers.
 
 Seeding `best` with the nearest neighbor length in advance gave exactly the same counts, because the ordered search already finds that route first.
 
@@ -72,17 +72,17 @@ if bound >= best:
     return
 ```
 
-A running total makes the sum cost O(1) per call: start with the sum for all stops except the depot, and subtract a stop's value when the path reaches it. We verified the answers against full enumeration on 90 random instances of 7, 8 and 9 stops.
+A running total makes the sum cost O(1) per call: start with the sum for all stops except the depot, and subtract a stop's value when the path reaches it. We verified the answers against full enumeration on 90 random instances of 7, 8 and 9 stops, and the table uses the same instances as the one above.
 
 | Stops | Cost Only | With Bound | Time Saved |
 | --- | --- | --- | --- |
-| 10 | 152,000 | 16,100 | 9 times |
-| 12 | 2.68 million | 150,000 | 16 times |
-| 13 | 12.1 million | 412,000 | 26 times |
+| 8 | 6,500 | 1,700 | 4 times |
+| 10 | 168,000 | 17,300 | 10 times |
+| 12 | 4.69 million | 362,000 | 13 times |
 
 The columns show calls, with nearest first ordering in both. The larger the instance, the more the stronger bound pays. It can also cost more per call, and a bound that takes a lot of time to compute can lose to a weaker one. Textbooks build the bound for this problem from a minimum spanning tree of the unvisited stops, which takes more work per call than our sum of cheapest roads.
 
-How far does it go? On five random instances of 18 stops, the search took between 0.9 and 41 seconds. Brute force would need about five years at our measured speed. The spread is wide, about 44 times between the easiest and hardest of five, because the saving depends on how early a good route shows up.
+How far does it go? On five random instances of 16 stops, our search took between 2.3 and 6.0 seconds, where brute force would need about a week at our measured speed. The spread between instances is more than 2 times, because the saving depends on how early a good route shows up.
 
 The worst case is still exponential, so this is a faster exhaustive search, not a different class of problem.
 
@@ -90,13 +90,13 @@ The worst case is still exponential, so this is a faster exhaustive search, not 
 
 Pruning can also come from the order of decisions. In Sudoku, any empty cell can be filled next. If the search takes the first empty cell each time, it might pick one with six possible digits. If it takes the cell with the fewest possible digits, there are fewer branches, and a cell with no possible digit shows up as a dead end immediately.
 
-We built eight random puzzles with 55 blank cells each and solved them both ways, counting calls. Filling cells in board order took between 212 and 72,097 calls, 84,071 in total. Choosing the cell with the fewest options took between 56 and 406 calls, 920 in total, about 90 times fewer. The rule of thumb is to fail early: make the choice most likely to run out of options first.
+We built eight random puzzles with 55 blank cells each and solved them both ways, counting calls. Filling cells in board order took between 161 and 63,006 calls, 80,001 in total. Choosing the cell with the fewest options took between 56 and 68 calls, 496 in total, about 160 times fewer. The rule of thumb is to fail early: make the choice most likely to run out of options first.
 
 ## A Prune Must Be Safe
 
 A bound that is too eager turns an exact search into a guess. To see this, we pruned a route as soon as its cost reached 90% of the best, on the theory that such routes are unlikely to win.
 
-On 200 random instances of 9 stops, that returned a route longer than the true shortest on 12 of them, up to 4.9% longer. The search was faster, but it no longer answered the question asked.
+On 200 random instances of 9 stops, that returned a route longer than the true shortest on 26 of them, up to 4.0% longer. The search was faster, but it no longer answered the question asked.
 
 Two habits keep a prune safe. State the claim it relies on, such as "distances aren't negative, so extending can't shorten a route". That claim fails if negative values are possible, and the prune then breaks silently. And compare the pruned search with a brute force on small random inputs, as in [Edge Cases and Testing](/algorithms/edge-cases).
 
@@ -110,6 +110,6 @@ That gave 46 solutions for n = 8 with 1,029 calls, against 92 solutions and 2,05
 
 - Prune a branch when no completion can be valid, or none can beat the best known answer
 - A bound is a number no completion can go below, such as the cost so far, and the prune needs it to be a true lower bound
-- Find a good answer early, because the prune compares against it, which cut the 12 stop search by 25%
-- A stronger bound removes more branches but costs more per call, and our cheapest-road bound made 12 stops 16 times faster
+- Find a good answer early, because the prune compares against it, which cut the 12 stop search by about a quarter
+- A stronger bound removes more branches but costs more per call, and our cheapest-road bound made 12 stops 13 times faster
 - Order decisions to fail early, as in Sudoku, and keep every prune safe by testing it against a brute force

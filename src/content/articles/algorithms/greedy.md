@@ -41,19 +41,19 @@ def greedy_coins(coins, amount):
 
 We compared this with an exact table, built the way [Memoization and Tabulation](/algorithms/memoization-tabulation) will describe, for every amount from 1 to 10,000. For the coins 1, 5, 10 and 25, the two agreed on all of them. The euro cent coins, 1, 2, 5, 10, 20 and 50, showed no failure up to 1,000 either.
 
-Then we drew 2,000 random coin systems, each with a 1-cent coin and three others between 2 and 30. Greedy failed on some amount up to 200 in 1,782 of them, or 89%. The pleasant systems we use every day are the exception, and the rule alone doesn't say whether a given set of coins is one of them.
+Then we drew 2,000 random coin systems, each with a 1-cent coin and three others between 2 and 30. Greedy failed on some amount up to 200 in 1,785 of them, or 89%. The pleasant systems we use every day are the exception, and the rule alone doesn't say whether a given set of coins is one of them.
 
 ## When It Doesn't: The Courier Again
 
 The delivery route from [Pruning the Search Space](/algorithms/pruning) has a natural greedy rule: from the current stop, drive to the nearest stop not yet visited. It takes one pass and finds a route instantly.
 
-We ran it on 200 random instances of 10 stops and compared with the exact answer from the pruned search. The nearest stop rule found the shortest route in only 17 of them. On average its route was 11.7% longer, and the worst was 44.8% longer.
+We ran it on 200 random instances of 10 stops, placed at random in a square, and compared with the exact answer. The nearest stop rule found the shortest route in only 31 of them. On average its route was 10.2% longer, and the worst was 48.5% longer.
 
 The rule is cheap and decent, which is why the pruning article used it to get a first good route, but it is a heuristic: there is no guarantee that it is optimal.
 
-Knapsack shows another failure. Choose items with weights and values to fit a bag of limited size, and take items in order of value per unit of weight. We tried this on 2,000 random instances of 10 items, with the bag holding half the total weight, and checked each against all 1,024 subsets.
+Knapsack shows another failure. Choose items with weights and values to fit a bag of limited size, and take items in order of value per unit of weight. We tried this on 2,000 random instances of 10 items, with weights and values from 1 to 100 and the bag holding half the total weight, and checked each against all 1,024 subsets.
 
-The rule fell short of the best value in 684 of them, 34%, by 3.9% on average when it was wrong and 15.5% at worst. The best-ratio item can leave an awkward gap that no other item fills.
+The rule fell short of the best value in 683 of them, 34%, by 3.9% on average when it was wrong and 17.8% at worst. The best-ratio item can leave an awkward gap that no other item fills.
 
 If the items could be cut, so that you may take part of one, the same rule would be optimal, because any space left over is filled by a piece of the next item and nothing is wasted. The 0/1 version has no such fix, and a different method is needed, as in [From Recursion to Dynamic Programming](/algorithms/recursion-to-dp).
 
@@ -95,5 +95,5 @@ A test like this can't prove a rule correct, but a rule that survives thousands 
 - A greedy algorithm makes each choice once by a simple rule, so it is usually a sort plus a pass and costs O(n log n)
 - It is correct when the greedy choice belongs to some optimal solution and the remainder is a smaller copy of the problem
 - The same rule can be right for one input family and wrong for another: largest coin first matched the optimum for 1, 5, 10 and 25 up to 10,000, and failed on 89% of random coin systems
-- Nearest stop first was optimal on only 17 of 200 courier instances, and best ratio first fell short on 34% of 0/1 knapsack instances
+- Nearest stop first was optimal on only 31 of 200 courier instances, and best ratio first fell short on 34% of 0/1 knapsack instances
 - Test a rule against brute force on random small inputs, and then try to prove it

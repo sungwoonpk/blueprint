@@ -2,7 +2,7 @@
 
 The eight queens puzzle asks for eight queens on a chessboard with no two attacking each other. A queen attacks along its row, its column and both diagonals.
 
-The puzzle is old enough that Gauss wrote about it in a letter, and the method he described is the one we use here: place the queens one row at a time, trying the squares of a row from left to right, and keep a square only if the queens already placed don't attack it.
+The puzzle is old enough to have a history. The chess composer Max Bezzel posed it in 1848, Franz Nauck listed all 92 solutions in 1850, and Gauss, who wrote about it in letters that year, had found only 72 of them before he learned of Nauck's list. The method we use is the natural one: place the queens one row at a time, trying the squares of a row from left to right, and keep a square only if the queens already placed don't attack it.
 
 That method is backtracking, and the puzzle is a good place to learn it.
 
