@@ -105,7 +105,7 @@ def fib_matrix(n, m):
 
 The loop is the same as for numbers, with the identity matrix as the starting result. We checked it against the step by step loop and against a third method, based on doubling formulas for Fibonacci numbers, for every n below 600.
 
-Then, modulo 1,000,000,007, F(10⁶) came out as 918,091,266 in 11 µs, the same as the step by step loop gives, and F(10¹⁸) as 209,783,453 in 34 µs, which the doubling method confirmed. The linear loop would never finish for 10¹⁸.
+Then, modulo 1,000,000,007, F(10⁶) came out as 918,091,266 in 11 µs, the same as the step by step loop gives, and F(10¹⁸) as 209,783,453 in 34 µs, which the doubling method confirmed. The linear loop would take decades for 10¹⁸.
 
 The recipe is general: any sequence where the next terms are a fixed linear mix of the last few can be advanced n steps with a matrix power, in log n multiplications of small matrices.
 
