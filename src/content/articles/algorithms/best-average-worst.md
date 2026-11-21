@@ -47,18 +47,18 @@ The same code, on inputs of the same size, falls into two different growth class
 
 The worst case is a promise that holds for any input. The average case is a promise about typical inputs, and it depends on an assumption: what is typical? Think of it as a game: an adversary picks the input to hurt you, and if your bound holds even then, it holds for any input.
 
-That adversary is not imaginary. A hash table is expected to insert n keys in about n steps, because keys spread across buckets. If many keys land in the same bucket, each insert has to walk past the others. We forced that in Python with keys that share one hash value.
+That adversary is not imaginary. A hash table is expected to insert n keys in about n steps, because keys spread across buckets. If many keys land in the same bucket, each insert has to walk past the others. We forced that in a Python dictionary with keys that all share one hash value.
 
 | Keys Inserted | Ordinary Keys | All Keys Collide |
 | --- | --- | --- |
-| 1,000 | 0.02 ms | 15 ms |
-| 2,000 | 0.03 ms | 60 ms |
-| 4,000 | 0.07 ms | 240 ms |
-| 8,000 | 0.15 ms | 960 ms |
+| 1,000 | 0.05 ms | 18 ms |
+| 2,000 | 0.10 ms | 63 ms |
+| 4,000 | 0.18 ms | 244 ms |
+| 8,000 | 0.34 ms | 976 ms |
 
 The ordinary column roughly doubles when the input doubles, and the colliding column quadruples: a linear algorithm turned quadratic by the choice of input.
 
-In 2003, Crosby and Wallach showed this was a practical attack. Programs that keep outside data in hash tables, among them Perl, the Squid proxy and the Bro intrusion detection system, could be pushed into their worst case by input an attacker chose. In their Bro experiment, tens of thousands of crafted packets cost about 45 minutes of processor time, against under one minute for random ones.
+In 2003, Crosby and Wallach showed this was a practical attack. Programs that keep outside data in hash tables, among them Perl, the Squid proxy and the Bro intrusion detection system, could be pushed into their worst case by input an attacker chose. In their Bro experiment, 64,000 crafted packets cost about 45 minutes of processor time, against under one minute for as many random ones.
 
 In December 2011 the same weakness was reported across many languages and web frameworks, since a web server puts request parameters into a hash table. Python made its string hashes random by default in version 3.3, so an attacker can't predict which keys collide.
 
