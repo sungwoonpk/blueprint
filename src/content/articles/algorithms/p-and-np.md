@@ -96,7 +96,7 @@ The reason to draw the line at polynomial time is how differently the two kinds 
 | 50 | 125,000 | 1.1 × 10¹⁵ | 13 days |
 | 100 | 1,000,000 | 1.3 × 10³⁰ | 40 trillion years |
 
-Trying every subset of n numbers for a target sum is a 2ⁿ method, and we measured it: 22 numbers took 8.6 s, and each extra number doubles that. A tour of 100 buildings has about 10¹⁵⁶ orders to try. Checking the answer for either problem is a few lines and a fraction of a millisecond.
+Trying every subset of n numbers for a target sum is a 2ⁿ method, and we measured it: 22 numbers took 3.8 s, and each extra number about doubles that. A tour of 100 buildings has about 10¹⁵⁶ orders to try. Checking the answer for either problem is a few lines and a fraction of a millisecond.
 
 Polynomial time is only a rough boundary. An algorithm that takes n¹⁰⁰ steps is polynomial, and useless. Cook defends the line for natural problems, whose polynomial algorithms tend to have small exponents, and he names a few rare exceptions with enormous constants.
 
