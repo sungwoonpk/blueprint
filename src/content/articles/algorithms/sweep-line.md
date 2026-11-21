@@ -2,7 +2,7 @@
 
 The campus has six study group bookings. Each one reserves a room from a start hour to an end hour: 1 to 5, 2 to 6, 4 to 8, 7 to 9, 8 to 12 and 10 to 13.
 
-How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
+How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging and Inserting Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
 
 ## Starts and Ends as Events
 
@@ -73,7 +73,7 @@ With the ends processed first, the counter drops to 0 before it rises again, and
 
 Sorting the pairs `(time, delta)` puts −1 before +1 at the same time, which gives the half open behavior for free. We ran the version that processes starts first on those three bookings, and it said 2 instead of 1.
 
-If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
+If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging and Inserting Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
 
 ## When the Positions Are Huge
 
