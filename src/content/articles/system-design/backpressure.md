@@ -69,7 +69,7 @@ Queue depth and age are the signals that something upstream should slow down, or
 
 Callers have to obey the signal, and many don't. Take a backend with a limit of 10,000 requests a second that is offered 10,100: naive retries push it to 10,200 and then higher, and cutting the load to 9,000 may not bring it back.
 
-Its rules for clients are a limit of three attempts for each request, a budget that allows retries only while they are below 10 percent of a client's requests, randomized exponential backoff, and retrying only at the layer just above the one that rejected.
+The Google SRE book's rules for clients are a limit of three attempts for each request, a budget that allows retries only while they are below 10 percent of a client's requests, randomized exponential backoff, and retrying only at the layer just above the one that rejected.
 
 Otherwise retries multiply: 4 attempts at each of 3 layers is 64 attempts at the database.
 

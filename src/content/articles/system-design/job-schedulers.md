@@ -47,7 +47,7 @@ If each of the 6 servers has the digest in its crontab, the students get 6 email
 
 The first is the most common. BullMQ's job schedulers define a schedule with `upsertJobScheduler`, with a name and either an interval or a cron pattern. Because it is an upsert, creating the same scheduler on every server at startup doesn't create 6 schedules: it updates or creates it without duplicates.
 
-It also notes that the next job is produced only when the previous one begins processing, so a busy queue can make jobs run less often than the interval says.
+BullMQ's documentation also notes that the next job is produced only when the previous one begins processing, so a busy queue can make jobs run less often than the interval says.
 
 The second is how Quartz, a Java scheduler, works. It uses nodes that share one database, where the first node to get the lock on a trigger fires it:
 
@@ -64,9 +64,10 @@ The second is how Quartz, a Java scheduler, works. It uses nodes that share one 
 <figcaption>All nodes see the trigger, and the database lock lets only one fire it</figcaption>
 </figure>
 
-If a node dies in the middle of a job, the others find the jobs it was running, and run again those marked as needing recovery. Quartz has two limits.
+If a node dies in the middle of a job, the others find the jobs it was running, and run again those marked as needing recovery. Quartz has two limits:
 
-The lock gets slower as nodes are added, beyond about three nodes depending on the database, and the clocks of the nodes must be kept within about a second of each other by a time sync service.
+- **Lock speed**: the lock gets slower as nodes are added, beyond about three nodes depending on the database
+- **Clocks**: the clocks of the nodes must be kept within about a second of each other by a time sync service
 
 ## Missed and Overlapping Runs
 
