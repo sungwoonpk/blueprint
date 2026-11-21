@@ -71,12 +71,12 @@ def halls_needed(requests):
     return halls
 ```
 
-On the six requests it opens hall 1 for A. B starts at 9, while A is still running, so B gets hall 2. C starts at 10 and hall 2 is free then, so C takes it, and so do D and F in turn. E starts at 12, when A's hall is free, so E goes to hall 1. Two halls, the depth.
+The code sorts by start time and then by end time, so on the six requests B comes first and opens hall 1. A also starts at 9, while B is still running, so A opens hall 2. C starts at 10, when hall 1 is free, so C takes it, and so do D and F in turn. E starts at 12, when A's hall 2 is free, so E goes to hall 2. Two halls, the depth.
 
 | Hall | Requests |
 | --- | --- |
-| 1 | A, E |
-| 2 | B, C, D, F |
+| 1 | B, C, D, F |
+| 2 | A, E |
 
 Why does it match the depth? A new hall number d opens only when the request, call it j, finds all d − 1 existing halls busy. Each of those busy halls holds a request that ends after j starts, and each started no later than j, because requests are processed in order of start.
 
