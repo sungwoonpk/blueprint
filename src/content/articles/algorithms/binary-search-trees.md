@@ -101,13 +101,13 @@ def delete(node, key):
 
 ## The Shape Depends on the Order
 
-Everything above costs O(h), and the height depends on the order keys arrive in. Insert 1, 2, 3, 4 and so on in order, and each key goes to the right of the last, making a chain. Insert the same keys in a random order, and the tree comes out bushy. We measured both.
+Everything above costs O(h), and the height depends on the order keys arrive in. Insert 1, 2, 3, 4 and so on in order, and each key goes to the right of the last, making a chain. Insert the same keys in a random order, and the tree comes out bushy. We measured both, taking the mean of 5 random orders for each random row.
 
 | Insertion Order | Items | Height | Average Depth |
 | --- | --- | --- | --- |
-| Random | 1,000 | 21 | 10.2 |
-| Random | 10,000 | 31 | 14.9 |
-| Random | 100,000 | 39 | 19.7 |
+| Random | 1,000 | 21 | 11.2 |
+| Random | 10,000 | 30 | 15.5 |
+| Random | 100,000 | 39 | 20.1 |
 | Sorted | 1,000 | 999 | 499.5 |
 | Sorted | 5,000 | 4,999 | 2,499.5 |
 
@@ -117,9 +117,9 @@ That's the weakness: the structure is only as good as the input order, and sorte
 
 ## How It Compares
 
-We stored 200,000 random keys. Building the tree took 0.34 s in Python. Looking up 100,000 keys took 113 ms in the tree and 4 ms in a dictionary. A plain tree in Python is slower than a built-in hash table for exact lookups, which is the price of being written in the language.
+We stored 200,000 random keys. Building the tree took 0.34 s in Python. Looking up 100,000 keys took 119 ms in the tree and 5 ms in a set. A plain tree in Python is slower than a built-in hash table for exact lookups, which is the price of being written in the language.
 
-Keeping a sorted list with `bisect.insort` took about the same time as building the tree, an estimated 0.3 s, since shifting list items is a fast block copy. The tree pays off when you need order and updates together at a scale where the shifting hurts, and the tree is kept balanced.
+Keeping a sorted list with `bisect.insort` took 3.0 s for the same 200,000 keys, about nine times longer than building the tree, because each insert shifts about half of the list. The tree pays off when you need order and updates together at a scale where that shifting hurts, and when the tree is kept balanced.
 
 | Structure | Find | Insert | Next Larger Key |
 | --- | --- | --- | --- |
