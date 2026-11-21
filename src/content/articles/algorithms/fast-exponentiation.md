@@ -49,15 +49,15 @@ We compared it with Python's built in `pow(a, n, m)` for 20,000 random triples w
 
 ## How Much It Saves
 
-| Exponent n | Bits | Ones | Squarings + Multiplications | Repeated Multiplication |
-| --- | --- | --- | --- | --- |
-| 10 | 4 | 2 | 4 + 2 | 9 |
-| 1,000 | 10 | 6 | 10 + 6 | 999 |
-| 1,000,000 | 20 | 7 | 20 + 7 | 999,999 |
-| 10⁹ | 30 | 13 | 30 + 13 | 999,999,999 |
-| 10¹⁸ | 60 | 24 | 60 + 24 | 10¹⁸ − 1 |
+| Exponent n | Squarings + Multiplications | Repeated Multiplication |
+| --- | --- | --- |
+| 10 | 4 + 2 | 9 |
+| 1,000 | 10 + 6 | 999 |
+| 1,000,000 | 20 + 7 | 999,999 |
+| 10⁹ | 30 + 13 | 999,999,999 |
+| 10¹⁸ | 60 + 24 | 10¹⁸ − 1 |
 
-The number of multiplications is at most about 2 log₂ n. Timing it with m = 1,000,000,007 and base 7:
+The squarings equal the number of bits in n, and the multiplications equal the number of 1 bits, for example 20 and 7 for 1,000,000. The number of multiplications is at most about 2 log₂ n. Timing it with m = 1,000,000,007 and base 7:
 
 | Exponent | Repeated Multiplication | Squaring |
 | --- | --- | --- |
