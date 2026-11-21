@@ -106,9 +106,12 @@ The fixed shape of each URL is both a strength and a weakness. The phone's listi
 <figcaption>One screen, 21 requests: each round trip adds its own wait</figcaption>
 </figure>
 
-This is often called the **N+1** problem, one request plus one per item. Remember from [The Life of a Request](/system-design/life-of-a-request) that each round trip costs time. Done one after another, 21 calls at 60 ms each take over a second. Its opposite is just as common: **over-fetching**, where the response holds 30 fields and the screen shows two. Common fixes, from smallest to largest.
+This is often called the **N+1** problem, one request plus one per item. Remember from [The Life of a Request](/system-design/life-of-a-request) that each round trip costs time. Done one after another, 21 calls at 60 ms each take over a second. Its opposite is just as common: **over-fetching**, where the response holds 30 fields and the screen shows two. Common fixes, from smallest to largest:
 
-One answer is to embed what's usually needed: `GET /listings?include=seller` returns each seller inside its listing. Another is to let the client pick fields, since `?fields=title,price` trims the response. A third is to add an endpoint shaped for the screen, a backend built for one client, sometimes called a backend for frontend. The last is to change the style: let the client describe exactly what it wants, as [GraphQL](/system-design/graphql) does, or use a leaner binary protocol, as in [RPC and gRPC](/system-design/rpc-grpc).
+- **Embed what's usually needed**: `GET /listings?include=seller` returns each seller inside its listing
+- **Let the client pick fields**: `?fields=title,price` trims the response
+- **Add an endpoint shaped for the screen**: a backend built for one client, sometimes called a backend for frontend
+- **Change the style**: let the client describe exactly what it wants, as [GraphQL](/system-design/graphql) does, or use a leaner binary protocol, as in [RPC and gRPC](/system-design/rpc-grpc)
 
 [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) puts these side by side.
 
