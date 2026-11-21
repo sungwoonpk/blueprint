@@ -4,7 +4,7 @@ At the registrar's office, the person who arrived first is served first. Print j
 
 ## First In, First Out
 
-A queue has two main operations. **Enqueue** adds an item at the back, and **dequeue** removes the item at the front. Like a [stack](/algorithms/stacks), each should take O(1) time, since they only touch the ends.
+A queue has two main operations. **Enqueue** adds an item at the back, and **dequeue** removes the item at the front. Like the operations of [Stacks](/algorithms/stacks), each should take O(1) time, since they only touch the ends.
 
 The natural first attempt in Python is a list, with `append` at the back and `pop(0)` at the front. It works, and it is slow, because removing the first item shifts every other item one slot, the same cost as inserting at the front of an array in [Arrays and Dynamic Arrays](/algorithms/arrays). We emptied queues of three sizes both ways.
 
@@ -20,7 +20,7 @@ The list column quadruples when the size doubles, the O(n²) pattern in total. T
 
 A queue needs fast access at both ends. There are two standard designs.
 
-**A linked list with two pointers.** Keep a pointer to the head and one to the tail. Enqueue attaches a node after the tail, and dequeue removes the head. Both are O(1), and the size can grow without any copying. The cost is the usual one for [linked lists](/algorithms/linked-lists): a pointer for each item and scattered memory.
+**A linked list with two pointers.** Keep a pointer to the head and one to the tail. Enqueue attaches a node after the tail, and dequeue removes the head. Both are O(1), and the size can grow without any copying. The cost is the usual one for the lists of [Singly and Doubly Linked Lists](/algorithms/linked-lists): a pointer for each item and scattered memory.
 
 **A circular buffer.** Use an array, and a **head** index that says where the oldest item is. New items go at the position `head + size`, and when an index runs off the end of the array it wraps around to the start.
 
