@@ -8,15 +8,15 @@ That same move, run in the other direction, is how problems are shown to be hard
 
 <figure class="diagram">
 <div class="flow">
-<div class="node">Instance of A</div>
+<div class="node">Input A</div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Convert</div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node">Instance of B</div>
+<div class="node">Input B</div>
 <div class="arrow" aria-hidden="true"></div>
 <div class="node">Solve B</div>
 <div class="arrow" aria-hidden="true"></div>
-<div class="node">Answer for A</div>
+<div class="node">Answer</div>
 </div>
 <figcaption>A reduction from A to B. The converter runs in polynomial time and keeps the answer, so any solver for B becomes a solver for A</figcaption>
 </figure>
