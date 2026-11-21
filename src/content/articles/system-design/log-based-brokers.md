@@ -45,13 +45,13 @@ This breaks the usual contract of a queue, and the case where it matters most is
 
 It helps that disks aren't slow in the way people assume. Disks are slow at seeking and fast at reading and writing in a line.
 
-It quotes a drive array on which linear writes ran at about 600 MB per second while random writes ran at about 100 KB per second, a difference of over 6,000 times. That figure is from older hardware, but the gap between sequential and random access is still the point.
+Kafka's design documentation quotes a drive array on which linear writes ran at about 600 MB per second while random writes ran at about 100 KB per second, a difference of over 6,000 times. That figure is from older hardware, but the gap between sequential and random access is still the point.
 
-A log only appends and only reads forward, so it stays on the fast side. The document lists the other ingredients:
+A log only appends and only reads forward, so it stays on the fast side. The documentation lists the other ingredients:
 
 - **Constant time operations**: Many brokers keep for each message metadata in a tree, where each step can mean a disk seek of about 10 ms. Appending to and reading from a file costs the same however big the log is
 - **The operating system's cache**: Kafka writes to files and relies on the page cache, the free memory the operating system uses for files, which stays warm even if the broker restarts
-- **Batching**: Producers collect messages into batches, for example up to 64 KB or 10 ms, and the broker appends and serves them in chunks. The document says this gives orders of magnitude of speed up, and it connects to our own measurement in [Write-Ahead Logs](/system-design/write-ahead-logs), where flushing once for 100 records was about 80 times faster than flushing for each record
+- **Batching**: Producers collect messages into batches, for example up to 64 KB or 10 ms, and the broker appends and serves them in chunks. The documentation says this gives orders of magnitude of speed up, and it connects to our own measurement in [Write-Ahead Logs](/system-design/write-ahead-logs), where flushing once for 100 records was about 80 times faster than flushing for each record
 - **Zero copy**: When the data is not encrypted in the broker's process, the operating system sends it from the page cache to the network card directly, one copy instead of four, so consumers who are caught up cause no disk reads at all
 
 These are the same ideas as in [LSM Trees](/system-design/lsm-trees): write in a line, batch, and let the operating system do the caching.
@@ -85,7 +85,7 @@ With compaction a log holds the full current state and not only recent changes. 
 
 ## Pull, Not Push
 
-Kafka consumers pull. They send fetch requests that include their offset. The design document gives the reasons. A broker that pushes controls the rate, so a slow consumer is overwhelmed, whereas a consumer that pulls takes what it can handle. Pulling also batches well, since the consumer takes everything after its position, up to a limit.
+Kafka consumers pull. They send fetch requests that include their offset. Kafka's design documentation gives the reasons. A broker that pushes controls the rate, so a slow consumer is overwhelmed, whereas a consumer that pulls takes what it can handle. Pulling also batches well, since the consumer takes everything after its position, up to a limit.
 
 The weakness of pulling is a tight loop of polling an empty log, which a long poll solves by letting the request wait until data arrives. This is the shape that makes [Backpressure](/system-design/backpressure) natural: a consumer that falls behind simply has more lag, and the log holds the difference.
 

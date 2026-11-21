@@ -86,7 +86,7 @@ The same holds when messages have a primary key: updates are idempotent, since r
 
 Its consumer position is itself stored as a message in an internal topic, so a transaction can write the output and the new offset together, and consumers that read in `read_committed` mode don't see the output of an aborted transaction. Kafka Streams uses this for exactly once processing.
 
-For a destination outside Kafka, the document says this takes cooperation from the destination.
+For a destination outside Kafka, Kafka's documentation says this takes cooperation from the destination.
 
 Its suggestion is not a two phase commit, which many outputs don't support, but to store the offset in the same place as the output, the way a connector that writes to HDFS stores the offsets with the data, so that both change together or not at all.
 

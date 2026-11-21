@@ -64,7 +64,7 @@ One gap remains, and it is the problem from [Delivery Guarantees and Exactly Onc
 
 ## Activities, Retries and Timeouts
 
-The engine takes over the retry logic of each step. Temporal retries an activity automatically with exponential backoff unless told otherwise. AWS Step Functions, a managed service where the process is a state machine described in JSON, makes the policy explicit in each step. The defaults the two documents state:
+The engine takes over the retry logic of each step. Temporal retries an activity automatically with exponential backoff unless told otherwise. AWS Step Functions, a managed service where the process is a state machine described in JSON, makes the policy explicit in each step. The defaults that the two products' documentation states:
 
 | Setting | Temporal Default | Step Functions Default |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ Prefer choreography for simple workflows and few services, as in [Event-Driven A
 
 An engine isn't free. Temporal limits the history: a warning at 10,240 events, and termination of the execution beyond 51,200. For a process that runs for a long time, the answer is to start a fresh execution with a feature called Continue-As-New.
 
-It also says long running workflows can run into versioning problems, because code that changes while an old execution is still replaying must stay compatible with its history.
+Temporal's documentation also says long running workflows can run into versioning problems, because code that changes while an old execution is still replaying must stay compatible with its history.
 
 Step Functions shows the pricing side. Its Standard workflows run up to a year, with each step executed exactly once and pricing per state transition.
 

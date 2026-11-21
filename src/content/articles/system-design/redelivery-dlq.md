@@ -10,7 +10,7 @@ Not every failure is the same kind. Transient faults and permanent ones need dif
 
 A permanent failure, such as a business rule that rejects the data or a message that can't be parsed, will fail on every attempt, and retrying it wastes time and resources.
 
-For HTTP calls, the same page treats 429 and the 5xx errors as worth retrying, and most other 4xx errors, such as 400 or 404, as not.
+For HTTP calls, the usual rule treats 429 and the 5xx errors as worth retrying, and most other 4xx errors, such as 400 or 404, as not.
 
 A broker can't tell the two apart from outside. It only sees "not confirmed" and offers the message again, and a message put back after failures can cycle forever.
 

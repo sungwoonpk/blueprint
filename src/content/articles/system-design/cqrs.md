@@ -97,9 +97,12 @@ Two stores mean the read side trails the write side, a delay called eventual con
 
 A seller who posts a listing and sees the next page 100 ms later would miss it in 60.8 percent of the posts. After 1 second, 0.65 percent still missed it, and after 2 seconds, 0.01 percent.
 
-The numbers depend on our assumed delay, and the shape holds: most readers see the change soon and a few see the old page. The usual remedies follow.
+The numbers depend on our assumed delay, and the shape holds: most readers see the change soon and a few see the old page. The usual remedies:
 
-The response to `PostListing` can carry the new listing, so the page shows it without asking the read side. A user interface can show pending work, listing the commands still being processed, so the user sees that the change was accepted. A command that fails after it was accepted is reported by a notification, since it can't answer at once. And one more remedy is to read from the write side for a moment: after a user's own write, serve that user's next read from the write store.
+- **Return the new listing in the response** to `PostListing`, so the page shows it without asking the read side
+- **Show pending work**: a user interface can list the commands still being processed, so the user sees that the change was accepted
+- **Report late failures**: a command that fails after it was accepted is reported by a notification, since it can't answer at once
+- **Read from the write side for a moment**: after a user's own write, serve that user's next read from the write store
 
 A similar point for commands: validate in the client where possible, so most commands succeed, and queue the rest. The design has to expect that a user may act on stale data and decide what happens then.
 
@@ -107,13 +110,15 @@ A similar point for commands: validate in the client where possible, so most com
 
 For most systems CQRS adds risky complexity, and most systems fit a plain create, read, update and delete model.
 
-He says most of the cases he has met went badly, and advises using it in a part of a system, within one bounded context, and not across the whole. Two models, a projector, a queue and a lag to manage are a lot to run.
+Martin Fowler says most of the cases he has met went badly, and advises using it in a part of a system, within one bounded context, and not across the whole. Two models, a projector, a queue and a lag to manage are a lot to run.
 
 He also names a lighter option: if just some queries are heavy, copy data to a reporting database and keep everything else as it was.
 
-The cost is worth it in a few cases.
+The cost is worth it in a few cases:
 
-It pays when many people change the same data, as in collaborative environments and task based screens. It pays when reads and writes have different needs, such as workloads that read much more than they write and need to scale separately. And it pays for queries across services, where one query needs data from several services that each own theirs. A view database is one answer, and API composition, which calls the services and joins the results, is the alternative.
+- **Many people change the same data**, as in collaborative environments and task based screens
+- **Reads and writes have different needs**, such as workloads that read much more than they write and need to scale separately
+- **Queries across services**, where one query needs data from several services that each own theirs. A view database is one answer, and API composition, which calls the services and joins the results, is the alternative
 
 Skip it when the domain and the rules are simple. In the textbook app, the listing search is a fit: many more reads than writes, and a shape that differs from the tables. The seller's profile page is a plain table that one model handles.
 

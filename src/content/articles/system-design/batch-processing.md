@@ -128,7 +128,7 @@ A rerun of the same day produces the same table, not twice the rows.
 
 The last few tasks decide when a job ends, and one slow machine can hold the whole run. Google saw machines with a bad disk that read at 1 MB a second instead of 30, and a bug that slowed some by more than a factor of 100.
 
-Its answer is backup tasks: near the end, the master starts a second copy of each task still running, and takes whichever finishes first. This adds no more than a few percent of extra work, and Google's 1 terabyte sort took 44 percent longer with backups switched off.
+Google's answer is backup tasks: near the end, the master starts a second copy of each task still running, and takes whichever finishes first. This adds no more than a few percent of extra work, and Google's 1 terabyte sort took 44 percent longer with backups switched off.
 
 We simulated 200 tasks of 100 seconds on 20 workers, one of them 10 times slower. Without backups the job took 2,000 seconds, since the slow worker held a task for 1,000 seconds and then took another.
 

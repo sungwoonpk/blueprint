@@ -72,7 +72,7 @@ Sidekiq's best practices say plainly that a job runs at least once, never exactl
 
 Deploys are another time when workers stop. The twelve factor guidelines say a worker that gets a shutdown signal should return its current job to the queue, as with a negative acknowledgement in RabbitMQ, and that jobs should be written so that doing one twice is safe, usually by a transaction or by making the operation idempotent.
 
-For sudden death, it relies on a queue that returns jobs when a worker disconnects or times out.
+For sudden death, the guidelines rely on a queue that returns jobs when a worker disconnects or times out.
 
 ## Time Limits and Rate Limits
 

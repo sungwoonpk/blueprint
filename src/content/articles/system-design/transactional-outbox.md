@@ -81,7 +81,7 @@ The relay can crash after publishing a row and before recording that it did. Whe
 
 The row's id makes this possible: Debezium puts it in an `id` header that can be used to remove duplicates. The techniques are those of [Delivery Guarantees and Exactly Once Processing](/system-design/delivery-guarantees), and some queues accept the row id as a deduplication id.
 
-On the consumer side, The matching pattern is the **inbox**. The consumer stores the message's key and does its work in one transaction, so a repeat finds the key and is skipped:
+On the consumer side, the matching pattern is the **inbox**. The consumer stores the message's key and does its work in one transaction, so a repeat finds the key and is skipped:
 
 ```sql
 BEGIN;
@@ -91,7 +91,7 @@ VALUES ('email-service', 'c0a8-77e1');       -- fails on a repeat
 COMMIT;
 ```
 
-Its advice has details that catch people out. Use the id the producer assigned, which stays the same on each redelivery, and not an id the transport generates or a correlation id. Put the consumer's name in the key when several consumers share one table, or the first would hide each message from the rest.
+The inbox pattern has details that catch people out. Use the id the producer assigned, which stays the same on each redelivery, and not an id the transport generates or a correlation id. Put the consumer's name in the key when several consumers share one table, or the first would hide each message from the rest.
 
 Rely on a uniqueness constraint, since checking and then inserting in two steps lets two concurrent consumers both pass. And keep the records at least as long as the broker can redeliver the message, remembering that an operator can resubmit a dead letter long after the normal window.
 
