@@ -97,7 +97,9 @@ We reproduced each in turn.
 
 **Subtraction.** With 32 bit integers, 2,000,000,000 minus −2,000,000,000 should be 4,000,000,000, which does not fit, so it wraps around to −294,967,296. A comparator that returns the difference says the larger number is smaller. Sorting 2,000,000,000, −2,000,000,000, 5 and 0 with it gave 0, 2,000,000,000, −2,000,000,000, 5. Python's integers don't overflow, so we emulated 32 bit arithmetic, which is what Java's `int` uses.
 
-**Less or equal.** We sorted the records (1, a), (1, b), (1, c), (0, d), (1, e) by their first value with a comparator that returned "first" on ties. The result was (0, d), (1, e), (1, c), (1, b), (1, a), with the equal items in reverse order, where a stable sort keeps them in the order a, b, c, e. Some libraries react more harshly. Java's documentation says a sort may throw an exception when it detects a comparator that breaks the contract, and Rust's may panic.
+**Less or equal.** We sorted the records (1, a), (1, b), (1, c), (0, d), (1, e) by their first value with a comparator that returned "first" on ties. The result was (0, d), (1, e), (1, c), (1, b), (1, a), with the equal items in reverse order, where a stable sort keeps them in the order a, b, c, e.
+
+Some libraries react more harshly. Java's documentation says a sort may throw an exception when it detects a comparator that breaks the contract, and Rust's may panic.
 
 **NaN.** `sorted([3, nan, 1, 2])` in Python returns `[3, nan, 1, 2]`, which is not sorted, and other input orders give other nonsense, because every comparison with NaN is false. The documentation for Python's sorting advises removing NaN values first.
 

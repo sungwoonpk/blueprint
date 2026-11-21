@@ -98,7 +98,9 @@ Two points on the same side of the line are at least δ apart, and a square that
 <figcaption>Eight points on a grid, x from 0 to 7 across and y from 0 to 4 up. The dividing line sits between columns 3 and 4, and the tinted columns are the strip. The closest pair, D and E, crosses the line</figcaption>
 </figure>
 
-In the figure, the left half A, B, C, D has its closest pair about 2.24 apart, and the right half E, F, G, H has its closest pair exactly 2 apart, so δ = 2. The strip holds C, D, E and F for the line drawn in the figure. In order of y they are F, D, E, C. Checking neighbors finds D and E at distance √2, about 1.41, closer than either half. That is the answer. The code below measures from x = 4, the first point of the right half, which keeps D, E and F, and that is enough, since any crossing pair closer than δ has both points within δ of that x.
+In the figure, the left half A, B, C, D has its closest pair about 2.24 apart, and the right half E, F, G, H has its closest pair exactly 2 apart, so δ = 2. The strip holds C, D, E and F for the line drawn in the figure. In order of y they are F, D, E, C.
+
+Checking neighbors finds D and E at distance √2, about 1.41, closer than either half. That is the answer. The code below measures from x = 4, the first point of the right half, which keeps D, E and F, and that is enough, since any crossing pair closer than δ has both points within δ of that x.
 
 ```python
 import math

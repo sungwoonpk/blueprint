@@ -86,7 +86,9 @@ Two practical points come up when you convert.
 
 **Order.** A stack gives the last item pushed first. If the recursion visited children left to right, push them in reverse order so the first child ends on top. For a sum, which doesn't care, the order doesn't matter. For [Depth-First Search](/algorithms/depth-first-search), it can.
 
-**Cost.** The time is the same, because the same work happens in the same number of steps. On a wide tree with 200,000 folders, the recursive version took 15.2 ms and the loop 15.6 ms, so there is no speed to gain. Memory is the same order too: the stack holds as many entries as the recursion would have frames. The difference is where it lives. The call stack has a small fixed size, and your list can use as much memory as the machine has.
+**Cost.** The time is the same, because the same work happens in the same number of steps. On a wide tree with 200,000 folders, the recursive version took 15.2 ms and the loop 15.6 ms, so there is no speed to gain. Memory is the same order too: the stack holds as many entries as the recursion would have frames.
+
+The difference is where it lives. The call stack has a small fixed size, and your list can use as much memory as the machine has.
 
 ## When It Matters
 

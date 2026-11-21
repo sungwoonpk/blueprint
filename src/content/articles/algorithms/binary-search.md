@@ -129,7 +129,9 @@ Java's version doesn't promise which duplicate it finds, and its encoding of a m
 
 Binary search leans on three assumptions, and breaking any of them gives wrong answers without an error.
 
-**The list must be sorted by the same rule you compare with.** We sorted four names the default way, which puts uppercase letters first: Bob, Carol, alice, dave. Then we searched for each name with a comparison that ignores case. Bob, Carol and `dave` were found, but `alice` was reported missing even though it is in the list: the first look at Carol said the target belongs to the left, where the list has no `alice`, because the middle checks assumed an order that the list didn't have. Sorting with the case-insensitive key fixed all four.
+**The list must be sorted by the same rule you compare with.** We sorted four names the default way, which puts uppercase letters first: Bob, Carol, alice, dave. Then we searched for each name with a comparison that ignores case.
+
+Bob, Carol and `dave` were found, but `alice` was reported missing even though it is in the list: the first look at Carol said the target belongs to the left, where the list has no `alice`, because the middle checks assumed an order that the list didn't have. Sorting with the case-insensitive key fixed all four.
 
 **It needs fast access by position.** An array gives the middle in one step. On a linked list, reaching the middle costs a walk, and Java's documentation says that a binary search of a list without fast positional access does a number of link traversals proportional to n, along with only log n comparisons. The advantage disappears.
 

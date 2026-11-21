@@ -28,8 +28,8 @@ The median splits the sorted data into a lower half and an upper half. Everythin
 
 Keep the halves balanced in size, so that the lower half has the same number of items as the upper half or one more. Then the median is:
 
-- the top of the lower half, when the total count is odd
-- the average of the two tops, when the count is even
+- The top of the lower half, when the total count is odd
+- The average of the two tops, when the count is even
 
 Python's `heapq` only provides min-heaps, so the lower half stores negated values, which turns the smallest negative into the largest value.
 
