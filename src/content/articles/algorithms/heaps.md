@@ -92,12 +92,12 @@ The surprise is that this is O(n) in total. Half of the nodes are leaves and nee
 
 | Items | n Pushes | Heapify |
 | --- | --- | --- |
-| 1,000 | 2.20 per item | 1.87 per item |
+| 1,000 | 2.32 per item | 1.88 per item |
 | 100,000 | 2.28 per item | 1.88 per item |
 
 Heapify stays under about 2 comparisons per item however large the input grows, and Python's `heapq.heapify` is documented as linear. On random data the pushes were also cheap, because a random item rarely floats far.
 
-The cost is worse on adversarial input: pushing numbers in descending order, so each new one is the smallest so far, cost 8.0 comparisons per item at 1,000 items and 14.7 at 100,000, close to log₂ n. For a million numbers, `heapify` took 18 ms and pushing one by one took 44 ms.
+The cost is worse on adversarial input: pushing numbers in descending order, so each new one is the smallest so far, cost 8.0 comparisons per item at 1,000 items and 14.7 at 100,000, close to log₂ n. For a million numbers, `heapify` took 18 ms and pushing one by one took 63 ms.
 
 ## Priority Queues in Practice
 
