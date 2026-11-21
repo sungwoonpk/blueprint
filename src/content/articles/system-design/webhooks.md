@@ -63,9 +63,11 @@ def verify(secret, header, body):
     return hmac.compare_digest(expected, sig)  # constant time
 ```
 
-Three details matter.
+Three details matter:
 
-Use the raw bytes of the body, since parsing the JSON and serializing it again can change it and break the match. Compare in constant time, since an ordinary `==` can leak how many characters matched. And protect the secret: keep it out of code and logs, and rotate it when needed. Stripe lets the old secret keep working for a while after a rotation, so nothing breaks in between.
+- **Use the raw bytes of the body**: parsing the JSON and serializing it again can change it and break the match
+- **Compare in constant time**: an ordinary `==` can leak how many characters matched
+- **Protect the secret**: keep it out of code and logs, and rotate it when needed. Stripe lets the old secret keep working for a while after a rotation, so nothing breaks in between
 
 For anything that matters, treat the event as a doorbell and not as the final word. If it says order 311 was paid, you can ask the provider's API for the current state of that payment before shipping the book. Stripe's newer "thin" events are designed for exactly that, carrying only ids.
 
@@ -146,13 +148,15 @@ Delivery can still fail for good, since an endpoint may be down for longer than 
 
 ## When You Are the Sender
 
-Now turn it around. A campus bookstore wants to know when a listing sells, and we agree to send it a webhook. The design is mostly the lessons above, seen from our side.
+Now turn it around. A campus bookstore wants to know when a listing sells, and we agree to send it a webhook. The design is mostly the lessons above, seen from our side:
 
-Registration comes first: the partner gives a URL and picks event types, and we create a signing secret for that endpoint alone. The event has a stable shape, with an id that stays the same across retries, a type, a timestamp and a small payload. Standard Webhooks suggests keeping it under about 20 KB, and sending ids for the rest to fetch. Each delivery is signed, so the partner can verify it, and carries a timestamp.
-
-The failure rules are strict: treat anything other than a 2xx as a failure, including timeouts and redirects. Slow down on 429, 502 and 504, honor `Retry-After`, and stop for good when an endpoint answers 410 Gone. Retries use backoff with jitter, growing waits with a little randomness added, over days, from a queue, with one line per attempt in a delivery log. Give the partner a way to see the log and resend an event.
-
-Disable dead endpoints: after days of failures, tell the owner by email and stop sending, so one broken URL isn't retried forever. And isolate partners, so one slow partner doesn't hold up the others. Each endpoint gets its own queue or limit, the idea behind [Bulkheads](/system-design/bulkheads).
+- **Registration**: the partner gives a URL and picks event types, and we create a signing secret for that endpoint alone
+- **A stable event shape**: an id that stays the same across retries, a type, a timestamp and a small payload. Standard Webhooks suggests keeping it under about 20 KB, and sending ids for the rest to fetch
+- **Signed deliveries**: each one is signed, so the partner can verify it, and carries a timestamp
+- **Strict failure rules**: treat anything other than a 2xx as a failure, including timeouts and redirects. Slow down on 429, 502 and 504, honor `Retry-After`, and stop for good when an endpoint answers 410 Gone
+- **Retries with backoff and jitter**: growing waits with a little randomness added, over days, from a queue, with one line per attempt in a delivery log. Give the partner a way to see the log and resend an event
+- **Disabling dead endpoints**: after days of failures, tell the owner by email and stop sending, so one broken URL isn't retried forever
+- **Isolating partners**: one slow partner shouldn't hold up the others, so each endpoint gets its own queue or limit, the idea behind [Bulkheads](/system-design/bulkheads)
 
 One more risk is specific to senders. The partner chooses the URL, and our server will call whatever it says.
 

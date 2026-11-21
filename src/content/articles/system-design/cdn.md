@@ -149,9 +149,7 @@ Netflix's Open Connect shows how far the idea goes. Netflix places its own serve
 
 It works with over 1,000 providers. A viewer's stream can then come from a server inside their own provider's network, without crossing the wider internet.
 
-Netflix doesn't wait for a first miss, either.
-
-The appliances are filled with the titles likely to be watched in their area ahead of time, with fills sent in off hours. This is a **push** style: you place the copies in advance, and it works because what people will watch is fairly predictable.
+Netflix doesn't wait for a first miss, either. The appliances are filled with the titles likely to be watched in their area ahead of time, with fills sent in off hours. This is a **push** style: you place the copies in advance, and it works because what people will watch is fairly predictable.
 
 Most CDNs use a **pull** style, where the edge fetches a file the first time someone asks, which is simpler and needs no prediction.
 

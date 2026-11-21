@@ -98,19 +98,25 @@ The second query looks like `SELECT * FROM users WHERE id IN (7, 12, 31, ...)`. 
 
 ## Other Costs
 
-The flexibility that helps clients also removes some defaults that REST gives for free, and the first to go is caching. All requests go to one URL, usually as a POST, so the browser and CDN caching from [How HTTP Works](/system-design/http) don't apply on their own. Teams get some of it back with persisted queries, where the client sends the id of a query the server already knows, which can travel as a GET and be cached, and with caching by field inside the server.
+The flexibility that helps clients also removes some defaults that REST gives for free:
 
-The second cost is that queries can be expensive. Nothing stops a client from asking for listings, each with its seller, each with that seller's other listings, several levels deep. Servers set limits on depth, give each field a cost, and refuse a query over budget before running it. For the same reason, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) counts query cost and not just requests.
-
-Errors are the third. A response can carry both data and an `errors` list when some of the fields fail, and the usual practice is to answer 2xx, normally 200, whenever the query ran and produced data. Just a request that can't run at all, such as an invalid query, gets a 4xx. A dashboard that watches status codes, as in [Logs, Metrics and Traces](/system-design/observability), misses failures unless it also looks inside the body.
-
-The last is access control. Any field can be requested from anywhere in the query, so each resolver has to check who is asking, as in [Authentication and Authorization](/system-design/authn-authz). Many teams also switch off the schema browsing feature, called introspection, in production.
+- **Caching**: all requests go to one URL, usually as a POST, so the browser and CDN caching from [How HTTP Works](/system-design/http) don't apply on their own. Teams get some of it back with persisted queries, where the client sends the id of a query the server already knows, which can travel as a GET and be cached, and with caching by field inside the server
+- **Expensive queries**: nothing stops a client from asking for listings, each with its seller, each with that seller's other listings, several levels deep. Servers set limits on depth, give each field a cost, and refuse a query over budget before running it. For the same reason, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) counts query cost and not just requests
+- **Errors inside a 200**: a response can carry both data and an `errors` list when some of the fields fail, and the usual practice is to answer 2xx, normally 200, whenever the query ran and produced data. Only a request that can't run at all, such as an invalid query, gets a 4xx. A dashboard that watches status codes, as in [Logs, Metrics and Traces](/system-design/observability), misses failures unless it also looks inside the body
+- **Access control**: any field can be requested from anywhere in the query, so each resolver has to check who is asking, as in [Authentication and Authorization](/system-design/authn-authz). Many teams also switch off the schema browsing feature, called introspection, in production
 
 ## When It Fits
 
-GraphQL pays off when several clients need different data, such as a phone, a website and a watch app that each want a different slice. It pays off when the data is richly connected, as listings, sellers, messages and reviews are, and are read together in many combinations. It helps when screens change often, because front end teams can adjust their queries without waiting for a new endpoint, and when many backends sit behind one API, which it presents as a single one.
+GraphQL pays off when:
 
-It is less attractive for a small API with one client, where a few REST endpoints are simpler, for public APIs that outsiders want to try with `curl` and cache at a CDN, and for teams not ready to run the extra pieces: batching, cost limits and query monitoring. Plenty of systems keep REST or gRPC inside and add GraphQL as the layer that front ends talk to, often in an [API Gateway](/system-design/api-gateways). [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) compares the three directly.
+- **Several clients need different data**: a phone, a website and a watch app each want a different slice
+- **The data is richly connected**: listings, sellers, messages and reviews are read together in many combinations
+- **Screens change often**: front end teams can adjust their queries without waiting for a new endpoint
+- **Many backends sit behind one API**: GraphQL presents them as a single one
+
+It is less attractive for a small API with one client, where a few REST endpoints are simpler. It is also a weaker fit for public APIs that outsiders want to try with `curl` and cache at a CDN, and for teams not ready to run the extra pieces: batching, cost limits and query monitoring.
+
+Plenty of systems keep REST or gRPC inside and add GraphQL as the layer that front ends talk to, often in an [API Gateway](/system-design/api-gateways). [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) compares the three directly.
 
 ## Key Points
 

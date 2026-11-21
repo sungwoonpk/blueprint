@@ -91,9 +91,9 @@ If the charge fails, the listing already says sold. Someone has to write the com
 
 ## Start With a Monolith
 
-The "MonolithFirst" argument is worth remembering. Most of the successful microservice systems began as a monolith that grew too big and was split, and most of the ones built as microservices from the start ran into serious trouble.
+Martin Fowler's "MonolithFirst" argument is worth remembering. Most of the successful microservice systems began as a monolith that grew too big and was split, and most of the ones built as microservices from the start ran into serious trouble.
 
-His reasoning is that you don't know the right boundaries early, and moving a boundary inside one program is a refactoring, while moving it between services is a project.
+Fowler's reasoning is that you don't know the right boundaries early, and moving a boundary inside one program is a refactoring, while moving it between services is a project.
 
 His follow up on the "microservice premium" gives the rule of thumb: the extra cost is only worth paying when the system is too complex to manage as one. For the textbook app, that is far off. The national scale in [Estimating Capacity](/system-design/estimation) needed about six identical servers, which is a monolith question, not a microservice one.
 

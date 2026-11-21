@@ -51,9 +51,11 @@ Look at the pattern. Operations that say "make it this way" are idempotent, and 
 
 ## Make the Operation Idempotent
 
-The best fix is to design the action so repeating it is naturally harmless. Three techniques do it.
+The best fix is to design the action so repeating it is naturally harmless. Three techniques do it:
 
-Set, don't add: store `status = sold` and not a "sold count", and send the final price, not "lower the price by 5". Let the client choose the id: `PUT /orders/c1d9...` creates the order or replaces it with the same content, so a repeat lands on the same row. And let the database refuse duplicates, since a unique constraint turns a second insert into a harmless no-op.
+- **Set, don't add**: store `status = sold` and not a "sold count", and send the final price, not "lower the price by 5"
+- **Let the client choose the id**: `PUT /orders/c1d9...` creates the order or replaces it with the same content, so a repeat lands on the same row
+- **Let the database refuse duplicates**: a unique constraint turns a second insert into a harmless no-op
 
 ```sql
 INSERT INTO reservations (listing_id, buyer_id)

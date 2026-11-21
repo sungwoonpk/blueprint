@@ -1,6 +1,6 @@
 > A **rate limiter** decides, for each request, whether the client is still within its allowance. The algorithms differ in how they count and in how they treat bursts.
 
-An [API Gateways](/system-design/api-gateways) is a natural place to limit traffic, and [Idempotency and Safe Retries](/system-design/idempotency) showed clients that retry. This topic is about what a limiter does with each request. The next, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), covers running one across many servers.
+[API Gateways](/system-design/api-gateways) are a natural place to limit traffic, and [Idempotency and Safe Retries](/system-design/idempotency) showed clients that retry. This topic is about what a limiter does with each request. The next, [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), covers running one across many servers.
 
 ## Why Limit at All
 

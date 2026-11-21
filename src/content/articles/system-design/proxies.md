@@ -38,11 +38,12 @@ The HTTP standard, [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html), draw
 
 ## Forward Proxies
 
-A campus network might send its web traffic through one proxy. That gives the network a place to do things no single laptop can.
+A campus network might send its web traffic through one proxy. That gives the network a place to do things no single laptop can:
 
-It can filter and log, blocking sites and recording who asked for what. It can cache for the whole campus: when 500 students download the same file, the proxy fetches it once, which is what Squid, a long standing open source caching proxy, is built for. It hides the client, since the website sees the proxy's address and not the student's.
-
-It can also control outbound traffic from servers. A production server in a private network can be allowed to reach a short list of hosts, through a proxy that enforces the list, which also helps against the server side request forgery from [Webhooks](/system-design/webhooks).
+- **Filter and log**: block sites and record who asked for what
+- **Cache for the whole campus**: when 500 students download the same file, the proxy fetches it once, which is what Squid, a long standing open source caching proxy, is built for
+- **Hide the client**: the website sees the proxy's address and not the student's
+- **Control outbound traffic from servers**: a production server in a private network can be allowed to reach a short list of hosts, through a proxy that enforces the list, which also helps against the server side request forgery from [Webhooks](/system-design/webhooks)
 
 HTTPS raises a question: if everything is encrypted, how does a proxy pass it along? The client asks the proxy to open a tunnel, with a request called CONNECT. After that the proxy just relays bytes:
 
@@ -57,13 +58,14 @@ The TLS handshake from [TLS and HTTPS](/system-design/tls-https) then happens in
 
 ## Reverse Proxies
 
-For a system we build, the reverse proxy matters more. It is the one public front door, and the servers behind it can stay private. A single front door can do many jobs, which is why most real deployments have one.
+For a system we build, the reverse proxy matters more. It is the one public front door, and the servers behind it can stay private. A single front door can do many jobs, which is why most real deployments have one:
 
-It ends TLS, keeping certificates in one place, as in "Where the Encryption Ends" in [TLS and HTTPS](/system-design/tls-https). It spreads load by picking one of several servers, which [Load Balancers](/system-design/load-balancers) covers in depth, and it routes by path or host, sending `/api/` to one group of servers and `/photos/` to another.
-
-It can cache, answering popular requests without bothering the servers, using the headers from [How HTTP Works](/system-design/http). It compresses and buffers: it shrinks responses and soaks up slow clients. A phone on a weak connection can take seconds to send a request, and the proxy absorbs that wait so an application server isn't tied up.
-
-And it protects, limiting request rates, dropping malformed requests and hiding the servers' real addresses, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) and [DDoS Protection](/system-design/ddos).
+- **Ends TLS**: certificates stay in one place, as in "Where the Encryption Ends" in [TLS and HTTPS](/system-design/tls-https)
+- **Spreads load**: it picks one of several servers, which [Load Balancers](/system-design/load-balancers) covers in depth
+- **Routes**: by path or host, sending `/api/` to one group of servers and `/photos/` to another
+- **Caches**: it answers popular requests without bothering the servers, using the headers from [How HTTP Works](/system-design/http)
+- **Compresses and buffers**: it shrinks responses and soaks up slow clients. A phone on a weak connection can take seconds to send a request, and the proxy absorbs that wait so an application server isn't tied up
+- **Protects**: it limits request rates, drops malformed requests and hides the servers' real addresses, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) and [DDoS Protection](/system-design/ddos)
 
 <figure class="diagram">
 <div class="flow">
