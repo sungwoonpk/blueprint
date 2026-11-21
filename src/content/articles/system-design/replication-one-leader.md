@@ -34,9 +34,10 @@ Redis uses a replication ID and an offset that grows with each byte of its strea
 
 ## Synchronous or Asynchronous
 
-When does the leader tell the client that a write is done? There are two answers, and they trade safety for speed.
+When does the leader tell the client that a write is done? There are two answers, and they trade safety for speed:
 
-With asynchronous replication, the leader commits, answers at once, and ships the log in the background. It is fast, and the writes still in flight when the leader dies are lost. This is the default in MySQL, PostgreSQL and Redis. With synchronous replication, the leader waits until a follower has the change. A single follower slows each commit, and a follower that stops answering can stall writes entirely.
+- **Asynchronous**: the leader commits, answers at once, and ships the log in the background. It is fast, and the writes still in flight when the leader dies are lost. This is the default in MySQL, PostgreSQL and Redis
+- **Synchronous**: the leader waits until a follower has the change. A single follower slows each commit, and a follower that stops answering can stall writes entirely
 
 PostgreSQL offers levels in `synchronous_commit`: wait for the standby to write the commit record to disk, or just to receive it, or to replay it so that queries can see it. Its `synchronous_standby_names` is empty by default, meaning no synchronous standbys.
 
