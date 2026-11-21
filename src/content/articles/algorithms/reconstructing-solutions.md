@@ -61,7 +61,7 @@ This takes a few comparisons for each step of the walk, and no memory beyond the
 
 We tested both on every amount from 0 to 300 with the coins 1, 3 and 4. Each rebuilt list added up to the amount, had exactly the number of coins in the table, and used only coins from the set. For an amount of 200,000, the table and the choice array took 0.04 s together.
 
-Rebuilding from the choice array took 1.2 ms, giving 50,000 coins, and rebuilding from the table alone took 8.3 ms. Each list took 1.6 MB for its pointers.
+Rebuilding from the choice array took 1.2 ms, giving 50,000 coins, and rebuilding from the table alone took 8.3 ms. Each list of 50,000 coins took 0.4 MB.
 
 ## Choosing the Path for the Days
 

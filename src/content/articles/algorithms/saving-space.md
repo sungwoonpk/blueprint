@@ -6,7 +6,7 @@ Time and memory are different resources. The table is quadratic in size, and it 
 
 ## Which Cells Are Still Needed
 
-Look at where each cell gets its value. In the common subsequence table, a cell reads the cell above it, the cell to its left, and the one above and to the left. All three are in the current row or the row immediately above. Once row i is finished, row i − 1 is never read again, and nothing older was needed since row i − 1 was done.
+Look at where each cell gets its value. In the common subsequence table, a cell reads the cell above it, the cell to its left, and the one above and to the left. All three are in the current row or the row immediately above. Once row i is finished, row i − 1 is never read again, and rows older than that were already done with.
 
 <figure class="diagram">
 <div class="cells board"><div class="cell dim"></div><div class="cell dim"></div><div class="cell dim">c</div><div class="cell dim">o</div><div class="cell dim">m</div><div class="cell dim">p</div><div class="cell dim">a</div><div class="cell dim">n</div><div class="cell dim">y</div></div>

@@ -85,7 +85,7 @@ We checked it against two other ways on 500 random strings of up to 30 letters f
 
 ## Counting Every Palindrome
 
-The radii hold more than the longest one. Each center holds a palindrome of every length up to its radius that has the center's parity, so a letter with radius 3, as in aba, holds a and aba, and a gap with radius 4, as in baab, holds aa and baab. In general a radius of k gives (k + 1) ÷ 2 palindromes, rounded down.
+The radii hold more than the longest one. Each center holds a palindrome of every length up to its radius that has the center's parity, so a letter with radius 3, as in aba, holds b and aba, and a gap with radius 4, as in baab, holds aa and baab. In general a radius of k gives (k + 1) ÷ 2 palindromes, rounded down.
 
 ```python
 def count_palindromes(s):

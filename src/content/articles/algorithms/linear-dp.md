@@ -92,7 +92,7 @@ Both problems have the same skeleton: a table over prefix lengths, a base case f
 
 When the look back is a fixed small number, each state costs a constant, and the total is O(n). When it can reach back over the whole prefix, as in a word dictionary with no length limit, each state costs up to n and the total is O(n²), though a bound on the piece length, as the code uses, brings it back down.
 
-The table also can run in the other direction: define the state as the suffix still to be handled and fill from the end. It is the same idea and sometimes more natural, as when a recursion works from the front.
+The table can also run in the other direction: define the state as the suffix still to be handled and fill from the end. It is the same idea and sometimes more natural, as when a recursion works from the front.
 
 ## Key Points
 

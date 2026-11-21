@@ -26,7 +26,7 @@ The saving comes from a **box**: the match found so far that reaches furthest to
 
 So for a position i inside the box, the letters starting at i are a copy of the letters starting at i − l, and we already know Z[i − l].
 
-That gives a starting value for Z[i]: the smaller of Z[i − l] and the room left in the box, r − i. If Z[i − l] is less than the room, the answer is exactly that and nothing needs checking. If it reaches the box's edge, the match may continue past r, and we extend it letter by letter, moving the box to the right.
+That gives a starting value for Z[i]: the smaller of Z[i − l] and the room left in the box, r − i. If Z[i − l] is less than the room, the answer is exactly that, and the one comparison the code still makes fails at once. If it reaches the box's edge, the match may continue past r, and we extend it letter by letter, moving the box to the right.
 
 | i | Start From the Box | Z[i] | Box After |
 | --- | --- | --- | --- |

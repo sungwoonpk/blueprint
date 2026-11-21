@@ -20,7 +20,7 @@ Doubling both lengths made the work 4 times bigger, since it grows as the text l
 
 ## A Window as a Number
 
-Treat a window of m characters as a number in some base R, the way decimal digits make a number. The text 2718281828 read in windows of 4 digits gives 2718, 7182, 1828, 8281, 2818 and 8182. Two windows are equal exactly when their numbers are equal, so the search for 8182 becomes a search for the number 8182.
+Treat a window of m characters as a number in some base R, the way decimal digits make a number. The text 2718281828 read in windows of 4 digits gives 2718, 7182, 1828, 8281, 2818, 8182 and 1828 again. Two windows are equal exactly when their numbers are equal, so the search for 8182 becomes a search for the number 8182.
 
 Real windows are too long for that, so each number is kept small by taking the remainder after dividing by a modulus Q, and the remainder is the window's **hash**. Equal windows always give equal hashes. Different windows usually give different hashes, but not always, so a hash match must be confirmed.
 

@@ -73,7 +73,7 @@ The formula stops working when blocks are closed. The table doesn't, and that is
 
 ## Why the Table Is Needed
 
-The plain recursion asks, for each block, about the block above and to the left, and many routes share blocks, so it repeats work. For a 10 by 10 grid the plain recursion made 184,755 calls, and there are only 100 blocks. The table makes 100. The recursion's call count is about the number of routes, since every route is a separate walk down the call tree, and that number grows as a binomial coefficient.
+The plain recursion asks, for each block, about the block above and to the left, and many routes share blocks, so it repeats work. For a 10 by 10 grid the plain recursion made 184,755 calls, and there are only 100 blocks. The table makes 100. The recursion's call count is a binomial coefficient, C(20, 10) − 1 here, because every call splits into two and the same blocks are reached by many routes.
 
 The time of the table is the number of cells, with a constant amount of work for each.
 
