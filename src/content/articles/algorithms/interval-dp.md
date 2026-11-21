@@ -37,11 +37,11 @@ def matrix_chain(dims):
 
 <figure class="diagram">
 <div class="cells board"><div class="cell dim"></div><div class="cell dim">A</div><div class="cell dim">B</div><div class="cell dim">C</div><div class="cell dim">D</div></div>
-<div class="cells board"><div class="cell dim">A</div><div class="cell">0</div><div class="cell">12K</div><div class="cell">1.5K</div><div class="cell hl">10.5K</div></div>
-<div class="cells board"><div class="cell dim">B</div><div class="cell" style="visibility:hidden"></div><div class="cell">0</div><div class="cell">0.6K</div><div class="cell">1.35K</div></div>
-<div class="cells board"><div class="cell dim">C</div><div class="cell" style="visibility:hidden"></div><div class="cell" style="visibility:hidden"></div><div class="cell">0</div><div class="cell">6K</div></div>
+<div class="cells board"><div class="cell dim">A</div><div class="cell">0</div><div class="cell">12</div><div class="cell">1.5</div><div class="cell hl">10.5</div></div>
+<div class="cells board"><div class="cell dim">B</div><div class="cell" style="visibility:hidden"></div><div class="cell">0</div><div class="cell">0.6</div><div class="cell">1.35</div></div>
+<div class="cells board"><div class="cell dim">C</div><div class="cell" style="visibility:hidden"></div><div class="cell" style="visibility:hidden"></div><div class="cell">0</div><div class="cell">6</div></div>
 <div class="cells board"><div class="cell dim">D</div><div class="cell" style="visibility:hidden"></div><div class="cell" style="visibility:hidden"></div><div class="cell" style="visibility:hidden"></div><div class="cell">0</div></div>
-<figcaption>The cheapest cost of multiplying each stretch of the chain A, B, C, D. The cell in row X and column Y is the cost for the matrices from X to Y, with K for a thousand scalar multiplications, and the outlined cell is the whole chain, 10,500</figcaption>
+<figcaption>The cheapest cost of multiplying each stretch of the chain A, B, C, D. The cell in row X and column Y is the cost for the matrices from X to Y, in thousands of scalar multiplications, and the outlined cell is the whole chain, 10.5 thousand</figcaption>
 </figure>
 
 For the four matrices, with dims 60, 5, 40, 3, 50, the table above holds the cost of every stretch. The pair BC is cheap, 5 × 40 × 3 = 600, and AB is expensive, 60 × 5 × 40 = 12,000, which already tells us not to multiply A and B first.
