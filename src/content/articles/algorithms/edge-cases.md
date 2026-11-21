@@ -28,7 +28,7 @@ The fix keeps the numbers small by adding half the distance to `low`.
 int mid = low + (high - low) / 2;
 ```
 
-We tried this on a pretend array of 2³⁰ + 5 items, using 32 bit arithmetic. The original line produced the index −1,073,741,824 and the fixed line found the target. On an array of a thousand items, both worked.
+We tried this on a pretend array of 2³⁰ + 5 items, using 32 bit arithmetic. The original line produced the index −1,073,741,823, with division that truncates toward zero as in Java, and the fixed line found the target. On an array of a thousand items, both worked.
 
 The lesson isn't that the proof was wrong. The proof treated integers as unbounded, and the machine didn't. Python's integers don't overflow, so the same line is safe in Python, but the idea carries to languages with fixed width numbers.
 
