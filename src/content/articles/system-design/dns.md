@@ -6,7 +6,7 @@ In [How Clients and Servers Talk](/system-design/client-server), the phone neede
 
 People remember names. Computers connect to addresses like 203.0.113.80. DNS sits between the two.
 
-It also gives us room to change things. When the textbook app grows from one server to many behind a load balancer, the machine that spreads requests across servers (from [From One Server to Many](/system-design/one-server-to-many)), the address changes and the name stays the same, so bookmarks keep working.
+It also gives us room to change things. When the textbook app grows from one server to many behind a load balancer, the address changes and the name stays the same, so bookmarks keep working. A load balancer is the machine that spreads requests across servers, from [From One Server to Many](/system-design/one-server-to-many).
 
 ## How a Lookup Works
 
