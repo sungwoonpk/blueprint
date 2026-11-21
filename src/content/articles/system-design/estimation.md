@@ -49,7 +49,9 @@ Reads:  30,000,000 / 100,000 = 300 a second
 Writes:    600,000 / 100,000 =   6 a second
 ```
 
-That is the average, and an average is not what takes a system down. Traffic arrives in waves, and the busiest moment sets what you must handle. Think of registration day at 9:00 AM from [From One Server to Many](/system-design/one-server-to-many): everyone shows up at once. Rules of thumb range from 2 to 10 times the average for the peak, depending on how spiky the traffic is. A deadline driven app like ours is spiky, so use 10:
+That is the average, and an average is not what takes a system down. Traffic arrives in waves, and the busiest moment sets what you must handle. Think of registration day at 9:00 AM from [From One Server to Many](/system-design/one-server-to-many): everyone shows up at once.
+
+Rules of thumb range from 2 to 10 times the average for the peak, depending on how spiky the traffic is. A deadline driven app like ours is spiky, so use 10:
 
 ```text
 Peak reads:  300 x 10 = 3,000 a second
@@ -76,7 +78,7 @@ That is the count for the load alone. [Redundancy and Failover](/system-design/r
 
 ## How Much Storage
 
-Storage is a similar chain: how much each write adds, times how many writes, times how long you keep it. Estimate each part of a listing on its own, because sizes differ wildly:
+Storage is a similar chain: how much each write adds, times how many writes, times how long you keep it. Of the 600,000 writes a day, say 30,000 are new listings. Messages and "sold" marks are tiny, so they barely change the total. Estimate each part of a listing on its own, because sizes differ wildly:
 
 - **Text**: the title, price, description and a few other fields come to about 1 KB
 - **Photos**: three photos at about 300 KB each, roughly 0.9 MB
@@ -87,7 +89,9 @@ Photos: 30,000 x 0.9 MB = 27 GB a day      (about 10 TB a year)
 Three copies for safety: 10 TB x 3 = 30 TB a year
 ```
 
-The photos outweigh the text by close to a thousand times. That one fact decides a lot: the photos shouldn't sit in the main database, they belong in cheap file storage with a [CDN](/system-design/cdn) in front, and the database stays small and fast. The factor of three is a common choice, since [Redundancy and Failover](/system-design/redundancy-failover) keeps several copies so one failed disk doesn't lose the data. Add room for indexes and for growth, and you get a figure to plan against, not an exact bill.
+The photos outweigh the text by close to a thousand times. That one fact decides a lot: the photos shouldn't sit in the main database, they belong in cheap file storage with a [CDN](/system-design/cdn) in front, and the database stays small and fast.
+
+The factor of three is a common choice, since [Redundancy and Failover](/system-design/redundancy-failover) keeps several copies so one failed disk doesn't lose the data. Add room for indexes and for growth, and you get a figure to plan against, not an exact bill.
 
 ## How Much Bandwidth
 
