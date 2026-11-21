@@ -74,9 +74,12 @@ Smaller measures help, such as a larger backlog or a shorter timeout, and they a
 
 The hardest flood to stop is made of valid requests. Ten thousand machines each asking for `GET /search?q=calculus` do nothing unusual individually, and together they exhaust the search service and its database. The attacker picks expensive endpoints: search, login, anything that skips the cache.
 
-Defenses here use what the earlier topics built.
+Defenses here use what the earlier topics built:
 
-A CDN and caches come first: a flood of cacheable requests is absorbed at the edge, as in [Content Delivery Networks (CDNs)](/system-design/cdn). Tighter rate limits and concurrency limits on costly paths such as search and login come next, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice). A web application firewall blocks known bad patterns. And challenges ask suspicious clients to prove they are human, with a CAPTCHA or a small proof of work.
+- **A CDN and caches**: a flood of cacheable requests is absorbed at the edge, as in [Content Delivery Networks (CDNs)](/system-design/cdn)
+- **Tighter limits**: rate limits and concurrency limits on costly paths such as search and login, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
+- **A web application firewall**: it blocks known bad patterns
+- **Challenges**: suspicious clients are asked to prove they are human, with a CAPTCHA or a small proof of work
 
 ## Two Real Cases
 
@@ -112,11 +115,13 @@ Cloud providers draw the same line: network layer attacks are handled at the pro
 <figcaption>Each layer removes the kind of traffic it is built for, and what passes is small enough for the next layer</figcaption>
 </figure>
 
-Start by reducing the target: let just the CDN reach your servers, hide their real addresses, and close unused ports and services, especially UDP ones. Then absorb at the edge. A CDN or anycast network spreads an attack across many locations, the idea in [Global Traffic Routing](/system-design/global-routing), and has more capacity than you do. AWS Shield Standard defends against common layer 3 and 4 attacks at no extra charge, and Google Cloud Armor and Azure DDoS Protection offer always on protection for those layers.
+Five steps, in this order:
 
-At layer 7, filter with a WAF plus rate limits, since layer 7 protection needs a WAF, and managed services such as Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top.
-
-Scaling helps, with a ceiling. [Autoscaling](/system-design/autoscaling) can absorb some load, and an attack can drive the bill up, which is why Shield Advanced lists cost protection among its features, so set a maximum. Finally, keep spare capacity and plans: the headroom from [Redundancy and Failover](/system-design/redundancy-failover), and a plan written down before it's needed.
+- **Reduce the target**: let just the CDN reach your servers, hide their real addresses, and close unused ports and services, especially UDP ones
+- **Absorb at the edge**: a CDN or anycast network spreads an attack across many locations, the idea in [Global Traffic Routing](/system-design/global-routing), and has more capacity than you do. AWS Shield Standard defends against common layer 3 and 4 attacks at no extra charge, and Google Cloud Armor and Azure DDoS Protection offer always on protection for those layers
+- **Filter at layer 7**: use a WAF plus rate limits, and managed services such as Google's Adaptive Protection and AWS's Shield Advanced add detection and automatic rules on top
+- **Scale, with a ceiling**: [Autoscaling](/system-design/autoscaling) can absorb some load, and an attack can drive the bill up, which is why Shield Advanced lists cost protection among its features, so set a maximum
+- **Keep spare capacity and a plan**: the headroom from [Redundancy and Failover](/system-design/redundancy-failover), and a plan written down before it's needed
 
 ## Attack or Just a Busy Day
 
