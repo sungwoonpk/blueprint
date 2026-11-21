@@ -71,7 +71,9 @@ def halls_needed(requests):
     return halls
 ```
 
-The code sorts by start time and then by end time, so on the six requests B comes first and opens hall 1. A also starts at 9, while B is still running, so A opens hall 2. C starts at 10, when hall 1 is free, so C takes it, and so do D and F in turn. E starts at 12, when A's hall 2 is free, so E goes to hall 2. Two halls, the depth.
+The code sorts by start time and then by end time, so on the six requests B comes first and opens hall 1. A also starts at 9, while B is still running, so A opens hall 2. C starts at 10, when hall 1 is free, so C takes it, and so do D and F in turn.
+
+E starts at 12, when A's hall 2 is free, so E goes to hall 2. Two halls, the depth.
 
 | Hall | Requests |
 | --- | --- |

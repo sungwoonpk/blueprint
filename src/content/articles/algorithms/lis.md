@@ -93,7 +93,9 @@ The longest increasing subsequence of a random shuffle is about twice the square
 
 ## Other Forms of the Same Problem
 
-The same table solves the longest chain of nested envelopes, or boxes: sort by width, with equal widths ordered by falling height, then find the LIS of the heights. [Sorting as a First Step](/algorithms/sorting-first) is a good companion. The longest non-decreasing subsequence uses `bisect_right`. And the length of the LIS also equals the length of the longest common subsequence of the sequence and its sorted copy when all values differ, which leads to [Longest Common Subsequence and Edit Distance](/algorithms/lcs-edit-distance).
+The same table solves the longest chain of nested envelopes, or boxes: sort by width, with equal widths ordered by falling height, then find the LIS of the heights. [Sorting as a First Step](/algorithms/sorting-first) is a good companion. The longest non-decreasing subsequence uses `bisect_right`.
+
+And the length of the LIS also equals the length of the longest common subsequence of the sequence and its sorted copy when all values differ, which leads to [Longest Common Subsequence and Edit Distance](/algorithms/lcs-edit-distance).
 
 ## Key Points
 

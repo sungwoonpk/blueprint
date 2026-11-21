@@ -64,7 +64,9 @@ for c in range(C):          # column by column
 
 In row-major storage, walking along a row visits neighboring memory locations, and the processor loads memory in blocks, so the next few cells arrive with the first. Walking down a column jumps a whole row each step and uses only one cell from each block it loads.
 
-We timed both in C, compiled with `gcc -O2`, on an 8,192 by 8,192 matrix of integers, 256 MB. Over eight runs, row by row took about 5 ms once the memory was warm, with 26 ms for the first pass, and column by column took 210 to 250 ms. That is more than 40 times slower for the same sum. Without optimization, which doesn't vectorize the row loop, the gap shrank to 7 or 8 times, and it was still large.
+We timed both in C, compiled with `gcc -O2`, on an 8,192 by 8,192 matrix of integers, 256 MB. Over eight runs, row by row took about 5 ms once the memory was warm, with 26 ms for the first pass, and column by column took 210 to 250 ms.
+
+That is more than 40 times slower for the same sum. Without optimization, which doesn't vectorize the row loop, the gap shrank to 7 or 8 times, and it was still large.
 
 The lesson is to make the inner loop follow the memory layout. With row-major data, that is the column index. The same loop with the roles swapped is the right choice for data stored by column, which NumPy supports with its Fortran order option.
 

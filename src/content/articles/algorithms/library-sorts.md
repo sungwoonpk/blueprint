@@ -60,7 +60,9 @@ Python's `list.sort` and `sorted` use **Timsort**, written by Tim Peters for CPy
 <figcaption>Three runs are found in one pass: 1, 3, 5, 9 then the descending 7, 4, 2 then 6, 8. After the middle run is reversed, merging finishes the job</figcaption>
 </figure>
 
-**Extend short runs.** In random data the runs are tiny, so Timsort stretches any run shorter than a minimum length by inserting the next items into it with a **binary insertion sort**, which is insertion sort with a binary search to find each spot. The minimum is chosen between 32 and 64 for long lists, and a list shorter than 64 is sorted entirely by binary insertion sort. This is the point from [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) and [Measuring Time and Space with Big O](/algorithms/big-o), that a quadratic sort wins on short stretches.
+**Extend short runs.** In random data the runs are tiny, so Timsort stretches any run shorter than a minimum length by inserting the next items into it with a **binary insertion sort**, which is insertion sort with a binary search to find each spot. The minimum is chosen between 32 and 64 for long lists, and a list shorter than 64 is sorted entirely by binary insertion sort.
+
+This is the point from [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) and [Measuring Time and Space with Big O](/algorithms/big-o), that a quadratic sort wins on short stretches.
 
 **Merge neighbors wisely.** Runs are merged with the stable merge from [Merge Sort](/algorithms/merge-sort), but only adjacent runs, since merging runs that aren't adjacent could reorder equal items. A policy decides which neighbors to merge and when, aiming to keep the merged pieces similar in size, which is the cheapest way to merge. A temporary array holds the smaller of the two runs being merged.
 

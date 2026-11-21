@@ -79,7 +79,9 @@ If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, fli
 
 [Difference Arrays](/algorithms/difference-arrays) solve the same counting question by adding 1 at each start and subtracting 1 after each end, then taking a running total. That needs an array with a slot for every position. If the times are seconds in a year, or any numbers up to a billion, the array doesn't fit.
 
-The sweep line is the same idea without the array. The events are exactly the places where the difference array is nonzero, and sorting them stands in for walking the array's slots in order. We generated 200,000 intervals with start times up to a billion and lengths up to a million. The sweep took 148 ms, and the busiest moment had 144 bookings overlapping. A difference array for the same data would have needed about 8 GB of counters.
+The sweep line is the same idea without the array. The events are exactly the places where the difference array is nonzero, and sorting them stands in for walking the array's slots in order. We generated 200,000 intervals with start times up to a billion and lengths up to a million.
+
+The sweep took 148 ms, and the busiest moment had 144 bookings overlapping. A difference array for the same data would have needed about 8 GB of counters.
 
 So the choice is between the two: use a difference array when the positions are small enough to index, and a sweep over sorted events when they are spread out.
 

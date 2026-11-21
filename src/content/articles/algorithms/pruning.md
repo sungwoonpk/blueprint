@@ -39,7 +39,9 @@ def shortest(d):
     return best[0]
 ```
 
-The invariant behind the prune is that every complete route starting with this path costs at least `cost`. If that is no better than `best`, the whole subtree below can be skipped. We checked the answers against full enumeration on random instances of 8, 9 and 10 stops, and then counted the calls. The stops are random points in a square, and the numbers are averages over 10 random instances for 8 and 10 stops and 6 for 12 stops.
+The invariant behind the prune is that every complete route starting with this path costs at least `cost`. If that is no better than `best`, the whole subtree below can be skipped. We checked the answers against full enumeration on random instances of 8, 9 and 10 stops, and then counted the calls.
+
+The stops are random points in a square, and the numbers are averages over 10 random instances for 8 and 10 stops and 6 for 12 stops.
 
 | Stops | Full Search | Pruned | Nearest First |
 | --- | --- | --- | --- |

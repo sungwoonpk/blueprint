@@ -70,7 +70,7 @@ Negative numbers break it. With the days 5, −4 and 6 and a goal of 6, the righ
 
 That is below the goal, so it stopped shrinking. Dropping the −4 as well would have raised the total to 6, but the loop assumed that dropping items can only lower the total. That holds for positive numbers and fails for negative ones.
 
-For arrays with negative numbers there are other tools: [Prefix Sums with Hash Maps](/algorithms/prefix-sums-hash-maps) handles exact sums, and [Kadane's Algorithm for Maximum Subarrays](/algorithms/kadane) handles the largest sum.
+For arrays with negative numbers there are other tools: [Prefix Sums with Hash Maps](/algorithms/prefix-sums-hash-maps) handles exact sums, and [Kadane’s Algorithm for Maximum Subarrays](/algorithms/kadane) handles the largest sum.
 
 ## A Template
 
