@@ -53,7 +53,9 @@ The cost: one more machine, and every query now crosses the network.
 
 ### 3. Add Servers Behind a Load Balancer
 
-With the database moved out, the web server is next: one can't keep up at peak, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going. The load balancer itself usually runs as a pair, so it doesn't become the new single point of failure. Common ones are NGINX, HAProxy and the load balancers cloud providers sell.
+With the database moved out, the web server is next: one can't keep up at peak, and if it dies, the app is down. So we run several identical web servers. This is **scaling out**, or horizontal scaling. A **load balancer** sits in front and sends each request to one of them. If a server dies, the others keep going.
+
+The load balancer itself usually runs as a pair, so it doesn't become the new single point of failure. Common ones are NGINX, HAProxy and the load balancers cloud providers sell.
 
 <figure class="diagram">
 <div class="flow">
