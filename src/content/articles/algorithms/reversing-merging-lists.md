@@ -1,6 +1,6 @@
 > Reversing a linked list flips its pointers so the last node becomes the first. Merging two sorted lists weaves their nodes into one sorted list. Both are done by relinking the nodes that already exist, without allocating new ones.
 
-Two departments keep waitlists for the same seminar, and each list is sorted by sign-up time. The registrar wants one list, in order, and also a view with the newest sign-ups first. Both are small pointer jobs on [linked lists](/algorithms/linked-lists), and they turn up again and again in bigger algorithms.
+Two departments keep waitlists for the same seminar, and each list is sorted by sign-up time. The registrar wants one list, in order, and also a view with the newest sign-ups first. Both are small pointer jobs on the lists of [Singly and Doubly Linked Lists](/algorithms/linked-lists), and they turn up again and again in bigger algorithms.
 
 ## Reversing by Flipping Arrows
 

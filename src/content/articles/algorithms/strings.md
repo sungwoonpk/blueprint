@@ -54,11 +54,11 @@ key("José") == key("José")    # True
 key("JOSÉ") == key("josé")     # True
 ```
 
-The form now sees both spellings as the same name. Normalization turns a messy comparison into an exact one, which is what lets a [hash table](/algorithms/hash-tables) or a sort treat the key properly afterward.
+The form now sees both spellings as the same name. Normalization turns a messy comparison into an exact one, which is what lets a hash table, the structure of [How Hash Tables Work](/algorithms/hash-tables), or a sort treat the key properly afterward.
 
 ## Strings Are Usually Immutable
 
-In Python, Java, Go and JavaScript, a string can't be changed in place. Assigning to `name[0]` is an error in Python, and any change builds a new string. That makes strings safe to share and to use as keys, since they can't change under a [hash table](/algorithms/hash-tables). The price is that changing one costs a copy.
+In Python, Java, Go and JavaScript, a string can't be changed in place. Assigning to `name[0]` is an error in Python, and any change builds a new string. That makes strings safe to share and to use as keys, since they can't change under a hash table, as [How Hash Tables Work](/algorithms/hash-tables) explains. The price is that changing one costs a copy.
 
 The price shows up when building a string piece by piece. Joining n single characters with `+=` copies the growing string each time, so the total work is quadratic. We measured it, with and without a second reference to the string:
 

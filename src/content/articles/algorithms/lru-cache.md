@@ -6,7 +6,7 @@ The campus course catalog looks up a course's details in a slow database. A few 
 
 A **cache** keeps copies of results that are slow to get, so repeat requests are fast. The choice of what to throw away is the **eviction policy**. LRU bets on a simple pattern: what was used recently is likely to be used again soon, and what hasn't been touched for a while is the safest to drop.
 
-The bet isn't always right, but it often is. We simulated requests for 10,000 courses where a few are far more popular than the rest, with a cache holding 500, and compared policies.
+The bet isn't always right, but it often is. We simulated requests for 10,000 courses where a few are far more popular than the rest, the course ranked k being requested in proportion to 1/k, with a cache holding 500, and compared policies.
 
 | Eviction Policy | Share of Requests Served from the Cache |
 | --- | --- |
@@ -25,7 +25,7 @@ A cache needs two operations, and both should be fast.
 
 Each job needs a different structure. To find an item by key quickly, use a hash map. To know which item is oldest, and to move an item to "newest" after a use, you need an ordering that can be edited quickly.
 
-A list kept in order of use fits, but an array makes a move O(n), and a singly linked list can't unlink a node without its predecessor. A [doubly linked list](/algorithms/linked-lists) can: given a node, it removes it and relinks it at the front in O(1).
+A list kept in order of use fits, but an array makes a move O(n), and a singly linked list can't unlink a node without its predecessor. A doubly linked list, from [Singly and Doubly Linked Lists](/algorithms/linked-lists), can: given a node, it removes it and relinks it at the front in O(1).
 
 The way to get both is to use the two together. The list keeps the order of use, with the most recent at the front and the least recent at the back. The hash map maps each key to its node in the list, so the node is reached without walking.
 

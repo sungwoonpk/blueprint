@@ -113,7 +113,7 @@ We checked this against a Python list over 500 random sequences of inserts and r
 
 On paper the linked list looks like a winner for edits. In practice it often loses, because the table counts steps and not the cost of each step.
 
-Each node is a separate object with a pointer, and a pointer costs memory. A Python node with two attributes took 48 bytes in our run, even in its leanest form and before counting the value it points to, while an array slot is 8 bytes.
+Each node is a separate object with a pointer, and a pointer costs memory. A Python node like the ones above took 88 bytes in our run, and 48 bytes even in its leanest form, with `__slots__`, both before counting the value it points to, while an array slot is 8 bytes.
 
 Then there is where the nodes live. An array's neighbors are neighbors in memory, so the processor's cache brings several items at once. Nodes can be anywhere, and following a pointer to a distant address is slow. We built a list of 10 million nodes in C and added up the values.
 
@@ -125,9 +125,9 @@ Then there is where the nodes live. An array's neighbors are neighbors in memory
 
 The same list, with the same arrows, went from 3 ms to a full second after its nodes were scattered. A list that has lived through many inserts and deletes looks more like the last row than the middle one.
 
-The advantage on edits is not as clear as it seems either. Inserting at a random position needs the position first, and a linked list finds it by walking. We inserted 20,000 items at random positions in a list of 100,000. The array shifted items with a block copy and took 162 ms.
+The advantage on edits is not as clear as it seems either. Inserting at a random position needs the position first, and a linked list finds it by walking. We inserted 20,000 items at random positions in a list of 100,000. The array shifted items with a block copy and took 149 ms.
 
-The linked list walked to each position and took 1,426 ms, nearly nine times longer, even though its nodes sat in mostly sequential memory. Rust's documentation for its own linked list gives similar advice: reach for a vector or a ring buffer first, because array based containers are usually faster and use less memory.
+The linked list walked to each position and took 1,570 ms, more than ten times longer, even though its nodes sat in mostly sequential memory. Rust's documentation for its own linked list gives similar advice: reach for a vector or a ring buffer first, because array based containers are usually faster and use less memory.
 
 ## Where Linked Lists Win
 

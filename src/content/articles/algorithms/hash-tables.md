@@ -39,6 +39,29 @@ A table with 100,000 slots has a collision after only about 400 keys, while it i
 
 In **chaining**, each slot holds a small list of the items that landed there. A lookup computes the slot and then scans that short list. With n items in m slots, the average list holds n / m items, called the **load factor** α, so a lookup takes about 1 + α steps on average. If the table grows with the data and α stays below a constant, that is O(1).
 
+<figure class="diagram">
+<p class="rowname">Slot 0: empty</p>
+<p class="rowname">Slot 1</p>
+<div class="flow packets">
+<div class="node">Ana</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node hl">Dee</div>
+</div>
+<p class="rowname">Slot 2</p>
+<div class="flow packets">
+<div class="node">Ben</div>
+</div>
+<p class="rowname">Slot 3</p>
+<div class="flow packets">
+<div class="node">Cy</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Eli</div>
+<div class="arrow" aria-hidden="true"></div>
+<div class="node">Fay</div>
+</div>
+<figcaption>A table with four slots using chaining. Ana and Dee hashed to the same slot, so they share a short list, and a lookup for Dee scans only that list</figcaption>
+</figure>
+
 Java's `HashMap` chains. Its source also shows what happens when the hashing goes badly: once a single chain reaches 8 items, and the table is large enough, the chain is turned into a balanced tree, so even a bad case costs O(log n) and not O(n).
 
 ## Open Addressing

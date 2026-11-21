@@ -18,7 +18,7 @@ An array reserves one block of memory and puts items side by side, each the same
 <figcaption>Reading index 3 means computing start + 3 × item size. At 8 bytes an item and a start of 1000, that is address 1024</figcaption>
 </figure>
 
-The cost doesn't change with the position or the size. We timed `a[i]` on a Python list of a thousand items and on one of ten million. Reading the first item took 13.5 ns in both, and reading the last took about 14.7 ns.
+The cost doesn't change with the position or the size. We timed `a[i]` on a Python list of a thousand items and on one of ten million. Reading the first item took about 10 ns in both, and reading the last about 11 ns, with the loop around the read included.
 
 One detail about Python: a list slot holds a reference to an object, not the object itself, and the reference is the fixed size item. That lets one list hold numbers, strings and other lists together, at the price of one extra hop to reach each value.
 
@@ -109,7 +109,7 @@ The Python and Go rows are what we measured, and the Java row follows the growth
 
 A Python list stores references, so a list of numbers is a list of arrows to number objects. A C array, a Java `int[]` or a Python `array` stores the values themselves.
 
-The difference shows up in memory. A Python list of a million ints took 36.4 MB in our run, and the same numbers in `array('q')`, which stores 8 byte integers, took 8.2 MB. Values that sit side by side are also easier on the processor's cache, because reading one brings its neighbors along with it, a reason array based containers tend to beat pointer based ones.
+The difference shows up in memory. A Python list of a million ints took 40.0 MB in our run, counting the list and the int objects it points to, and the same numbers in `array('q')`, which stores 8 byte integers, took 8.2 MB. Values that sit side by side are also easier on the processor's cache, because reading one brings its neighbors along with it, a reason array based containers tend to beat pointer based ones.
 
 ## Key Points
 

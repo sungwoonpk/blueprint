@@ -71,7 +71,7 @@ The word "average" shows up in both ideas, and they are different.
 
 Amortization is a worst case statement about a sequence. It holds even if an adversary picks the operations.
 
-What it does not promise is that each individual operation is fast. We timed a million appends to a Python list, one at a time. The median append took 83 ns, including the timer's own overhead, and the slowest took 241 µs, nearly 3,000 times the median. Not every slow one is a resize, since the machine also has other work to do, but resizes are among them.
+What it does not promise is that each individual operation is fast. We timed a million appends to a Python list, one at a time. The median append took 83 ns, including the timer's own overhead, and the slowest took 131 µs, more than 1,500 times the median. The slowest time changes from run to run. Not every slow one is a resize, since the machine also has other work to do, but resizes are among them.
 
 For most programs that doesn't matter. For something that must answer within a fixed time on each request, such as a trading system or a game's frame loop, one slow append can matter. The usual fix is to reserve the capacity up front, as `new ArrayList<>(n)` does in Java and `make([]T, 0, n)` does in Go, so the array doesn't have to grow.
 

@@ -64,7 +64,7 @@ for c in range(C):          # column by column
 
 In row-major storage, walking along a row visits neighboring memory locations, and the processor loads memory in blocks, so the next few cells arrive with the first. Walking down a column jumps a whole row each step and uses only one cell from each block it loads.
 
-We timed both on an 8,192 by 8,192 matrix of C integers, 256 MB. Row by row took 18 to 44 ms in two runs, and column by column took 426 ms both times, 10 to 20 times slower, for the same sum.
+We timed both in C, compiled with `gcc -O2`, on an 8,192 by 8,192 matrix of integers, 256 MB. Over eight runs, row by row took about 5 ms once the memory was warm, with 26 ms for the first pass, and column by column took 210 to 250 ms. That is more than 40 times slower for the same sum. Without optimization, which doesn't vectorize the row loop, the gap shrank to 7 or 8 times, and it was still large.
 
 The lesson is to make the inner loop follow the memory layout. With row-major data, that is the column index. The same loop with the roles swapped is the right choice for data stored by column, which NumPy supports with its Fortran order option.
 
@@ -126,7 +126,7 @@ The two `if` lines guard the case where the remaining area is a single row or a 
 
 ## How Big Can a Grid Get
 
-A grid with R rows and C columns has R × C cells, and the memory grows with that product. In Python, a 1,000 by 1,000 list of lists holding distinct integers took 40.9 MB in our run. The same million numbers in one flat `array('i')` took 4.1 MB, ten times less.
+A grid with R rows and C columns has R × C cells, and the memory grows with that product. In Python, a 1,000 by 1,000 list of lists holding distinct integers took 40.9 MB in our run, counting the lists and the int objects. The same million numbers in one flat `array('i')` took 4.1 MB, ten times less.
 
 A grid of 10,000 by 10,000 is 100 million cells, which would need at least 800 MB for the references alone in a list of lists. The sizes in a problem's limits, as in [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints), tell you whether to use a compact array.
 
@@ -136,7 +136,7 @@ If most cells are empty, a **sparse** representation is smaller still: a diction
 
 - A matrix is stored as one array, usually row-major, so cell (r, c) sits at r × C + c
 - Python lists of lists share a trap: `[[0] * C] * R` repeats one row, so build rows with a loop
-- Visit cells in memory order, because walking down columns of row-major data can be 10 to 20 times slower
+- Visit cells in memory order, because walking down columns of row-major data can be more than ten times slower
 - Direction offsets with a bounds check handle neighbors, and Python's negative indexes make a missing check give wrong answers silently
 - Transpose, rotation and spiral traversal are small loops worth knowing, and the spiral is a good exercise in stating an invariant
 - Large grids need compact storage, and mostly empty grids need a sparse form
