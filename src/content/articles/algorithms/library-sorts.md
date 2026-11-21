@@ -83,7 +83,7 @@ We counted the comparisons Python's `sorted` made on 100,000 items in several sh
 
 On random data the count was 1,531,851, about 1% above the minimum log₂(n!) from [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound), so Timsort gives up very little there. On sorted or reversed data, and on a list of equal items, it made n − 1 comparisons, just enough to see that the list is one run. Even a list with 1% of its values replaced took under two comparisons for each item.
 
-Time follows the same shape. Sorting a million integers took 178 ms when random, 3.2 ms when already ascending, 4.3 ms when descending and 13.7 ms when 1% had been replaced.
+Time follows the same shape. Sorting a million integers took 165 ms when random, 1.5 ms when already ascending, 2.0 ms when descending and 10 ms when 1% had been replaced.
 
 ## The Quick Sort Family
 
