@@ -88,6 +88,15 @@ Weighted scheduling gives a similar failure. A class of value 100 from time 0 to
 Before writing the proof, check the claim by brute force on small cases, as the tape experiments did.
 
 ```python
+import itertools
+
+def total_cost(order, L, F):                    # F[i] reads of file i, in this order
+    cost = prefix = 0
+    for i in order:
+        prefix += L[i]                             # the tape wound past this file
+        cost += prefix * F[i]
+    return cost
+
 def check_key(key, instances):
     for L, F in instances:
         order = sorted(range(len(L)), key=key(L, F))

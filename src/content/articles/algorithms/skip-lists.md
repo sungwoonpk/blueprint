@@ -31,7 +31,24 @@ We built a skip list of 65,536 keys with p = 1/2 and counted heights: 49.8% of t
 <figcaption>A skip list of ten keys, with level 3 at the top and level 1 at the bottom. Faded cells are levels the key doesn't reach. The outlined cells are the path of a search for 19</figcaption>
 </figure>
 
-Choosing a level takes a loop of coin flips, capped at a maximum so that the structure stays bounded.
+Each node holds a key and a list of forward pointers, one for each level it belongs to. The list starts with an empty header node that has the maximum number of levels.
+
+```python
+import random
+
+class Node:
+    def __init__(self, key, level):
+        self.key = key
+        self.next = [None] * level                   # next[i] is the next node on level i + 1
+
+class SkipList:
+    def __init__(self, p=0.5, max_level=32):
+        self.p, self.max_level = p, max_level
+        self.head = Node(None, max_level)
+        self.level = 1                               # the highest level in use
+```
+
+Choosing a level takes a loop of coin flips, capped at a maximum so that the structure stays bounded. It is a method of `SkipList`.
 
 ```python
 def _random_level(self):

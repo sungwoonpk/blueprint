@@ -56,6 +56,11 @@ After an insert, only the nodes on the path from the new leaf up to the root can
 If a node leans right by 2 and its right child leans right or is even, one left rotation fixes it. If the right child leans left, rotate that child right first, then rotate the node left. The mirror cases handle a left lean.
 
 ```python
+class Node:
+    def __init__(self, key):
+        self.key, self.left, self.right = key, None, None
+        self.h = 0                                  # the height of the subtree rooted here
+
 def height(n):
     return n.h if n else -1
 
@@ -73,7 +78,13 @@ def rotate_right(n):
     update(l)
     return l                                    # l is the new top of this subtree
 
-# rotate_left is the mirror image
+def rotate_left(n):                             # the mirror image
+    r = n.right
+    n.right = r.left
+    r.left = n
+    update(n)
+    update(r)
+    return r
 
 def rebalance(n):
     update(n)                                   # recompute n.h from its children
