@@ -51,7 +51,9 @@ Faults come from three places, and they behave differently:
 
 The last two points are why more copies don't fix everything, the independence condition from [Availability and the Nines](/system-design/availability). Uptime Institute, which studies outages, estimates that human error plays a part in about two thirds to four fifths of them, though it is rarely the only cause.
 
-A real case is Cloudflare in July 2019. A new rule for its web firewall contained a pattern that used far too much CPU. The rule was sent to every server worldwide at once, and the CPUs handling web traffic on every machine ran out of capacity for roughly half an hour. Having many healthy servers did not help, because they were all running the same change. The details are in [Cloudflare's own account](https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019). A gradual release, which sends a change to a few servers first, would have caught it sooner.
+A real case is Cloudflare in July 2019. A new rule for its web firewall contained a pattern that used far too much CPU. The rule was sent to every server worldwide at once, and the CPUs handling web traffic on every machine ran out of capacity for roughly half an hour.
+
+Having many healthy servers did not help, because they were all running the same change. The details are in [Cloudflare's own account](https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019). A gradual release, which sends a change to a few servers first, would have caught it sooner.
 
 ## Up is Not the Same as Right
 

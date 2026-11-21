@@ -37,7 +37,9 @@ Each spare can fail too, so the exercise repeats: the thing that detects failure
 <figcaption>A spare that sits idle, or spares that share the work</figcaption>
 </figure>
 
-With **active-passive**, one copy serves and the other waits, getting copies of the data. It is simpler, and it suits things with one main copy of the data, like a database primary. The cost is an idle machine, and a pause while the standby takes over. With **active-active**, every copy serves traffic, so losing one costs only its share, and there is no idle machine. The cost is that the copies must stay in step with each other, which is easy for stateless web servers from [Stateless and Stateful Services](/system-design/stateless-stateful) and hard for data.
+With **active-passive**, one copy serves and the other waits, getting copies of the data. It is simpler, and it suits things with one main copy of the data, like a database primary. The cost is an idle machine, and a pause while the standby takes over.
+
+With **active-active**, every copy serves traffic, so losing one costs only its share, and there is no idle machine. The cost is that the copies must stay in step with each other, which is easy for stateless web servers from [Stateless and Stateful Services](/system-design/stateless-stateful) and hard for data.
 
 A standby can also be kept at different temperatures:
 
@@ -90,7 +92,9 @@ One of the nastiest failures is a failover that should not have happened. Imagin
 <figcaption>Split brain: two copies accept writes and drift apart</figcaption>
 </figure>
 
-This is **split brain**. Each side now holds writes the other lacks, and merging them can be slow and painful. In October 2018, GitHub lost the link between its East Coast network hub and its primary East Coast data center for a short time. Automation moved database leadership to the West Coast, and afterward both sides held writes the other lacked. GitHub chose to protect the data over a quick return, and service was degraded for just over 24 hours. The details are in [GitHub's own analysis of the incident](https://github.blog/2018-10-30-oct21-post-incident-analysis/).
+This is **split brain**. Each side now holds writes the other lacks, and merging them can be slow and painful.
+
+In October 2018, GitHub lost the link between its East Coast network hub and its primary East Coast data center for a short time. Automation moved database leadership to the West Coast, and afterward both sides held writes the other lacked. GitHub chose to protect the data over a quick return, and service was degraded for just over 24 hours. The details are in [GitHub's own analysis of the incident](https://github.blog/2018-10-30-oct21-post-incident-analysis/).
 
 Systems guard against this in two ways. A quorum means a copy may lead only when a majority agrees it should, and fencing means the old primary is cut off from the data before the new one starts. See [Single Leader Replication](/system-design/replication-one-leader).
 

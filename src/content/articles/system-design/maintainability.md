@@ -20,7 +20,12 @@ So a design is not only judged by whether it works on day one. It is also judged
 
 A system that is easy to operate shows what it is doing, can be changed without heroics, and has few surprises.
 
-It has visibility: logs, metrics and alerts that tell you what is wrong, as in [Logs, Metrics and Traces](/system-design/observability). It has automation, so that deploying, restarting and rolling back are one command, not a list of manual steps. Its servers can be rebuilt, because the setup is described in code and a replacement matches the original. Machines that were fixed by hand over the years, each a little different, are called snowflake servers, and they are hard to reproduce or replace. And it has written runbooks, saying what to check and what to do for the problems that come up.
+Four habits make it so:
+
+- **Visibility**: logs, metrics and alerts that tell you what is wrong, as in [Logs, Metrics and Traces](/system-design/observability)
+- **Automation**: deploying, restarting and rolling back are one command, not a list of manual steps
+- **Servers that can be rebuilt**: the setup is described in code, so a replacement matches the original. Machines that were fixed by hand over the years, each a little different, are called snowflake servers, and they are hard to reproduce or replace
+- **Runbooks**: written notes on what to check and what to do for the problems that come up
 
 A test for operability is whether a new engineer who is on call on a Friday evening could diagnose a problem without calling the person who built the service.
 
@@ -39,13 +44,17 @@ Complexity grows faster than the number of parts, because every part can connect
 
 Doubling the services roughly quadruples the ways they can interact, and each way is something that can surprise you. Most systems don't connect every pair, but each connection they do have is another thing to understand.
 
-Some complexity comes with the problem. Fred Brooks called this essential complexity: if students need to post, search, message, pay and review, the system has to do all of those. The rest he called accidental complexity, which comes from our own tools and choices, and it is the part you can cut. The usual ways to cut it.
+Some complexity comes with the problem. Fred Brooks called this essential complexity: if students need to post, search, message, pay and review, the system has to do all of those. The rest he called accidental complexity, which comes from our own tools and choices, and it is the part you can cut. The usual ways:
 
-Hide details behind clear interfaces, so one part can be understood without reading the others. Delete code that nothing uses. And prefer well known technology: Dan McKinley's rule of thumb is that a team can afford just about three novel technologies, because each one brings unknowns it must learn to run.
+- **Hide details behind clear interfaces**, so one part can be understood without reading the others
+- **Delete code that nothing uses**
+- **Prefer well known technology**: Dan McKinley's rule of thumb is that a team can afford just about three novel technologies, because each one brings unknowns it must learn to run
 
 ## A Costly Example
 
-In 2012, Knight Capital, a trading firm, deployed new code by hand to eight servers and missed one. On that server, a setting that the new code used for something else switched on an old feature that had been unused since 2003 and never deleted. The old code ran on its own, and Knight lost about 440 million dollars in 45 minutes. The US regulator later found that the firm had no written procedure for the deployment and no second person checking it. When engineers tried to fix it, they removed the new code from the seven good servers, which made the problem worse.
+In 2012, Knight Capital, a trading firm, deployed new code by hand to eight servers and missed one. On that server, a setting that the new code used for something else switched on an old feature that had been unused since 2003 and never deleted. The old code ran on its own, and Knight lost about 440 million dollars in 45 minutes.
+
+The US regulator later found that the firm had no written procedure for the deployment and no second person checking it. When engineers tried to fix it, they removed the new code from the seven good servers, which made the problem worse.
 
 Both halves are in this topic: a manual, unchecked deployment is an operability problem, and dead code that was still wired up is a simplicity problem.
 

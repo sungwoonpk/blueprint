@@ -48,13 +48,18 @@ Pool size is a tradeoff, like the ones in [Thinking in Tradeoffs](/system-design
 
 TCP's waiting is the right deal for web pages and databases. Sometimes it's the wrong one, because a late answer can be worse than none. That is where UDP fits.
 
-DNS lookups fit: the phone book from [How DNS Works](/system-design/dns) deals in one small question and one small answer, so a handshake would cost more than the exchange. Video and voice calls fit, since a resent frame arrives too late to show, and skipping it beats waiting for it. Fast online games fit, because the next position update replaces a lost one. So do metrics: sending a number should be cheap, and losing one reading rarely matters.
+Four common fits:
+
+- **DNS lookups**: the phone book from [How DNS Works](/system-design/dns) deals in one small question and one small answer, so a handshake would cost more than the exchange
+- **Video and voice calls**: a resent frame arrives too late to show, so skipping it beats waiting for it
+- **Fast online games**: the next position update replaces a lost one
+- **Metrics**: sending a number should be cheap, and losing one reading rarely matters
 
 Using UDP doesn't mean being careless. An app can add the little reliability it needs on top, such as resending a game's "player fired" message while letting position updates go. Some slower games use TCP instead.
 
 ## Building on UDP
 
-UDP can also be a foundation. Head-of-line blocking hurts most when one connection carries many independent requests, such as a page and each of its images, because a single lost packet stalls all of them. **QUIC** avoids that. It runs on UDP and handles reliability itself, separately for each **stream**, one of those independent conversations inside the connection, and it folds the encryption handshake into connection setup, so a new connection can be ready in one round trip instead of two.
+UDP can also be a foundation. Head-of-line blocking hurts most when one connection carries many independent requests, such as a page and each of its images, because a single lost packet stalls all of them. **QUIC** avoids that. It runs on UDP and handles reliability itself, separately for each **stream**, one of those independent conversations inside the connection. It also folds the encryption handshake into connection setup, so a new connection can be ready in one round trip instead of two.
 
 <figure class="diagram">
 <p class="rowname">TCP: One Lane</p>

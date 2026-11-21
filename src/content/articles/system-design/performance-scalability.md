@@ -56,7 +56,11 @@ A request passes through several stages, as in [The Life of a Request](/system-d
 <figcaption>This chain carries 1,500 requests per second, however fast the other stages are</figcaption>
 </figure>
 
-Doubling the web servers changes nothing here, and the database is where the limit sits. This is the rule from [From One Server to Many](/system-design/one-server-to-many): measure, find the bottleneck, then fix that part. Signs of a bottleneck are throughput that stops rising while response time keeps climbing, and one resource, such as a pool, a lock or a disk, running at its limit while the rest sit idle. Once you have found it, fix that stage, measure again, and expect the next bottleneck to show up. See [Load Testing](/system-design/load-testing).
+Doubling the web servers changes nothing here, and the database is where the limit sits.
+
+This is the rule from [From One Server to Many](/system-design/one-server-to-many): measure, find the bottleneck, then fix that part.
+
+Signs of a bottleneck are throughput that stops rising while response time keeps climbing, and one resource, such as a pool, a lock or a disk, running at its limit while the rest sit idle. Once you have found it, fix that stage, measure again, and expect the next bottleneck to show up. See [Load Testing](/system-design/load-testing).
 
 The next topic looks at the two ways to add capacity, [Scaling Up and Scaling Out](/system-design/scaling).
 
