@@ -66,7 +66,9 @@ Two models sit between the strong ones and the session guarantees.
 
 Below causal consistency are the small promises that fix the strangest effects of [Replication Lag](/system-design/replication-lag):
 
-**Read your writes** means a process that wrote a value sees it, or newer, in its later reads. **Monotonic reads** means a process's later reads don't show an older state than an earlier read. **PRAM** means a process's writes are seen everywhere in the order it made them, and it is equivalent to read your writes, monotonic reads and monotonic writes together.
+- **Read your writes**: a process that wrote a value sees it, or newer, in its later reads
+- **Monotonic reads**: a process's later reads don't show an older state than an earlier read
+- **PRAM**: a process's writes are seen everywhere in the order it made them, which is equivalent to read your writes, monotonic reads and monotonic writes together
 
 We checked what read policies give. In a simulation of one key written at 500 ms intervals with 3 followers, each normally 20 ms behind and 3 seconds behind for 2 percent of the time, 50 clients read at 50 reads a second in total. The leader's reads were the reference:
 
@@ -96,15 +98,12 @@ With several regions, strong writes take about twice the round trip between the 
 
 ## Models in Real Systems
 
-Here is a way to compare.
+Real systems make different choices:
 
-etcd makes reads linearizable by default. A serializable read is an opt in that can be stale and avoids waiting on consensus, which trades freshness for speed.
-
-Google Spanner's default gives external consistency, behavior as if transactions ran serially in the order commits can be seen, which is what strict serializability means. Reads are strong by default, and a stale read at a chosen age is available, with 15 seconds a reasonable value for performance.
-
-Amazon S3 gives strong read after write for puts and deletes of objects. A key is updated atomically, and there is no atomic update across keys. Concurrent puts to one key are settled by last writer wins.
-
-Azure Cosmos DB offers five levels, strong, bounded staleness, session, consistent prefix and eventual, from the strongest to the weakest, and each request can pick.
+- **etcd** makes reads linearizable by default. A serializable read is an opt in that can be stale and avoids waiting on consensus, which trades freshness for speed
+- **Google Spanner**'s default gives external consistency, behavior as if transactions ran serially in the order commits can be seen, which is what strict serializability means. Reads are strong by default, and a stale read at a chosen age is available, with 15 seconds a reasonable value for performance
+- **Amazon S3** gives strong read after write for puts and deletes of objects. A key is updated atomically, and there is no atomic update across keys. Concurrent puts to one key are settled by last writer wins
+- **Azure Cosmos DB** offers five levels, strong, bounded staleness, session, consistent prefix and eventual, from the strongest to the weakest, and each request can pick
 
 Claims need checking, since a database can say more than it does. Independent testing of MongoDB 4.2.6 in 2020 found that operations in a transaction ignored the collection level read concern and used the default `local`, and that the default write concern was one node.
 
