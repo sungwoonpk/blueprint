@@ -73,7 +73,7 @@ You rarely implement these yourself. You choose among the policies your cache of
 
 Exact LRU needs a list in order of use that is updated on every read, which costs memory and time. Redis takes a shortcut: when it needs to evict, it samples a few random keys and removes the one used longest ago.
 
-The setting is `maxmemory-samples`, the page's example is 5, and it says that 10 gets very close to true LRU, for a little more CPU.
+The setting is `maxmemory-samples`. The Redis documentation uses 5 in its example and says that 10 gets very close to true LRU, for a little more CPU.
 
 ```text
 maxmemory 100mb
@@ -81,9 +81,12 @@ maxmemory-policy allkeys-lru
 maxmemory-samples 10
 ```
 
-The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. In short, the choices are these.
+The `allkeys` policies choose from all entries, and the `volatile` ones only among entries that have a TTL, behaving like `noeviction` when none do. In short:
 
-Use `allkeys-lru` as the default choice when some entries get most of the requests, and `allkeys-random` when the entries are about equally popular. Use `volatile-ttl` when your code gives short TTLs to the entries that are best to drop. The `volatile-*` policies in general suit one instance that holds both cached and permanent keys, though two separate instances are cleaner.
+- **`allkeys-lru`**: the default choice when some entries get most of the requests
+- **`allkeys-random`**: for when the entries are about equally popular
+- **`volatile-ttl`**: for when your code gives short TTLs to the entries that are best to drop
+- **`volatile-*` in general**: they suit one instance that holds both cached and permanent keys, though two separate instances are cleaner
 
 Telling whether the policy works is simple. The hit ratio is hits divided by hits plus misses. A low hit ratio together with many evicted keys suggests that the cache is evicting the wrong entries or is too small. Few evictions but many expired keys suggests the TTLs are too short.
 
