@@ -19,11 +19,10 @@ A **producer** sends a message to a **broker**, the server that runs the queues.
 <figcaption>A message stays in the queue until its consumer confirms it</figcaption>
 </figure>
 
-The confirmation is the point. If the broker deleted a message as soon as it was handed out, a worker that crashed halfway would lose the job. Brokers offer two modes.
+The confirmation is the point. If the broker deleted a message as soon as it was handed out, a worker that crashed halfway would lose the job. Brokers offer two modes. In RabbitMQ's words:
 
-With automatic acknowledgement, the message counts as handled once it is written to the connection, which it calls unsafe: a message that was sent but not yet processed is lost if the connection closes.
-
-With manual acknowledgement, the consumer sends an `ack` after the work, and an unacknowledged message is put back in the queue when the connection or channel closes.
+- **Automatic acknowledgement**: the message counts as handled once it is written to the connection, which RabbitMQ calls unsafe, since a message that was sent but not yet processed is lost if the connection closes
+- **Manual acknowledgement**: the consumer sends an `ack` after the work, and an unacknowledged message is put back in the queue when the connection or channel closes
 
 Amazon SQS gets there by another route. When a consumer receives a message, SQS hides it for a **visibility timeout**, 30 seconds by default. If the consumer deletes the message in that time, it is gone.
 
