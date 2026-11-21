@@ -48,11 +48,11 @@ The range split is the worst because new listing ids are the newest, and they fa
 
 ## Choosing the Key
 
-A few tests help, and the first is cardinality. The number of distinct values caps the number of chunks, so a key of the continent, with 7 values, can't use more than 7 shards.
+A few tests help:
 
-Next is frequency. If a few values dominate, their chunk can't be split, a jumbo chunk in MongoDB's words, so add a field to the key to break it up. For values that keep growing, use hashing or a hashed prefix to avoid monotonic change.
-
-And check the query patterns: a query that includes the shard key goes to one shard, and one that doesn't is sent to the whole set of shards, which scales poorly.
+- **Cardinality**: the number of distinct values caps the number of chunks, so a key of the continent, with 7 values, can't use more than 7 shards
+- **Frequency**: if a few values dominate, their chunk can't be split, a jumbo chunk in MongoDB's words, so add a field to the key to break it up. For values that keep growing, use hashing or a hashed prefix to avoid monotonic change
+- **Query patterns**: a query that includes the shard key goes to one shard, and one that doesn't is sent to the whole set of shards, which scales poorly
 
 The same advice comes from the other side. A key with many distinct values, such as a user id, spreads load, and a status code with a few values or a date rounded to the hour is a poor key.
 

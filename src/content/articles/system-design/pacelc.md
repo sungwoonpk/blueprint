@@ -43,25 +43,13 @@ Reads have a similar choice. A strong read at the East leader costs the same rou
 
 ## How Real Systems Expose the Choice
 
-Systems that serve several regions publish numbers and settings for the choice, and each shows a different face of it.
+Systems that serve several regions publish numbers and settings for the choice, and each shows a different face of it:
 
-Cosmos DB keeps reads and writes under 10 ms at the 99th percentile for most consistency levels. The exception is strong consistency across several regions, which takes about twice the round trip between the two farthest regions plus 10 ms.
-
-Strong and bounded staleness reads consult 2 of 4 replicas and so cost twice as much, and strong across regions more than 5,000 miles apart is blocked by default. The levels are a PACELC trade, offered as a dial.
-
-Spanner makes each split of data a Paxos group with a leader. The leader forwards a write to the voting replicas and commits when a majority agrees, so a write spread over several regions includes a round trip between regions.
-
-A strong read on a replica that isn't the leader has to ask the leader for a timestamp, and a strong read from the US East coast against a leader in Europe takes about 100 ms.
-
-DynamoDB global tables have two modes. The default copies changes asynchronously, typically within a second or less, with last writer wins. The second writes synchronously to at least one other region before returning, so a read of any replica returns the latest item and the data loss on a failure is zero.
-
-There is no promised millisecond figure: latency depends on the regions and round trip time, so test it. The strong mode needs exactly three regions and fails a concurrent write to an item being changed elsewhere.
-
-Cassandra puts the choice in each request. A level such as LOCAL_QUORUM waits for a majority in the coordinator's data center, and EACH_QUORUM waits for a majority in each, which costs a wide area round trip.
-
-A local level gives read your writes within one data center, and it is faster than a level that must reach other data centers, though less available.
-
-Aurora Global Database copies to other regions with latency typically under a second, so a secondary region's reads are local and slightly behind.
+- **Cosmos DB** keeps reads and writes under 10 ms at the 99th percentile for most consistency levels. The exception is strong consistency across several regions, which takes about twice the round trip between the two farthest regions plus 10 ms. Strong and bounded staleness reads consult 2 of 4 replicas and so cost twice as much, and strong across regions more than 5,000 miles apart is blocked by default. The levels are a PACELC trade, offered as a dial
+- **Spanner** makes each split of data a Paxos group with a leader. The leader forwards a write to the voting replicas and commits when a majority agrees, so a write spread over several regions includes a round trip between regions. A strong read on a replica that isn't the leader has to ask the leader for a timestamp, and a strong read from the US East coast against a leader in Europe takes about 100 ms
+- **DynamoDB global tables** have two modes. The default copies changes asynchronously, typically within a second or less, with last writer wins. The second writes synchronously to at least one other region before returning, so a read of any replica returns the latest item and the data loss on a failure is zero. There is no promised millisecond figure: latency depends on the regions and round trip time, so test it. The strong mode needs exactly three regions and fails a concurrent write to an item being changed elsewhere
+- **Cassandra** puts the choice in each request. A level such as LOCAL_QUORUM waits for a majority in the coordinator's data center, and EACH_QUORUM waits for a majority in each, which costs a wide area round trip. A local level gives read your writes within one data center, and it is faster than a level that must reach other data centers, though less available
+- **Aurora Global Database** copies to other regions with latency typically under a second, so a secondary region's reads are local and slightly behind
 
 ## Buying Back Speed with Stale Reads
 
