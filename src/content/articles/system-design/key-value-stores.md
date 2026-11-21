@@ -23,7 +23,7 @@ The key is `session:9f3a`. The value is a string that holds some JSON, and the s
 
 `EX 1800` says the entry should disappear after 1,800 seconds, so a forgotten session cleans itself up. An expired key is removed in two ways: when a client asks for it after it expired, and by a background process that samples keys that have timeouts.
 
-One gotcha from the same page: a plain `SET` on a key that has a timeout clears the timeout, so the entry can live forever if the code forgets to set it again.
+One gotcha from the Redis documentation: a plain `SET` on a key that has a timeout clears the timeout, so the entry can live forever if the code forgets to set it again.
 
 ## What Fits
 
@@ -76,7 +76,7 @@ With no schema, the keys are the design. A common habit is a readable pattern, `
 
 In a store that spreads data over many machines, the key does a second job. DynamoDB hashes the partition key to pick a partition, a slice of storage that serves its share of the data. Traffic spreads evenly when the keys do.
 
-Pick a key with many different values, and to avoid ones with few values or ones that group requests in time. For the textbook app logging 3,000 page views a second at the registration day peak:
+Pick keys with many different values, and avoid ones with few values or ones that group requests in time. For the textbook app logging 3,000 page views a second at the registration day peak:
 
 | Candidate Key | Verdict | Why |
 | --- | --- | --- |
@@ -103,7 +103,7 @@ A log keyed by date would send all 3,000 page views to one partition, which is t
 <figcaption>Writes per second on four partitions, for the same 3,000 (example numbers)</figcaption>
 </figure>
 
-The fix is to spread the key. The standard fix is **write sharding**: add a suffix to the key, such as the date plus a number from 1 to 10, so one day becomes ten keys.
+The fix is to spread the key, and the standard way is **write sharding**: add a suffix to the key, such as the date plus a number from 1 to 10, so one day becomes ten keys.
 
 The price comes back at read time, since reading one day's data means asking ten keys and merging the answers. How a store decides which machine owns a key is the subject of [Consistent Hashing](/system-design/consistent-hashing).
 

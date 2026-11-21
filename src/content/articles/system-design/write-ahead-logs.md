@@ -32,13 +32,18 @@ The last row refers to a PostgreSQL feature, `full_page_writes`, on by default: 
 
 ## What the Log Holds
 
-The simplest log holds only redo information: how to reapply each change. Many systems log both redo and undo information, because of how databases manage memory. Two policies matter.
+The simplest log holds only redo information: how to reapply each change. Many systems log both redo and undo information, because of how databases manage memory. Two policies matter:
 
-A database may write a dirty page to disk before its transaction commits, called **steal**, to free memory, which means recovery may have to undo changes that never committed. And it needn't force pages to disk at commit, called **no-force**, which means committed changes may be missing from the files and must be redone.
+- **Steal**: a database may write a dirty page to disk before its transaction commits, to free memory, which means recovery may have to undo changes that never committed
+- **No-force**: a database needn't force pages to disk at commit, which means committed changes may be missing from the files and must be redone
 
 The classic design for this combination is ARIES, designed for a no-force, steal database.
 
-Recovery runs in three phases: analysis, which works out from the last checkpoint what was in flight, redo, which repeats history, including changes of transactions that were never committed, and undo, which rolls those back, writing a record for each undo so that a crash during recovery can itself be recovered.
+Recovery runs in three phases:
+
+- **Analysis**: works out from the last checkpoint what was in flight
+- **Redo**: repeats history, including changes of transactions that were never committed
+- **Undo**: rolls those back, writing a record for each undo so that a crash during recovery can itself be recovered
 
 The page's sequence number is also the trick that makes redo safe to repeat: each page stores the number of the last change applied to it, and a record already reflected in the page is skipped.
 
@@ -83,9 +88,7 @@ Once a database keeps an ordered record of each change, other uses follow:
 
 The same pattern appears far beyond relational databases. RocksDB, the engine behind many stores, writes each update to its WAL and to a table in memory, and the WAL recovers the table after a failure. A log is deleted once everything in it has been flushed to files.
 
-RocksDB has recovery modes for the awkward case of a damaged end of the log, which a crash in the middle of a write can leave: one tolerates a corrupted tail, one stops at the first error and returns to a consistent earlier point, and one treats any error as corruption.
-
-The point in time mode has been the default since version 6.6. SQLite offers a WAL mode too, in which changes are appended to a separate file and readers can work while a single writer appends.
+SQLite offers a WAL mode too, in which changes are appended to a separate file and readers can work while a single writer appends.
 
 And the consensus algorithm in [Consensus and Leader Election](/system-design/consensus-leader-election) gives each server a log as well as a state machine: first agree on the log, then apply it.
 

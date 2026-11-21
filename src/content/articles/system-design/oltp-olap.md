@@ -32,7 +32,7 @@ Typical response times and data sizes are milliseconds and gigabytes for OLTP, a
 
 ## Why Keep Them Apart
 
-A report can run on the main database, and for a small app that is a fine start. The trouble grows with the data, for reasons the sources point to:
+A report can run on the main database, and for a small app that is a fine start. The trouble grows with the data, for four reasons:
 
 - **Contention**: Analysis queries on a transaction system cause lock contention, which is one reason to have a warehouse. A scan of three million orders competes with the students' purchases for disk, memory and locks
 - **Opposite tuning**: An OLTP designer avoids excessive indexes, to keep writes fast, while analysis wants other structures, so a database designed for OLTP won't work well as an analytical store without careful design

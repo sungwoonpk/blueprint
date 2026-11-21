@@ -65,7 +65,7 @@ Replication is asynchronous by default. A replica started with `replicaof host p
 
 The `WAIT` command makes a client wait until some replicas acknowledge its writes, but even that doesn't make Redis strongly consistent, because acknowledged writes can still be lost in a failover.
 
-One warning from the same page is worth knowing: if a master without persistence restarts empty, its replicas copy the empty state and erase their own data.
+One warning from Redis's own documentation is worth knowing: if a master without persistence restarts empty, its replicas copy the empty state and erase their own data.
 
 ## Side by Side
 

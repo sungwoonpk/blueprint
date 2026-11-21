@@ -77,7 +77,7 @@ Also, the primary key is an identity. Two rows with the same primary key overwri
 
 Hashing the partition key spreads partitions over the machines, as [Consistent Hashing](/system-design/consistent-hashing) describes. The danger is in how big a single partition gets. Partitions should be just right: not too big, not too small.
 
-It sets a hard limit of 2 billion values in one partition, and says trouble usually starts long before that. All of a partition's rows live on the same replicas, so a huge or very busy one is a hotspot.
+Cassandra sets a hard limit of 2 billion values in one partition, and says trouble usually starts long before that. All of a partition's rows live on the same replicas, so a huge or very busy one is a hotspot.
 
 A private conversation stays small. A channel for a big course, where thousands of students post, doesn't. If the channel is the partition key, the partition grows without limit. The fix is to split it by time, with the month in the partition key:
 
@@ -89,7 +89,7 @@ Now one month of one channel is one partition, and "the latest 50" reads the cur
 
 Bigtable has the same worry with its row keys. The usual advice is to avoid row keys that start with a timestamp or a sequential number, because new rows pile onto the same machine.
 
-A key that begins with a value that has many different options, such as `conversation#41#`, spreads the writes. It also suggests keeping a row under 100 MB, with a hard limit of 256 MB.
+A key that begins with a value that has many different options, such as `conversation#41#`, spreads the writes. Google's guidance also suggests keeping a row under 100 MB, with a hard limit of 256 MB.
 
 ## Why Writes Are Cheap
 
