@@ -92,13 +92,13 @@ It rearranges `a` as it goes, so pass a copy if the original order matters. We c
 
 Each round costs time proportional to the size of the window, and the window shrinks. With a random pivot, there is a good chance that the pivot lands in the middle half of the window, which leaves at most three quarters of it. The sizes behave like n, then about 3n/4, then 9n/16, and a geometric series like that adds up to a constant multiple of n, not n log n.
 
-We counted comparisons on random lists. For the minimum, the maximum and the 95th percentile the count stayed near 2n, and for the median it was about 3.4n.
+We counted comparisons on random lists, as the mean of 60 to 300 lists for each size. The minimum stayed near 2n, the 95th percentile near 2.4n, and the median was about 3.4n, close to the 2n(1 + ln 2) that the analysis of random pivots gives.
 
 | Items | Minimum | 95th Percentile | Median |
 | --- | --- | --- | --- |
-| 1,000 | 2.2n | 2.5n | 3.1n |
-| 10,000 | 2.1n | 2.4n | 3.4n |
-| 100,000 | 1.9n | 2.2n | 3.5n |
+| 1,000 | 2.0n | 2.4n | 3.5n |
+| 10,000 | 2.0n | 2.4n | 3.4n |
+| 100,000 | 1.9n | 2.4n | 3.6n |
 
 The cost per item doesn't grow as the list grows, while sorting's does: n log₂ n is 13 comparisons for each item at 10,000 items and 17 at 100,000. On a list of a million random integers, our Python quickselect took 0.10 s, and `sorted(data)[k]` took 0.14 s, even though `sorted` is written in C. The same job with our Python merge sort took 1.87 s.
 
