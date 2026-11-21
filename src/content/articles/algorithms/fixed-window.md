@@ -68,7 +68,7 @@ def best_window_sum(a, k):
 
 The first window costs k steps and each of the remaining n − k windows costs a constant, so the total is O(n). Recomputing each window costs O(n × k).
 
-We tried it on 100,000 daily counts with a window of 1,000 days: sliding took 5.5 ms and recomputing took 319 ms, about 58 times more. The gap is the window size, so it grows with k. We compared the sliding version with brute force on 4,000 random arrays.
+We tried it on 100,000 daily counts with a window of 1,000 days: sliding took 6.9 ms and recomputing took 505 ms, about 70 times more. The gap is the window size, so it grows with k. We compared the sliding version with brute force on 4,000 random arrays.
 
 The invariant is that `window` holds the sum of the k items ending at index `i`. It is true after the first window is added, and each pass of the loop keeps it true by swapping one item for another.
 
@@ -79,6 +79,8 @@ A running sum is the simplest summary. The idea works for any summary that can b
 **Counts.** How many distinct values are in each window of k? Keep a dictionary of counts. When an item enters, add one to its count. When an item leaves, subtract one, and delete the key when it hits zero. The number of keys is the answer.
 
 ```python
+from collections import defaultdict
+
 def distinct_in_windows(a, k):
     counts = defaultdict(int)
     out = []
@@ -104,9 +106,9 @@ A window maximum can't be updated that simply, because removing the leaving item
 
 ## A Floating Point Caution
 
-With integers, adding and subtracting is exact. With decimals, each addition and subtraction rounds a little, and the rounding errors pile up as the window slides. We ran a window of 1,000 values over a million decimals.
+With integers, adding and subtracting is exact. With decimals, each addition and subtraction rounds a little, and the rounding errors pile up as the window slides. We ran a window of 1,000 values between 0 and 100 over four million decimals.
 
-The rolling sum ended 2.7 × 10⁻⁵ away from the sum recomputed directly for the last window. That is a small relative error, but it keeps growing with more steps. If the exact value matters, recompute the sum from time to time, or use a summation routine such as `math.fsum` for each window.
+The rolling sum was 6 × 10⁻¹⁰ away from the exactly summed window after 100,000 steps, 1.2 × 10⁻⁹ after two million steps and 2.9 × 10⁻⁹ after four million. That is a tiny relative error, near 6 × 10⁻¹⁴, but it wanders and tends to grow with more steps. If the exact value matters, recompute the sum from time to time, or use a summation routine such as `math.fsum` for each window.
 
 ## Choosing the Window Size
 
@@ -117,7 +119,7 @@ Edge cases for the fixed window are a k larger than the array, which has no wind
 ## Key Points
 
 - A fixed size window moves along the array one step at a time, adding the item that enters and removing the one that leaves
-- That update costs O(1), so all windows cost O(n), against O(n × k) for recomputing, 58 times slower in our test of 1,000 days
+- That update costs O(1), so all windows cost O(n), against O(n × k) for recomputing, 70 times slower in our test of 1,000 days
 - Any summary that can be added to and subtracted from works: sums, averages and counts of distinct values
 - Decimal sums drift with rounding errors over many steps, so recompute now and then if exactness matters
 - A window maximum needs more than add and subtract, and a monotonic queue handles it
