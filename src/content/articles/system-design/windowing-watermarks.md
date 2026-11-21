@@ -93,15 +93,12 @@ Choose the delay from the question: a trending list can tolerate 3 percent missi
 
 ## What to Do With Late Events
 
-Engines offer a few answers, which can be combined.
+Engines offer a few answers, which can be combined:
 
-The simplest answer is to drop them. Kafka Streams calls the wait a grace period, and discards a record whose window ended more than the grace period before the current stream time. Flink's allowed lateness is zero by default, so late events are dropped.
-
-The second is to update the result. Flink keeps a window for an allowed lateness after the watermark passes its end, so late events fire it again with a corrected result. With 5 minute windows and 1 minute of lateness, the 12:00 to 12:05 window is removed once the watermark passes 12:06. Downstream consumers then see two results for one window and must replace the first.
-
-The third is to divert them. Flink can send late events to a side output, a separate stream, so they can be counted, logged or fixed by a later batch job.
-
-The fourth is to adjust them. Azure Stream Analytics can drop late events or move their timestamp up to the watermark, which keeps the data and gives up exact timing. Its late arrival tolerance defaults to 5 seconds.
+- **Drop them**: Kafka Streams calls the wait a grace period, and discards a record whose window ended more than the grace period before the current stream time. Flink's allowed lateness is zero by default, so late events are dropped
+- **Update the result**: Flink keeps a window for an allowed lateness after the watermark passes its end, so late events fire it again with a corrected result. With 5 minute windows and 1 minute of lateness, the 12:00 to 12:05 window is removed once the watermark passes 12:06. Downstream consumers then see two results for one window and must replace the first
+- **Divert them**: Flink can send late events to a side output, a separate stream, so they can be counted, logged or fixed by a later batch job
+- **Adjust them**: Azure Stream Analytics can drop late events or move their timestamp up to the watermark, which keeps the data and gives up exact timing. Its late arrival tolerance defaults to 5 seconds
 
 ## Early, On Time and Late Results
 
@@ -109,9 +106,11 @@ A warning: a watermark is sometimes too fast, so late data shows up behind it, a
 
 Baseline lateness can be several minutes, so waiting for the watermark alone can give results later than a design that sends quick estimates and corrects them afterwards.
 
-Its answer is triggers, which decide when to emit, separately from the watermark. A window can fire early with a speculative result, again at the watermark, and again for each late event. A refinement mode says how those results relate.
+The Dataflow model's answer is triggers, which decide when to emit, separately from the watermark. A window can fire early with a speculative result, again at the watermark, and again for each late event. A refinement mode says how those results relate:
 
-With discarding, each result covers the events since the last one, which suits a consumer that adds them up. With accumulating, each result covers the whole window so far and replaces the previous one, which suits a consumer that overwrites a value. With accumulating and retracting, each result comes with a retraction of the previous one, which suits a consumer that aggregates further downstream.
+- **Discarding**: each result covers the events since the last one, which suits a consumer that adds them up
+- **Accumulating**: each result covers the whole window so far and replaces the previous one, which suits a consumer that overwrites a value
+- **Accumulating and retracting**: each result comes with a retraction of the previous one, which suits a consumer that aggregates further downstream
 
 Engines differ on this. In Azure Stream Analytics the output follows the watermark alone, with no partial or revised results, so the engine's model decides which designs are possible.
 
