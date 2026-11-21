@@ -2,7 +2,7 @@
 
 The library's visitor counts are no longer a finished history. The count for today keeps changing as people walk in, and the dean still asks for the total over any stretch of days.
 
-[Prefix sums](/algorithms/prefix-sums) answer each question in O(1), but one change to a day's count invalidates every running total after it, and repairing them costs O(n). Scanning the days for each question costs O(n) too. A Fenwick tree makes both operations cost O(log n).
+The running totals of [Prefix Sums for Range Queries](/algorithms/prefix-sums) answer each question in O(1), but one change to a day's count invalidates every running total after it, and repairing them costs O(n). Scanning the days for each question costs O(n) too. A Fenwick tree makes both operations cost O(log n).
 
 ## Each Slot Covers a Block
 
@@ -65,7 +65,7 @@ class Fenwick:
         return self.prefix(r) - self.prefix(l - 1)
 ```
 
-The sum of any stretch is the difference of two prefix sums, as in the prefix sum article. Each loop moves through at most about log₂ n slots, because each step clears or carries the lowest set bit, so both operations are O(log n). For a million days, a prefix sum reads at most 20 slots, and the prefix up to day 999,999 read 12.
+The sum of any stretch is the difference of two prefix sums, as in that article. Each loop moves through at most about log₂ n slots, because each step clears or carries the lowest set bit, so both operations are O(log n). For a million days, a prefix sum reads at most 20 slots, and the prefix up to day 999,999 read 12.
 
 The invariant is that `tree[k]` holds the sum of the days in the block ending at `k`, and `add` keeps it true for every block that contains the changed day. We checked the structure against a plain list on 2,000 random sequences of updates and range sums, with sizes from 1 to 20.
 
