@@ -132,9 +132,9 @@ It uses a single loop and two variables, and needs no memory for the rest of the
 
 Here is what happened, in the order that works on every problem of this kind.
 
-1. **Write the recursion.** Express the answer for the whole problem through answers to smaller versions of the same problem. This is the hard part, and the first sentence of this article was it.
-2. **Check that few different smaller problems arise.** Here they are the numbers 0 to n.
-3. **Compute each one once.** Remember them as they are computed, or fill them in from the smallest up.
+1. **Write the recursion.** Express the answer for the whole problem through answers to smaller versions of the same problem. This is the hard part, and the first sentence of this article was it
+2. **Check that few different smaller problems arise.** Here they are the numbers 0 to n
+3. **Compute each one once.** Remember them as they are computed, or fill them in from the smallest up
 
 The central claim of this phase is that the recursion is the algorithm, and the table is a way of running it fast. A wrong recurrence gives a wrong answer however neatly it is memoized, and a right one gives a correct answer even if it is slow.
 
