@@ -138,7 +138,7 @@ It is a weaker fit in a few places. Browsers can't speak the full protocol, so a
 
 Third parties trying out a public API prefer something they can call with `curl` and read in a log, which favors REST and JSON. And binary messages need tools to inspect, where JSON can be read as is.
 
-So many systems use both: REST and JSON at the edge for browsers and partners, and gRPC between the services inside, often with an [API Gateways](/system-design/api-gateways) translating between them. gRPC is also one choice among several RPC systems, such as Apache Thrift and JSON-RPC, which share the same idea.
+So many systems use both: REST and JSON at the edge for browsers and partners, and gRPC between the services inside, often with [API Gateways](/system-design/api-gateways) translating between them. gRPC is also one choice among several RPC systems, such as Apache Thrift and JSON-RPC, which share the same idea.
 
 [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) puts the styles side by side.
 
