@@ -17,7 +17,9 @@ Computer times are hard to feel because they are so small. So stretch them: if r
 | Seek on a spinning disk | 10 ms | About 4 months |
 | Round trip between continents | 150 ms | About 5 years |
 
-Each row is much slower than the one above it. So the first rule of speed is to avoid going far: memory beats an SSD by a factor of a thousand, and anything that crosses a network is slower than anything that doesn't. The original table of numbers like these goes back to Jeff Dean at Google. Faster drives and networks have since shifted some rows, SSDs in particular, but the gaps between rows have changed far less than the numbers themselves.
+Each row is much slower than the one above it. So the first rule of speed is to avoid going far: memory beats an SSD by a factor of a thousand, and anything that crosses a network is slower than anything that doesn't.
+
+The original table of numbers like these goes back to Jeff Dean at Google. Faster drives and networks have since shifted some rows, SSDs in particular, but the gaps between rows have changed far less than the numbers themselves.
 
 ## Distance Costs Time
 
