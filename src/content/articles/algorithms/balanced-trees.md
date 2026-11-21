@@ -104,11 +104,11 @@ Each node stores its height, and `update` recomputes it after a change. The recu
 
 We measured the effect on the input that ruined the plain tree. Inserting 100,000 keys in sorted order gave an AVL tree of height 16, with 99,983 rotations in all, about one for each insert, in 0.41 s. The plain tree on sorted keys was quadratic: 2,000, 4,000 and 8,000 sorted inserts took 0.05 s, 0.21 s and 0.81 s.
 
-For random keys, a plain tree of 200,000 keys was 45 levels tall and an AVL tree was 20, but the AVL took more time to build, 0.89 s against 0.34 s, since it does extra work to stay balanced.
+For random keys, a plain tree of 200,000 keys was 47 levels tall and an AVL tree was 20, but the AVL took more time to build, 0.97 s against 0.26 s, since it does extra work to stay balanced.
 
 ## Red-Black Trees and Others
 
-Other schemes trade the strictness of balance for cheaper repairs. A **red-black tree** colors nodes red or black and keeps rules that limit how unevenly the colors can stack, which keeps the height under 2 log₂ n. It is a binary form of a 2-3 tree, a perfectly balanced tree whose nodes hold one or two keys.
+Other schemes trade the strictness of balance for cheaper repairs. A **red-black tree** colors nodes red or black and keeps rules that limit how unevenly the colors can stack, which keeps the height under 2 log₂ n. It is a binary form of a 2-3-4 tree, a perfectly balanced tree whose nodes hold one to three keys.
 
 An update to a red-black tree needs at most a couple of rotations: the Linux kernel's documentation says at most two for an insert and three for a delete, a bounded cost per update.
 
