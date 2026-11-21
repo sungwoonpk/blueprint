@@ -109,7 +109,7 @@ The Python and Go rows are what we measured, and the Java row follows the growth
 
 A Python list stores references, so a list of numbers is a list of arrows to number objects. A C array, a Java `int[]` or a Python `array` stores the values themselves.
 
-The difference shows up in memory. A Python list of a million ints took about 36 MB in our run, counting the list and the int objects it points to, and the same numbers in `array('q')`, which stores 8 byte integers, took 8.2 MB. Values that sit side by side are also easier on the processor's cache, because reading one brings its neighbors along with it, a reason array based containers tend to beat pointer based ones.
+The difference shows up in memory. A Python list of a million ints took 40.0 MB in our run, counting the list and the int objects it points to, and the same numbers in `array('q')`, which stores 8 byte integers, took 8.2 MB. Values that sit side by side are also easier on the processor's cache, because reading one brings its neighbors along with it, a reason array based containers tend to beat pointer based ones.
 
 ## Key Points
 

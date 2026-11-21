@@ -126,7 +126,7 @@ The two `if` lines guard the case where the remaining area is a single row or a 
 
 ## How Big Can a Grid Get
 
-A grid with R rows and C columns has R × C cells, and the memory grows with that product. In Python, a 1,000 by 1,000 list of lists holding distinct integers took about 37 MB in our run, counting the lists and the int objects. The same million numbers in one flat `array('i')` took 4.1 MB, about nine times less.
+A grid with R rows and C columns has R × C cells, and the memory grows with that product. In Python, a 1,000 by 1,000 list of lists holding distinct integers took 40.9 MB in our run, counting the lists and the int objects. The same million numbers in one flat `array('i')` took 4.1 MB, ten times less.
 
 A grid of 10,000 by 10,000 is 100 million cells, which would need at least 800 MB for the references alone in a list of lists. The sizes in a problem's limits, as in [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints), tell you whether to use a compact array.
 
