@@ -55,7 +55,7 @@ For a tree with 50 at the root, 30 and 70 below it, 20 and 40 under 30, and 60 a
 
 With a tall tree and many queries, walking is slow. We built a tree of 100,000 nodes with a chain of 50,000 and a leaf attached to each chain node, so it is 50,000 levels deep, and asked for the lowest common ancestor of random pairs of leaves.
 
-Walking took 54 ms for 200 queries, about 0.27 ms each. The way to do better is to pay once for a table that lets a query jump.
+Walking took 51 ms for 200 queries, about 0.26 ms each. The way to do better is to pay once for a table that lets a query jump.
 
 **Binary lifting** stores, for every node, its ancestor 1 step up, 2 steps up, 4 steps up, 8 and so on. The ancestor 2^j steps up is the ancestor 2^(j−1) steps up from the ancestor 2^(j−1) steps up, so each row of the table comes from the row before.
 
@@ -90,7 +90,7 @@ def lca_lift(up, depth, a, b):
     return up[0][a]
 ```
 
-The table has about log₂ n rows of n entries, so building it costs O(n log n) memory and time, and each query is O(log n). On the 100,000 node tree the table had 17 rows and took 0.02 s to build. The same 200 queries took 1.3 ms, against 54 ms for walking. We verified this against brute force on the same 500 random trees.
+The table has about log₂ n rows of n entries, so building it costs O(n log n) memory and time, and each query is O(log n). On the 100,000 node tree the table had 17 rows and took 0.02 s to build. The same 200 queries took 0.74 ms, against 51 ms for walking. We verified this against brute force on the same 500 random trees.
 
 ## Faster Still, and Offline
 
@@ -112,5 +112,5 @@ A rough guide:
 - The lowest common ancestor is the deepest node above both given nodes, and a node counts as its own ancestor
 - Walking up is O(h): lift the deeper node to the same depth, then climb both until they meet
 - In a search tree, comparing values with each node finds it without parent pointers
-- Binary lifting stores 2^j th ancestors, builds in O(n log n), and answers each query in O(log n), 41 times faster than walking on our 50,000 deep tree
+- Binary lifting stores 2^j th ancestors, builds in O(n log n), and answers each query in O(log n), about 70 times faster than walking on our 50,000 deep tree
 - Distance between two nodes is `depth(a) + depth(b) − 2 × depth(lca)`

@@ -69,7 +69,7 @@ A binary tree with n nodes has n + 1 empty links, so the sequence has exactly 2n
 
 ## Level by Level
 
-The same idea works with a [level order traversal](/algorithms/level-order), writing `#` for missing children. For the same tree it gives `B,A,D,#,#,C,E`, once the markers after the last node are trimmed. This form reads naturally from the top down. Rebuilding uses a queue: each node takes the next two tokens as its children. We round-tripped this form on the same random trees.
+The same idea works with the traversal of [Level Order Traversal](/algorithms/level-order), writing `#` for missing children. For the same tree it gives `B,A,D,#,#,C,E`, once the markers after the last node are trimmed. This form reads naturally from the top down. Rebuilding uses a queue: each node takes the next two tokens as its children. We round-tripped this form on the same random trees.
 
 ## Rebuilding from Two Traversals
 
@@ -94,7 +94,7 @@ def build_from_pre_in(pre, ino):
 
 The dictionary `pos` gives each value's place in the inorder list in one step. Without it, a version that searches the list and slices both lists at every node does a lot more work. We rebuilt a chain of 1,000, 2,000 and 4,000 nodes both ways.
 
-The index map took 0.3 ms, 0.6 ms and 1.9 ms. The scanning and slicing version took 4 ms, 16 ms and 73 ms, quadrupling each time the size doubled. Both agreed with the original tree on 1,500 random trees.
+The index map took 0.3 ms, 0.6 ms and 1.2 ms. The scanning and slicing version took 4 ms, 16 ms and 73 ms, quadrupling each time the size doubled. Both agreed with the original tree on 1,500 random trees.
 
 Distinct values matter. With repeated values the root's place in the inorder list is ambiguous. Preorder with postorder can't rebuild a tree either, as the one-child example showed.
 
@@ -121,9 +121,9 @@ We rebuilt 1,000 random search trees from their preorder lists, and each matched
 
 ## Cost and Format
 
-Both directions take O(n) time. On a balanced tree of 200,000 nodes, serializing took 25 ms and deserializing 142 ms, and the text was 1.7 MB.
+Both directions take O(n) time. On a balanced tree of 200,000 nodes, serializing took 20 ms and deserializing about 100 ms, and the text was 1.7 MB.
 
-The nested form common in JSON, where each node is an object with its value and two children, took 6.1 MB for the same tree, because it repeats names at every node. The flat form is compact and fast, and the nested form is easier to read and edit by hand.
+The nested form common in JSON, where each node is an object with its value and two children, took 6.1 MB for the same tree even with one letter keys, `v`, `l` and `r`, because it repeats the names at every node. The flat form is compact and fast, and the nested form is easier to read and edit by hand.
 
 Whatever form you choose, the same rule applies: the format must carry the shape. Test it with a round trip, serialize then rebuild then serialize again and compare, on the empty tree, one node, a chain and a bushy tree, as the advice in [Edge Cases and Testing](/algorithms/edge-cases) suggests. A deep chain can also overflow the call stack in the recursive versions, which [Turning Recursion into Iteration](/algorithms/recursion-to-iteration) addresses.
 

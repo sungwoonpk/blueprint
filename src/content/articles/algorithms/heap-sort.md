@@ -1,6 +1,6 @@
 > **Heap sort** builds a max-heap from the array, then repeatedly swaps the largest item to the end and repairs the heap in the shorter front part. It sorts in place and takes O(n log n) time even in the worst case, but it isn't stable.
 
-[Selection sort](/algorithms/simple-sorts) finds the largest remaining item with a full scan, n steps for each of n rounds. The scan is where the time goes. A heap from [Heaps and Priority Queues](/algorithms/heaps) can hand over the largest item in log n steps instead. Replace the scan with a heap, and selection sort's O(n²) becomes O(n log n), with its in-place habit intact.
+Selection sort, from [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts), finds the largest remaining item with a full scan, n steps for each of n rounds. The scan is where the time goes. A heap from [Heaps and Priority Queues](/algorithms/heaps) can hand over the largest item in log n steps instead. Replace the scan with a heap, and selection sort's O(n²) becomes O(n log n), with its in-place habit intact.
 
 ## Two Phases
 
@@ -89,7 +89,7 @@ We counted comparisons on random arrays. The count should be about 2 n log₂ n 
 | 1,000 | 16,888 | 85% | 8,529 |
 | 100,000 | 3,019,715 | 91% | 1,516,704 |
 
-Heap sort uses nearly twice the minimum number of comparisons that any comparison sort needs, from [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound), where merge sort came within 2%. The count hardly changed with the input's order: a sorted list of 100,000 took 3,112,517 comparisons and a reversed one 2,926,640. Heap sort doesn't exploit existing order, which is why [Python's sort](/algorithms/library-sorts) beats it on partly ordered data.
+Heap sort uses nearly twice the minimum number of comparisons that any comparison sort needs, from [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound), where merge sort came within 2%. The count hardly changed with the input's order: a sorted list of 100,000 took 3,112,517 comparisons and a reversed one 2,926,640. Heap sort doesn't exploit existing order, which is why the Timsort of [How Standard Library Sorts Work](/algorithms/library-sorts) beats it on partly ordered data.
 
 ## Not Stable, and Not Fast in Practice
 
