@@ -65,7 +65,7 @@ XA RECOVER lists the prepared branches after a crash. A transaction with a singl
 
 A prepared transaction is neither committed nor rolled back, and it holds its locks. Leaving one prepared for long interferes with vacuum in PostgreSQL and, in extreme cases, can force a shutdown to prevent transaction ID wraparound.
 
-It says the feature is meant for external transaction managers and not for applications, and that if no manager tracks prepared transactions, `max_prepared_transactions` should stay at its default of 0. A prepared transaction that is forgotten holds its locks until someone finds it in `pg_prepared_xacts`.
+PostgreSQL's documentation says the feature is meant for external transaction managers and not for applications, and that if no manager tracks prepared transactions, `max_prepared_transactions` should stay at its default of 0. A prepared transaction that is forgotten holds its locks until someone finds it in `pg_prepared_xacts`.
 
 The time a participant stays locked depends on the network. We calculated it, assuming 1 ms to force a log write:
 

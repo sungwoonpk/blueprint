@@ -41,7 +41,7 @@ Two problems grow with the number of shards. The slowest shard sets the pace, as
 
 The second problem is work. In Elasticsearch a search uses one thread for each shard, so many shards can exhaust the search thread pool.
 
-It advises shards of 10 GB to 50 GB and under 200 million documents, and the number of concurrent shard requests defaults to 5 per node. Adding shards to hold more data makes each local index query more expensive.
+Elasticsearch advises shards of 10 GB to 50 GB and under 200 million documents, and the number of concurrent shard requests defaults to 5 per node. Adding shards to hold more data makes each local index query more expensive.
 
 The fan out can be avoided when the query contains a routing value. In Elasticsearch, a document indexed with a routing value goes to one shard, and a search with the same value asks that shard alone. That is the same as choosing a shard key.
 
@@ -63,7 +63,9 @@ An index entry and its row are on different shards, and no single transaction co
 
 Spanner keeps a global index atomic with two phase commit. The index is stored as a separate table that can be split on its own, and updates often span splits, so a global index costs more to write than one stored with its parent row. An interleaved index, stored with the parent row, is usually written locally. The commit protocol is in [Two-Phase Commit](/system-design/two-phase-commit).
 
-Vitess takes a careful protocol instead. It keeps a lookup table that maps a column value to a shard. A standard lookup is essentially a distributed transaction, and its consistent lookup variants use locks and a sequence of three sessions to avoid two phase commit, with the limit that an insert followed by an update of the same value in one transaction isn't supported. A lookup also costs more than a computed shard in its planner: 10 for a unique lookup and 20 for a non unique one, against 1 for a hash.
+Vitess takes a careful protocol instead. It keeps a lookup table that maps a column value to a shard. A standard lookup is essentially a distributed transaction, and its consistent lookup variants use locks and a sequence of three sessions to avoid two phase commit, with the limit that an insert followed by an update of the same value in one transaction isn't supported.
+
+A lookup also costs more than a computed shard in its planner: 10 for a unique lookup and 20 for a non unique one, against 1 for a hash.
 
 DynamoDB goes asynchronous and repairs. It updates its indexes later. Facebook's TAO stores an association on the shard of its first object and the inverse on the shard of the second, with no atomicity between the two writes. A failure can leave the forward edge without its inverse, and an asynchronous job repairs these hanging associations.
 
@@ -85,7 +87,7 @@ An index can be a hotspot of its own. In Spanner, using the commit timestamp as 
 
 CockroachDB solves the same problem with hash sharded indexes: it adds a hidden shard column computed as a hash of the key modulo a bucket count, which becomes the index key prefix, so sequential writes spread over ranges.
 
-The price is that a scan over the sequential key reads each bucket. It advises against more buckets than nodes.
+The price is that a scan over the sequential key reads each bucket. CockroachDB's documentation advises against more buckets than nodes.
 
 ## Choosing
 
