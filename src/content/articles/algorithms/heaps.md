@@ -131,7 +131,7 @@ To change the priority of a waiting task, the usual trick is **lazy deletion**: 
 
 ## Where Heaps Appear
 
-Heaps run schedulers that pick the next job, event simulations that process the earliest event, and shortest path searches that take the nearest unvisited place, as in [Dijkstra's Algorithm](/algorithms/dijkstra). The next articles use them directly: [Heap Sort](/algorithms/heap-sort) sorts with one, [Top K Elements](/algorithms/top-k) keeps the best k with one, and [Running Medians with Two Heaps](/algorithms/two-heaps) uses two.
+Heaps run schedulers that pick the next job, event simulations that process the earliest event, and shortest path searches that take the nearest unvisited place, as in [Dijkstra’s Algorithm](/algorithms/dijkstra). The next articles use them directly: [Heap Sort](/algorithms/heap-sort) sorts with one, [Top K Elements](/algorithms/top-k) keeps the best k with one, and [Running Medians with Two Heaps](/algorithms/two-heaps) uses two.
 
 ## Key Points
 

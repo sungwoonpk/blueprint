@@ -69,7 +69,7 @@ For the response times, this is the alert loop: push each new reading, and read 
 
 For the minimum, flip the comparison, so the deque keeps rising values and the front is the smallest. The same code with `>=` in place of `<=` handles it.
 
-The most useful trick is combining a monotonic queue with prefix sums. In [Kadane's Algorithm for Maximum Subarrays](/algorithms/kadane), the best stretch ending at `j` uses the smallest earlier prefix sum. If the stretch may be at most k items long, the earlier prefix must come from the last k positions, a sliding window minimum.
+The most useful trick is combining a monotonic queue with prefix sums. In [Kadane’s Algorithm for Maximum Subarrays](/algorithms/kadane), the best stretch ending at `j` uses the smallest earlier prefix sum. If the stretch may be at most k items long, the earlier prefix must come from the last k positions, a sliding window minimum.
 
 ```python
 import itertools
