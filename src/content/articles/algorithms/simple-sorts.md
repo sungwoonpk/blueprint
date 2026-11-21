@@ -42,7 +42,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <figure class="diagram">
 <p class="rowname">Insert 2</p>
 <div class="cells">
-<div class="cell done">2</div>
+<div class="cell hl">2</div>
 <div class="cell done">5</div>
 <div class="cell">4</div>
 <div class="cell">6</div>
@@ -52,7 +52,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <p class="rowname">Insert 4</p>
 <div class="cells">
 <div class="cell done">2</div>
-<div class="cell done">4</div>
+<div class="cell hl">4</div>
 <div class="cell done">5</div>
 <div class="cell">6</div>
 <div class="cell">1</div>
@@ -63,13 +63,13 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <div class="cell done">2</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
-<div class="cell done">6</div>
+<div class="cell hl">6</div>
 <div class="cell">1</div>
 <div class="cell">3</div>
 </div>
 <p class="rowname">Insert 1</p>
 <div class="cells">
-<div class="cell done">1</div>
+<div class="cell hl">1</div>
 <div class="cell done">2</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
@@ -80,7 +80,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <div class="cells">
 <div class="cell done">1</div>
 <div class="cell done">2</div>
-<div class="cell done">3</div>
+<div class="cell hl">3</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
 <div class="cell done">6</div>
