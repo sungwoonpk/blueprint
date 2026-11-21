@@ -45,7 +45,7 @@ Debezium, an open source tool that reads these logs, wraps each change in an env
 }
 ```
 
-The `op` is `c` for create, `u` for update, `d` for delete and `r` for a row read during a snapshot. Whether `before` is complete depends on the database: In PostgreSQL, by default an update or delete carries just the key columns, and the whole old row needs `REPLICA IDENTITY FULL` on the table.
+The `op` is `c` for create, `u` for update, `d` for delete and `r` for a row read during a snapshot. Whether `before` is complete depends on the database: in PostgreSQL, by default an update or delete carries just the key columns, and the whole old row needs `REPLICA IDENTITY FULL` on the table.
 
 A delete is followed, by default, by a tombstone with the same key and an empty value, which lets log compaction in [Logs as Message Brokers](/system-design/log-based-brokers) clean up the old events for that key.
 
@@ -76,7 +76,7 @@ The position in the log, a log sequence number in PostgreSQL or a file and offse
 
 That gives at least once delivery. In normal operation each change arrives once, but after a crash a replacement task resumes from the last recorded position, not the last processed one, so duplicates can appear, depending on how often positions are saved.
 
-It points to the log position in each event for detecting them.
+Each event carries its log position, which helps detect them.
 
 Google's Datastream delivers at least once with no guaranteed order, though the event metadata carries what is needed to order and deduplicate.
 
@@ -86,15 +86,13 @@ Latency isn't promised either. AWS's migration service promises no latency for i
 
 ## What Can Go Wrong
 
-A stalled reader fills the disk. The database has to keep the log until its readers have taken it. In PostgreSQL a replication slot holds the log it hasn't delivered even with no consumer connected, and in extreme cases that can bring the server down. If the textbook app's database writes 5 MB of log a second, a connector that is down for 6 hours leaves 108 GB behind. SQL Server has the same shape, since its log can't be truncated until the capture job has read it.
+Five things go wrong most often:
 
-MySQL has the opposite risk: a slow reader loses the log. Binary logs expire after a set time, 30 days by default, and a consumer that falls further behind than that can't resume and needs a new snapshot.
-
-Quiet tables hold the log back too. A connector that watches few busy tables rarely confirms its position, and Debezium offers heartbeats, set with `heartbeat.interval.ms` and off by default, so that it reports progress even when no rows change.
-
-Schema changes aren't events. In PostgreSQL, logical decoding doesn't capture changes to the table definition, so a column change reaches consumers as a change in the shape of later events. Use the expand and contract steps from [Schema Migrations Without Downtime](/system-design/schema-migrations), and let consumers ignore fields they don't know.
-
-And failover can lose the position. A replication slot lives on the primary, so after a switch to a replica it may be missing. PostgreSQL 17 added slots that can be kept in sync on a standby, and older setups have to recreate the slot, which can mean a gap or a new snapshot.
+- **A stalled reader fills the disk**: the database has to keep the log until its readers have taken it. In PostgreSQL a replication slot holds the log it hasn't delivered even with no consumer connected, and in extreme cases that can bring the server down. If the textbook app's database writes 5 MB of log a second, a connector that is down for 6 hours leaves 108 GB behind. SQL Server has the same shape, since its log can't be truncated until the capture job has read it
+- **A slow reader loses the log**: this is MySQL's opposite risk. Binary logs expire after a set time, 30 days by default, and a consumer that falls further behind than that can't resume and needs a new snapshot
+- **Quiet tables hold the log back**: a connector that watches few busy tables rarely confirms its position, and Debezium offers heartbeats, set with `heartbeat.interval.ms` and off by default, so that it reports progress even when no rows change
+- **Schema changes aren't events**: in PostgreSQL, logical decoding doesn't capture changes to the table definition, so a column change reaches consumers as a change in the shape of later events. Use the expand and contract steps from [Schema Migrations Without Downtime](/system-design/schema-migrations), and let consumers ignore fields they don't know
+- **Failover can lose the position**: a replication slot lives on the primary, so after a switch to a replica it may be missing. PostgreSQL 17 added slots that can be kept in sync on a standby, and older setups have to recreate the slot, which can mean a gap or a new snapshot
 
 Watch the lag in time and in bytes, and alert long before the disk is full.
 

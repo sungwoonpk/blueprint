@@ -168,7 +168,7 @@ One Python library uses a single application wide key, so shredding for one pers
 
 Use the pattern where it earns its cost: an audit trail with intent matters, replay and compensation are needed, or many readers want different views.
 
-It advises against it for simple create, read, update and delete work, for short lived or early prototypes, for data that is mostly static, when views must be fully up to date at once, and for a team that is new to event driven design.
+Microsoft's guidance advises against it for simple create, read, update and delete work, for short lived or early prototypes, for data that is mostly static, when views must be fully up to date at once, and for a team that is new to event driven design.
 
 It also advises using it for a part of a system and keeping plain tables elsewhere. The textbook app's wallet and its orders are good candidates, because money moves and disputes need answers. Seller profiles and the course list are plain tables.
 
