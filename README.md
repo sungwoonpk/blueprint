@@ -1,6 +1,6 @@
-# blueprint
+# Coreva
 
-A text-first study guide with one ordered roadmap per subject: **System Design** (fundamentals, building blocks, distributed systems, patterns and the classic papers) and **Algorithms** (the data structures, techniques and strategies behind coding problems). It is for learning concepts, not for practicing exercises. The name is always lowercase and lives in `src/config.ts`.
+A text-first study guide with one ordered roadmap per subject: **System Design** (fundamentals, building blocks, distributed systems, patterns and the classic papers) and **Algorithms** (the data structures, techniques and strategies behind coding problems). It is for learning concepts, not for practicing exercises. The site name is **Coreva** and lives in `src/config.ts`.
 
 ## Status
 

@@ -4,7 +4,7 @@ Simple and quiet, in the spirit of Apple's own sites: system font, lots of white
 
 ## Identity
 
-The header shows the logo and the name, **blueprint** (always lowercase). The name links to Home. Browser tabs read `blueprint` on Home, the subject name on a subject's roadmap ("System Design", "Algorithms"), and `<topic> · blueprint` on a topic.
+The header shows the logo and the name, **Coreva**. The name links to Home. Browser tabs read `Coreva` on Home, the subject name on a subject's roadmap ("System Design", "Algorithms"), and `<topic> · Coreva` on a topic.
 
 The logo is the artwork in `docs/assets/logo-source.png`, a transparent PNG, cropped to the shape. It sits directly on the page in both themes.
 

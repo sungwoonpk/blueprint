@@ -63,7 +63,7 @@ Do all of these after the last edit, every time:
 
 ## Sources and our own voice
 
-The words in blueprint are ours. We learn from the sources, understand them, and then explain the idea as if we had worked it out, with our own example, our own numbers and our own simulation. Rules:
+The words on Coreva are ours. We learn from the sources, understand them, and then explain the idea as if we had worked it out, with our own example, our own numbers and our own simulation. Rules:
 
 - **Where to learn**: Official documentation, papers, standards (RFCs), and the engineering articles of the company or institution that built the thing. Never Wikipedia, Reddit, Stack Overflow, Medium or any page that anyone can edit. Famous system design sites and books are for background and cross checking only, never for the structure or the words of a page.
 - **Read, don't relay**: Read the source yourself, then close it and write what you understood. If a fact can't be traced to a primary source, compute it ourselves or leave it out.
