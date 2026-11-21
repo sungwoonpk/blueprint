@@ -69,7 +69,7 @@ def lis_length_fast(a):
 | 7 | 9 | 2, 3, 6, 9 |
 | 8 | 7 | 2, 3, 6, 7 |
 
-The list's length at the end, 4, is the answer. The list itself isn't always a real run. At the end it holds 2, 3, 6, 7, and 2, 3, 6, 7 happens to be a real run here, but each tail comes from the best run of its length so far, and those runs can use different days, so in general the list mixes them.
+The list's length at the end, 4, is the answer. The list itself isn't always a real run. Here it ends as 2, 3, 6, 7, which happens to be one, days 2, 5, 6 and 8, but each tail comes from the best run of its length so far, and those runs can use different days, so in general the list mixes them.
 
 To list a real run, record for each tail which day it came from and which tail was just below it when it was placed, and walk back.
 
@@ -87,7 +87,7 @@ The quadratic time grows about 4 times when the length doubles, and the tails me
 
 ## A Surprise About Random Sequences
 
-In a random shuffle of the numbers 1 to n, we might expect the longest increasing run to be short or long. It is neither. For n = 100,000 it was 632, and for n = 1,000,000 it was 1,980. Compare with 2√n: 632 and 2,000.
+In a random shuffle of the numbers 1 to n, we might expect the longest increasing run to be short or long. It is neither. Over five shuffles each, n = 100,000 gave between 619 and 627, and n = 1,000,000 gave between 1,977 and 1,997. Compare with 2√n: 632 and 2,000, a little above what we saw, since the true average falls slightly short of it at these sizes.
 
 The longest increasing subsequence of a random shuffle is about twice the square root of its length. A sorted list has an LIS of n, which for 1,000 values is 1,000, and a descending list has 1.
 
@@ -103,4 +103,4 @@ And the length of the LIS also equals the length of the longest common subsequen
 - For step counts 5, 2, 8, 6, 3, 6, 9, 7 the longest run is 4 days long, 2, 3, 6, 9, and the table matched a brute force over all subsets on 1,500 random lists
 - Keeping the smallest tail for each length gives a sorted list, and each new value either extends it or replaces the first tail at least as large, found by binary search, for O(n log n)
 - The list of tails gives the length but not the run itself, so a real run needs the days recorded as well
-- In random shuffles the longest run was close to 2√n, 1,980 for a million values, and the tails method took 0.18 s for that
+- In random shuffles the longest run was close to 2√n, about 1,980 for a million values, and the tails method took 0.18 s for that
