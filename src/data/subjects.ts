@@ -22,6 +22,7 @@ const subject = (name: string, path: string, phases: Phase[]): Subject => ({
 export const subjects: Subject[] = [
   subject('System Design', '/system-design', systemDesign),
   subject('Algorithms', '/algorithms', algorithms),
+  subject('Data & AI', '/data-ai', []),
 ];
 
 export const subjectAt = (path: string): Subject => subjects.find((s) => s.path === path)!;
