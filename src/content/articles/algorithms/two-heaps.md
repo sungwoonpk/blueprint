@@ -6,7 +6,7 @@ But the dashboard can't re-sort a million numbers after each new request, and it
 
 ## The Costs of the Easy Ways
 
-Keeping all values in a sorted list lets you read the middle in O(1), but each insert shifts items, which costs O(n). Recomputing the median from scratch costs O(n log n) per step with a sort, or O(n) with [quickselect](/algorithms/quickselect), which is still too much at every step.
+Keeping all values in a sorted list lets you read the middle in O(1), but each insert shifts items, which costs O(n). Recomputing the median from scratch costs O(n log n) per step with a sort, or O(n) with the method of [Quickselect](/algorithms/quickselect), which is still too much at every step.
 
 We measured both on streams of random numbers. With `bisect.insort` into a sorted list, 100,000 items took 795 ms. Recomputing `statistics.median` after each of 20,000 items would take about 16 seconds, estimated from samples. Both slow down quickly as the stream grows.
 
