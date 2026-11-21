@@ -137,7 +137,7 @@ Clients help by caching. A Eureka client keeps its own copy of the list and refr
 | Many platforms, or VMs and containers together | A registry such as Consul |
 | A service mesh or Envoy based proxies | A control plane pushing endpoint lists |
 
-The last row leads into the next topics. An [API Gateways](/system-design/api-gateways) uses discovery to route outside requests to the right service, and a [Service Meshes and Sidecars](/system-design/service-mesh) puts a proxy beside each service, with the registry feeding those proxies a live list.
+The last row leads into the next topics. [API Gateways](/system-design/api-gateways) use discovery to route outside requests to the right service, and [Service Meshes and Sidecars](/system-design/service-mesh) put a proxy beside each service, with the registry feeding those proxies a live list.
 
 ## Key Points
 
