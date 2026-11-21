@@ -34,7 +34,7 @@ Here is the run for the three largest of 4, 9, 2, 7, 5, 8 and 1.
 
 The invariant is that the heap holds the k largest items among those seen so far. An item that is not larger than the heap's smallest can never be in the final answer, since k items already beat it. The cost for each item is a comparison with the top, and for items that get in, a replacement costing O(log k).
 
-So the pass is O(n log k) at worst. The heap only ever holds k items, which matters for streams: we ran a million values through a generator with k = 100, and the extra memory peaked at about 4 KB, where sorting the same stream used 36 MB.
+So the pass is O(n log k) at worst. The heap only ever holds k items, which matters for streams: we ran a million values through a generator with k = 100, and the extra memory peaked at about 6 KB, where sorting the same stream used 36 MB.
 
 ## Faster Than the Worst Case Suggests
 
