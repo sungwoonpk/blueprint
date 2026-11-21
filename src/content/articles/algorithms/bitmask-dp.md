@@ -133,7 +133,7 @@ At the rate of our brute force, about 0.45 microseconds an order, 16 stops would
 
 ## The Limit
 
-The table has 2ⁿ sets with n last stops each, so its size doubles with every stop, and so does the time, with a factor of n² as well. Memory was the first wall: 136 MB at 18 stops, so about 550 MB at 20 and 2 GB at 22 with this Python layout.
+The table has 2ⁿ sets with n last stops each, so its size doubles with every stop, and so does the time, with a factor of n² as well. Memory was the first wall: 136 MB at 18 stops, so about 600 MB at 20 and 2.7 GB at 22 with this Python layout.
 
 That is why bitmask DP is for sets of about 20 items at most, a fact that [Reading Constraints to Pick a Target Complexity](/algorithms/reading-constraints) uses to recognize the problem: "n is at most 20" invites a subset in the state.
 
