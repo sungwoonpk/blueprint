@@ -112,7 +112,7 @@ For sizes where the best can't be found, the tree gives the yardstick. On a rand
 
 The idea can be improved. Some buildings in the tree have an odd number of paths meeting there. Pair those buildings up in the cheapest way and add the pairing's paths to the tree, and every building has an even number of paths, so a single walk can use each path once, as in [Eulerian Paths and Circuits](/algorithms/eulerian-paths).
 
-Shortcutting that walk is the method of Christofides, with a guarantee of 1.5 times the best. A slight improvement, below 1.5 by a tiny amount, was published in 2021 by Karlin, Klein and Oveis Gharan. Whether a factor close to 1 is possible is open, and it can't go below about 1.004 unless P equals NP.
+Shortcutting that walk is the method of Christofides, with a guarantee of 1.5 times the best. A slight improvement, below 1.5 by a tiny amount, was published in 2021 by Karlin, Klein and Oveis Gharan. Whether a factor close to 1 is possible is open, and it can't go below about 1.008 unless P equals NP.
 
 ## Knapsack as Close as We Like
 
@@ -159,9 +159,9 @@ For those 100 items with weights and values between 10⁸ and 10⁹, it took 0.0
 | --- | --- | --- | --- |
 | Vertex cover | Cameras at both ends of unwatched roads | 2 | Not below 1.36 unless P = NP |
 | Metric tour | Double tree | 2 | |
-| Metric tour | Christofides | 1.5 | Not below about 1.004 unless P = NP |
+| Metric tour | Christofides | 1.5 | Not below about 1.008 unless P = NP |
 | Any tour | None | No constant | Unless P = NP |
-| Knapsack | Rounded values | 1 + ε for any ε | |
+| Knapsack | Rounded values | 1 − ε of the best, for any ε | |
 
 The guarantee is a worst case, and the averages in the knapsack table show how far a typical instance can be from it. A method with no guarantee at all might do as well or better, which is the topic of [Heuristics and Local Search](/algorithms/local-search).
 

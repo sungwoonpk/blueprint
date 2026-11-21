@@ -93,7 +93,7 @@ def two_opt(walk, tour):
 
 Every accepted move makes the tour shorter, so it can't loop forever, and when a full pass finds nothing to change, we are at a local optimum. A pass looks at about n²/2 pairs. We checked that every result was a valid tour.
 
-Started from the nearest neighbor tour, two-opt gave tours 1.011 times the best on average for 12 points, with a worst case of 1.09, and found the best tour exactly in 62 of 100 instances. For 500 points it took 0.10 s and the tour came down from 1.47 to 1.21 times the tree bound.
+Started from the nearest neighbor tour, two-opt gave tours 1.011 times the best on average for 12 points, with a worst case of 1.09 on these instances and 1.22 on another set, and found the best tour exactly in 62 of 100 instances. For 500 points it took 0.10 s and the tour came down from 1.47 to 1.21 times the tree bound.
 
 ## Stuck at a Local Optimum
 
@@ -109,7 +109,7 @@ The standard fix for the tour is to start again from different places and keep t
 | 5 | 92% | 0.07% |
 | 20 | 100% | 0% |
 
-Twenty starts were enough for all of 12 points, which isn't a measure of larger problems. On 500 points, the best of 100 random starts took 10 s and was 1.22 times the tree bound, no better than the single run from the nearest neighbor tour at 0.10 s, since random starts end in poorer local optima than the nearest neighbor start does.
+Twenty starts solved all 100 instances of 12 points, and 99 of 100 on a second set of instances, which isn't a measure of larger problems. On 500 points, the best of 100 random starts took 10 s and was 1.22 times the tree bound, no better than the single run from the nearest neighbor tour at 0.10 s, since random starts end in poorer local optima than the nearest neighbor start does.
 
 Restarting helps when local optima are few and cheap, and not so much when they are many.
 
@@ -221,4 +221,4 @@ In practice they combine. A tour from a heuristic is a fine starting point for a
 - Two-opt, which replaces two paths of the tour with two shorter ones by reversing a stretch, took a 500-stop tour from 1.47 to 1.21 times the tree bound in 0.10 s, and found the exact best for 62 of 100 tours of 12 points
 - A local optimum can be far from the best: removing cameras from a star hub first stops at 100 cameras where 1 would do
 - Restarts solved all 100 instances of 12 points with 20 starts, and simulated annealing, which accepts worse moves with probability e<sup>−Δ/T</sup>, kept improving with time, 1.21 to 1.16 times the bound on 500 stops
-- WalkSAT found assignments 5 to 8 times faster than DPLL near the hard region, but it can't prove that none exists, and it missed one satisfiable formula in 40 at ratio 4.0
+- WalkSAT found assignments 5 to 8 times faster than DPLL near the hard region, but it can't prove that none exists, and it missed one of the 38 satisfiable formulas at ratio 4.0
