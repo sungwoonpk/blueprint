@@ -10,8 +10,8 @@ Without limits, a day is spent in one of two situations: holding a copy, or not.
 
 Each day we choose what to do. With nothing held we can rest, or buy, which moves to holding and costs the price. Holding, we can rest, or sell, which moves to free and earns the price. So today's values come from yesterday's:
 
-- free after today is the larger of free yesterday, and hold yesterday plus today's price
-- hold after today is the larger of hold yesterday, and free yesterday minus today's price
+- Free after today is the larger of free yesterday, and hold yesterday plus today's price
+- Hold after today is the larger of hold yesterday, and free yesterday minus today's price
 
 ```python
 def best_unlimited(prices):
@@ -48,9 +48,9 @@ Now the bookstore adds a rule: after selling, you must sit out the next day befo
 
 The diagram lists every move. Buying takes free to holding, selling takes holding to cooldown, and a day of waiting takes cooldown to free. A free or holding trader can also stay where they are. The recurrence is read straight off the arrows into each state:
 
-- free after today comes from free or cooldown yesterday, whichever is larger, since both can wait
-- hold after today comes from hold yesterday, or free yesterday minus today's price
-- cooldown after today comes only from selling: hold yesterday plus today's price
+- Free after today comes from free or cooldown yesterday, whichever is larger, since both can wait
+- Hold after today comes from hold yesterday, or free yesterday minus today's price
+- Cooldown after today comes only from selling: hold yesterday plus today's price
 
 ```python
 def best_with_cooldown(prices):
