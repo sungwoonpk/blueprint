@@ -6,9 +6,12 @@ By the end of the year it holds billions of rows, almost all of which few people
 
 ## The Shape of the Data
 
-Time series data behaves in ways a database can exploit.
+Time series data behaves in ways a database can exploit:
 
-Points are appended, not edited: they arrive in time order and are rarely updated afterwards. Recent data matters most. Facebook's monitoring database, Gorilla, found that at least 85 percent of the queries to its older system were for data from the past 26 hours. Questions are about aggregates, since users care little about individual points and much about trends, such as an average over five minutes. And old data loses value: last year's reading every 10 seconds is rarely needed, though a daily summary of it might be.
+- **Points are appended, not edited**: they arrive in time order and are rarely updated afterwards
+- **Recent data matters most**: Facebook's monitoring database, Gorilla, found that at least 85 percent of the queries to its older system were for data from the past 26 hours
+- **Questions are about aggregates**: users care little about individual points and much about trends, such as an average over five minutes
+- **Old data loses value**: last year's reading every 10 seconds is rarely needed, though a daily summary of it might be
 
 Prometheus, the most widely used metrics system, describes a time series as a stream of timestamped values for one metric name plus a set of labels. Each sample is a number and a millisecond timestamp:
 
@@ -113,9 +116,11 @@ One trap: some summaries can't be added up. An average of averages is wrong when
 
 ## Choosing
 
-Use a dedicated store when the write volume is steady and high, when old data should disappear cheaply, and when most questions are about ranges of time.
+Use a dedicated store when the write volume is steady and high, when old data should disappear cheaply, and when most questions are about ranges of time. Then pick by the situation:
 
-For metrics about your own servers, Prometheus fits. Its local storage is a single node and not replicated, and network file systems aren't supported, so plan for what a lost server means. For a time series inside the main database, use PostgreSQL tables partitioned by time, or the TimescaleDB extension, which keeps SQL and joins with business data. And when the data has its own life and tools, a separate time series database such as InfluxDB is the answer.
+- **Metrics about your own servers**: Prometheus fits. Its local storage is a single node and not replicated, and network file systems aren't supported, so plan for what a lost server means
+- **A time series inside the main database**: use PostgreSQL tables partitioned by time, or the TimescaleDB extension, which keeps SQL and joins with business data
+- **Data with its own life and tools**: a separate time series database such as InfluxDB is the answer
 
 Gorilla's own tradeoff is a good reminder of what these systems optimize for. It favors staying available for writes over keeping each point, at the expense of possibly dropping a small amount of data, because a lost point rarely changes an aggregate.
 
