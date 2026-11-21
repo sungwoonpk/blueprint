@@ -95,7 +95,7 @@ For n² ≥ 10¹² it returned 1,000,000 using 40 calls to the question: about 2
 
 ## What Makes a Question Usable
 
-Before using this idea, check one thing: is the question monotone? It should be false up to some point and true afterward, with no flips back. Three checks help.
+Before using this idea, check one thing: is the question monotone? It should be false up to some point and true afterward, with no flips back. Four checks help.
 
 - **Does the data back it up?** Test on a small case by hand, or compare with a brute force scan, as we did for each example here
 - **What happens at the ends?** The first position might already be true, or none might be, and the loop should return the start or the end in those cases

@@ -4,7 +4,7 @@ The registrar has to rank 1,000,000 students by their exam score, a whole number
 
 ## Counting Sort
 
-The [lower bound](/algorithms/sorting-lower-bound) says comparison sorts need n log n steps, and the way around it is to use the key itself as information. **Counting sort** works when keys are integers in a small range 0 to k − 1.
+The bound in [The Lower Bound for Comparison Sorting](/algorithms/sorting-lower-bound) says comparison sorts need n log n steps, and the way around it is to use the key itself as information. **Counting sort** works when keys are integers in a small range 0 to k − 1.
 
 1. Count how many items have each key
 2. Turn the counts into starting positions: the first output slot for key 0 is 0, for key 1 it is the count of key 0, and so on
@@ -69,13 +69,13 @@ def counting_sort(items, key, k):
 
 The code makes one pass over the items to count, one pass over the k counters, and one more pass over the items to place them, so it takes O(n + k) time and O(n + k) memory. Items with equal keys are placed in the order they arrive, so the sort is **stable**, and that matters in the next section. We checked it against Python's own stable `sorted` on 2,000 random lists of records.
 
-On a million records with grades 0 to 100, our counting sort took 0.09 s and `sorted` with a key function took 0.10 s. That is close, not a runaway win. Python's built-in sort is written in C, and our counting sort runs in Python, so the algorithm's lower operation count mostly pays for the language's slower loop.
+On a million records with grades 0 to 100, our counting sort took 0.08 s and `sorted` with a key function took 0.09 s. That is close, not a runaway win. Python's built-in sort is written in C, and our counting sort runs in Python, so the algorithm's lower operation count mostly pays for the language's slower loop.
 
 ## When the Range Is Too Large
 
-Counting sort's cost includes k, and a big range is expensive even when n is small. We sorted 1,000 numbers drawn from 0 to 9,999,999. Counting sort had to build and scan ten million counters and took 462 ms.
+Counting sort's cost includes k, and a big range is expensive even when n is small. We sorted 1,000 numbers drawn from 0 to 9,999,999. Counting sort had to build and scan ten million counters and took about 400 ms.
 
-`sorted` took 0.06 ms, more than 7,000 times faster. Counting sort is the right tool when the range is comparable to the number of items or smaller, and the wrong tool for wide ranges. The next idea widens its reach.
+`sorted` took 0.06 ms, more than 6,000 times faster. Counting sort is the right tool when the range is comparable to the number of items or smaller, and the wrong tool for wide ranges. The next idea widens its reach.
 
 ## Radix Sort
 
@@ -142,11 +142,11 @@ We timed this in C, sorting random 32 bit integers with four passes of 8 bits ag
 
 | Items | qsort | Radix Sort |
 | --- | --- | --- |
-| 100,000 | 9.1 ms | 0.9 ms |
-| 1,000,000 | 80.5 ms | 3.5 ms |
-| 10,000,000 | 882 ms | 36.5 ms |
+| 100,000 | 7.4 ms | 0.4 ms |
+| 1,000,000 | 76 ms | 3.4 ms |
+| 10,000,000 | 871 ms | 35 ms |
 
-The radix sort ran about 24 times faster on ten million integers. That overstates the typical gap, because `qsort` calls a function for each comparison, which a tuned sort avoids, but it shows that linear time is not only theory.
+The radix sort ran about 25 times faster on ten million integers. That overstates the typical gap, because `qsort` calls a function for each comparison, which a tuned sort avoids, but it shows that linear time is not only theory.
 
 ## Bucket Sort
 
@@ -174,7 +174,7 @@ def bucket_sort(values):
 
 When the values are uniform, each bucket holds about one value, and the sorting inside buckets costs a constant amount for each item in expectation, so the whole sort is O(n) on average. The risk is that the evenness assumption fails. We timed the sort above on 80,000 values.
 
-Spread evenly, it took 13 ms. With all values squeezed into the first thousandth of the range, a thousand values piled into each bucket, and it took 766 ms, about 60 times longer. The sort gets no benefit from the buckets when they are unbalanced.
+Spread evenly, it took 16 ms. With all values squeezed into the first thousandth of the range, a thousand values piled into each bucket, and it took 833 ms, about 50 times longer. The sort gets no benefit from the buckets when they are unbalanced.
 
 ## Choosing
 

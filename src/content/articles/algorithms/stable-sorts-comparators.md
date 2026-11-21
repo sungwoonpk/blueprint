@@ -44,7 +44,7 @@ students.sort(key=lambda s: s.name)      # secondary key first
 students.sort(key=lambda s: s.grade)     # then the primary key, stable
 ```
 
-This is the same trick that makes [radix sort](/algorithms/linear-time-sorting) work, where every digit pass relies on the pass before it keeping its order. A key made of a tuple gets the same result in one pass: `key=lambda s: (s.grade, s.name)`. For a descending grade with ascending names, use `(-s.grade, s.name)`.
+This is the same trick that makes radix sort work, as [Counting, Radix and Bucket Sort](/algorithms/linear-time-sorting) shows, where every digit pass relies on the pass before it keeping its order. A key made of a tuple gets the same result in one pass: `key=lambda s: (s.grade, s.name)`. For a descending grade with ascending names, use `(-s.grade, s.name)`.
 
 Which sorts are stable depends on how they are written.
 

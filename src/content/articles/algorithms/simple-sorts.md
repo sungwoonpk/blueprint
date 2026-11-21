@@ -42,7 +42,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <figure class="diagram">
 <p class="rowname">Insert 2</p>
 <div class="cells">
-<div class="cell done">2</div>
+<div class="cell hl">2</div>
 <div class="cell done">5</div>
 <div class="cell">4</div>
 <div class="cell">6</div>
@@ -52,7 +52,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <p class="rowname">Insert 4</p>
 <div class="cells">
 <div class="cell done">2</div>
-<div class="cell done">4</div>
+<div class="cell hl">4</div>
 <div class="cell done">5</div>
 <div class="cell">6</div>
 <div class="cell">1</div>
@@ -63,13 +63,13 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <div class="cell done">2</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
-<div class="cell done">6</div>
+<div class="cell hl">6</div>
 <div class="cell">1</div>
 <div class="cell">3</div>
 </div>
 <p class="rowname">Insert 1</p>
 <div class="cells">
-<div class="cell done">1</div>
+<div class="cell hl">1</div>
 <div class="cell done">2</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
@@ -80,7 +80,7 @@ Here is a run on 5, 2, 4, 6, 1, 3. The shaded cells are the sorted section, and 
 <div class="cells">
 <div class="cell done">1</div>
 <div class="cell done">2</div>
-<div class="cell done">3</div>
+<div class="cell hl">3</div>
 <div class="cell done">4</div>
 <div class="cell done">5</div>
 <div class="cell done">6</div>
@@ -92,9 +92,9 @@ The invariant is the same as for selection sort in one respect and different in 
 
 The work depends on how far items slide. An **inversion** is a pair of items that is out of order, such as 5 before 2. Each shift in the inner loop removes exactly one inversion, so the number of shifts equals the number of inversions, and the comparisons are those plus about one for each item. A sorted list has none, and a reversed list has the most, n(n − 1)/2.
 
-We counted for 1,000 items: 999 comparisons for a sorted list, 240,400 for a random one and 499,500 for a reversed one. The same pattern shows on a list that is almost sorted. We took 10,000 sorted items and swapped 100 pairs a short distance apart.
+We counted for 1,000 items: 999 comparisons for a sorted list, 250,553 for a random one, as the mean of 20 random lists, and 499,500 for a reversed one. The same pattern shows on a list that is almost sorted. We took 10,000 sorted items and swapped 100 pairs, each up to 20 positions apart.
 
-That created 2,104 inversions, and insertion sort made 12,103 comparisons, about 1.2 for each item. It is **adaptive**: its cost follows how disordered the input is. It is also stable, since it doesn't move an item past an equal one.
+That created 2,037 inversions, and insertion sort made 12,039 comparisons, about 1.2 for each item. It is **adaptive**: its cost follows how disordered the input is. It is also stable, since it doesn't move an item past an equal one.
 
 ## Bubble Sort
 
@@ -114,16 +114,16 @@ def bubble_sort(a):
 
 After the first sweep, the largest item is at the end, after the second sweep the two largest are, and so on, so each sweep covers one fewer position. The early exit ends the loop when a sweep makes no swaps, which makes a sorted list cost only n − 1 comparisons.
 
-Every swap of neighbors fixes exactly one inversion, so bubble sort swaps as many times as insertion sort moves items. But it compares many more pairs on random data: 497,670 comparisons for 1,000 random items, against 240,400 for insertion sort.
+Every swap of neighbors fixes exactly one inversion, so bubble sort swaps as many times as insertion sort moves items. But it compares many more pairs on random data: 498,539 comparisons for 1,000 random items, against 250,553 for insertion sort, both as means of 20 lists.
 
 ## Side by Side
 
-We counted comparisons and moves for 1,000 items, where a move is a swap for selection and bubble sort and a shift for insertion sort.
+We counted comparisons and moves for 1,000 items, where a move is a swap for selection and bubble sort and a shift for insertion sort. The random row is the mean of 20 random lists.
 
 | Input | Selection Sort | Insertion Sort | Bubble Sort |
 | --- | --- | --- | --- |
 | Sorted | 499,500 compares, 0 swaps | 999 compares, 0 shifts | 999 compares, 0 swaps |
-| Random | 499,500 compares, 992 swaps | 240,400 compares, 239,408 shifts | 497,670 compares, 239,408 swaps |
+| Random | 499,500 compares, 992 swaps | 250,553 compares, 249,560 shifts | 498,539 compares, 249,560 swaps |
 | Reversed | 499,500 compares, 500 swaps | 499,500 compares, 499,500 shifts | 499,500 compares, 499,500 swaps |
 
 On 2,000 random items in Python, selection sort took 54 ms, insertion sort 59 ms and bubble sort 120 ms. The three are quadratic, so doubling the list size roughly quadruples the work.

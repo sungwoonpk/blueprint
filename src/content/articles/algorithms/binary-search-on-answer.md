@@ -60,7 +60,7 @@ Six checks gave the answer, 28. A limit of 27 needs four sessions, and 28 needs 
 
 The cost is the number of checks times the cost of one check. The range has size at most the total number of pages, and halving it takes about log₂ of that many steps.
 
-For a reading list of a million chapters with 1,000 sessions, the range was about 501 million wide and the search needed 29 checks, each a pass over the list, 0.8 seconds in all. There was no need to look at the exponentially many ways to split the list.
+For a reading list of a million chapters with 1,000 sessions, the range was about 500 million wide and the search needed 28 checks, each a pass over the list, 0.8 seconds in all. There was no need to look at the exponentially many ways to split the list.
 
 ## Why the Check Has to Be Monotone
 
@@ -129,7 +129,7 @@ When all four hold, the recipe is: bound the range, write the check, confirm it 
 
 - Binary search on the answer searches over candidate values, using a check that is no for small values and yes from some point on
 - Bound the range, write a check that asks "is it enough", and find the first value where it holds
-- The cost is about log₂ of the range times the cost of one check, so a million items took 29 passes
+- The cost is about log₂ of the range times the cost of one check, so a million items took 28 passes
 - Maximizing works by finding the last yes, one step before the first no
 - For real numbers, run a fixed number of halvings, and 50 or so reaches the limit of floating point accuracy
 - Look for "minimize the maximum", "maximize the minimum" and "smallest x such that" in the problem
