@@ -32,12 +32,12 @@ The depth you can reach is the stack size divided by the frame size, so it diffe
 | --- | --- | --- |
 | Python 3.13 | Recursion limit, 1,000 by default | About 1,000 |
 | Node 22 | Stack size | About 9,200 |
-| C, no optimization | 8 MB stack | About 74,000 |
-| Go | Stack grows on demand up to a cap, 1 GB by default | Over 30 million, where we stopped |
+| C, no optimization | 8 MB stack | About 260,000 |
+| Go | Stack grows on demand up to a cap, 1 GB by default | 30 million worked, 100 million overflowed |
 
-The numbers vary with the machine and the size of each frame, so read them as orders of magnitude. Java depends on the platform and the setting, and the default thread stack is 1 MB on Linux on x86-64, adjustable with the `-Xss` option.
+The numbers vary with the machine and the size of each frame, so read them as orders of magnitude. Our C frame was 32 bytes, and a function with more local variables reaches less. Java depends on the platform and the setting, and the default thread stack is 1 MB on Linux on x86-64, adjustable with the `-Xss` option.
 
-Python's limit can be raised with `sys.setrecursionlimit`. On Python 3.13, raising it to 200,000 let a 150,000 deep `total` finish. The documentation warns that a limit set too high can crash the interpreter, so raising it is a patch and not a design.
+Python's limit can be raised with `sys.setrecursionlimit`. On Python 3.13, raising it to 200,000 let a recursive sum 150,000 calls deep finish. The documentation warns that a limit set too high can crash the interpreter, so raising it is a patch and not a design.
 
 ## Depth Is the Space Cost
 
