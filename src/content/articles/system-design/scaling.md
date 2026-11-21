@@ -41,7 +41,9 @@ Neither is better everywhere, in the way [Thinking in Tradeoffs](/system-design/
 | Growing Further | Resizing often needs a restart | Add one at a time, with no restart |
 | Cost | Tends to rise faster than capacity at the top sizes | Rises in step, plus a load balancer and more to run |
 
-The ceiling for scaling up is higher than most people expect, since the largest cloud machines have hundreds of CPU cores and many terabytes of memory. That is why many teams scale up first while it is cheap and simple. One machine is also a **single point of failure**, a part whose failure stops everything, which [Redundancy and Failover](/system-design/redundancy-failover) returns to. That and the ceiling are the reasons teams don't stop at scaling up.
+The ceiling for scaling up is higher than most people expect, since the largest cloud machines have hundreds of CPU cores and many terabytes of memory. That is why many teams scale up first while it is cheap and simple.
+
+One machine is also a **single point of failure**, a part whose failure stops everything, which [Redundancy and Failover](/system-design/redundancy-failover) returns to. That and the ceiling are the reasons teams don't stop at scaling up.
 
 ## Scaling Out Needs Some Preparation
 

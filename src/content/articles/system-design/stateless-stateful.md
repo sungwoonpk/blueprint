@@ -1,6 +1,6 @@
 > A **stateless** service keeps nothing about a user between requests, so any copy of it can answer any request. A **stateful** service remembers things, so a request has to reach the right one.
 
-You have seen the idea three times already: [How Clients and Servers Talk](/system-design/client-server) said HTTP has no memory of its own, [From One Server to Many](/system-design/one-server-to-many) moved login sessions into a shared store, and [Scaling Up and Scaling Out](/system-design/scaling) said servers must be stateless before copies help. This topic explains what that really means and what to do with the state that is left.
+You have seen the idea three times already. [How Clients and Servers Talk](/system-design/client-server) said HTTP has no memory of its own. [From One Server to Many](/system-design/one-server-to-many) moved login sessions into a shared store. [Scaling Up and Scaling Out](/system-design/scaling) said servers must be stateless before copies help. This topic explains what that really means and what to do with the state that is left.
 
 ## The Random Logout
 
@@ -52,7 +52,9 @@ Sessions are the most common case, and there are three usual answers:
 | Signed token | The client carries the session itself, signed so the server can trust it, as in a JWT | Hard to cancel before it expires, and it grows with what you put in it |
 | Sticky sessions | The load balancer keeps sending a user to the same server | The load gets uneven, and a user loses the session if that server goes away |
 
-A shared store lets you end a session instantly. A token needs no lookup, but cancelling one early means keeping a block list, which is state again. Sticky sessions need no code change, which makes them tempting, but the twelve-factor guidelines treat them as a violation and they get in the way of scaling in and out. Many teams combine the first two: a short lived token for fast checks and a longer lived one in a store on the server, so a session can still be revoked. See [OAuth and JWT](/system-design/oauth-jwt).
+A shared store lets you end a session instantly. A token needs no lookup, but cancelling one early means keeping a block list, which is state again. Sticky sessions need no code change, which makes them tempting, but the twelve-factor guidelines treat them as a violation and they get in the way of scaling in and out.
+
+Many teams combine the first two: a short lived token for fast checks and a longer lived one in a store on the server, so a session can still be revoked. See [OAuth and JWT](/system-design/oauth-jwt).
 
 ## Stateless Doesn't Mean No State
 
