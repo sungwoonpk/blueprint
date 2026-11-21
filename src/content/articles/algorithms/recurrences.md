@@ -94,8 +94,8 @@ Every ratio is nearly flat as n grows by a factor of a thousand, so each claimed
 
 Some recurrences fall outside the form, and the recursion tree still works.
 
-- **Work that isn't a power of n**: 2 T(n / 2) + n / log₂ n has levels that are neither equal nor a geometric series. Summing them gives Θ(n log log n). We computed it, and T(n) divided by n log₂ log₂ n stayed between 0.71 and 0.73 from n = 2<sup>10</sup> to 2<sup>40</sup>, while T(n) divided by n log₂ n kept falling, from 0.24 to 0.09
-- **Pieces of unequal size**: T(n) = T(n / 3) + T(2n / 3) + n has branches of different depths. Every complete level still adds up to n, and there are about log<sub>3/2</sub> n of them, so the answer is Θ(n log n). Our computed ratio to n log₂ n stayed between 1.11 and 1.15 from 2<sup>10</sup> to 2<sup>26</sup>
+- **Work that isn't a power of n**: 2 T(n / 2) + n / log₂ n has levels that are neither equal nor a geometric series. Summing them gives Θ(n log log n). We computed it with T(1) = 1, and T(n) divided by n came out as 3.93 at n = 2<sup>10</sup>, 4.60 at 2<sup>20</sup> and 5.28 at 2<sup>40</sup>, a slow climb of about 0.7 each time the exponent doubles, as n log log n predicts. T(n) divided by n log₂ n kept falling, from 0.39 to 0.13
+- **Pieces of unequal size**: T(n) = T(n / 3) + T(2n / 3) + n has branches of different depths. Every complete level still adds up to n, and there are about log<sub>3/2</sub> n of them, so the answer is Θ(n log n). Our computed ratio to n log₂ n, with the smaller piece rounded down, stayed between 1.13 and 1.21 from 2<sup>10</sup> to 2<sup>26</sup>
 - **Shrinking by subtraction**: T(n) = T(n − 1) + n is a chain, not a tree, and it adds up to n(n + 1) / 2, so Θ(n²), like insertion sort. T(n) = 2 T(n − 1) + 1 gives 2ⁿ − 1, which we confirmed for n up to 7, the moves of the towers of Hanoi puzzle
 
 There is also a general theorem by Akra and Bazzi from 1998 that handles several subproblem sizes at once, but the recursion tree is usually enough, and it works for the rest as well.
