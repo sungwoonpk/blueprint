@@ -102,17 +102,20 @@ It feels natural to have `/health` run a query, because a server that can't reac
 
 All the servers fail the check together, and the load balancer removes the whole fleet, so users get errors from a site whose web servers were fine. A slow database turns into a full outage. Automation that removes servers helps with one bad server and does damage when the whole fleet looks bad.
 
-The habits that follow.
+The habits that follow:
 
-Keep the load balancer's check local, to liveness and local health. Watch dependencies another way, with background checks reported to monitoring and alerts, and react to them gently. When a dependency is optional, report degraded and not dead, and serve what you can, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding).
-
-One more habit is to fail open: when each server fails its check, send traffic to them anyway. The AWS Application Load Balancer does this. It is a safety net, though, not a plan.
+- **Keep the load balancer's check local**, to liveness and local health
+- **Watch dependencies another way**, with background checks reported to monitoring and alerts, and react to them gently
+- **Report degraded, not dead**, when a dependency is optional, and serve what you can, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding)
+- **Fail open**: when every server fails its check, send traffic to them anyway. The AWS Application Load Balancer does this. It is a safety net, though, not a plan
 
 ## Probes Inside the Platform
 
-Container platforms run health checks themselves. Kubernetes, which [Containers and Orchestration](/system-design/containers) covers, has three probes with different consequences.
+Container platforms run health checks themselves. Kubernetes, which [Containers and Orchestration](/system-design/containers) covers, has three probes with different consequences:
 
-A liveness probe, when it fails, gets the container killed and restarted. A readiness probe, when it fails, takes the pod out of the service's endpoints with no restart. A startup probe holds the other two back until a slow starting app is up.
+- **Liveness probe**: when it fails, the container is killed and restarted
+- **Readiness probe**: when it fails, the pod is taken out of the service's endpoints, with no restart
+- **Startup probe**: it holds the other two back until a slow starting app is up
 
 ```yaml
 readinessProbe:
@@ -136,11 +139,13 @@ Many systems use both kinds, probes to find a dead server quickly and real traff
 
 ## Details That Bite
 
-Firewalls come first: probes come from particular addresses, which must be allowed explicitly, or the backends look unhealthy.
+A few more details cause trouble:
 
-Busy servers are a trap. If a server is so loaded that it answers the check late, the balancer removes it, which pushes its work onto the rest, and they fall too. Reserve capacity so health checks get answered first. Cost adds up as well, since many balancers probe each server and several probers can run each check, so the endpoint should be cheap.
-
-A public `/health` should reveal little. Use a separate minimal endpoint for probes, and keep detailed diagnostics behind a login. And a new server should receive traffic just after it passes its check, so it doesn't take requests while still loading.
+- **Firewalls**: probes come from particular addresses, which must be allowed explicitly, or the backends look unhealthy
+- **Busy servers**: if a server is so loaded that it answers the check late, the balancer removes it, which pushes its work onto the rest, and they fall too. Reserve capacity so health checks get answered first
+- **Cost**: many balancers probe each server and several probers can run each check, so the endpoint should be cheap
+- **Exposure**: a public `/health` should reveal little. Use a separate minimal endpoint for probes, and keep detailed diagnostics behind a login
+- **Warm up**: a new server should receive traffic just after it passes its check, so it doesn't take requests while still loading
 
 Health checks also drive failover beyond a single data center. DNS can take an unhealthy region's address out of its answers, which [Global Traffic Routing](/system-design/global-routing) covers next.
 
