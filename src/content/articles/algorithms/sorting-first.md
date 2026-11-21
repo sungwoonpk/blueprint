@@ -64,6 +64,8 @@ Back-to-back meetings, such as 9 to 10 followed by 10 to 11, don't count as a cl
 Sorting can also reduce different things to a common form. Two words are anagrams if their letters sorted are the same, so the sorted letters make a key for grouping.
 
 ```python
+from collections import defaultdict
+
 def group_anagrams(words):
     groups = defaultdict(list)
     for w in words:
@@ -102,9 +104,9 @@ Looking up one item by scanning the list costs about 0.4 ms. Sorting costs about
 | 20 | 8.2 ms | 9.9 ms |
 | 100 | 40.9 ms | 9.6 ms |
 
-The sort pays for itself after about 20 lookups. At 2,000 lookups, scanning took 0.80 s and sorting once took 10 ms. A hash set did the same lookups in 2 ms, so when the only question is "is this item present?", a set beats sorting.
+The sort pays for itself after about 20 lookups. At 2,000 lookups, scanning took 0.80 s and sorting once took 10 ms. A hash set, including the time to build it, did the same lookups in 2.4 ms, so when the only question is "is this item present?", a set beats sorting.
 
-The duplicate check shows the same trade. On 1,000,000 distinct IDs, the set version took 44 ms and sorting then comparing neighbors took 262 ms. Sorting loses on speed there.
+The duplicate check shows the same trade. On 1,000,000 distinct IDs, the set version took 82 ms and sorting then comparing neighbors took 253 ms. Sorting loses on speed there.
 
 What it offers instead is the order itself, which also answers questions a set can't, such as the closest pair. It also needs no hash table: sorting the list in place with `list.sort` avoids holding a second copy of the IDs, though the sort itself may use a temporary array.
 
