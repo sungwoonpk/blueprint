@@ -53,7 +53,38 @@ def diameter(root):
     return best
 ```
 
-Take the tree whose root is 1, with children 2 and 3. Node 2 has children 4 and 5, and 4 has a child 7. Node 3 has a right child 6, and 6 has a left child 8. For each node, the table lists the heights of its two subtrees and the path that bends there.
+Take the tree whose root is 1, with children 2 and 3. Node 2 has children 4 and 5, and 4 has a child 7. Node 3 has a right child 6, and 6 has a left child 8.
+
+<figure class="diagram graph">
+<svg viewBox="0 0 330 196" role="img" aria-label="A binary tree with root 1 whose longest path runs from 7 through the root to 8">
+<line class="e hl" x1="180.0" y1="24.0" x2="100.0" y2="72.0"/>
+<line class="e hl" x1="180.0" y1="24.0" x2="260.0" y2="72.0"/>
+<line class="e hl" x1="100.0" y1="72.0" x2="60.0" y2="120.0"/>
+<line class="e" x1="100.0" y1="72.0" x2="140.0" y2="120.0"/>
+<line class="e hl" x1="260.0" y1="72.0" x2="300.0" y2="120.0"/>
+<line class="e hl" x1="60.0" y1="120.0" x2="30.0" y2="168.0"/>
+<line class="e hl" x1="300.0" y1="120.0" x2="270.0" y2="168.0"/>
+<rect class="n hl" x="166" y="10" width="28" height="28" rx="14"/>
+<text class="t hl" x="180" y="24">1</text>
+<rect class="n hl" x="86" y="58" width="28" height="28" rx="14"/>
+<text class="t hl" x="100" y="72">2</text>
+<rect class="n hl" x="246" y="58" width="28" height="28" rx="14"/>
+<text class="t hl" x="260" y="72">3</text>
+<rect class="n hl" x="46" y="106" width="28" height="28" rx="14"/>
+<text class="t hl" x="60" y="120">4</text>
+<rect class="n" x="126" y="106" width="28" height="28" rx="14"/>
+<text class="t " x="140" y="120">5</text>
+<rect class="n hl" x="286" y="106" width="28" height="28" rx="14"/>
+<text class="t hl" x="300" y="120">6</text>
+<rect class="n hl" x="16" y="154" width="28" height="28" rx="14"/>
+<text class="t hl" x="30" y="168">7</text>
+<rect class="n hl" x="256" y="154" width="28" height="28" rx="14"/>
+<text class="t hl" x="270" y="168">8</text>
+</svg>
+<figcaption>The tree of the diameter example. The longest path, 7, 4, 2, 1, 3, 6, 8, is outlined. It has 6 edges and passes through the root</figcaption>
+</figure>
+
+For each node, the table lists the heights of its two subtrees and the path that bends there.
 
 | Node | Left Height | Right Height | Path Through It |
 | --- | --- | --- | --- |
