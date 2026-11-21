@@ -77,13 +77,13 @@ Problems that look alike often land on opposite sides, and the figure's two boxe
 | Easy Question (in P) | Similar Question With No Fast Method Known |
 | --- | --- |
 | Shortest path between two buildings | Longest path that visits no building twice |
-| Walk that uses every path once, an [Eulerian circuit](/algorithms/eulerian-paths) | Walk that visits every building once, a Hamiltonian cycle |
-| Can the vertices be split into two sides, a [bipartite graph](/algorithms/bipartite) | Can the vertices be colored with three colors so neighbors differ |
+| Walk that uses every path once, an Euler circuit | Walk that visits every building once, a Hamiltonian cycle |
+| Can the vertices be split into two sides | Can the vertices be colored with three colors so neighbors differ |
 | Does a 2-clause formula have a satisfying assignment | The same for 3-clause formulas, 3-SAT |
 
-The first pair is the longest-path problem from [Recognizing a Dynamic Programming Problem](/algorithms/recognizing-dp), and the second pair we measured. On random graphs with three edges per vertex, the degree test for an Euler circuit took 3 to 7 µs at every size from 10 to 22 vertices.
+The longest path is the problem that resisted a table in [Recognizing a Dynamic Programming Problem](/algorithms/recognizing-dp), and the two-sides test is the check from [Bipartite Graphs](/algorithms/bipartite). The Euler walk of [Eulerian Paths and Circuits](/algorithms/eulerian-paths) we measured against a Hamiltonian cycle. On random graphs with three edges per vertex, the degree test took 3 to 7 µs at every size from 10 to 22 vertices, leaving out the connectivity check, which is linear.
 
-We left out the connectivity check, which is linear. Our best Hamiltonian cycle search, a bitmask table, went from 0.001 s at 10 vertices to 1.2 s at 22.
+Our best Hamiltonian cycle search, a bitmask table, went from 0.001 s at 10 vertices to 1.2 s at 22.
 
 ## Exponential Against Polynomial
 
