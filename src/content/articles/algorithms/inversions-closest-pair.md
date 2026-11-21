@@ -8,7 +8,7 @@ A pair that disagrees is an **inversion**, and counting inversions is a measure 
 
 In a list `a`, an inversion is a pair of positions i < j with a[i] > a[j]. The list 3, 1, 4, 2, 5 has three: (3, 1), (3, 2) and (4, 2). A sorted list has none. A reversed list of n items has all n(n − 1) / 2 pairs inverted.
 
-A random list lands halfway between, near n(n − 1) / 4: the mean of 20 random lists of 1,000 items was 249,432, against a predicted 249,750.
+A random list lands halfway between, near n(n − 1) / 4: the mean of 20 random lists of 1,000 items was 248,721, against a predicted 249,750.
 
 The same count shows up in other places. Insertion sort moves an item left past exactly the larger items before it, so its number of shifts equals the number of inversions. We confirmed that on 500 random lists, duplicates included. That is why insertion sort is fast on nearly sorted input, as [Bubble, Selection and Insertion Sort](/algorithms/simple-sorts) showed.
 
@@ -98,7 +98,7 @@ Two points on the same side of the line are at least δ apart, and a square that
 <figcaption>Eight points on a grid, x from 0 to 7 across and y from 0 to 4 up. The dividing line sits between columns 3 and 4, and the tinted columns are the strip. The closest pair, D and E, crosses the line</figcaption>
 </figure>
 
-In the figure, the left half A, B, C, D has its closest pair about 2.24 apart, and the right half E, F, G, H has its closest pair exactly 2 apart, so δ = 2. The strip holds C, D, E and F. In order of y they are F, D, E, C. Checking neighbors finds D and E at distance √2, about 1.41, closer than either half. That is the answer.
+In the figure, the left half A, B, C, D has its closest pair about 2.24 apart, and the right half E, F, G, H has its closest pair exactly 2 apart, so δ = 2. The strip holds C, D, E and F for the line drawn in the figure. In order of y they are F, D, E, C. Checking neighbors finds D and E at distance √2, about 1.41, closer than either half. That is the answer. The code below measures from x = 4, the first point of the right half, which keeps D, E and F, and that is enough, since any crossing pair closer than δ has both points within δ of that x.
 
 ```python
 def closest_pair(points):                         # distinct points
