@@ -24,7 +24,9 @@ Suppose 100 requests arrive. 98 take 100 ms and 2 get stuck for 5 seconds:
 | Median, or p50 | 100 ms | The typical request |
 | p99 | 5,000 ms | At least 1 request in 100 takes this long |
 
-The average hides the two unhappy users. So latency is reported in **percentiles**: p50 is the middle, p95 is the time that 95 out of 100 requests come in at or under, and p99 is the time that 99 out of 100 do. The slowest 1% is what's left beyond it. Look at p95 or p99 when you care about the worst experiences. One more catch: percentiles from different servers can't be averaged together. Combine the raw measurements first, then work out the percentile.
+The average hides the two unhappy users. So latency is reported in **percentiles**: p50 is the middle, p95 is the time that 95 out of 100 requests come in at or under, and p99 is the time that 99 out of 100 do. Look at p95 or p99 when you care about the worst experiences.
+
+One more catch: percentiles from different servers can't be averaged together. Combine the raw measurements first, then work out the percentile.
 
 ## Slow Calls Add Up
 
@@ -40,7 +42,9 @@ A call that is slow 1% of the time sounds rare. But one page often needs many ca
 <figcaption>Chance that a page load meets at least one slow call</figcaption>
 </figure>
 
-The chance of meeting at least one slow call is 1 minus 0.99 to the power of the number of calls. With 100 calls, a rare 1% slowness reaches 63% of page loads. This is the tail latency effect described in Google's "The Tail at Scale" paper. It assumes slow calls are independent, so read it as an illustration, not a forecast. Still, the tail of a backend becomes the typical experience of the front end, which is one reason to cut the number of calls a request makes.
+The chance of meeting at least one slow call is 1 minus 0.99 to the power of the number of calls. With 100 calls, a rare 1% slowness reaches 63% of page loads. This is the tail latency effect described in Google's "The Tail at Scale" paper.
+
+It assumes slow calls are independent, so read it as an illustration, not a forecast. Still, the tail of a backend becomes the typical experience of the front end, which is one reason to cut the number of calls a request makes.
 
 ## Load Makes Everything Slower
 
@@ -56,7 +60,9 @@ Even a healthy server slows down when it gets busy, because requests start to wa
 <figcaption>Response time as a server gets busier, relative to its idle time</figcaption>
 </figure>
 
-At 50% busy a request takes about twice its idle time, at 80% about five times and at 90% about ten times. This is the chart from [From One Server to Many](/system-design/one-server-to-many), where response time stayed flat and then shot up. Real servers are less tidy than the model, and bursts make the curve worse, but the shape holds. That is why a server with room to spare behaves very differently from one running at 90%, and why teams plan for a margin at peak. See [Capacity Planning](/system-design/capacity-planning) and [Load Shedding and Graceful Degradation](/system-design/load-shedding).
+At 50% busy a request takes about twice its idle time, at 80% about five times and at 90% about ten times. This is the chart from [From One Server to Many](/system-design/one-server-to-many), where response time stayed flat and then shot up. Real servers are less tidy than the model, and bursts make the curve worse, but the shape holds.
+
+That is why a server with room to spare behaves very differently from one running at 90%, and why teams plan for a margin at peak. See [Capacity Planning](/system-design/capacity-planning) and [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
 ## How Many Requests Are in Flight
 
