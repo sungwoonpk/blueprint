@@ -33,7 +33,7 @@ def suffix_array_naive(s):
     return sorted(range(len(s)), key=lambda i: s[i:])
 ```
 
-It is short, and it costs memory: the key function creates every suffix as a separate string, about n²/2 characters in all. For 2,000, 5,000 and 10,000 characters of our text the peak memory was 3 MB, 15 MB and 98 MB. It grows 4 times for each doubling, so 200,000 characters would take tens of gigabytes. The time stayed small, since Python compares strings in C, but the memory settles it.
+It is short, and it costs memory: the key function creates every suffix as a separate string, about n²/2 characters in all. For 2,000, 5,000 and 10,000 characters of our text the peak memory was 3 MB, 15 MB and 98 MB, and 402 MB at 20,000. At these sizes it grows about 4 times for each doubling, so 200,000 characters would take tens of gigabytes. The time stayed small, since Python compares strings in C, but the memory settles it.
 
 The standard remedy is **prefix doubling**. Sort the suffixes by their first letter only, and give each suffix a rank for that. Then sort by the pair (rank of the suffix, rank of the suffix that starts one place later). That orders the suffixes by their first 2 letters, since the second rank covers the second letter.
 
