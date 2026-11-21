@@ -1,4 +1,4 @@
-> A **document store** is a database that keeps each record as a complete document, usually JSON, and can look inside it to search, index and update individual fields. It sits between a [Key-Value Stores](/system-design/key-value-stores), which treats the value as opaque, and a relational database, which splits a record across tables.
+> A **document store** is a database that keeps each record as a complete document, usually JSON, and can look inside it to search, index and update individual fields. It sits between [Key-Value Stores](/system-design/key-value-stores), which treat the value as opaque, and relational databases, which split a record across tables.
 
 In the last topic we ended at a signal: when you start asking questions about what is inside the values, a plain key-value store stops being enough.
 
