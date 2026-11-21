@@ -36,7 +36,7 @@ The `max` matters. A later interval can sit entirely inside the last merged one,
 
 The invariant is that `merged` holds disjoint stretches, in order, covering exactly what the intervals seen so far cover, and the last one is the only one a later interval could touch. Sorting costs O(n log n) and the sweep O(n).
 
-We checked the function on 4,000 random lists by comparing which points are covered before and after, and that the merged stretches are separated by gaps. Merging a million intervals took 0.82 s in Python.
+We checked the function on 4,000 random lists by comparing which points are covered before and after, and that the merged stretches are separated by gaps. Merging a million intervals took 0.88 s in Python.
 
 ## Deciding What Counts as Overlap
 
@@ -84,7 +84,7 @@ def insert_interval(sorted_disjoint, new):
 
 Adding 5 to 9 to the merged list above gives 1 to 10 and 15 to 20, since it bridges the first two stretches. The pass is O(n) and needs no sort, and it matched merging everything again on 4,000 random cases.
 
-In practice it isn't always faster. On about 190,000 merged intervals, the insertion pass took 54 ms, and adding the interval and merging everything again took 45 ms. The reason is that Python's sort is adaptive: a list that is already sorted except for one new item is sorted in nearly linear time, as [How Standard Library Sorts Work](/algorithms/library-sorts) explains. The insertion pass has a guaranteed bound without relying on that behavior.
+In practice it isn't much faster. On about 190,000 merged intervals, the insertion pass took about 18 ms, and adding the interval and merging everything again took about 21 ms. The reason is that Python's sort is adaptive: a list that is already sorted except for one new item is sorted in nearly linear time, as [How Standard Library Sorts Work](/algorithms/library-sorts) explains. The insertion pass has a guaranteed bound without relying on that behavior.
 
 ## The Pattern
 

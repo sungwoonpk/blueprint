@@ -2,7 +2,7 @@
 
 The campus has six study group bookings. Each one reserves a room from a start hour to an end hour: 1 to 5, 2 to 6, 4 to 8, 7 to 9, 8 to 12 and 10 to 13.
 
-How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
+How many rooms must be open so that no group is turned away? The answer is the largest number of bookings that overlap at the same moment. [Merging and Inserting Intervals](/algorithms/merging-intervals) joins overlapping bookings together, but it can't count how many overlap at once. Counting needs a different pass.
 
 ## Starts and Ends as Events
 
@@ -73,13 +73,13 @@ With the ends processed first, the counter drops to 0 before it rises again, and
 
 Sorting the pairs `(time, delta)` puts −1 before +1 at the same time, which gives the half open behavior for free. We ran the version that processes starts first on those three bookings, and it said 2 instead of 1.
 
-If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
+If bookings are closed, so that 9 to 10 and 10 to 11 do share the moment 10, flip the order. As with [Merging and Inserting Intervals](/algorithms/merging-intervals), decide what overlap means and keep the code consistent with it.
 
 ## When the Positions Are Huge
 
 [Difference Arrays](/algorithms/difference-arrays) solve the same counting question by adding 1 at each start and subtracting 1 after each end, then taking a running total. That needs an array with a slot for every position. If the times are seconds in a year, or any numbers up to a billion, the array doesn't fit.
 
-The sweep line is the same idea without the array. The events are exactly the places where the difference array is nonzero, and sorting them stands in for walking the array's slots in order. We generated 200,000 intervals with start times up to a billion. The sweep took 222 ms, and the busiest moment had 142 bookings overlapping. A difference array for the same data would have needed about 8 GB of counters.
+The sweep line is the same idea without the array. The events are exactly the places where the difference array is nonzero, and sorting them stands in for walking the array's slots in order. We generated 200,000 intervals with start times up to a billion and lengths up to a million. The sweep took 148 ms, and the busiest moment had 144 bookings overlapping. A difference array for the same data would have needed about 8 GB of counters.
 
 So the choice is between the two: use a difference array when the positions are small enough to index, and a sweep over sorted events when they are spread out.
 

@@ -66,11 +66,11 @@ The second half of the condition, `a[a[i] - 1] != a[i]`, matters. If the home sl
 
 There is a loop inside a loop again, and again the cost is amortized. Every swap puts one value into its final home, where it stays, and a value in its home is not moved again.
 
-There are at most n values that can be at home, so there are at most n swaps in total, whatever the order. The scan costs n more. On a million entries our run did 999,985 swaps, just under n.
+There are at most n values that can be at home, so there are at most n swaps in total, whatever the order. The scan costs n more. On a million entries, a shuffled list of 1 to 1,000,000, our run did 999,989 swaps, just under n.
 
 We compared the function with a version that builds a set, on 5,000 random lists including negative numbers, zeros and duplicates. Both returned the same answers. For 3, 4, −1, 1 it returns 2, for 1, 2, 0 it returns 3, and for 7, 8, 9 it returns 1.
 
-The memory is the point. The set version needed about 50 MB at a million entries, and the in-place version used none. In Python, the set version was faster, 52 ms against 0.40 s, because its loop runs inside the language's fast built-in code. The in-place method is for when memory is the limit, or when you are not allowed to allocate.
+The memory is the point. The set version needed about 50 MB at a million entries, and the in-place version used none. In Python, the set version was faster, 70 ms against 0.32 s, because its loop runs inside the language's fast built-in code. The in-place method is for when memory is the limit, or when you are not allowed to allocate.
 
 ## Other Tricks with the Same Idea
 

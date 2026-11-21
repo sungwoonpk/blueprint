@@ -66,7 +66,7 @@ The direct version quadruples when the size doubles, and the difference array ro
 
 ## The Mirror of Prefix Sums
 
-A difference array and a [prefix sum](/algorithms/prefix-sums) are inverses of each other. The prefix sum turns values into running totals, so a stretch's sum becomes one subtraction. The difference array turns a running total back into the steps between neighboring values, so a stretch's update becomes two edits. Differences of the prefix sums give back the original array, and prefix sums of the differences give it back the other way.
+A difference array and the prefix sums of [Prefix Sums for Range Queries](/algorithms/prefix-sums) are inverses of each other. The prefix sum turns values into running totals, so a stretch's sum becomes one subtraction. The difference array turns a running total back into the steps between neighboring values, so a stretch's update becomes two edits. Differences of the prefix sums give back the original array, and prefix sums of the differences give it back the other way.
 
 That makes the pair useful together. The difference array is for writing in bulk, many updates before one read. The prefix array is for reading in bulk, many queries before one write. If updates and queries arrive mixed together, neither works alone, and [Fenwick Trees](/algorithms/fenwick-trees) handle the mixture in O(log n) per operation.
 

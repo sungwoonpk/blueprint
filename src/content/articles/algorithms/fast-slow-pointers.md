@@ -58,7 +58,7 @@ For a tail of t nodes and a loop of c nodes, they meet after at most t + c steps
 
 The obvious method keeps a set of visited nodes and stops on a repeat. It works but needs memory for each node. We built a chain of a million nodes with a loop. The fast and slow version took 12 ms and no extra memory.
 
-The visited set version took 449 ms and about 70 MB. The two pointer version answered the same question without extra memory, which matters when the structure is huge or when you are not allowed to mark nodes.
+The visited set version took 173 ms and about 70 MB, with the time measured separately from the memory. The two pointer version answered the same question without extra memory, which matters when the structure is huge or when you are not allowed to mark nodes.
 
 ## Finding Where the Loop Starts
 

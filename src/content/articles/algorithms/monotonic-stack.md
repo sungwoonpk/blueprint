@@ -85,7 +85,7 @@ def largest_rectangle(heights):
     return best
 ```
 
-When a bar of height `h` arrives and pops a taller bar, the popped bar's rectangle ends just before `i`. It begins just after the bar now on top of the stack, which is the nearest shorter bar on the left. For the heights above the answer is 10, the rectangle of height 2 and width 5 across the middle five bars, and it matched checking every pair of ends on 4,000 random histograms.
+When a bar of height `h` arrives and pops a taller bar, the popped bar's rectangle ends just before `i`. It begins just after the bar now on top of the stack, which is the nearest shorter bar on the left. For the heights above the answer is 10, the rectangle of height 2 and width 5 across the last five bars, and it matched checking every pair of ends on 4,000 random histograms.
 
 ## Spotting It
 

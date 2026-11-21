@@ -47,7 +47,7 @@ def range_sum(p, l, r):
 
 The prefix array has one more slot than the data, because `p[0]` stands for the empty stretch. That leading zero removes the special case for a stretch that starts at the very first item: `p[r + 1] - p[0]` works with no extra branch.
 
-Building the array is one pass, O(n). Each query is one subtraction, O(1). We ran 100,000 range queries over 100,000 numbers. With prefix sums the whole batch took 8 ms. Adding up each range directly would take about 29 seconds, extrapolating from 2,000 queries. The more queries, the better the trade: the setup costs n steps once, and each query saves up to n steps.
+Building the array is one pass, O(n). Each query is one subtraction, O(1). We ran 100,000 range queries over 100,000 numbers. With prefix sums the whole batch, including the build, took 15 ms. Adding up each range directly with Python's built-in `sum` took 0.15 s for 2,000 queries, which extrapolates to about 8 seconds for all of them, and a Python loop would be several times slower. The more queries, the better the trade: the setup costs n steps once, and each query saves up to n steps.
 
 The invariant is simple: `p[i]` equals the sum of `a[0..i-1]`. Subtracting two prefix sums cancels the shared part, and what's left is exactly the stretch between them. We checked the formula against direct sums on 4,000 random arrays.
 
@@ -92,6 +92,6 @@ Sums can also overflow. A million values of a billion each total a quadrillion, 
 
 - A prefix sum array stores `p[i]`, the sum of the first i items, with a leading zero for the empty stretch
 - The sum of `a[l..r]` is `p[r + 1] − p[l]`, one subtraction after O(n) setup
-- 100,000 queries took 8 ms with prefix sums, against about 29 seconds when each range was added up directly
+- 100,000 queries took 15 ms with prefix sums, against about 8 seconds when each range was added up directly with the built-in `sum`
 - In a grid, four lookups give the sum of any rectangle
 - It needs data that doesn't change, and quantities that can be subtracted, so it fits sums and counts and not maximums

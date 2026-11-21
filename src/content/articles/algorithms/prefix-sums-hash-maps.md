@@ -2,7 +2,7 @@
 
 The cafeteria card of a student goes up with deposits and down with purchases. The daily changes in dollars are 2, 4, −2, 1, 3 and 2, and the student asks: over how many stretches of consecutive days did the balance change by exactly +5?
 
-The [variable window](/algorithms/variable-window) can't answer this, because the numbers include a negative one, and a negative number breaks its rule that growing the window only raises the total. A different view of the same problem works.
+The window of [Variable Size Sliding Window](/algorithms/variable-window) can't answer this, because the numbers include a negative one, and a negative number breaks its rule that growing the window only raises the total. A different view of the same problem works.
 
 ## A Stretch Is a Difference of Two Prefixes
 
@@ -83,10 +83,10 @@ The tools for sums over stretches differ in what they allow.
 
 | Situation | Tool |
 | --- | --- |
-| Many sum queries on fixed data | [Prefix Sums](/algorithms/prefix-sums) |
+| Many sum queries on fixed data | [Prefix Sums for Range Queries](/algorithms/prefix-sums) |
 | All positive numbers, stretch with a condition | [Variable Size Sliding Window](/algorithms/variable-window) |
 | Negative numbers allowed, sum exactly k | Prefix sums with a hash map |
-| Largest sum of any stretch | [Kadane's Algorithm](/algorithms/kadane) |
+| Largest sum of any stretch | [Kadane’s Algorithm for Maximum Subarrays](/algorithms/kadane) |
 
 The window is lighter on memory when it applies. The hash map approach is the general one, since it needs no assumption about the signs.
 
