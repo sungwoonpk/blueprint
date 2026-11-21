@@ -1,6 +1,6 @@
 > A **segment tree** stores an answer for a block of the array at every node: the leaves are single items, and each parent combines its two children. It handles point updates and range queries for sums, minimums, maximums and more, each in O(log n).
 
-The library's visitor counts are still changing during the day, and now the dean asks a question about the peak: what was the busiest single day between day 12 and day 40? A [Fenwick tree](/algorithms/fenwick-trees) can't help. It gets a range answer by subtracting two prefix sums, and there is no way to subtract a maximum. The structure has to hold the maximum of blocks directly.
+The library's visitor counts are still changing during the day, and now the dean asks a question about the peak: what was the busiest single day between day 12 and day 40? The structure of [Fenwick Trees](/algorithms/fenwick-trees) can't help. It gets a range answer by subtracting two prefix sums, and there is no way to subtract a maximum. The structure has to hold the maximum of blocks directly.
 
 ## A Tree of Block Answers
 
@@ -86,10 +86,10 @@ We ran 100,000 operations on 100,000 days, half of them point updates and half r
 
 | Approach | Time |
 | --- | --- |
-| Scan the range for each query | 8.33 s |
-| Segment tree | 0.14 s |
+| Scan the range for each query | 15 s |
+| Segment tree | 0.15 s |
 
-The tree was about 60 times faster, and the gap widens as the array grows, since the scan costs the length of the range and the tree costs its logarithm. The memory is 2n numbers, and a segment tree finds the position of a minimum too, by descending from the root toward the smaller child.
+With ranges of random length, the tree was about 100 times faster, and the gap widens as the array grows, since the scan costs the length of the range and the tree costs its logarithm. The memory is 2n numbers, and a segment tree finds the position of a minimum too, by descending from the root toward the smaller child.
 
 ## Choosing a Range Tool
 
@@ -97,7 +97,7 @@ Several structures answer range questions, and each fits a different situation.
 
 | Situation | Tool |
 | --- | --- |
-| Sums, data never changes | [Prefix Sums](/algorithms/prefix-sums) |
+| Sums, data never changes | [Prefix Sums for Range Queries](/algorithms/prefix-sums) |
 | Many range additions, read at the end | [Difference Arrays](/algorithms/difference-arrays) |
 | Sums or counts with point updates | [Fenwick Trees](/algorithms/fenwick-trees) |
 | Minimum, maximum or gcd with point updates | Segment tree |
@@ -112,4 +112,4 @@ The last row extends the idea. To add a value to a whole range in O(log n), a no
 - In an array of 2n slots, node `k` has children `2k` and `2k + 1`, and the items are in slots `n` to `2n − 1`
 - Update changes a leaf and recomputes its ancestors, and a query climbs from both ends taking the blocks that tile the range, each in O(log n)
 - Any associative operation with an identity works, such as sum, minimum, maximum and gcd
-- It was about 60 times faster than scanning ranges on 100,000 mixed operations, and it covers the cases a Fenwick tree can't, such as range maximum
+- It was about 100 times faster than scanning ranges on 100,000 mixed operations, and it covers the cases a Fenwick tree can't, such as range maximum
