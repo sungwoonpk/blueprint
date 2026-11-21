@@ -53,7 +53,7 @@ Different groups read independently, each with its own offsets: the search index
 
 When a consumer joins, leaves or crashes, the group **rebalances**: partitions are handed out again. The default way has a cost: member ids change when a consumer restarts, so a deploy can shuffle a large share of the work and, for applications that keep local state, leave them unavailable while they rebuild it.
 
-Its fix is static membership, in which each instance has a persistent id and keeps its partitions through a restart.
+Kafka's fix is static membership, in which each instance has a persistent id and keeps its partitions through a restart.
 
 ## Choosing the Key
 
