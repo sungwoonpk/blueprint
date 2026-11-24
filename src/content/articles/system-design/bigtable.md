@@ -170,16 +170,6 @@ Now the reads. The numbers are blocks read from disk for one lookup, for a key t
 | Merge Into One, No Filter | 1.00 | 1.00 |
 | Merge Into One, With Filter | 0.86 | 0.01 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Blocks read for a missing key under four setups">
-<div class="hbar peak"><span>No Merging</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">99</span></div>
-<div class="hbar"><span>Merge Four</span><span class="track"><span class="fill" style="--w: 5%"></span></span><span class="value">5</span></div>
-<div class="hbar"><span>Merge Into One</span><span class="track"><span class="fill" style="--w: 1%"></span></span><span class="value">1</span></div>
-<div class="hbar"><span>Merge Four, Filter</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">0.05</span></div>
-</div>
-<figcaption>Blocks read to look up a key that doesn't exist, from our simulation</figcaption>
-</figure>
-
 The filter is the surprise. A lookup of a missing key must otherwise ask each file in turn, and with the filter it asks close to zero.
 
 With four similar files and a filter, a missing key cost 0.05 blocks, less than merging into one file, and a key that exists cost under one block on average because some keys were still in the memtable.
@@ -188,27 +178,14 @@ A small amount of memory spent on filters buys back most of what compaction cost
 
 ## Small Choices That Add Up
 
-Several smaller design choices carry weight, and each solves a specific problem.
+Several smaller design choices carry weight, and each solves a specific problem:
 
-A **locality group** puts chosen column families into their own SSTable. The metadata of a page, such as its language and checksum, sits in one group and the page contents in another, so a job that reads just the metadata doesn't read the contents.
-
-A group can also be declared in memory, which is how the small table of tablet locations is served.
-
-The commit log is one file for each tablet server and not for each tablet, since a thousand log files written at once would mean a thousand disk seeks and groups too small to batch.
-
-The price is paid at recovery, when the tablets of a dead server go to many machines and each needs just its own entries.
-
-Reading the whole log 100 times would be wasteful, so the master has the log sorted first, by table, row and sequence number, in 64 MB segments sorted in parallel, and each new server then reads one contiguous piece.
-
-Because a write to the distributed file system can stall, each server also keeps two log writers and switches to the other when one is slow, with sequence numbers to skip the duplicates.
-
-Moving a tablet is quick because of a trick: the old server does a minor compaction, stops serving, does a second very short compaction for what arrived meanwhile, and then the new server can load the tablet with no log to replay.
-
-A split is quick for a related reason. The files are immutable, so the two child tablets just share the parent's files.
-
-Compression is by block, so a small part of a file can be read without unpacking the rest. A two pass scheme, one over long repeated strings and one over short ones, reached a 10 to 1 reduction on web pages, against about 3 or 4 to 1 for ordinary compressors.
-
-The reason is the row key again: pages of one host sit next to each other, and they share a lot of boilerplate.
+- **Locality groups**: a locality group puts chosen column families into their own SSTable. The metadata of a page, such as its language and checksum, sits in one group and the page contents in another, so a job that reads just the metadata doesn't read the contents. A group can also be declared in memory, which is how the small table of tablet locations is served
+- **One commit log for each tablet server**: not for each tablet, since a thousand log files written at once would mean a thousand disk seeks and groups too small to batch. The price is paid at recovery, when the tablets of a dead server go to many machines and each needs just its own entries. Reading the whole log 100 times would be wasteful, so the master has the log sorted first, by table, row and sequence number, in 64 MB segments sorted in parallel, and each new server then reads one contiguous piece
+- **Two log writers**: a write to the distributed file system can stall, so each server keeps two log writers and switches to the other when one is slow, with sequence numbers to skip the duplicates
+- **Quick tablet moves**: the old server does a minor compaction, stops serving, does a second very short compaction for what arrived meanwhile, and then the new server can load the tablet with no log to replay
+- **Quick splits**: the files are immutable, so the two child tablets just share the parent's files
+- **Compression by block**: a small part of a file can be read without unpacking the rest. A two pass scheme, one over long repeated strings and one over short ones, reached a 10 to 1 reduction on web pages, against about 3 or 4 to 1 for ordinary compressors. The reason is the row key again: pages of one host sit next to each other, and they share a lot of boilerplate
 
 ## What the Numbers Say About Scale
 
@@ -252,13 +229,13 @@ The company is not Google, and the ideas still apply at small scale.
 
 ## Pitfalls
 
-- **A key that starts with a timestamp**: One tablet takes each new write
-- **A forward host name**: One domain scatters over many tablets
-- **A big block for random reads**: Most of the bytes moved are not used
-- **No filter on lookups of missing keys**: Each file is asked in turn
-- **Merging into one file often**: Each entry is rewritten dozens of times
-- **Expecting a join or a secondary index**: The key order is the sole index
-- **A lock service that fails more often than the data store**: Its outage becomes yours
+- **A key that starts with a timestamp**: one tablet takes each new write
+- **A forward host name**: one domain scatters over many tablets
+- **A big block for random reads**: most of the bytes moved are not used
+- **No filter on lookups of missing keys**: each file is asked in turn
+- **Merging into one file often**: each entry is rewritten dozens of times
+- **Expecting a join or a secondary index**: the key order is the sole index
+- **A lock service that fails more often than the data store**: its outage becomes yours
 
 ## Key Points
 
