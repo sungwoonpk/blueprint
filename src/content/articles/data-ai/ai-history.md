@@ -28,7 +28,7 @@ Search wasn't wrong, only starved. In May 1997 Deep Blue beat the world chess ch
 
 ## Knowledge Written by Experts
 
-Meanwhile a second idea took over in the 1970s and 1980s. If search cannot find the answer from nothing, give the program what an expert knows. Engineers interviewed specialists, such as doctors diagnosing infections or technicians configuring computer orders, and wrote their know-how down as if-then rules. These **expert systems** were the first commercial wave of AI.
+Meanwhile a second idea took over in the 1970s and 1980s. If search cannot find the answer from nothing, give the program what an expert knows. Engineers interviewed specialists, such as doctors diagnosing infections or technicians configuring computer orders, and wrote what they knew down as if-then rules. These **expert systems** were the first commercial wave of AI.
 
 The wall here was the people. Every rule had to be extracted from an expert and typed in by hand. Rules collided with other rules. A case that nobody had listed got a wrong answer, delivered with the same confidence as a right one. The cost of maintaining the rulebook grew faster than its value, and interest cooled in a second winter. The idea itself survives in [Logic and Knowledge Representation](/data-ai/logic-kr).
 
