@@ -18,7 +18,11 @@ The client then polls the status resource, which returns 200 with a body that sh
 
 When the work finishes, the status resource answers 303 See Other with the location of the result. Avoid 302, since some clients replay the original method on a redirect, which could repeat a POST.
 
-The rest is housekeeping. A DELETE on the status resource cancels the work. An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work). A retention policy removes old status resources, with an `Expires` header as a hint.
+The rest is housekeeping:
+
+- A DELETE on the status resource cancels the work
+- An `Idempotency-Key` header makes a repeated POST return the existing status resource, as in [Avoiding Duplicate Work and Double Charges](/system-design/duplicate-work)
+- A retention policy removes old status resources, with an `Expires` header as a hint
 
 <figure class="diagram">
 <p class="rowname">Submit</p>
@@ -59,16 +63,6 @@ At each step the worker may crash with a probability p, a restart costs 5 second
 | At 10 Step Intervals | 107 s, 1.5 runs | 124 s, 3.2 runs | 170 s, 7.8 runs |
 | After Each Step | 113 s, 1.5 runs | 122 s, 3.1 runs | 141 s, 6.2 runs |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Mean seconds to finish for four checkpoint choices">
-<div class="hbar peak"><span>Start Over</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">3,870 s</span></div>
-<div class="hbar"><span>Each 50 Steps</span><span class="track"><span class="fill" style="--w: 15.8%"></span></span><span class="value">610 s</span></div>
-<div class="hbar"><span>Each 10 Steps</span><span class="track"><span class="fill" style="--w: 4.4%"></span></span><span class="value">170 s</span></div>
-<div class="hbar"><span>After Each Step</span><span class="track"><span class="fill" style="--w: 3.6%"></span></span><span class="value">141 s</span></div>
-</div>
-<figcaption>Mean total time for a 100 step job at a 5 percent crash chance per step, from our simulation</figcaption>
-</figure>
-
 The chance that a 100 step job finishes in a single attempt is 61 percent at p = 0.5, 13 percent at p = 2, and 0.6 percent at p = 5.
 
 A job that restarts from the beginning on each crash becomes a lottery as it grows: at p = 5 percent, the mean was over an hour, for work that takes under two minutes without failures. Saving progress at 10 step intervals brought it to 170 seconds.
@@ -95,9 +89,10 @@ Each attempt should have a start to close timeout, and a heartbeat timeout tells
 
 The history has a ceiling: 51,200 events or 50 MB for an execution, with warnings after 10,240 events or 10 MB. A long workflow periodically continues as a new execution, with its state passed on, to stay under the limit.
 
-A managed form is a state machine service such as AWS Step Functions. A standard workflow runs for up to a year, with exactly once execution unless retries are specified, and is billed by state transitions.
+A managed form is a state machine service such as AWS Step Functions, in two kinds:
 
-An express workflow runs for up to five minutes, with at least once delivery for asynchronous runs, and is billed by requests and duration.
+- **Standard**: runs for up to a year, with exactly once execution unless retries are specified, and is billed by state transitions
+- **Express**: runs for up to five minutes, with at least once delivery for asynchronous runs, and is billed by requests and duration
 
 A state can declare a retry with an error list, an interval defaulting to 1 second, a maximum of 3 attempts, and a backoff rate of 2.0, with a cap on the delay and a choice of full jitter. A catch clause routes an error to another state, and an unhandled error fails the whole execution.
 
@@ -116,11 +111,13 @@ A saga has named parts: compensable steps that can be undone, a pivot step that 
 
 Compensation needs a caution. A compensation can fail too, so record progress, make each compensation an idempotent command, alert with details when a person is needed, and consider that offering an alternative may be better than undoing the whole task.
 
-Building the recovery loop yourself has a known shape, with three roles. A scheduler arranges the steps, records each step's state and a deadline by which it must complete in a durable store, and calls the agents, usually through queues.
+Building the recovery loop yourself has a known shape, with three roles:
 
-An agent wraps one call to one service, does its own retries within the deadline, and passes a stable identifier on each retry so the other side can deduplicate.
+- **A scheduler**: arranges the steps, records each step's state and a deadline by which it must complete in a durable store, and calls the agents, usually through queues
+- **An agent**: wraps one call to one service, does its own retries within the deadline, and passes a stable identifier on each retry so the other side can deduplicate
+- **A supervisor**: runs periodically, looks in the store for steps past their deadline, and asks for recovery, while counting retries for each step
 
-A supervisor runs periodically, looks in the store for steps past their deadline, and asks for recovery, while counting retries for each step. The state store can't tell a step that timed out from one that failed. Recovery then either extends the deadline and retries, which needs idempotent steps, or undoes the whole task with compensations.
+The state store can't tell a step that timed out from one that failed. Recovery then either extends the deadline and retries, which needs idempotent steps, or undoes the whole task with compensations.
 
 Two warnings come with the design. Retries multiply across layers, so one component should own the end to end retry budget. And the loop doesn't control admission, so a bounded queue or a cap on work in flight is needed. [Task Queues](/system-design/task-queues) covers the queue side.
 
@@ -158,13 +155,13 @@ Two changes need care. Changing the workflow code while runs are in flight must 
 
 ## Pitfalls
 
-- **Holding the request open**: The proxy or the client gives up first
-- **State held in memory alone**: A restart loses the job
-- **Starting over after each failure**: Large jobs may not finish
-- **Non idempotent steps**: A replay duplicates the effect
-- **A retry at each layer**: The attempts multiply
-- **No deadline on a human step**: The workflow waits forever
-- **Changing workflow code under running jobs**: The replay diverges from the history
+- **Holding the request open**: the proxy or the client gives up first
+- **State held in memory alone**: a restart loses the job
+- **Starting over after each failure**: large jobs may not finish
+- **Non idempotent steps**: a replay duplicates the effect
+- **A retry at each layer**: the attempts multiply
+- **No deadline on a human step**: the workflow waits forever
+- **Changing workflow code under running jobs**: the replay diverges from the history
 
 ## Key Points
 
