@@ -83,14 +83,6 @@ A MapReduce style job pays startup, a disk read, parsing and computing on each p
 | 30 | 1,050 s | 92.5 s | 11.4 times |
 | 100 | 3,500 s | 267.5 s | 13.1 times |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Time for 30 passes with and without caching in memory">
-<div class="hbar peak"><span>Reading Each Pass Again</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">1,050 s</span></div>
-<div class="hbar"><span>Cached in Memory</span><span class="track"><span class="fill" style="--w: 8.8%"></span></span><span class="value">92.5 s</span></div>
-</div>
-<figcaption>Time for 30 passes over 100 GB, from our cost model</figcaption>
-</figure>
-
 The first pass is no faster by much, and each later pass is cheap, so the gain grows with the number of passes and approaches the ratio of the two per pass costs.
 
 The published measurements point the same way: Spark ran up to 20 times faster than Hadoop on iterative machine learning and graph jobs, answered interactive queries on 1 TB in 5 to 7 seconds, and the first iteration was moderately faster, because it had to read the disk too.
@@ -130,13 +122,13 @@ Later versions grew into a platform with SQL, a structured data model, and strea
 
 ## Pitfalls
 
-- **Using it for one pass over the data**: The first pass is barely faster than a plain job
-- **Not persisting a dataset used twice**: Each action recomputes it from the source
-- **A wide step in each iteration without partitioning**: A shuffle on each pass
-- **A long lineage with no checkpoint**: Recovery replays the whole chain
-- **Steps that are not deterministic**: A rebuilt partition differs from the lost one
-- **A working set larger than memory**: The speedup vanishes
-- **Updating one record at a time**: An RDD can't be changed in place
+- **Using it for one pass over the data**: the first pass is barely faster than a plain job
+- **Not persisting a dataset used twice**: each action recomputes it from the source
+- **A wide step in each iteration without partitioning**: a shuffle on each pass
+- **A long lineage with no checkpoint**: recovery replays the whole chain
+- **Steps that are not deterministic**: a rebuilt partition differs from the lost one
+- **A working set larger than memory**: the speedup vanishes
+- **Updating one record at a time**: an RDD can't be changed in place
 
 ## Key Points
 
