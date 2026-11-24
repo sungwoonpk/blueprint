@@ -6,20 +6,21 @@ Everything in this phase so far is a defense: [Timeouts, Retries and Backoff](/s
 
 ## An Experiment, Not a Prank
 
-The name suggests breaking things at random. The method is the opposite: an empirical approach. Its steps:
+The name suggests breaking things at random. The method is the opposite: an empirical one, in four steps:
 
-- **Define steady state**: Pick a measurable output that shows the system is behaving normally, such as orders a minute or error rate and latency percentiles, and not an internal detail like CPU
-- **Hypothesize**: Predict that the steady state holds in both a control group and an experimental group
-- **Introduce a realistic event**: A crashed server, a slow disk, a cut network link, or a spike in traffic, ranked by likely impact or frequency
-- **Try to disprove the hypothesis**: Compare the two groups, and a difference is a finding
+- **Define steady state**: pick a measurable output that shows the system is behaving normally, such as orders a minute or error rate and latency percentiles, and not an internal detail like CPU
+- **Hypothesize**: predict that the steady state holds in both a control group and an experimental group
+- **Introduce a realistic event**: a crashed server, a slow disk, a cut network link, or a spike in traffic, ranked by likely impact or frequency
+- **Try to disprove the hypothesis**: compare the two groups, and a difference is a finding
 
-Four more ideas shape how it is done. The principles prefer running in production, since real traffic is the best way to capture the real request path. They ask for automation, so experiments run continuously and not once.
+Four more ideas, from the published Principles of Chaos Engineering, shape how it is done:
 
-They ask to minimize the blast radius, so that the damage from an experiment is contained. And they allow some short term impact, as the price of the learning.
+- **Run in production**: real traffic is the best way to capture the real request path
+- **Automate**: experiments run continuously and not once
+- **Minimize the blast radius**: contain the damage an experiment can do
+- **Accept some short term impact**: it is the price of the learning
 
-Cloud providers are more cautious about the first idea: start outside production, since fault injection in production can be disruptive and can cause downtime.
-
-These agree on a ladder, climbed in order: start in a test environment, then go to production with a small blast radius once the checks are in place.
+Cloud providers are more cautious about the first idea and advise starting outside production, since fault injection in production can be disruptive and cause downtime. The two views fit one ladder: start in a test environment, then move to production with a small blast radius once the checks are in place.
 
 A template for the hypothesis: if a fault injection action is performed, a business or technical metric should not exceed a value. For the textbook app: if one of the 6 servers is stopped, the share of failed requests stays under 0.5 percent and the 99th percentile stays under 300 ms.
 
@@ -65,14 +66,14 @@ The fix is capacity, covered in [Capacity Planning](/system-design/capacity-plan
 
 ## Which Faults to Inject
 
-The Principles suggest ranking events by their likely impact or how often they happen. A starting list for a service like ours:
+Rank the events by their likely impact or how often they happen. A starting list for a service like ours:
 
-- **Servers**: A stopped instance or container, the classic test and still the first one to run
-- **Network**: Delay, packet loss, a cut link between two services, or a blocked dependency
-- **Slow dependencies**: A call that takes 10 seconds, and not just one that fails, since [Circuit Breakers](/system-design/circuit-breakers) and timeouts are tested by slowness
-- **Resources**: A full disk, exhausted memory or a saturated CPU
-- **Traffic**: A spike, or a surge of retries
-- **Larger units**: A zone or a cell, which leads into [Surviving a Region Outage](/system-design/region-outage)
+- **Servers**: a stopped instance or container, the classic test and still the first one to run
+- **Network**: delay, packet loss, a cut link between two services, or a blocked dependency
+- **Slow dependencies**: a call that takes 10 seconds, and not just one that fails, since [Circuit Breakers](/system-design/circuit-breakers) and timeouts are tested by slowness
+- **Resources**: a full disk, exhausted memory or a saturated CPU
+- **Traffic**: a spike, or a surge of retries
+- **Larger units**: a zone or a cell, which leads into [Surviving a Region Outage](/system-design/region-outage)
 
 Platforms supply the tools. A service mesh can add a delay or an abort to a share of the requests for a route, and Istio's fault injection sets the delay time, the status code and the percentage.
 
@@ -80,36 +81,36 @@ Kubernetes gives a related safeguard: a PodDisruptionBudget limits how many pods
 
 ## Game Days and Tabletop Exercises
 
-Systems aren't the sole thing that fails: the people and the procedures do too. A **game day** is a planned session where a team handles a simulated or injected failure while the others watch.
+Systems aren't the only things that fail: people and procedures do too. A **game day** is a planned session where a team handles a simulated or injected failure while the others watch.
 
 Two forms help new engineers on call. One is disaster role playing, where on-call engineers respond to a simulated page and work the problem without a real outage.
 
-The other, under the heading Break Real Things, Fix Real Things, has the team break a real system on purpose, a search cluster, for example, and then fix it. A milder version is a tabletop exercise, in which the team talks through a scenario without touching anything.
+The other has the team break a real system on purpose, such as a search cluster, and then fix it. A milder version is a tabletop exercise, in which the team talks through a scenario without touching anything.
 
 Disaster recovery needs its own tests. Use a dedicated environment so the test can't hurt production, and measure the result against the recovery time and recovery point targets, as in [Backups and Disaster Recovery](/system-design/backup-dr).
 
-A test that finds a bug before release gives it a time to repair of zero, which is the logic behind each experiment here.
+A bug found by a test before release costs no outage, which is the logic behind every experiment here.
 
 ## Starting Small
 
 A path for the textbook app:
 
-1. **Talk through it**: A tabletop of "a server dies at 9:00 AM," and write down what the team expects
-2. **Test environment**: Stop a server there and compare with the prediction
-3. **Production, small**: Stop one server off peak, with the stop condition armed and the team watching
-4. **Production, at risk**: Repeat at a busy time, now that the headroom is known, or in one cell, as in [Cellular Architecture](/system-design/cells)
-5. **Automate**: Run the experiment on a schedule, so a change that breaks the protection shows up in days and not at the next outage
+1. **Talk through it**: a tabletop of "a server dies at 9:00 AM," and write down what the team expects
+2. **Test environment**: stop a server there and compare with the prediction
+3. **Production, small**: stop one server off peak, with the stop condition armed and the team watching
+4. **Production, at risk**: repeat at a busy time, now that the headroom is known, or in one cell, as in [Cellular Architecture](/system-design/cells)
+5. **Automate**: run the experiment on a schedule, so a change that breaks the protection shows up in days and not at the next outage
 
 Each run ends with a record: what was predicted, what happened, and what was changed. An experiment that finds no problem is useful too, since it gives a measured reason for trust.
 
 ## Pitfalls
 
-- **No hypothesis**: Without a prediction, an outage is just an outage
-- **No stop condition**: An experiment that can't be stopped is an incident that was scheduled
-- **Testing blind**: If the steady state can't be measured, the result can't be read
-- **Skipping the known problems**: Fix what is already known to be weak before injecting a fault that will show it
-- **Surprising people**: Tell the teams that might see the effects, and pick a time when people can respond
-- **No follow up**: A finding that doesn't change anything is a finding that will return
+- **No hypothesis**: without a prediction, an outage is just an outage
+- **No stop condition**: an experiment that can't be stopped is an incident that was scheduled
+- **Testing blind**: if the steady state can't be measured, the result can't be read
+- **Skipping the known problems**: fix what is already known to be weak before injecting a fault that will show it
+- **Surprising people**: tell the teams that might see the effects, and pick a time when people can respond
+- **No follow up**: a finding that doesn't change anything is a finding that will return
 
 ## Key Points
 
