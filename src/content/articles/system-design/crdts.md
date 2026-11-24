@@ -10,9 +10,9 @@ The idea was formalized in 2011 by Marc Shapiro, Nuno Preguiça, Carlos Baquero 
 
 A merge function is the heart of a CRDT, and three laws make it safe:
 
-- **Commutative**: Merging A with B gives the same result as merging B with A
-- **Associative**: Merging in any grouping gives the same result
-- **Idempotent**: Merging the same state twice changes no value, so duplicates are harmless
+- **Commutative**: merging A with B gives the same result as merging B with A
+- **Associative**: merging A with B and then C gives the same result as merging A with the merge of B and C
+- **Idempotent**: merging the same state twice changes no value, so duplicates are harmless
 
 With these laws, replicas can exchange updates in any order, with duplicates and delays, and still converge. There are two ways to build it:
 
@@ -29,15 +29,15 @@ We tested the merge laws on an observed-remove set, described below. Three repli
 
 A plain counter fails in replication. If two replicas each add 1 to a total of 5, a merge that keeps the newer total gives 6, and the other increment is lost.
 
-A **G-Counter**, a counter with increments alone, gives each replica its own slot and lets that replica alone change it. The value is the sum of the slots and the merge takes the larger value for each slot.
+A **G-Counter**, a grow only counter, gives each replica its own slot, and only that replica changes it. The value is the sum of the slots, and the merge takes the larger value for each slot.
 
-If replica A holds [2, 0, 0] and replica B holds [1, 3, 0], the merge is [2, 3, 0], with a value of 5, whichever way it is done.
+If replica A holds [2, 0, 0] and replica B holds [1, 3, 0], the merge is [2, 3, 0], with a value of 5, in whichever order the merge happens.
 
 A **PN-Counter** uses two G-Counters, one for increments and one for decrements, and the value is their difference. The state keeps growing, even when the visible value goes down.
 
 How much does it matter? We ran 30,000 increments spread over 3 replicas, with a merge between two of them at about 1 step in 20. The G-Counter ended at exactly 30,000. The rule that keeps the newer total ended at 12,079, losing 59.7 percent of the increments.
 
-The loss depends on how often replicas merge, and it is large whenever updates are concurrent. Riak's counters are PN-Counters: the increments and decrements from each actor are applied.
+The loss depends on how often replicas merge, and it is large whenever updates are concurrent. Riak's counters are PN-Counters, which keep each actor's increments and decrements.
 
 ## Sets
 
@@ -54,7 +54,7 @@ The **OR-Set**, observed-remove set, handles the saved list well. Each add creat
 
 We tested an add after a remove. Replica A removes an item, and replica B, which has seen the remove, adds it back 50 ms later. We allowed B's clock to be off by up to 100 ms either way:
 
-| Type | Result Wrong |
+| Type | Runs With the Wrong Result |
 | --- | --- |
 | 2P-Set | 100% |
 | LWW-Element-Set | 25.0% |
@@ -70,11 +70,11 @@ Removes need the causal context from an earlier read, since without it a remove 
 
 ## Text and Documents
 
-Editing text needs a sequence CRDT, in which each character has an identity that stays valid as others insert around it. Treedoc, RGA, WOOT, Logoot and LSEQ are published designs. Many published algorithms have anomalies, such as interleaved text from concurrent inserts, and naive implementations perform badly.
+Editing text needs a sequence CRDT, in which each character has an identity that stays valid as others insert around it. Treedoc, RGA, WOOT, Logoot and LSEQ are published designs. Many published algorithms have anomalies, such as interleaved text, where two people typing at the same spot get their words mixed together, and naive implementations perform badly.
 
-Two libraries are widely used. Yjs offers shared types, Y.Array, Y.Map, Y.Text and XML types, and is network agnostic, with providers for WebSocket, WebRTC and local storage. It merges adjacent items, drops the content of deleted ones, and garbage collects tombstones when their order no longer matters.
+Two libraries are widely used. Yjs offers shared types (Y.Array, Y.Map, Y.Text and XML types) and doesn't depend on a particular network, with providers for WebSocket, WebRTC and local storage. To save space it merges adjacent items, drops the content of deleted ones, and garbage collects tombstones when their order no longer matters.
 
-Automerge is a Rust core with bindings, a compact binary format and a sync protocol, and its version 3 cut memory use by about 10 times.
+Automerge has a Rust core with bindings for other languages, a compact binary format and a sync protocol. Its version 3 cut memory use about tenfold.
 
 Kleppmann and Beresford's JSON CRDT extends the idea to nested maps and lists, with the aim that concurrent edits merge with no lost updates, and the replicas converge.
 
@@ -82,11 +82,11 @@ Kleppmann and Beresford's JSON CRDT extends the idea to nested maps and lists, w
 
 The uses range from shopping carts and counters to collaborative editing and chat presence, and Riak ships counters, sets and maps as built in data types for this reason.
 
-SoundCloud's Roshi is an LWW element set on Redis, and Redis Enterprise's Active-Active databases are built on CRDTs and offer strong eventual consistency. Apple Notes uses one for offline sync. Figma, though often named, doesn't use CRDTs in the pure sense: its server decides the order, with a last writer wins rule for each property.
+SoundCloud's Roshi is a last write wins element set on Redis, and Redis Enterprise's Active-Active databases are built on CRDTs and offer strong eventual consistency. Apple Notes uses a CRDT for offline sync. Figma, though often named, doesn't use CRDTs in the pure sense: its server decides the order, with a last writer wins rule for each property.
 
 ## What They Can't Do
 
-CRDTs guarantee convergence, which is not the same as keeping each rule of the application:
+CRDTs guarantee convergence, which is not the same as keeping every rule of the application:
 
 | Need | CRDT? | Why |
 | --- | --- | --- |
