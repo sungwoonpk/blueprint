@@ -27,8 +27,8 @@ Messaging systems describe three guarantees. At most once doesn't repeat and can
 
 The honest summary is that exactly once is an effect and not a delivery. Systems get it by combining at least once delivery with deduplication or idempotent processing:
 
-- **SQS FIFO queues**: Deduplication by a `MessageDeduplicationId`, or by a SHA-256 hash of the body with content based deduplication, within a window of 5 minutes. A retry of a send within the window adds no duplicate. After the window, no promise holds
-- **Kafka**: An idempotent producer attaches sequence numbers to batches so that the broker discards a retry's duplicates, and transactions make writes across partitions atomic. The scope is limited: exactly once in Kafka Streams covers processing inside Kafka. A call to an outside service, or an update of an outside database, isn't covered
+- **SQS FIFO queues**: deduplication by a `MessageDeduplicationId`, or by a SHA-256 hash of the body with content based deduplication, within a window of 5 minutes. A retry of a send within the window adds no duplicate. After the window, no promise holds
+- **Kafka**: an idempotent producer attaches sequence numbers to batches so that the broker discards a retry's duplicates, and transactions make writes across partitions atomic. The scope is limited: exactly once in Kafka Streams covers processing inside Kafka. A call to an outside service, or an update of an outside database, isn't covered
 
 Both stop duplicates at one hop, within one system, for a limited time. The charge to a card is outside both, so the application needs its own protection end to end.
 
@@ -81,16 +81,6 @@ In 5 percent of first attempts the process crashes after the charge and before s
 | Insert the Key First | 40 | 40 |
 | Insert First, and Send the Key to the Provider | 0 | 0 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Orders charged more than once for four designs">
-<div class="hbar peak"><span>No Protection</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">500</span></div>
-<div class="hbar"><span>Check, Then Insert</span><span class="track"><span class="fill" style="--w: 0.8%"></span></span><span class="value">4</span></div>
-<div class="hbar"><span>Insert the Key First</span><span class="track"><span class="fill" style="--w: 8%"></span></span><span class="value">40</span></div>
-<div class="hbar"><span>Key First, Sent On</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0</span></div>
-</div>
-<figcaption>Orders charged more than once out of 500, by design, from our simulation</figcaption>
-</figure>
-
 Walk down the table to see why each row fails. With no protection, each duplicate request charged again, and the final retry of each order did too.
 
 The first fix is to check for the key and insert it if it is missing. That leaves a gap: two requests that arrive together both find no key, and both proceed.
@@ -115,19 +105,19 @@ If a request dies midway, a later retry reads the recovery point and continues f
 
 Many operations can be made idempotent by their shape, which is cheaper than a key table:
 
-- **A unique constraint on a business key**: One payment for each order id, one enrollment for each student and course, so a second insert fails and the code treats the failure as success
+- **A unique constraint on a business key**: one payment for each order id, one enrollment for each student and course, so a second insert fails and the code treats the failure as success
 - **A conditional update**: `UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'pending'`, which has no effect the second time, the technique of [Handling Contention for Scarce Resources](/system-design/contention)
-- **An upsert with a deterministic id**: Derived records, such as a receipt, get an id computed from the order, so a retry writes the same row
-- **Set, don't increment**: Set the stock to a value derived from the source, and not add one, where the arithmetic allows
-- **A processed message table**: A consumer records each message id in the same transaction as the effect, and skips ids it has seen, the receiving side of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
+- **An upsert with a deterministic id**: derived records, such as a receipt, get an id computed from the order, so a retry writes the same row
+- **Set, don't increment**: set the stock to a value derived from the source, and not add one, where the arithmetic allows
+- **A processed message table**: a consumer records each message id in the same transaction as the effect, and skips ids it has seen, the receiving side of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
 
 ## Duplicate Work Beyond Side Effects
 
 Some duplicates waste time and no more, and they matter at scale:
 
-- **Stampedes**: Many requests recompute one expired cache entry, the problem of [Cache Stampedes](/system-design/cache-stampedes), solved by coalescing them into one
-- **Repeated jobs**: Two workers pick up the same job, or a scheduler fires twice. A key for the job, or a claim with a lease as in [Task Queues](/system-design/task-queues), prevents it
-- **Retries multiplying through layers**: The arithmetic of retries at each layer, which the budgets in [Timeouts, Retries and Backoff](/system-design/timeouts-retries) cap
+- **Stampedes**: many requests recompute one expired cache entry, the problem of [Cache Stampedes](/system-design/cache-stampedes), solved by coalescing them into one
+- **Repeated jobs**: two workers pick up the same job, or a scheduler fires twice. A key for the job, or a claim with a lease as in [Task Queues](/system-design/task-queues), prevents it
+- **Retries multiplying through layers**: the arithmetic of retries at each layer, which the budgets in [Timeouts, Retries and Backoff](/system-design/timeouts-retries) cap
 
 ## When Prevention Isn't Enough
 
@@ -149,13 +139,13 @@ The user interface helps without being the guarantee: disable the button after t
 
 ## Pitfalls
 
-- **Check, then insert**: Concurrent duplicates pass the check together
-- **A key table without the provider key**: A crash between charge and save causes a second charge
-- **Hashing parameters in place of a client key**: Two intentional identical orders become one
-- **Returning an error on a repeat**: The caller can't tell whether its own request worked
-- **Keys without an expiry**: The table grows without bound
-- **Trusting the button**: A disabled button isn't a guarantee
-- **Exactly once as a feature to buy**: It covers one system for a limited time
+- **Check, then insert**: concurrent duplicates pass the check together
+- **A key table without the provider key**: a crash between charge and save causes a second charge
+- **Hashing parameters in place of a client key**: two intentional identical orders become one
+- **Returning an error on a repeat**: the caller can't tell whether its own request worked
+- **Keys without an expiry**: the table grows without bound
+- **Trusting the button**: a disabled button isn't a guarantee
+- **Exactly once as a feature to buy**: it covers one system for a limited time
 
 ## Key Points
 
