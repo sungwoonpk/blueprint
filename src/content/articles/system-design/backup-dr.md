@@ -22,15 +22,15 @@ The file system copy takes the data directory itself. A usable copy needs the se
 
 Continuous archiving starts from a base copy and keeps the log files that follow. A restore can stop at any chosen moment since the base copy, which is its great strength.
 
-Its weakness is timing: a log segment is archived when it completes, so a long delay can open between a commit and its safe storage, and a timeout of a minute or so bounds that delay. Like the file copy, it restores the whole cluster and no subset.
+Its weakness is timing. A log segment is archived when it completes, so a long delay can open between a commit and its safe storage. A timeout of a minute or so bounds that delay. Like the file copy, it restores the whole cluster and no subset.
 
 Whichever one you pick, set up and test the archiving procedure before taking the first base backup. At the end of a restore, inspect the contents of the database to make sure it recovered to the state you wanted.
 
 ## Recovering to Just Before the Mistake
 
-The ability to stop replay at a chosen moment is **point in time recovery**. We tried the idea on a toy database.
+The ability to stop replay at a chosen moment is **point in time recovery**. We tried the idea on a toy SQLite database that held 50,000 listings at midnight.
 
-SQLite held 50,000 listings at midnight, with about 0.5 changes a second after that, which are our assumptions, for 25,288 logged changes by 14:07:30, when a mistaken delete removed the rows. The database had 60,093 listings just before:
+Changes then arrived at about 0.5 a second, an assumption of ours, for 25,288 logged changes by 14:07:30, when a mistaken delete removed the rows. The database had 60,093 listings just before:
 
 | Recovery Option | Listings Restored | Listings Lost |
 | --- | --- | --- |
@@ -73,13 +73,17 @@ Replaying the log adds more, and so does the rest of the runbook: finding the ba
 
 A copy that nobody has restored is a hope. Backups fail quietly: the job reports success while it writes an empty file, the credentials expired, the log has a gap, or the dump can't be loaded into the current version.
 
-The cure is to restore on a schedule. Each night or week, restore the latest backup into a scratch environment and record how long it took. Compare row counts and checksums with production, and run a smoke test of the application against the restored copy.
+The cure is to restore on a schedule. Each night or week:
+
+- Restore the latest backup into a scratch environment and record how long it took
+- Compare row counts and checksums with production
+- Run a smoke test of the application against the restored copy
 
 Then wire an alarm to it, so that a failed or slow drill pages someone, and so does a backup that didn't run. The measured restore time is the real recovery time objective, so compare it with the target.
 
 The rule of thumb for where the copies live is 3-2-1: three copies of the data, on two kinds of storage, with one kept off site. The reasoning is to make no single event, whether a failed disk, a lost account or a building, take the whole set of copies.
 
-A fourth point matters for attackers and mistakes alike: keep one copy that the production credentials can't delete or change, such as a copy in a separate account with write once storage, since an attacker or a runaway script with production access can reach each copy that production can reach.
+A fourth point matters for attackers and mistakes alike: keep one copy that the production credentials can't delete or change, such as a copy in a separate account with write once storage, since an attacker or a runaway script with production access can reach every copy that production can reach.
 
 Backups need protecting too. They contain the same personal data as the database, so they are encrypted, with the keys kept separately, as in [Encrypting Data at Rest](/system-design/encryption-at-rest), and they are part of the retention plan in [Data Privacy and Compliance](/system-design/privacy).
 
@@ -127,12 +131,12 @@ Then practice the whole plan to see that it meets the objectives, as in a game d
 
 ## Pitfalls
 
-- **Treating replicas as backups**: A mistake is copied in a second
-- **A backup that lives next to the data**: The same account, region and credentials
-- **No restore test**: The first restore is the disaster
-- **An unmeasured recovery time**: The target is a guess
-- **Backups without the keys**: The data is there and unreadable
-- **Objectives chosen by engineers alone**: The business pays for the downtime and has to set the numbers
+- **Treating replicas as backups**: a mistake is copied in a second
+- **A backup that lives next to the data**: the same account, region and credentials
+- **No restore test**: the first restore is the disaster
+- **An unmeasured recovery time**: the target is a guess
+- **Backups without the keys**: the data is there and unreadable
+- **Objectives chosen by engineers alone**: the business pays for the downtime and has to set the numbers
 
 ## Key Points
 
