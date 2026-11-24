@@ -23,13 +23,13 @@ Two ideas follow. If the model provider can keep the work done for the prefix, t
 
 **Prompt caching** keeps the processed form of the start of a prompt, so a later request that begins the same way skips the work. The major providers agree on the shape and differ in the details:
 
-- **Anthropic**: The prefix is built in the order tools, then system, then messages, and a breakpoint marks the end of what to cache. A hit needs prompt segments that are identical, and caching has no effect on the output. The default lifetime is 5 minutes and each use refreshes it at no extra cost, with a 1 hour option. It prices a 5 minute write at 1.25 times the base input price, a 1 hour write at 2 times and a read at 0.1 times, with lower read prices on some models. A prompt shorter than the minimum, which is 512 tokens on the current models listed and larger on older ones, isn't cached and returns no error
-- **OpenAI**: Caching is on by default for supported models, with a discount of up to 95 percent on cached input tokens, and the stored data is the model's internal key and value tensors, not the text. Minimums and retention depend on the model, with 1,024 tokens and a default of 30 minutes on the newest. The cache lives on individual machines, so heavy traffic can cause misses
-- **Gemini**: Implicit caching is on by default for 2.5 and newer models, with minimums of 2,048 to 4,096 tokens depending on the model. Its advice is to put large common content first and to send requests with a similar start close together in time
+- **Anthropic**: the prefix is built in the order tools, then system, then messages, and a breakpoint marks the end of what to cache. A hit needs prompt segments that are identical, and caching has no effect on the output. The default lifetime is 5 minutes and each use refreshes it at no extra cost, with a 1 hour option. It prices a 5 minute write at 1.25 times the base input price, a 1 hour write at 2 times and a read at 0.1 times, with lower read prices on some models. A prompt shorter than the minimum, which is 512 tokens on the current models listed and larger on older ones, isn't cached and returns no error
+- **OpenAI**: caching is on by default for supported models, with a discount of up to 95 percent on cached input tokens, and the stored data is the model's internal key and value tensors, not the text. Minimums and retention depend on the model, with 1,024 tokens and a default of 30 minutes on the newest. The cache lives on individual machines, so heavy traffic can cause misses
+- **Gemini**: implicit caching is on by default for 2.5 and newer models, with minimums of 2,048 to 4,096 tokens depending on the model. Its advice is to put large common content first and to send requests with a similar start close together in time
 
 The rules are the same everywhere. Put what is stable first and what changes last.
 
-Anything that changes the text before the breakpoint breaks the match: Changes to tool definitions, added images, and an unstable order of keys in JSON are common causes. A timestamp at the top of the prompt turns each request into a miss.
+Anything that changes the text before the breakpoint breaks the match. Common causes are changes to tool definitions, added images and an unstable order of keys in JSON. A timestamp at the top of the prompt turns each request into a miss.
 
 <figure class="diagram">
 <div class="flow">
@@ -53,17 +53,6 @@ A write costs more than plain input, so caching can lose money. We worked out th
 | 30 | 91.8% | 49.8% less |
 | 600 | 100% | 55.7% less |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Cost per thousand requests for four request rates">
-<div class="hbar peak"><span>Half a Request a Hour</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">$10.92</span></div>
-<div class="hbar"><span>No Cache</span><span class="track"><span class="fill" style="--w: 88.8%"></span></span><span class="value">$9.70</span></div>
-<div class="hbar"><span>6 an Hour</span><span class="track"><span class="fill" style="--w: 77.7%"></span></span><span class="value">$8.49</span></div>
-<div class="hbar"><span>30 an Hour</span><span class="track"><span class="fill" style="--w: 44.6%"></span></span><span class="value">$4.87</span></div>
-<div class="hbar"><span>600 an Hour</span><span class="track"><span class="fill" style="--w: 39.4%"></span></span><span class="value">$4.30</span></div>
-</div>
-<figcaption>Cost for 1,000 helper requests at four traffic levels, against $9.70 with no cache, from our arithmetic</figcaption>
-</figure>
-
 At a hit chance of about 22 percent, which is about 3 requests an hour for this lifetime, caching breaks even. Below that, the writes cost more than the reads save.
 
 At the helper's registration day rate of tens of requests a second, the prefix is read nearly each time, and the cost for each answer fell from $0.0097 to $0.0043.
@@ -78,7 +67,7 @@ Read the usage fields that report tokens written and read, since the hit rate is
 
 A cache of whole answers skips the call. The simplest form is an exact match: the key is the normalized question plus the data the answer depends on, and the value is the answer.
 
-GPTCache's README, an open source cache for model calls, says that at temperature 0 it searches the cache before calling the model, and a higher temperature skips it.
+GPTCache, an open source cache for model calls, searches the cache before calling the model at temperature 0, and skips it at a higher temperature.
 
 The key matters more than the lookup. A question about a listing depends on the listing's price and status, so the key has to include the version of the listing, or the entry has to expire quickly.
 
@@ -86,13 +75,18 @@ A reply that uses a student's own data must be cached for that student alone. Th
 
 Exact matching misses paraphrases: "is this the 9th edition" and "which edition is this" are different strings. A **semantic cache** embeds the question, a topic of [Semantic Search with Embeddings](/system-design/embeddings), and looks for the nearest stored question. If the similarity passes a threshold, it returns the stored answer.
 
-The tools we read describe the same design. GPTCache states that it uses a vector store for similarity search and warns that false positives on hits and false negatives on misses occur.
+GPTCache uses a vector store for similarity search, and its documentation warns that false positives on hits and false negatives on misses occur.
 
 A semantic cache has a similarity threshold, the minimum score to count as a match, and a time to live, both editable. A response served from the cache costs no output tokens.
 
-Vendor material, which comes without sources, suggests starting points: a threshold between 0.85 and 0.95 on cosine similarity, a start at 0.90 to 0.95 while watching false positives, and the remark that if false positives exceed 3 to 5 percent, tuning the threshold alone won't fix it.
+Vendor guides, which cite no sources, suggest starting points:
 
-Reasonable lifetimes are 5 to 15 minutes for prices and stock, 1 to 4 hours for product descriptions and 24 hours for stable text, and the vector search adds 5 to 20 ms. Add jitter to the lifetimes, so entries don't expire at once and cause a burst of calls.
+- A threshold between 0.85 and 0.95 on cosine similarity, starting at 0.90 to 0.95 while watching false positives
+- If false positives exceed 3 to 5 percent, tuning the threshold alone won't fix it
+- Lifetimes of 5 to 15 minutes for prices and stock, 1 to 4 hours for product descriptions and 24 hours for stable text
+- Jitter on the lifetimes, so entries don't expire at once and cause a burst of calls
+
+The vector search adds 5 to 20 ms.
 
 The threshold is a trade between two errors, and we simulated it. The similarity scores are invented: paraphrases of one question score around 0.90 and different questions around 0.60, with the best of five near misses taken for each lookup. In the stream, 60 percent of the questions had an equivalent earlier one:
 
@@ -103,17 +97,6 @@ The threshold is a trade between two errors, and we simulated it. The similarity
 | 0.85 | 49.0% | 5.92% | 10.8% |
 | 0.80 | 55.8% | 11.66% | 17.3% |
 | 0.75 | 56.9% | 20.18% | 26.2% |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Wrong hits for five thresholds">
-<div class="hbar"><span>Threshold 0.95</span><span class="track"><span class="fill" style="--w: 4%"></span></span><span class="value">0.81%</span></div>
-<div class="hbar"><span>Threshold 0.90</span><span class="track"><span class="fill" style="--w: 12.6%"></span></span><span class="value">2.54%</span></div>
-<div class="hbar"><span>Threshold 0.85</span><span class="track"><span class="fill" style="--w: 29.3%"></span></span><span class="value">5.92%</span></div>
-<div class="hbar"><span>Threshold 0.80</span><span class="track"><span class="fill" style="--w: 57.8%"></span></span><span class="value">11.66%</span></div>
-<div class="hbar peak"><span>Threshold 0.75</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">20.18%</span></div>
-</div>
-<figcaption>Wrong hits as a share of the requests, by similarity threshold, from our simulation</figcaption>
-</figure>
 
 Loosening from 0.90 to 0.80 gained 26 points of correct hits and multiplied the wrong hits by four. Below 0.80 the correct hits barely grew and the wrong ones kept climbing. A wrong hit is a confident answer to a different question, which for a price or an edition is a visible error.
 
@@ -135,8 +118,8 @@ Both are abstract level claims on their own benchmarks, so treat them as evidenc
 
 There are two designs:
 
-- **A router**: A classifier looks at the request and picks a model before any answer exists. It adds little delay and has to guess difficulty from the text
-- **A cascade**: The small model answers first, a check judges the answer, and a doubtful one goes to the large model. It sees the answer before deciding, and the escalated requests pay for both calls
+- **A router**: a classifier looks at the request and picks a model before any answer exists. It adds little delay and has to guess difficulty from the text
+- **A cascade**: the small model answers first, a check judges the answer, and a doubtful one goes to the large model. It sees the answer before deciding, and the escalated requests pay for both calls
 
 <figure class="diagram">
 <p class="rowname">Router</p>
@@ -171,16 +154,6 @@ The large model got 96.5 percent right, the small one 58.4 percent, at a cost ra
 | Router, Noise 0.05 | 94.6% | 58.4% |
 | Cascade, Cutoff 0.6 | 94.9% | 55.7% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of large model quality for four designs at similar cost">
-<div class="hbar peak"><span>Random Split</span><span class="track"><span class="fill" style="--w: 82%"></span></span><span class="value">82%</span></div>
-<div class="hbar"><span>Router, Noise 0.30</span><span class="track"><span class="fill" style="--w: 88.5%"></span></span><span class="value">88.5%</span></div>
-<div class="hbar"><span>Router, Noise 0.05</span><span class="track"><span class="fill" style="--w: 94.6%"></span></span><span class="value">94.6%</span></div>
-<div class="hbar"><span>Cascade, Cutoff 0.6</span><span class="track"><span class="fill" style="--w: 94.9%"></span></span><span class="value">94.9%</span></div>
-</div>
-<figcaption>Quality kept, as a share of the large model, at about 57 percent of its cost, from our toy model</figcaption>
-</figure>
-
 At a bit more than half the cost, a random split kept 82 percent of the quality, and routing on difficulty kept 88.5 to 94.6 percent depending on how well it sensed difficulty.
 
 A cascade kept 94.9 percent at 55.7 percent of the cost. Moving the cutoff trades one against the other: the router at a cost share of 42 percent held 88.0 percent of the quality, and the cascade at 41.4 percent held 88.9.
@@ -209,11 +182,11 @@ Batch interfaces are often priced at about half, which fits the overnight jobs o
 
 Each layer needs its own number:
 
-- **Hit ratio for each cache**: Prompt, exact answer and semantic, since a falling ratio means a changed prompt or a changed traffic mix
-- **Cost for each answer**: Input, output and cached tokens priced separately, as the usage fields report them
-- **False positives**: A sample of semantic hits reviewed by a person or a judge, against the 3 to 5 percent warning level
-- **Quality by route**: The share of answers judged good for the small model, the large model and the cache, as in [Evaluation](/system-design/ai-evaluation)
-- **Escalation rate**: The share of cascade requests that go to the large model, which drifts with the traffic
+- **Hit ratio for each cache**: prompt, exact answer and semantic, since a falling ratio means a changed prompt or a changed traffic mix
+- **Cost for each answer**: input, output and cached tokens priced separately, as the usage fields report them
+- **False positives**: a sample of semantic hits reviewed by a person or a judge, against the 3 to 5 percent warning level
+- **Quality by route**: the share of answers judged good for the small model, the large model and the cache, as in [Evaluation](/system-design/ai-evaluation)
+- **Escalation rate**: the share of cascade requests that go to the large model, which drifts with the traffic
 
 [Monitoring AI Systems in Production](/system-design/ai-monitoring) covers these signals in a dashboard.
 
@@ -231,13 +204,13 @@ Each layer needs its own number:
 
 ## Pitfalls
 
-- **A changing value at the top of the prompt**: Each request misses the prompt cache
-- **Caching with too few requests**: A write costs more than the reads save below about 3 requests an hour in our model
-- **A key that leaves out the data**: The cache serves a stale price
-- **A loose semantic threshold**: The hit rate rises along with the wrong answers
-- **One cache for each tenant's questions combined**: One user's answer reaches another
-- **Routing without an evaluation set**: Savings that hide a drop in quality
-- **A cascade that ignores the escalated cost**: A doubtful request pays for two calls
+- **A changing value at the top of the prompt**: each request misses the prompt cache
+- **Caching with too few requests**: a write costs more than the reads save below about 3 requests an hour in our model
+- **A key that leaves out the data**: the cache serves a stale price
+- **A loose semantic threshold**: the hit rate rises along with the wrong answers
+- **One cache for each tenant's questions combined**: one user's answer reaches another
+- **Routing without an evaluation set**: savings that hide a drop in quality
+- **A cascade that ignores the escalated cost**: a doubtful request pays for two calls
 
 ## Key Points
 
