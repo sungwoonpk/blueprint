@@ -24,7 +24,7 @@ Correlation is sensitive to extremes. We drew 50 pairs of unrelated values and g
 
 | Data | Pearson | Spearman |
 | --- | --- | --- |
-| 50 independent pairs | 0.235 | Near 0 |
+| 50 independent pairs | 0.235 | Not measured |
 | The same plus one extreme point | 0.670 | 0.329 |
 
 A single point nearly tripled the Pearson correlation, since it alone pulls a line through itself and the cloud. The rank version moved much less. Anscombe's fourth dataset in [Summarizing Data with Statistics](/data-ai/summary-statistics) is the same trick in the extreme.

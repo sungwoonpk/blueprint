@@ -45,7 +45,7 @@ Heavy tails appear in file sizes, wealth, city sizes and the number of sales per
 
 ## Bin Width Changes the Picture
 
-A histogram is an estimate, and its bin width is a choice. Too wide, and two peaks merge: with 4 bins of about $27 each, our mixture showed no clear second peak. Too narrow, and noise creates false peaks. A reasonable start is a rule such as the square root of the count for the number of bins, then try several. A smooth **density estimate**, which replaces each point with a small bump and adds them up, avoids the bin edges, and it has a width setting of its own.
+A histogram is an estimate, and its bin width is a choice. Too wide, and the shape disappears: with 2 bins of $55 each, our mixture showed only 3,086 and 1,913 listings and no peaks at all. Too narrow, and noise creates false peaks. A reasonable start is a rule such as the square root of the count for the number of bins, then try several. A smooth **density estimate**, which replaces each point with a small bump and adds them up, avoids the bin edges, and it has a width setting of its own.
 
 ## Reading Shapes Before Modeling
 

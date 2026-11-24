@@ -12,7 +12,7 @@ The most common mistake is to tell the story in the order it was discovered. The
 4. **How sure we are**, with the main caveat
 5. **What to do**, or what decision it informs
 
-For the textbook app: "Should we show a suggested price? Yes. Sellers who saw a suggestion priced within $5 of the final price in 75 percent of cases against 50 percent without one. This comes from a simulation on historical sales, so we expect the real gain to be smaller until it is tested live. We recommend an experiment on 10 percent of new listings."
+For the textbook app: "Should we show a suggested price? Yes. In a simulation on historical sales, the learned suggestion landed within $5 of the final price for 75 percent of listings, against 50 percent for the old rules. A real gain is likely to be smaller until it is tested live. We recommend an experiment on 10 percent of new listings."
 
 Details, methods and the many other charts go in an appendix. They support trust and don't belong in the main line.
 
