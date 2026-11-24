@@ -23,7 +23,7 @@ The original table of numbers like these goes back to Jeff Dean at Google. Faste
 
 ## Distance Costs Time
 
-The last row has a hard floor, because nothing is faster than light. In an optical fiber, light travels at about two thirds of its speed in empty space. For New York to London, that makes a round trip of about 56 ms at the very best, and real routes measure a little over that, around 60 to 70 ms. Engineering can't beat it, which is why a [CDN](/system-design/cdn) puts copies near users instead.
+The last row has a hard floor, because nothing is faster than light. In an optical fiber, light travels at about two thirds of its speed in empty space. For New York to London, that makes a round trip of about 56 ms at the very best, and real routes measure a little over that, around 60 to 70 ms. Engineering can't beat it, which is why a CDN puts copies near users instead, as in [Content Delivery Networks (CDNs)](/system-design/cdn).
 
 It also turns a harmless looking habit into a problem. Suppose a page needs ten calls to another service, one after the other:
 

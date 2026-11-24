@@ -116,7 +116,7 @@ GraphQL pays off when:
 
 It is less attractive for a small API with one client, where a few REST endpoints are simpler. It is also a weaker fit for public APIs that outsiders want to try with `curl` and cache at a CDN, and for teams not ready to run the extra pieces: batching, cost limits and query monitoring.
 
-Plenty of systems keep REST or gRPC inside and add GraphQL as the layer that front ends talk to, often in an [API Gateway](/system-design/api-gateways). [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) compares the three directly.
+Plenty of systems keep REST or gRPC inside and add GraphQL as the layer that front ends talk to, often behind the front door described in [API Gateways](/system-design/api-gateways). [Choosing Between REST, RPC and GraphQL](/system-design/api-style-choice) compares the three directly.
 
 ## Key Points
 

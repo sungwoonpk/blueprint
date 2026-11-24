@@ -6,7 +6,7 @@ Once the textbook app is split into services, each one needs a way to ask "where
 
 ## Why Addresses Change
 
-Instances move for ordinary reasons: a deploy replaces them one by one, [autoscaling](/system-design/autoscaling) adds and removes them with the load, and a failure sends their work to new machines. Suppose the listings service has its payments address in a setting:
+Instances move for ordinary reasons: a deploy replaces them one by one, autoscaling adds and removes them with the load (see [Autoscaling](/system-design/autoscaling)), and a failure sends their work to new machines. Suppose the listings service has its payments address in a setting:
 
 <figure class="diagram">
 <p class="rowname">Monday</p>
@@ -78,7 +78,7 @@ With **client-side discovery**, the caller asks the registry, picks an instance 
 
 With **server-side discovery**, the caller sends the request to a router at a well known address, and the router consults the registry.
 
-Callers stay simple, and there is one more piece to run and one more hop. Kubernetes Services and AWS load balancers work this way, and the [load balancers](/system-design/load-balancers) from earlier in this phase are exactly such routers.
+Callers stay simple, and there is one more piece to run and one more hop. Kubernetes Services and AWS load balancers work this way, and the ones in [Load Balancers](/system-design/load-balancers) from earlier in this phase are exactly such routers.
 
 ## DNS as a Registry
 

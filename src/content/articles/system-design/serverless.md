@@ -139,7 +139,7 @@ Other cautions: the provider's limits and prices are not yours to control, local
 | A Good Fit | A Poor Fit |
 | --- | --- |
 | Event driven glue, such as resizing photos or sending emails | Steady, high traffic that keeps servers busy anyway |
-| Handling [webhooks](/system-design/webhooks) and scheduled jobs | Long running work |
+| Handling [Webhooks](/system-design/webhooks) and scheduled jobs | Long running work |
 | Rare or spiky traffic, and prototypes | Tight loops that need microsecond access to data |
 | Consuming queues, as in [Task Queues](/system-design/task-queues) | Work that needs special hardware, or heavy state held in memory |
 
