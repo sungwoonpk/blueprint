@@ -36,16 +36,6 @@ We counted a page that needs 6 dependent round trips after a new connection, for
 
 The columns are the round trip to Seoul, the page time going straight to the origin, and the page time through an edge.
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Page time in milliseconds for two cities, direct and through an edge">
-<div class="hbar peak"><span>São Paulo, Direct</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2,201 ms</span></div>
-<div class="hbar"><span>São Paulo, Edge</span><span class="track"><span class="fill" style="--w: 17.9%"></span></span><span class="value">395 ms</span></div>
-<div class="hbar"><span>Frankfurt, Direct</span><span class="track"><span class="fill" style="--w: 46.6%"></span></span><span class="value">1,026 ms</span></div>
-<div class="hbar"><span>Frankfurt, Edge</span><span class="track"><span class="fill" style="--w: 11.3%"></span></span><span class="value">248 ms</span></div>
-</div>
-<figcaption>Page time for 6 dependent round trips after a new connection, origin in Seoul, from our arithmetic</figcaption>
-</figure>
-
 The student in São Paulo waits over 2 seconds before the page is done, and the cause is eight round trips at 275 ms each. Users in Seoul or Tokyo, who are near the origin, gain no speed from an edge.
 
 The lesson is that the number of round trips matters as much as the distance: fewer dependent requests, connection reuse and a nearby termination point each multiply the saving.
@@ -83,7 +73,7 @@ Read your writes needs help: a session token returned to the client and sent wit
 
 The surviving geodes must absorb the load when one fails, the capacity arithmetic of [Surviving a Region Outage](/system-design/region-outage). And the pattern doesn't suit data tied to a place, such as data or users restricted to particular deployments under residency rules, which belong in deployment stamps.
 
-Compare adding geodes with adding capacity to each geode, and if one region is enough, don't use the pattern.
+Weigh adding geodes against adding capacity to each geode, and if one region is enough, don't use the pattern.
 
 ## Move the Data
 
@@ -102,7 +92,7 @@ With one primary, the distance is paid by writes from far away. On a planned swi
 
 With multi active, each region commits locally and the copies converge afterward. DynamoDB's default is eventual consistency between regions with last writer wins for conflicting writes, plus a strongly consistent mode that can't be mixed in the same table.
 
-It offers 99.999 percent availability for global tables, and the replication latency depends on the distance between regions and has no promised figure.
+Global tables are rated for 99.999 percent availability, and the replication latency depends on the distance between regions and has no promised figure.
 
 With strong consistency across regions, a commit has to reach a majority of regions before it is acknowledged, and the cost follows from the table of distances.
 
@@ -151,13 +141,13 @@ This is an engineering overview, not legal advice, and the details need a lawyer
 
 ## Pitfalls
 
-- **Tuning servers for a distance problem**: The floor is physics
-- **Counting one round trip**: A page makes many, and each pays the distance
-- **A CDN for personal data**: The inbox can't be cached in a shared place
-- **Strong consistency everywhere**: The farthest writer pays the full distance
-- **Multi active without a conflict plan**: Last writer wins can drop a student's edit
-- **One catalog, many regions, no lag alert**: Users in one region see old prices
-- **Ignoring residency until launch**: Moving data after the fact is a migration
+- **Tuning servers for a distance problem**: the floor is physics
+- **Counting one round trip**: a page makes many, and each pays the distance
+- **A CDN for personal data**: the inbox can't be cached in a shared place
+- **Strong consistency everywhere**: the farthest writer pays the full distance
+- **Multi active without a conflict plan**: last writer wins can drop a student's edit
+- **One catalog, many regions, no lag alert**: users in one region see old prices
+- **Ignoring residency until launch**: moving data after the fact is a migration
 
 ## Key Points
 
