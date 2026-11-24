@@ -4,7 +4,9 @@
 
 ## Any Matrix, Three Pieces
 
-For a matrix A with n rows and d columns, the SVD finds a matrix U of perpendicular directions in the row space, a matrix V of perpendicular directions in the column space, and a diagonal matrix Σ of non negative singular values, usually listed largest first. Reading it as a sum, A is a total of simple rank one pieces, each a singular value times an outer product of a column of U and a column of V.
+For a matrix A with n rows and d columns, the SVD finds a matrix U of perpendicular directions in the row space, a matrix V of perpendicular directions in the column space, and a diagonal matrix Σ of non negative singular values, usually listed largest first.
+
+Reading it as a sum, A is a total of simple rank one pieces, each a singular value times an outer product of a column of U and a column of V.
 
 The link to the last topic is direct. The squared singular values of A are the eigenvalues of AᵀA, and the columns of V are its eigenvectors. The rank of A, the number of independent directions it keeps, is the number of nonzero singular values.
 
@@ -29,7 +31,9 @@ Keeping the top k pieces and dropping the rest gives a matrix of rank k. A theor
 | 3 | 6.14% | 57 |
 | 6, All | 0% | 114 |
 
-The matrix has 72 entries. Two pieces, 38 stored numbers, capture 99.27 percent of the squared size and leave 8.5 percent error, which is mostly the noise. Keeping more than 3 pieces stores more numbers than the matrix itself, so compression pays only when few pieces suffice. For a 3 million by 1,024 matrix of embeddings, keeping 128 pieces would store 3,000,000 × 128 + 1,024 × 128 + 128 = about 384 million numbers instead of 3.1 billion, a saving of 8 times, our arithmetic.
+The matrix has 72 entries. Two pieces, 38 stored numbers, capture 99.27 percent of the squared size and leave 8.5 percent error, which is mostly the noise. Keeping more than 3 pieces stores more numbers than the matrix itself, so compression pays only when few pieces suffice.
+
+For a 3 million by 1,024 matrix of embeddings, keeping 128 pieces would store 3,000,000 × 128 + 1,024 × 128 + 128 = about 384 million numbers instead of 3.1 billion, a saving of 8 times, our arithmetic.
 
 ## What the SVD Does for a Model
 

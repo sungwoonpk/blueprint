@@ -8,7 +8,9 @@ For a vector x of d numbers, the density is
 
 p(x) = 1 / ((2π)^(d/2) |Σ|^(1/2)) × exp(−½ (x − μ)ᵀ Σ⁻¹ (x − μ))
 
-The mean μ is the center and the covariance matrix Σ, from [Expectation, Variance and Covariance](/data-ai/expectation-variance), sets the shape. The exponent measures squared distance from the center with a twist: the inverse covariance Σ⁻¹ stretches distances so that directions with much spread count for less. Its contours, the sets of points with equal density, are ellipses in two dimensions and ellipsoids in more. The axes of the ellipse follow the eigenvectors of Σ, and their lengths follow the square roots of its eigenvalues, the picture from [Eigenvalues and Eigenvectors](/data-ai/eigen).
+The mean μ is the center and the covariance matrix Σ, from [Expectation, Variance and Covariance](/data-ai/expectation-variance), sets the shape. The exponent measures squared distance from the center with a twist: the inverse covariance Σ⁻¹ stretches distances so that directions with much spread count for less.
+
+Its contours, the sets of points with equal density, are ellipses in two dimensions and ellipsoids in more. The axes of the ellipse follow the eigenvectors of Σ, and their lengths follow the square roots of its eigenvalues, the picture from [Eigenvalues and Eigenvectors](/data-ai/eigen).
 
 ## Two Prices That Move Together
 
@@ -33,7 +35,9 @@ The **Mahalanobis distance** is the square root of that exponent: D = √((x −
 | Along the band: ($110, $55) | 65.8 | 1.83 |
 | Against the band: ($80, $16) | 32.3 | 3.48 |
 
-By Euclidean distance the first point is twice as far, and by Mahalanobis distance it is the ordinary one: a list price of $110 with a sold price of $55 is exactly what the pattern predicts. The second point is only half as far from the center, and it breaks the pattern. In two dimensions, 95 percent of a Gaussian lies within a Mahalanobis distance of 2.447, and in our sample 94.96 percent did, so the distance has a probability meaning that Euclidean distance lacks.
+By Euclidean distance the first point is twice as far, and by Mahalanobis distance it is the ordinary one: a list price of $110 with a sold price of $55 is exactly what the pattern predicts.
+
+The second point is only half as far from the center, and it breaks the pattern. In two dimensions, 95 percent of a Gaussian lies within a Mahalanobis distance of 2.447, and in our sample 94.96 percent did, so the distance has a probability meaning that Euclidean distance lacks.
 
 ## Outliers by Mahalanobis
 

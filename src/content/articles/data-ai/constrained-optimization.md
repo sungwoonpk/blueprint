@@ -4,7 +4,9 @@
 
 ## A Limit on the Answer
 
-Take a toy loss, the squared distance from the point (3, 1), and ask for the weights w = (w₁, w₂) with the smallest loss that also satisfy w₁² + w₂² ≤ c: the weights must stay inside a circle. Without the limit the best answer is (3, 1) itself, at squared length 10. If c is at least 10, the limit does nothing. If c is smaller, the best point lies on the boundary, at the spot of the circle closest to (3, 1).
+Take a toy loss, the squared distance from the point (3, 1), and ask for the weights w = (w₁, w₂) with the smallest loss that also satisfy w₁² + w₂² ≤ c: the weights must stay inside a circle.
+
+Without the limit the best answer is (3, 1) itself, at squared length 10. If c is at least 10, the limit does nothing. If c is smaller, the best point lies on the boundary, at the spot of the circle closest to (3, 1).
 
 At that boundary point two directions have to agree. The loss wants to move toward (3, 1), and the constraint blocks it. The best point is where the gradient of the loss is exactly opposite the gradient of the constraint, so that no move along the circle helps. That condition is the heart of the method.
 
@@ -14,7 +16,9 @@ Write the problem as minimizing L(w) subject to g(w) ≤ 0, with g(w) = w₁² +
 
 Λ(w, λ) = L(w) + λ g(w)
 
-At the optimum, the gradient of Λ with respect to w is zero: ∇L = −λ ∇g. The multiplier says how hard the constraint pushes back. If the constraint is slack, the best point is inside the circle and λ is zero. If it binds, λ is positive. These requirements are the **KKT conditions**, named for Karush, Kuhn and Tucker: stationarity, feasibility, a multiplier that is not negative, and complementary slackness, meaning λ times g(w) is zero, so either the multiplier is zero or the constraint is tight.
+At the optimum, the gradient of Λ with respect to w is zero: ∇L = −λ ∇g. The multiplier says how hard the constraint pushes back. If the constraint is slack, the best point is inside the circle and λ is zero.
+
+If it binds, λ is positive. These requirements are the **KKT conditions**, named for Karush, Kuhn and Tucker: stationarity, feasibility, a multiplier that is not negative, and complementary slackness, meaning λ times g(w) is zero, so either the multiplier is zero or the constraint is tight.
 
 ## The Price of a Constraint
 

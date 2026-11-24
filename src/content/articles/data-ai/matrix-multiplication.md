@@ -39,11 +39,15 @@ Each entry of the result takes k multiplications and additions, and there are n 
 
 Doubling the size multiplied the work by 8, as the n³ count says, and the time followed. These times are far from what a tuned library does. They come from one interpreter on one core, and a library that uses vector hardware and many cores is hundreds of times faster. The counts still carry over.
 
-Counts guide design. The price model on 3 million listings costs 3,000,000 × 4 × 1 = 12 million multiply-adds for one pass over the data. One layer of a network with 1,024 inputs and 1,024 outputs, on a batch of 64 examples, costs 64 × 1,024 × 1,024 = 67 million. Models with many layers and big batches are mostly matrix products, which is why GPUs, built to do exactly this, changed the field, as [A Short History of AI](/data-ai/ai-history) described.
+Counts guide design. The price model on 3 million listings costs 3,000,000 × 4 × 1 = 12 million multiply-adds for one pass over the data. One layer of a network with 1,024 inputs and 1,024 outputs, on a batch of 64 examples, costs 64 × 1,024 × 1,024 = 67 million.
+
+Models with many layers and big batches are mostly matrix products, which is why GPUs, built to do exactly this, changed the field, as [A Short History of AI](/data-ai/ai-history) described.
 
 ## Grouping Changes the Cost
 
-Because the product is associative, the order of grouping is a free choice, and it can change the cost by a large factor. For a vector v, multiplying (AB)v builds the full matrix AB first, and A(Bv) never builds it. With A of size 1,000 × 1,000, B of size 1,000 × 1,000 and v of size 1,000 × 1, the first costs 1,000³ + 1,000² = about 1 billion multiply-adds, and the second 2 × 1,000² = 2 million. The answers are the same. That is the kind of rewrite that [Tensors and Vectorized Computation](/data-ai/tensors) and automatic differentiation depend on.
+Because the product is associative, the order of grouping is a free choice, and it can change the cost by a large factor. For a vector v, multiplying (AB)v builds the full matrix AB first, and A(Bv) never builds it.
+
+With A of size 1,000 × 1,000, B of size 1,000 × 1,000 and v of size 1,000 × 1, the first costs 1,000³ + 1,000² = about 1 billion multiply-adds, and the second 2 × 1,000² = 2 million. The answers are the same. That is the kind of rewrite that [Tensors and Vectorized Computation](/data-ai/tensors) and automatic differentiation depend on.
 
 ## Key Points
 

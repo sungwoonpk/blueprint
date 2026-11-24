@@ -4,7 +4,9 @@
 
 ## The Jacobian
 
-A function can have several outputs. A model with 4 weights that predicts the prices of 3 listings maps 4 inputs to 3 outputs. The **Jacobian** J holds one row for each output and one column for each input: entry Jᵢⱼ is the partial derivative of output i with respect to input j. Near a point, f(w + δ) ≈ f(w) + J δ, a linear map, which is why matrices and calculus meet here.
+A function can have several outputs. A model with 4 weights that predicts the prices of 3 listings maps 4 inputs to 3 outputs.
+
+The **Jacobian** J holds one row for each output and one column for each input: entry Jᵢⱼ is the partial derivative of output i with respect to input j. Near a point, f(w + δ) ≈ f(w) + J δ, a linear map, which is why matrices and calculus meet here.
 
 For a linear model the Jacobian is easy. The predictions are Xw, and the derivative of Xw with respect to w is X itself. The listings of [Vectors and Matrices as Data](/data-ai/vectors-matrices) make a 3 × 4 Jacobian, each row the features of one listing: the rate at which that listing's prediction moves as each weight moves. A scalar function has a Jacobian with one row, and that row is the gradient.
 
@@ -29,11 +31,15 @@ That limit makes the other directions slow. With the step held under 4.2 × 10�
 
 ## Conditioning Is a Data Choice
 
-The Hessian is built from the features, so rescaling the features changes it. We divided each of the four columns by its standard deviation and recomputed. The eigenvalues became 27.6, 2.0, 1.5 and 0.8, and the condition number fell from 175.5 to 34.2, a fivefold improvement. The step limit became 2 / 27.6 = 0.07 and every direction moves at a similar pace. [Scaling and Normalizing Features](/data-ai/scaling) is a cheap preprocessing step that makes the loss surface rounder.
+The Hessian is built from the features, so rescaling the features changes it. We divided each of the four columns by its standard deviation and recomputed. The eigenvalues became 27.6, 2.0, 1.5 and 0.8, and the condition number fell from 175.5 to 34.2, a fivefold improvement.
+
+The step limit became 2 / 27.6 = 0.07 and every direction moves at a similar pace. [Scaling and Normalizing Features](/data-ai/scaling) is a cheap preprocessing step that makes the loss surface rounder.
 
 ## Using the Curvature
 
-If the Hessian is known, **Newton's method** steps to the bottom of the local quadratic: w ← w − H⁻¹ ∇L. On a quadratic loss that is one step, and on others a handful. The price is forming and inverting a d × d matrix, which costs about d³ operations, as [Matrix Multiplication and Linear Maps](/data-ai/matrix-multiplication) counted. For 4 weights that is nothing, for a model with a billion weights it is impossible, and the Hessian alone would have 10¹⁸ entries.
+If the Hessian is known, **Newton's method** steps to the bottom of the local quadratic: w ← w − H⁻¹ ∇L. On a quadratic loss that is one step, and on others a handful.
+
+The price is forming and inverting a d × d matrix, which costs about d³ operations, as [Matrix Multiplication and Linear Maps](/data-ai/matrix-multiplication) counted. For 4 weights that is nothing, for a model with a billion weights it is impossible, and the Hessian alone would have 10¹⁸ entries.
 
 So large models use only the gradient, plus cheap summaries of curvature that [Optimizers and Learning Rate Schedules](/data-ai/optimizers) describes. The Hessian still serves as the reference for what a good step would be.
 

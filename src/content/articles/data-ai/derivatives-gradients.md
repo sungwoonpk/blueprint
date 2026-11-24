@@ -37,7 +37,9 @@ A derived gradient is easy to get wrong, so a standard check compares it with a 
 | 10⁻¹² | 5.0 × 10⁻⁴ | 5.7 × 10⁻⁵ |
 | 10⁻¹⁴ | 1.9 × 10⁻² | 1.9 × 10⁻² |
 
-The error falls as h shrinks, and then rises again. A smaller step cuts the error of the approximation, and also leaves two nearly equal function values to subtract, where the computer's rounding dominates. [Floating Point and Numerical Stability](/data-ai/floating-point) explains the second effect. The **central difference**, (f(x + h) − f(x − h)) / (2h), is far more accurate, and its best step is around 10⁻⁶ to 10⁻⁸. With a step of 10⁻⁵ it matched our formula for the price model's gradient to a relative difference of 4 × 10⁻¹², which is the evidence that the formula is right.
+The error falls as h shrinks, and then rises again. A smaller step cuts the error of the approximation, and also leaves two nearly equal function values to subtract, where the computer's rounding dominates. [Floating Point and Numerical Stability](/data-ai/floating-point) explains the second effect.
+
+The **central difference**, (f(x + h) − f(x − h)) / (2h), is far more accurate, and its best step is around 10⁻⁶ to 10⁻⁸. With a step of 10⁻⁵ it matched our formula for the price model's gradient to a relative difference of 4 × 10⁻¹², which is the evidence that the formula is right.
 
 ## The Size of the Step
 

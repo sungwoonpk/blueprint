@@ -18,9 +18,13 @@ The Poisson is unusual in having its mean equal to its variance, a quick check o
 
 ## Counts and Rates
 
-A binomial with a large n and a small p behaves like a Poisson with λ = np. We checked it: each of 2,000 students opens a listing in a given minute with probability 0.0015, a binomial with an expected 3 opens. Over 5,000 minutes, the count had a mean of 3.002 and a variance of 3.001, against the binomial's np = 3 and np(1 − p) = 2.996, and the Poisson's 3 for both. The two families are the same story seen from different sides.
+A binomial with a large n and a small p behaves like a Poisson with λ = np. We checked it: each of 2,000 students opens a listing in a given minute with probability 0.0015, a binomial with an expected 3 opens.
 
-The exponential describes the wait between Poisson events. At a rate of 3 sales an hour, the average gap should be a third of an hour, and we found 0.335. The chance of a gap longer than an hour is e⁻³ = 4.98 percent by formula, and we measured 5.01 percent. The exponential is **memoryless**: having waited an hour already says nothing about the wait that remains. Among gaps over an hour, 4.88 percent also lasted past two hours, matching 4.98 percent. This is the reason that retry timers and queue models in the system design phases use it.
+Over 5,000 minutes, the count had a mean of 3.002 and a variance of 3.001, against the binomial's np = 3 and np(1 − p) = 2.996, and the Poisson's 3 for both. The two families are the same story seen from different sides.
+
+The exponential describes the wait between Poisson events. At a rate of 3 sales an hour, the average gap should be a third of an hour, and we found 0.335. The chance of a gap longer than an hour is e⁻³ = 4.98 percent by formula, and we measured 5.01 percent.
+
+The exponential is **memoryless**: having waited an hour already says nothing about the wait that remains. Among gaps over an hour, 4.88 percent also lasted past two hours, matching 4.98 percent. This is the reason that retry timers and queue models in the system design phases use it.
 
 ## Why the Gaussian Is Everywhere
 
@@ -35,7 +39,9 @@ The **central limit theorem** says that the sum, or average, of many independent
 | 30 | 68.3% | 95.5% |
 | A Gaussian | 68.3% | 95.4% |
 
-A single uniform draw is nothing like a bell, since all values are equally likely and every one is within two standard deviations. Averaging 12 is already close, and 30 is almost exact. Skewed sources take longer: the average of 30 draws from an exponential, which is very skewed, put 68.6 percent within one standard deviation and kept a small skew of 0.37. The rule of thumb that 30 is enough is a rough one, and the sources of the data matter.
+A single uniform draw is nothing like a bell, since all values are equally likely and every one is within two standard deviations. Averaging 12 is already close, and 30 is almost exact.
+
+Skewed sources take longer: the average of 30 draws from an exponential, which is very skewed, put 68.6 percent within one standard deviation and kept a small skew of 0.37. The rule of thumb that 30 is enough is a rough one, and the sources of the data matter.
 
 That is why measurement noise, the total of many small causes, is modeled as Gaussian, and why a mean squared error loss has a Gaussian story behind it, as [From Likelihood to Loss Functions](/data-ai/mle-losses) will show. It also explains why [The Multivariate Gaussian](/data-ai/multivariate-gaussian) gets its own page.
 

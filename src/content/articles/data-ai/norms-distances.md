@@ -12,11 +12,15 @@ The **L2 norm**, or Euclidean length, is the square root of the sum of squares. 
 | L2 | 40.06 | The straight line distance |
 | L∞ | 40 | The largest single gap |
 
-All three say the listings differ mostly in price. They agree here, and they disagree on the weighting of many small gaps against one large gap: L1 treats them alike, L2 gives the large gap more weight, and L∞ looks only at the largest. In machine learning the same choice shows up in losses. The squared L2 norm of the errors is the least squares loss, and the L1 norm of the errors, as in [Measuring Regression Error](/data-ai/regression-metrics), punishes a big miss less. Applied to the weights, L2 shrinks them evenly and L1 pushes some to zero, the subject of [Regularization with L1 and L2](/data-ai/regularization).
+All three say the listings differ mostly in price. They agree here, and they disagree on the weighting of many small gaps against one large gap: L1 treats them alike, L2 gives the large gap more weight, and L∞ looks only at the largest. In machine learning the same choice shows up in losses.
+
+The squared L2 norm of the errors is the least squares loss, and the L1 norm of the errors, as in [Measuring Regression Error](/data-ai/regression-metrics), punishes a big miss less. Applied to the weights, L2 shrinks them evenly and L1 pushes some to zero, the subject of [Regularization with L1 and L2](/data-ai/regularization).
 
 ## Similarity as an Angle
 
-The **cosine similarity** of two vectors is their dot product divided by the product of their lengths, the cosine of the angle between them. It ignores length. A and B have a cosine similarity of 0.9996 because both are dominated by the price direction. For texts and embeddings, direction carries the meaning and length is noise, which is why [Semantic Search with Embeddings](/system-design/embeddings) ranks by cosine. When vectors have length 1 the dot product equals the cosine, and the L2 distance is a function of it, so the two rankings agree.
+The **cosine similarity** of two vectors is their dot product divided by the product of their lengths, the cosine of the angle between them. It ignores length. A and B have a cosine similarity of 0.9996 because both are dominated by the price direction.
+
+For texts and embeddings, direction carries the meaning and length is noise, which is why [Semantic Search with Embeddings](/system-design/embeddings) ranks by cosine. When vectors have length 1 the dot product equals the cosine, and the L2 distance is a function of it, so the two rankings agree.
 
 ## Scale Decides Everything
 
@@ -35,7 +39,9 @@ Intuition from two or three dimensions fails in a thousand. We drew 200 random p
 | 100 | 1.39 |
 | 1,000 | 1.09 |
 
-In two dimensions the farthest point is 28 times as far as the nearest. In a thousand dimensions it is only 9 percent farther, so "nearest" is barely different from "any". This is the **concentration of distances**, and it is why raw distance in high dimensions needs care. Real data lies on lower dimensional shapes, which is how [Embeddings](/data-ai/embeddings) and [Principal Component Analysis](/data-ai/pca) get useful neighbors, and the effect is a warning against distance on many unscaled, uninformative features.
+In two dimensions the farthest point is 28 times as far as the nearest. In a thousand dimensions it is only 9 percent farther, so "nearest" is barely different from "any".
+
+This is the **concentration of distances**, and it is why raw distance in high dimensions needs care. Real data lies on lower dimensional shapes, which is how [Embeddings](/data-ai/embeddings) and [Principal Component Analysis](/data-ai/pca) get useful neighbors, and the effect is a warning against distance on many unscaled, uninformative features.
 
 ## Key Points
 

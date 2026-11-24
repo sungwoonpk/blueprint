@@ -35,7 +35,9 @@ The cells differ by several points, so the variables aren't independent. The edi
 
 ## How Much Do They Share
 
-A single number for the dependence is the **mutual information**, the sum over cells of the joint times the log of the joint divided by the product of marginals: it is zero for independent variables and positive otherwise. For the table above it was 0.079 bits. As a control, we simulated an edition flag and a sale flag drawn independently, and the value was 0.00001 bits, zero up to sampling noise. [Entropy and Information](/data-ai/entropy) gives the formula its meaning, and the number measures how much knowing the edition shrinks the uncertainty about the sale.
+A single number for the dependence is the **mutual information**, the sum over cells of the joint times the log of the joint divided by the product of marginals: it is zero for independent variables and positive otherwise. For the table above it was 0.079 bits.
+
+As a control, we simulated an edition flag and a sale flag drawn independently, and the value was 0.00001 bits, zero up to sampling noise. [Entropy and Information](/data-ai/entropy) gives the formula its meaning, and the number measures how much knowing the edition shrinks the uncertainty about the sale.
 
 Independence also has a conditional form, which is used heavily: A and B are **conditionally independent** given C if they are independent once C is known. It underlies [Naive Bayes](/data-ai/naive-bayes), which assumes that a listing's words are independent given the class, a convenient lie that works surprisingly often.
 

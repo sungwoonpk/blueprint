@@ -21,7 +21,9 @@ From 2,000 simulated sales, we took each listing's list price and its sold price
 | List Price | 1,598.1 | 845.4 |
 | Sold Price | 845.4 | 775.7 |
 
-The correlation is 0.759: expensive books sell for more, with plenty of spread. The eigenvalues of this matrix are 2,127.0 and 246.8. The eigenvector for the larger one is [0.848, 0.530], a line at 32.0 degrees from the list price axis. That line is the direction in which the sales vary most, and it carries 89.6 percent of the total variance, 2,127.0 out of 2,373.8. The perpendicular direction carries the other 10.4 percent. This is the whole idea of [Principal Component Analysis](/data-ai/pca): the eigenvectors of the covariance matrix are the axes of the data, and the eigenvalues say how much each matters.
+The correlation is 0.759: expensive books sell for more, with plenty of spread. The eigenvalues of this matrix are 2,127.0 and 246.8. The eigenvector for the larger one is [0.848, 0.530], a line at 32.0 degrees from the list price axis.
+
+That line is the direction in which the sales vary most, and it carries 89.6 percent of the total variance, 2,127.0 out of 2,373.8. The perpendicular direction carries the other 10.4 percent. This is the whole idea of [Principal Component Analysis](/data-ai/pca): the eigenvectors of the covariance matrix are the axes of the data, and the eigenvalues say how much each matters.
 
 ## Finding Them by Repeated Multiplication
 

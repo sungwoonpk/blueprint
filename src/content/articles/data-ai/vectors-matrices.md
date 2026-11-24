@@ -12,7 +12,9 @@ The price model reads four numbers for each listing: the list price, the list pr
 | B | 80 | 80 | 320 | 0 | [80, 80, 320, 0] |
 | C | 150 | 750 | 300 | 150 | [150, 750, 300, 150] |
 
-A vector can be read two ways. It is a list, one number for each feature, and it is a point in a space with one axis for each feature, here a space of four dimensions. The second view is the one that lets us talk about distance and direction later. In [Features, Labels and Datasets](/data-ai/features-labels) the features are chosen with care, and here only the shape matters: a fixed number of columns, in a fixed order, for every example.
+A vector can be read two ways. It is a list, one number for each feature, and it is a point in a space with one axis for each feature, here a space of four dimensions.
+
+The second view is the one that lets us talk about distance and direction later. In [Features, Labels and Datasets](/data-ai/features-labels) the features are chosen with care, and here only the shape matters: a fixed number of columns, in a fixed order, for every example.
 
 ## The Dot Product
 
@@ -26,7 +28,9 @@ w · x = w₁x₁ + w₂x₂ + w₃x₃ + w₄x₄
 | B | 0.599×80 − 0.069×80 + 0.050×320 − 0.177×0 | $58.40 |
 | C | 0.599×150 − 0.069×750 + 0.050×300 − 0.177×150 | $26.55 |
 
-Listing C is a new edition of a five year old book, which is why the dot product pulls its price down. The geometric reading is that w · x equals the length of w times the length of x times the cosine of the angle between them, so a dot product is large when the two vectors point the same way. A model is a direction in feature space, and a prediction measures how far an example lies along it.
+Listing C is a new edition of a five year old book, which is why the dot product pulls its price down.
+
+The geometric reading is that w · x equals the length of w times the length of x times the cosine of the angle between them, so a dot product is large when the two vectors point the same way. A model is a direction in feature space, and a prediction measures how far an example lies along it.
 
 ## A Dataset as a Matrix
 

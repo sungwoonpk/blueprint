@@ -4,7 +4,9 @@ The first four phases of the roadmap treated a sold price as a number. In truth 
 
 ## Discrete and Continuous
 
-A **discrete** random variable takes separate values, like the copies sold in a day: 0, 1, 2 and so on. Its distribution is a **probability mass function** (PMF) that gives the probability of each value, and the probabilities add to 1. A **continuous** random variable takes any value in a range, like a price in dollars. The chance of exactly $45.00000 is zero, so the distribution is a **probability density function** (PDF): probability is the area under the curve between two values, and the total area is 1.
+A **discrete** random variable takes separate values, like the copies sold in a day: 0, 1, 2 and so on. Its distribution is a **probability mass function** (PMF) that gives the probability of each value, and the probabilities add to 1.
+
+A **continuous** random variable takes any value in a range, like a price in dollars. The chance of exactly $45.00000 is zero, so the distribution is a **probability density function** (PDF): probability is the area under the curve between two values, and the total area is 1.
 
 A density is not a probability, and it can exceed 1. A price uniformly spread over a $0.50 range has a density of 2 everywhere, and the area under it is still 1. This matters later, when densities and probabilities appear in the same formula.
 

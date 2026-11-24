@@ -4,7 +4,9 @@
 
 ## Expectation
 
-The expectation, or mean, E[X], is the sum of each value times its probability, or an integral for a continuous variable. In the simulated textbook market, with 200,000 sales, the mean sold price was $56.65. The expectation is **linear**: E[aX + b] = aE[X] + b, and E[X + Y] = E[X] + E[Y] always, whether or not X and Y are independent. That last fact is the most useful sentence in probability, since it lets averages of complicated things be computed piece by piece.
+The expectation, or mean, E[X], is the sum of each value times its probability, or an integral for a continuous variable. In the simulated textbook market, with 200,000 sales, the mean sold price was $56.65.
+
+The expectation is **linear**: E[aX + b] = aE[X] + b, and E[X + Y] = E[X] + E[Y] always, whether or not X and Y are independent. That last fact is the most useful sentence in probability, since it lets averages of complicated things be computed piece by piece.
 
 ## Variance and Standard Deviation
 

@@ -41,7 +41,9 @@ The rule that follows is simple. Write the calculation as operations on whole ar
 
 ## Reductions and Axes
 
-A **reduction** collapses an axis: sum, mean, maximum. The axis argument says which one. A sum over axis 0 of the (3,000,000, 4) matrix gives a vector of shape (4), one total for each feature, and a sum over axis 1 gives (3,000,000), one total for each listing. Many training losses are a mean over the batch axis, and many metrics are a reduction followed by a comparison, so naming the axis is part of reading any line of model code.
+A **reduction** collapses an axis: sum, mean, maximum. The axis argument says which one. A sum over axis 0 of the (3,000,000, 4) matrix gives a vector of shape (4), one total for each feature, and a sum over axis 1 gives (3,000,000), one total for each listing.
+
+Many training losses are a mean over the batch axis, and many metrics are a reduction followed by a comparison, so naming the axis is part of reading any line of model code.
 
 ## Key Points
 
