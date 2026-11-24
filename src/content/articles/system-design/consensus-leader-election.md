@@ -10,13 +10,13 @@ The remedy for both is to let a group of nodes decide together, so that no singl
 
 Leslie Lamport's "Paxos Made Simple" states the consensus problem plainly. Some processes propose values, and the algorithm must make sure that one of them is chosen. The safety rules are:
 
-- **Validity**: A value may be chosen if it was proposed
-- **Agreement**: A single value is chosen
-- **Honest learning**: A process learns of a chosen value when it truly was chosen
+- **Validity**: only a proposed value can be chosen
+- **Agreement**: only one value is chosen
+- **Integrity**: a process learns of a chosen value only if it really was chosen
 
 The model is the asynchronous one from [Why Distributed Systems Are Hard](/system-design/why-distributed-is-hard): processes run at any speed, may stop and restart, and messages can take arbitrarily long, be duplicated or be lost.
 
-Lamport adds that, since the agents may fail after a value is chosen and then restart, a solution is impossible unless an agent can remember something through a restart. In practice, nodes write their promises to disk before they answer.
+A node can fail after a value is chosen and then restart, so no solution works unless nodes can remember something through a restart. In practice, nodes write their promises to disk before they answer.
 
 ## Why a Majority
 
@@ -33,9 +33,9 @@ The quorum rule from [Leaderless Replication and Quorums](/system-design/leaderl
 | 5 | 3 | 2 |
 | 7 | 4 | 3 |
 
-Four nodes tolerate no more failures than three, so odd sizes are the norm. Kafka uses 3 or 5 controllers, since tolerating N failures takes 2N plus 1.
+Four nodes tolerate no more failures than three, so odd sizes are the norm. Tolerating N failures takes 2N + 1 nodes, which is why Kafka's controller group, for example, runs 3 or 5.
 
-The Raft site gives the 5 server example: the cluster keeps running with 2 failures, and with more it stops making progress and does not return wrong results.
+A 5 node cluster keeps running with 2 failures. With more, it stops making progress and doesn't return wrong results.
 
 We calculated how often a majority is up if each node is down independently 1 percent or 5 percent of the time:
 
@@ -76,23 +76,23 @@ In phase 1, a proposer sends a prepare request with a number n to a majority. An
 
 In phase 2, the proposer sends an accept request, and it must use the value of the highest numbered proposal reported in the promises, if there is one. That rule keeps a later proposer from overturning a value that may already have been chosen.
 
-It is safe in the face of crashes, delays and competing proposers, and it can fail to make progress when two proposers keep interrupting each other, which leads to the next point.
+Paxos stays safe through crashes, delays and competing proposers. It can fail to make progress when two proposers keep interrupting each other, and the next result says some stalls like that can't be designed away.
 
 ## The Limit: FLP
 
-Michael Fischer, Nancy Lynch and Michael Paterson proved in 1985 that in an asynchronous system, each consensus protocol has some execution that does not terminate, even if just one process may crash.
+Michael Fischer, Nancy Lynch and Michael Paterson proved in 1985 that in an asynchronous system, every deterministic consensus protocol has some execution that never ends, even if only one process may crash. This is the **FLP result**.
 
-The reason is the one from the clock and failure detection topics: a slow node can't be told from a dead one, and a protocol that waits forever for it may not decide, while one that gives up may decide wrongly.
+The reason is the one behind failure detection: a slow node can't be told from a dead one, and a protocol that waits forever for it may not decide, while one that gives up may decide wrongly.
 
-The result is easy to misread. It doesn't mean consensus can't be reached. It means that in a fully asynchronous system no deterministic algorithm can guarantee it finishes, even if just one process may fail.
+The result is easy to misread. It doesn't mean consensus can't be reached. It means that in a fully asynchronous system, no deterministic algorithm can promise to finish.
 
-Practical systems keep safety and get liveness from timeouts, which are the same guesses as in [Failure Detection and Gossip](/system-design/failure-detection), and from randomization.
+Practical systems keep safety fixed and get progress from timeouts, which are the same guesses as in [Failure Detection and Gossip](/system-design/failure-detection), and from randomization.
 
 ## Electing a Leader
 
 Running full consensus for each operation is costly, so most systems elect a leader and let it order the operations, with consensus used to choose and replace the leader.
 
-Raft, described in the next topic, is built this way, and the Raft paper presents its decomposition into leader election, log replication and safety as the source of its clarity.
+Raft, in the next topic, is built this way: it splits the problem into leader election, log replication and safety.
 
 Here is the mechanism in outline. Each follower waits for a message from the leader. If a randomly chosen election timeout passes with silence, it becomes a candidate and asks the others to vote for it. A node votes for the first candidate it hears from, and a candidate that gets a majority wins.
 
@@ -107,11 +107,11 @@ The randomness matters. We simulated 5 nodes with message delays between 1 and 1
 
 With identical timeouts the candidates start together and split the votes forever. A narrow range still splits half the time.
 
-A wide range separates the candidates by more than a message delay, so the first candidate usually collects a majority before anyone else starts. etcd's defaults are a 100 ms heartbeat and a 1000 ms election timeout, and the advice is a heartbeat of 0.5 to 1.5 times the round trip time between members and an election timeout of at least 10 times it.
+A wide range separates the candidates by more than a message delay, so the first candidate usually collects a majority before anyone else starts. etcd's defaults are a 100 ms heartbeat and a 1000 ms election timeout. Its guidance is a heartbeat of 0.5 to 1.5 times the round trip time between members, and an election timeout of at least 10 times that round trip.
 
-ZooKeeper's leader election recipe shows another way, using a coordination service. Each candidate creates an ephemeral sequential znode, and the one with the smallest number is leader. Each candidate watches the node just below its own, so a leader's failure wakes one watcher and not the whole group.
+ZooKeeper's leader election recipe shows another way, using a coordination service. Each candidate creates an ephemeral sequential znode, a small entry in ZooKeeper's tree that gets the next number and disappears when its creator's session ends. The candidate with the smallest number is leader. Each candidate watches the node just below its own, so a leader's failure wakes one watcher and not the whole group.
 
-Ephemeral nodes disappear when the creator's session ends, which doubles as failure detection. The recipe notes that a candidate with no predecessor doesn't by itself prove the node knows it is the leader, so applications may need an acknowledgment node.
+Disappearing with the session doubles as failure detection. The recipe adds a warning: holding the smallest number doesn't mean the node has noticed that it leads, so an application may have the new leader create a separate node to say it took over.
 
 ## Leases: The Leader That Doesn't Know
 
@@ -131,7 +131,7 @@ Most applications should use a system that already solves this, and not write it
 | --- | --- |
 | Elect one worker or owner among service instances | A lease in etcd, ZooKeeper or Kubernetes |
 | Store small, critical configuration with strong guarantees | etcd or ZooKeeper, which replicate through consensus |
-| Choose the leader of a database cluster | The database's own consensus, or a manager built on etcd, as in the failover section of replication |
+| Choose the leader of a database cluster | The database's own consensus, or a manager built on etcd, as in [Single Leader Replication](/system-design/replication-one-leader) |
 | Order a large stream of writes | One leader with a replicated log, as in the next topic |
 
 Consensus is costly for large data. Each decision needs a round trip to a majority, so across regions it costs the latency from [PACELC](/system-design/pacelc), and the replicated state is kept small. Use it to decide who leads and what the configuration is, and let the leaders move the bulk data.

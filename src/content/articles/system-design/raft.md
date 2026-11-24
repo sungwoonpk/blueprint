@@ -33,7 +33,7 @@ Servers exchange terms in each message. A server that sees a larger term than it
 
 An election works as follows. A follower that hears no message during an election timeout increments its term, votes for itself and sends vote requests to the others. Each server votes for at most one candidate in a term, first come first served, so at most one candidate can win a majority.
 
-Raft chooses timeouts at random from a fixed range, for example 150 to 300 ms, and the simulation in the previous topic showed why: with that range, 0.4 percent of first elections split in our test, and with identical timeouts they did not finish.
+Raft chooses timeouts at random from a fixed range, for example 150 to 300 ms, and the simulation in the previous topic showed why: with that range, 0.4 percent of first elections split in our test, and with identical timeouts no leader was elected.
 
 A vote has one more condition, which carries the safety argument. A server denies its vote to a candidate whose log is less up to date than its own. The log with the later last term is more up to date, and with equal last terms the longer log wins.
 
@@ -90,19 +90,19 @@ We tested it with 5 servers and a leader that crashes at a random moment, counti
 
 Both halves matter. Dropping the vote rule lost committed entries in 41.8 percent of crashes, and committing on fewer than a majority lost them in 33.5 percent, even with the rule.
 
-There is a subtlety in the commit rule after a change of leader: a leader doesn't decide that an entry from an earlier term is committed by counting its copies, since such an entry can still be overwritten. It commits an entry from its own term on a majority, which commits the earlier entries too.
+One subtlety remains after a change of leader. A new leader doesn't count the copies of an older term's entry to call it committed, because such an entry can still be overwritten. It waits until an entry from its own term is on a majority, and that commits the earlier ones too.
 
 ## Changing the Membership
 
-Adding or removing servers is dangerous if two different majorities can exist during the switch.
+Adding or removing servers is dangerous if two different majorities can exist during the switch. Moving from 3 servers to 5 in one step shows how: servers still on the old setup need 2 votes, servers on the new setup need 3, and two leaders could win in the same term.
 
 Raft changes membership through a joint configuration that needs majorities of both the old and the new set, so no moment has two independent leaders. etcd adds a further step: a new member joins as a learner that gets the log, doesn't vote, and cannot become leader, and is promoted to a voter once it has caught up.
 
 ## Raft in Real Systems
 
-Several systems you have met use it. etcd is built on it, with defaults of a 100 ms heartbeat and a 1,000 ms election timeout, and after a leader fails, a new one is elected in about one election timeout, during which writes wait.
+Several systems use it. etcd is built on it, with defaults of a 100 ms heartbeat and a 1,000 ms election timeout, and after a leader fails, a new one is elected in about one election timeout, during which writes wait.
 
-Kafka's KRaft controllers use a quorum of 3 or 5 controllers. In CockroachDB, each range of data is a Raft group, which tolerates the loss of a minority of its replicas, and a three replica range survives one failure.
+Kafka's KRaft controllers use a quorum of 3 or 5 controllers. In CockroachDB, each range, a slice of a table's data, is a Raft group, which tolerates the loss of a minority of its replicas, and a three replica range survives one failure.
 
 The limits are the ones from the previous topic. Raft tolerates crashes and not Byzantine faults, where nodes lie.
 

@@ -47,10 +47,10 @@ A **compensable** step can be undone. The **pivot** is the point of no return: a
 
 ## Coordinating the Steps
 
-Two styles exist, and both are described by microservices.io, Microsoft and AWS:
+Two styles coordinate the steps:
 
-- **Choreography**: Each service does its local transaction and publishes an event, and the next service reacts. microservices.io's example is an order service that creates an order as pending and emits an event, the customer service reserves credit and emits its outcome, and the order service approves or rejects the order
-- **Orchestration**: A central orchestrator tells each participant which local transaction to run, and handles the replies. In AWS, Step Functions can do it, with a failure path that runs Revert Payment, then Revert Inventory, then Remove Order
+- **Choreography**: each service does its local transaction and publishes an event, and the next service reacts. In an order flow, the order service creates the order as pending and emits an event, the customer service reserves credit and emits its outcome, and the order service approves or rejects the order
+- **Orchestration**: a central orchestrator tells each participant which local transaction to run, and handles the replies. A workflow service such as AWS Step Functions can run the flow, with a failure path that reverses the payment, then the inventory, then the order
 
 | Question | Choreography | Orchestration |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ Two styles exist, and both are described by microservices.io, Microsoft and AWS:
 | Single Point of Failure | Absent | The orchestrator, unless it is durable |
 | Hard Part | Seeing and changing the flow | Writing and running the coordinator |
 
-These differences decide it, and the choice is the one from [Workflow Engines](/system-design/workflow-engines): a coordinator holds the process in one place and records its progress, which is why durable engines such as Step Functions and Temporal are common for sagas.
+The choice is the same one as in [Workflow Engines](/system-design/workflow-engines). A coordinator holds the process in one place and records its progress, which is why durable engines such as Step Functions and Temporal are common for sagas.
 
 Each step also has the dual write problem from [The Transactional Outbox](/system-design/transactional-outbox): a service must update its database and publish an event or reply reliably.
 
@@ -101,13 +101,19 @@ How much does retrying matter? We simulated 100,000 purchases with failure chanc
 
 A single attempt left 462 purchases, 0.46 percent, with a reserved listing or a charged buyer and no one to fix it. Retrying idempotent compensations removed them. The extra cost was about 1,000 more compensation calls over the whole run.
 
-The same shape applies to the forward steps, with their own retry policy. The Step Functions tutorial's example retries after 1 second, up to 3 attempts, doubling each wait with full jitter, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
+The same shape applies to the forward steps, with their own retry policy. A typical policy retries up to 3 times, starting at 1 second and doubling each wait with full jitter, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
 
 ## The Missing Isolation
 
 A saga is atomic in the sense that it completes or is compensated, and it is not isolated: other transactions can see the intermediate states.
 
-The anomalies: **lost updates**, where one saga overwrites changes another made, **dirty reads**, where one reads data another saga will undo, and **fuzzy reads**, where a saga reads the same data twice and gets different values. The countermeasures are design techniques:
+Three anomalies follow:
+
+- **Lost updates**: one saga overwrites changes another made
+- **Dirty reads**: one saga reads data that another saga will undo
+- **Fuzzy reads**: a saga reads the same data twice and gets different values
+
+The database no longer prevents them, so the countermeasures are design techniques:
 
 | Countermeasure | What It Does | In the Textbook App |
 | --- | --- | --- |
@@ -122,7 +128,7 @@ The semantic lock is the common one. A second buyer who finds the listing pendin
 
 ## Telling the Client
 
-A saga takes time, so the client can't treat the first response as the result. microservices.io lists three ways: wait for the response if it is quick, poll for the order's state, or push a notification over a websocket or webhook.
+A saga takes time, so the client can't treat the first response as the result. Three ways work: wait for the response if the saga is quick, poll for the order's state, or push a notification over a websocket or webhook.
 
 The order moves from pending to approved or rejected, and the page shows the user that state, as in the seller's pending listing in [Replication Lag](/system-design/replication-lag).
 
