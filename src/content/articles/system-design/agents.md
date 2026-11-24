@@ -91,19 +91,9 @@ A task of many steps succeeds when each step does. If a step succeeds with proba
 | 90% | 59.0% | 34.9% | 12.2% |
 | 95%, With 2 Retries | 97.8% | 95.6% | 91.4% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Success over ten steps for four settings">
-<div class="hbar peak"><span>90% a Step</span><span class="track"><span class="fill" style="--w: 34.9%"></span></span><span class="value">34.9%</span></div>
-<div class="hbar"><span>95% a Step</span><span class="track"><span class="fill" style="--w: 59.9%"></span></span><span class="value">59.9%</span></div>
-<div class="hbar"><span>99% a Step</span><span class="track"><span class="fill" style="--w: 90.4%"></span></span><span class="value">90.4%</span></div>
-<div class="hbar"><span>95%, 2 Retries</span><span class="track"><span class="fill" style="--w: 95.6%"></span></span><span class="value">95.6%</span></div>
-</div>
-<figcaption>Chance that a 10 step task succeeds, by success of each step, from our arithmetic</figcaption>
-</figure>
-
 The last row assumes that a failed step gets two retries, each succeeding 70 percent of the time, which is our assumption. That lifts the step to 99.55 percent.
 
-The Claude documentation points the same way: return a tool error with `is_error` set, write instructive error messages, and the model retries two or three times with corrections before giving up. A message such as "Rate limit exceeded. Retry after 60 seconds" teaches the model what to do, and a bare "failed" teaches it little.
+Return a tool error with `is_error` set and write instructive error messages, and the model retries two or three times with corrections before giving up. A message such as "Rate limit exceeded. Retry after 60 seconds" teaches the model what to do, and a bare "failed" teaches it little.
 
 The tau-bench benchmark measures this. It simulates a conversation between a user, played by a language model, and an agent with tools and policy rules, and checks the final state of a database against the intended one. Its metric, pass^k, asks whether the agent succeeds on the same task in each of k trials.
 
@@ -119,11 +109,11 @@ The idea is to design the interface so mistakes are hard to make, which it calls
 
 Some specifics help:
 
-- **Describe each tool at length**: It calls the description by far the most important factor in tool performance, and advises at least three or four sentences covering what the tool does, when to use it and not, what each parameter means, and caveats
-- **Fewer, broader tools**: Combine related actions into one tool with an action parameter, and prefix names with the service
-- **Return signal**: Send back the fields that matter, with stable identifiers, and not the whole record
-- **Validate the input**: A strict setting makes the model's calls conform to the schema
-- **Control the choice**: Automatic choice is the default, and options exist to require some tool, require a particular one, or forbid tools
+- **Describe each tool at length**: the description is by far the most important factor in tool performance, so write at least three or four sentences covering what the tool does, when to use it and not, what each parameter means, and caveats
+- **Fewer, broader tools**: combine related actions into one tool with an action parameter, and prefix names with the service
+- **Return signal**: send back the fields that matter, with stable identifiers, and not the whole record
+- **Validate the input**: a strict setting makes the model's calls conform to the schema
+- **Control the choice**: automatic choice is the default, and options exist to require some tool, require a particular one, or forbid tools
 
 Writing the same tool definitions for each application gets repetitive. The Model Context Protocol, an open standard for connecting AI applications to external systems, which its introduction compares to a USB-C port, defines tools once so that many clients can use them.
 
@@ -131,18 +121,18 @@ A shared tool is also a shared attack surface, so the points below apply to it a
 
 ## Limiting What an Agent Can Do
 
-An agent acts on outputs it can't fully control. The risk is called excessive agency: damaging actions taken in response to unexpected, ambiguous or manipulated model output, whether from a hallucination or from a prompt injection.
+An agent acts on outputs it can't fully control. OWASP calls this risk excessive agency: damaging actions taken in response to unexpected, ambiguous or manipulated model output, whether from a hallucination or from a prompt injection.
 
-It traces it to excessive functionality, such as a tool that can delete when the task needs a read, excessive permissions, such as a database identity with write rights, and excessive autonomy, such as deleting without asking the user.
+It traces the risk to excessive functionality, such as a tool that can delete when the task needs a read, excessive permissions, such as a database identity with write rights, and excessive autonomy, such as deleting without asking the user.
 
-Its mitigations are the familiar ones of access control:
+The mitigations are the familiar ones of access control:
 
-- **Minimize tools and what they can do**: Avoid open ended tools such as a general shell
-- **Minimal permissions**: An identity with read rights for a tool that reads
-- **The user's own context**: Run tools with the user's identity and the least scope, as in [Authentication and Authorization](/system-design/authn-authz)
-- **Approval for high impact actions**: A person confirms before the action
-- **Authorize downstream**: The system behind the tool checks the permission, not the model
-- **Sanitize inputs and outputs**: Treat tool results as untrusted text, so keep them inside result blocks and out of system prompts
+- **Minimize tools and what they can do**: avoid open ended tools such as a general shell
+- **Minimal permissions**: an identity with read rights for a tool that reads
+- **The user's own context**: run tools with the user's identity and the least scope, as in [Authentication and Authorization](/system-design/authn-authz)
+- **Approval for high impact actions**: a person confirms before the action
+- **Authorize downstream**: the system behind the tool checks the permission, not the model
+- **Sanitize inputs and outputs**: treat tool results as untrusted text, so keep them inside result blocks and out of system prompts
 
 Logging and rate limiting limit the damage and don't prevent it. [Guardrails](/system-design/guardrails) goes further.
 
@@ -175,13 +165,13 @@ A tool with a side effect can be called twice when a step is retried, so it need
 
 ## Pitfalls
 
-- **An agent for a fixed process**: A workflow is cheaper, faster and easier to test
-- **No limit on the loop**: Cost and time grow with the number of steps
-- **Judging one run**: Reliability shows in repeated runs of the same task
-- **Vague tool descriptions**: The model guesses the arguments
-- **Error messages with no advice**: The retry repeats the mistake
-- **Broad permissions for convenience**: A manipulated output reaches the data
-- **Side effects with no confirmation or key**: A retry sends two messages
+- **An agent for a fixed process**: a workflow is cheaper, faster and easier to test
+- **No limit on the loop**: cost and time grow with the number of steps
+- **Judging one run**: reliability shows in repeated runs of the same task
+- **Vague tool descriptions**: the model guesses the arguments
+- **Error messages with no advice**: the retry repeats the mistake
+- **Broad permissions for convenience**: a manipulated output reaches the data
+- **Side effects with no confirmation or key**: a retry sends two messages
 
 ## Key Points
 
