@@ -2,9 +2,7 @@
 
 The textbook app ships a change on the Thursday before registration day. It passes its tests, and it fails on 20 percent of search requests, because of a case the tests didn't cover. How many students see the failures depends on one decision: how the new version reaches the servers.
 
-The decision matters more than it seems. A majority of incidents, by the postmortem data of large operators, come from pushing a new binary or a new configuration.
-
-The change itself is the most common trigger of outages, so the way it is released is a reliability feature, in the same family as [Bulkheads](/system-design/bulkheads) and [Load Shedding and Graceful Degradation](/system-design/load-shedding).
+The decision matters more than it seems. Postmortems at large operators trace a large share of incidents to pushing a new binary or a new configuration, so the way a change is released is a reliability feature, in the same family as [Bulkheads](/system-design/bulkheads) and [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
 ## The Strategies
 
@@ -55,13 +53,16 @@ Canarying is a partial and time limited deployment of a change in a service, and
 
 An example shows why a breakdown matters. With a 5 percent canary and a defect that fails 20 percent of requests, the failures are just 1 percent of the service's traffic, which a whole service dashboard can hide. The error rate has to be shown for the canary and the control separately.
 
-A few rules make the comparison worth trusting. Pick user facing metrics, starting from the SLIs of [SLIs, SLOs and Error Budgets](/system-design/slo), such as HTTP status and latency, and avoid CPU and memory, which are noisy and don't show that users are hurt. Keep few of them, no more than a dozen, so the signal stays readable.
+A few rules make the comparison worth trusting:
 
-Aggregate metrics over intervals the same as or shorter than the canary, or the signal is muddied. Treat errors carefully: a 404 is often the user's mistake, so exclude the 400 range and add checks on known URLs.
-
-Run one canary at a time, since two at once contaminate each other's signal. Cover the peak, because performance defects often show up just under heavy load, and a canary at the quiet hour can miss them.
-
-Compare with the control, not with yesterday, since a before and after comparison picks up noise from the time of day and the weekday. And back it with absolute checks against the SLO, because both groups can get worse together.
+- **Pick user facing metrics**: start from the SLIs of [SLIs, SLOs and Error Budgets](/system-design/slo), such as HTTP status and latency, and avoid CPU and memory, which are noisy and don't show that users are hurt
+- **Keep few metrics**: no more than a dozen, so the signal stays readable
+- **Match the intervals**: aggregate metrics over intervals the same as or shorter than the canary, or the signal is muddied
+- **Treat errors carefully**: a 404 is often the user's mistake, so exclude the 400 range and add checks on known URLs
+- **Run one canary at a time**: two at once contaminate each other's signal
+- **Cover the peak**: performance defects often show up just under heavy load, and a canary at the quiet hour can miss them
+- **Compare with the control, not with yesterday**: a before and after comparison picks up noise from the time of day and the weekday
+- **Add absolute checks**: back the comparison with checks against the SLO, because both groups can get worse together
 
 ## How Big and How Long
 
@@ -79,11 +80,11 @@ The big defect was caught in seconds at any size. The subtle ones need more requ
 
 At 100 requests a second, a 5 percent canary needed 90 seconds for the 1 percent defect and 240 for the 0.3 percent one, so a quiet service needs a longer or larger canary.
 
-No single formula fits each service, and the size and duration must be representative: a handful of queries says little about a diverse workload. For a service with a daily release, a canary of a week is too long, and with many releases a day it has to be much shorter.
+No single formula fits every service. The size and duration must be representative, since a handful of queries says little about a diverse workload. For a service with a daily release, a canary of a week is too long, and with many releases a day it has to be much shorter.
 
 Tools turn the idea into settings. Flagger's built in checks need a success rate of at least 99 percent and a 99th percentile under 500 ms, evaluated each minute.
 
-It steps traffic up in increments, and with its example of 2 percent steps to a maximum of 50 percent at 1 minute each, a promotion takes at least 25 minutes. A rollback takes the check interval times the number of failures allowed.
+Flagger steps traffic up in increments, and with its example of 2 percent steps to a maximum of 50 percent at 1 minute each, a promotion takes at least 25 minutes. A rollback takes the check interval times the number of failures allowed.
 
 ## A Whole Pipeline
 
@@ -91,7 +92,7 @@ A large operator's pipeline shows how far this can go. The stages run source, bu
 
 The production stage is a series of waves: a low traffic region first, one zone or cell at a time, then a high traffic region, then three regions, then up to twelve, then the rest, since a single region at a time could take weeks.
 
-Each wave starts with a one box stage, a single server or container that takes at most 10 percent of the requests of a region or zone, and the rest of the fleet is updated in rolling batches that keep at least 66 percent of capacity healthy, up to 33 percent at a time.
+Each wave starts with a one box stage: a single server or container that takes at most 10 percent of the requests of a region or zone. The rest of the fleet is then updated in rolling batches that keep at least 66 percent of capacity healthy, with up to 33 percent updating at a time.
 
 Between steps the pipeline waits, which is called **bake time**: at least one hour after a one box stage, at least 12 hours after the first regional wave, and 2 to 4 hours after each later wave.
 
@@ -111,7 +112,7 @@ The order is the parallel change pattern: expand, adding the new version alongsi
 
 Applied to a database, the schema has to serve both versions, so a rename becomes add the new column, write to both, move the readers and drop the old one later. That discipline is a later topic in this phase, [Schema Migrations Without Downtime](/system-design/schema-migrations).
 
-Another tool: keep feature launches apart from binary releases with flags, so that code can be deployed dark and turned on for a few users, as in [Feature Flags](/system-design/feature-flags).
+Flags help too. They keep feature launches apart from binary releases, so that code can be deployed dark and turned on for a few users, as in [Feature Flags](/system-design/feature-flags).
 
 ## A Pipeline for the Textbook App
 
@@ -127,12 +128,12 @@ The Thursday change fails at the one server stage: errors at that server are wel
 
 ## Pitfalls
 
-- **Readiness as the sole gate**: A server can be ready and wrong
-- **Slow rollback**: A canary that finds a problem in 10 seconds and needs 10 minutes to undo it loses most of its value
-- **A canary that is too small or too short**: Subtle defects and defects that appear at peak pass
-- **Metrics that don't separate canary from control**: A 20 percent failure becomes 1 percent on the dashboard
-- **Incompatible versions**: A new version that writes data the old one can't read breaks the rollback
-- **Skipping the pipeline for an urgent fix**: The urgent change is the one most likely to be wrong, so ask for senior sign off before a shortened bake
+- **Readiness as the sole gate**: a server can be ready and wrong
+- **Slow rollback**: a canary that finds a problem in 10 seconds and needs 10 minutes to undo it loses most of its value
+- **A canary that is too small or too short**: subtle defects and defects that appear at peak pass
+- **Metrics that don't separate canary from control**: a 20 percent failure becomes 1 percent on the dashboard
+- **Incompatible versions**: a new version that writes data the old one can't read breaks the rollback
+- **Skipping the pipeline for an urgent fix**: the urgent change is the one most likely to be wrong, so ask for senior sign off before a shortened bake
 
 ## Key Points
 
