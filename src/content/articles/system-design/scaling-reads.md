@@ -52,10 +52,10 @@ A web server asks the cache for a key, goes to the database on a miss, and fills
 
 Facebook's memcache handles billions of requests a second and holds trillions of items. The lesson for this topic is in what went wrong at scale, and how it was fixed with **leases**:
 
-- **Stale sets**: Two concurrent operations are reordered, and an old value ends up in the cache after a delete
-- **Thundering herds**: A key with heavy reads and writes is invalidated repeatedly, and many readers fall through to the database at once
-- **The fix**: On a miss, the cache gives one client a 64 bit token for that key, and the client must present it to set the value. A delete invalidates the token, so a stale set is refused. By default a server issues a token at 10 second intervals for each key, and other clients are told to wait a moment and retry, when the value is usually there
-- **The result**: For a set of keys prone to herds, the peak database query rate over a week was 17,000 a second without leases and 1,300 a second with them
+- **Stale sets**: two concurrent operations are reordered, and an old value ends up in the cache after a delete
+- **Thundering herds**: a key with heavy reads and writes is invalidated repeatedly, and many readers fall through to the database at once
+- **The fix**: on a miss, the cache gives one client a 64 bit token for that key, and the client must present it to set the value. A delete invalidates the token, so a stale set is refused. By default a server issues a token at 10 second intervals for each key, and other clients are told to wait a moment and retry, when the value is usually there
+- **The result**: for a set of keys prone to herds, the peak database query rate over a week was 17,000 a second without leases and 1,300 a second with them
 
 How much a cache helps depends on how skewed the reads are. We simulated an LRU cache over 300,000 items, with request popularity following a Zipf distribution, which says that a few items get most of the requests. The skew is a parameter we don't know for the textbook app, so the table shows three:
 
@@ -67,15 +67,6 @@ How much a cache helps depends on how skewed the reads are. We simulated an LRU 
 | 10% | 47.5% | 75.4% | 92.9% |
 
 Each cell is the hit ratio. A cache holding 1 percent of the items answered between 22 and 84 percent of the reads, depending on the skew alone, so the first step is to measure the real distribution of reads from the logs.
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Hit ratio for three skews of the same cache size">
-<div class="hbar"><span>Mild, Skew 0.8</span><span class="track"><span class="fill" style="--w: 21.9%"></span></span><span class="value">21.9%</span></div>
-<div class="hbar peak"><span>Skew 1.0</span><span class="track"><span class="fill" style="--w: 54.7%"></span></span><span class="value">54.7%</span></div>
-<div class="hbar"><span>Strong, Skew 1.2</span><span class="track"><span class="fill" style="--w: 83.8%"></span></span><span class="value">83.8%</span></div>
-</div>
-<figcaption>Hit ratio of a cache holding 1 percent of the items, by skew of the reads, from our simulation</figcaption>
-</figure>
 
 Registration day is likely to be strongly skewed, since students look for the same few course books.
 
@@ -95,7 +86,7 @@ A cache adds a risk of its own. A service can become addicted to its cache: beha
 
 Cold starts have the same effect, with a new server's empty local cache flooding its dependency, and the remedies are request coalescing, a fallback, and testing with the cache switched off.
 
-It also describes soft and hard time limits, serving cached data past the soft limit while the dependency is unhealthy, and caching negative answers, where a failure to do so has caused higher failure rates. [Cache Stampedes](/system-design/cache-stampedes) and [Load Shedding and Graceful Degradation](/system-design/load-shedding) are the two defenses to have ready.
+Two more defenses are soft and hard time limits, which serve cached data past the soft limit while the dependency is unhealthy, and caching negative answers, since not caching them has caused higher failure rates. [Cache Stampedes](/system-design/cache-stampedes) and [Load Shedding and Graceful Degradation](/system-design/load-shedding) are the two defenses to have ready.
 
 ## Rung 3: More Copies
 
@@ -107,20 +98,20 @@ A student who edits a listing and reloads it may see the old price.
 
 The options for read your writes, in order of effort:
 
-- **Read from the leader after a write**: For a short window, such as 5 seconds, a user's reads go to the leader
-- **A version token**: The write returns a position, and a replica serves the read after it has caught up to that position
-- **Synchronous replay**: In PostgreSQL, in simple cases, a setting that makes a commit wait until a synchronous standby has replayed it allows load balancing with causal consistency, at the price of slower commits
-- **Accept it**: For a page of search results, a few seconds of staleness is fine
+- **Read from the leader after a write**: for a short window, such as 5 seconds, a user's reads go to the leader
+- **A version token**: the write returns a position, and a replica serves the read after it has caught up to that position
+- **Synchronous replay**: in PostgreSQL, in simple cases, a setting that makes a commit wait until a synchronous standby has replayed it allows load balancing with causal consistency, at the price of slower commits
+- **Accept it**: for a page of search results, a few seconds of staleness is fine
 
 A second cost is conflict with the replica's own replay. Replaying the leader's changes can conflict with a long running query on the standby, and a setting for the maximum delay decides whether the query is canceled or replay waits.
 
-Its guidance is a low value for a standby that exists for availability and a large one for a standby used for reports, so reports and user reads belong on different replicas.
+The usual guidance is a low value for a standby that exists for availability and a large one for a standby used for reports, so reports and user reads belong on different replicas.
 
 Managed services add their own details. Amazon RDS reports a `ReplicaLag` metric in seconds, promotes a replica in minutes or more, doesn't add replicas by itself, and shows higher lag for cross region replicas. The lag metric is a signal worth an alert, as in [Alerting and Dashboards](/system-design/alerting).
 
 ## Rung 4: Closer Copies
 
-A photo is a read too, and it doesn't need the database. The textbook app's 9 million photos, about 2.7 terabytes, are static files that a [Content Delivery Networks (CDNs)](/system-design/cdn) can serve from near the student, which takes most of the bytes off the app's servers and network.
+A photo is a read too, and it doesn't need the database. The textbook app's 9 million photos, about 2.7 terabytes, are static files that a CDN can serve from near the student (see [Content Delivery Networks (CDNs)](/system-design/cdn)), which takes most of the bytes off the app's servers and network.
 
 Static or slowly changing pages can be treated the same way. The cost is invalidation: a changed file has to disappear from the edge, or have a name that changes with its content.
 
@@ -151,13 +142,13 @@ The same cache that saves four servers is a dependency for the other 69 percent 
 
 ## Pitfalls
 
-- **Caching before measuring**: A cache over a missing index hides it
-- **A cache sized by guess**: The skew decides the hit ratio, and it can't be known without logs
-- **A database sized for the hits**: The miss traffic during a cache failure arrives with no capacity behind it
-- **Replicas for the freshest data**: A reader who just wrote sees the old value
-- **One replica for users and reports**: A long report query cancels, or stalls, the replay
-- **Counting the average**: Hot items, covered in [Handling Hot Spots and Celebrity Users](/system-design/hot-spots), concentrate load on single keys
-- **No metric for each rung**: The ladder is unmanaged
+- **Caching before measuring**: a cache over a missing index hides it
+- **A cache sized by guess**: the skew decides the hit ratio, and it can't be known without logs
+- **A database sized for the hits**: the miss traffic during a cache failure arrives with no capacity behind it
+- **Replicas for the freshest data**: a reader who just wrote sees the old value
+- **One replica for users and reports**: a long report query cancels, or stalls, the replay
+- **Counting the average**: hot items, covered in [Handling Hot Spots and Celebrity Users](/system-design/hot-spots), concentrate load on single keys
+- **No metric for each rung**: the ladder is unmanaged
 
 ## Key Points
 
