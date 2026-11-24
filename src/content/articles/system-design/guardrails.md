@@ -6,9 +6,12 @@ This topic is about the layers that handle that, how to set their thresholds, an
 
 ## What Goes Wrong
 
-A short list of main cases covers most of the risk. **Prompt injection** is user input that changes the model's behavior in unintended ways, in two forms. Direct injection is the user's own input.
+A short list of main cases covers most of the risk:
 
-Indirect injection is content the model reads that carries instructions, such as a web page, a file or a listing. **Jailbreaking** is a form of injection that makes the model ignore its safety rules. The impacts include leaking the system prompt or sensitive data, unauthorized use of connected functions, and manipulated decisions.
+- **Prompt injection**: user input that changes the model's behavior in unintended ways. Direct injection is the user's own input, and indirect injection is content the model reads that carries instructions, such as a web page, a file or a listing
+- **Jailbreaking**: a form of injection that makes the model ignore its safety rules
+
+The impacts include leaking the system prompt or sensitive data, unauthorized use of connected functions, and manipulated decisions.
 
 Indirect injection is hard for a plain reason: an application that mixes data and instructions in one prompt lets anyone who can plant text where it will be retrieved attack it, with no direct access.
 
@@ -24,21 +27,14 @@ The model's output is the other side. The failure is called improper output hand
 
 No single check works, so the answer is a set of layers, each with a different job.
 
-The first layer is limits on input. Limiting the amount of text a user can enter helps against prompt injection, and so do validated choices instead of free text where they fit. Cap the length of messages and the number of requests, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
+The layers, from the input to the action:
 
-Classifiers come next. A moderation model flags harmful content. OpenAI's moderation endpoint is free, covers 13 categories such as harassment, hate, illicit and self harm, and returns a flag and a score from 0 to 1 for each category. Treat the scores as signals and not automatic blocks, and recalibrate when the model is upgraded.
-
-Azure AI Content Safety scores sexual content, violence, hate and self harm at several severity levels and adds Prompt Shields for attacks on the model, groundedness detection, in preview, and a protected material check, with some features limited to English.
-
-A screening model is a lighter option: a small model screens each input and is forced by structured outputs to return a classification, such as a boolean for harmful, and a refusal by the screen counts as harmful. The same pattern can screen tool outputs for suspected injection before they reach the main model.
-
-Prompt design and separation of content work on the model's side. State the limits and how to decline, and tell the model that content from tools is data and not instructions. For indirect injection, put outside text just in the result blocks of tools, label where it came from, and keep your own instructions out of it.
-
-Checks on output close the loop. Validate formats with ordinary code, encode output for where it will be shown, use parameterized queries for any database use, and remove personal data.
-
-Structured outputs use constrained decoding so that the output follows a schema, which holds in most scenarios, with refusals and truncated outputs as exceptions that still need handling.
-
-The last layer is the action gate: least privilege, approval for high impact actions, and authorization in the system behind the tool, from [Agents and Tool Use](/system-design/agents).
+- **Limits on input**: limiting the amount of text a user can enter helps against prompt injection, and so do validated choices instead of free text where they fit. Cap the length of messages and the number of requests, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
+- **Classifiers**: a moderation model flags harmful content. OpenAI's moderation endpoint is free, covers 13 categories such as harassment, hate, illicit and self harm, and returns a flag and a score from 0 to 1 for each category. Treat the scores as signals and not automatic blocks, and recalibrate when the model is upgraded. Azure AI Content Safety scores sexual content, violence, hate and self harm at several severity levels and adds Prompt Shields for attacks on the model, groundedness detection, in preview, and a protected material check, with some features limited to English
+- **A screening model**: a lighter option. A small model screens each input and is forced by structured outputs to return a classification, such as a boolean for harmful, and a refusal by the screen counts as harmful. The same pattern can screen tool outputs for suspected injection before they reach the main model
+- **Prompt design and separation of content**: this works on the model's side. State the limits and how to decline, and tell the model that content from tools is data and not instructions. For indirect injection, put outside text just in the result blocks of tools, label where it came from, and keep your own instructions out of it
+- **Checks on output**: these close the loop. Validate formats with ordinary code, encode output for where it will be shown, use parameterized queries for any database use, and remove personal data. Structured outputs use constrained decoding so that the output follows a schema, which holds in most scenarios, with refusals and truncated outputs as exceptions that still need handling
+- **The action gate**: the last layer, with least privilege, approval for high impact actions, and authorization in the system behind the tool, from [Agents and Tool Use](/system-design/agents)
 
 <figure class="diagram">
 <div class="flow">
@@ -72,17 +68,6 @@ We simulated it with invented scores: benign inputs around 0.20 with a spread of
 | 0.50 | 86.7% | 0.62% | 12.3% |
 | 0.60 | 71.1% | 0.04% | 62.4% |
 | 0.70 | 50.0% | 0.00% | 97.0% |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of flags that are attacks for five thresholds">
-<div class="hbar"><span>Threshold 0.30</span><span class="track"><span class="fill" style="--w: 0.5%"></span></span><span class="value">0.5%</span></div>
-<div class="hbar"><span>Threshold 0.40</span><span class="track"><span class="fill" style="--w: 2%"></span></span><span class="value">2.0%</span></div>
-<div class="hbar peak"><span>Threshold 0.50</span><span class="track"><span class="fill" style="--w: 12.3%"></span></span><span class="value">12.3%</span></div>
-<div class="hbar"><span>Threshold 0.60</span><span class="track"><span class="fill" style="--w: 62.4%"></span></span><span class="value">62.4%</span></div>
-<div class="hbar"><span>Threshold 0.70</span><span class="track"><span class="fill" style="--w: 97%"></span></span><span class="value">97.0%</span></div>
-</div>
-<figcaption>Share of the screen's flags that are real attacks at 1 attack in 1,000 requests, by threshold, from our simulation</figcaption>
-</figure>
 
 At a threshold of 0.50 the screen caught 87 of the 100 attacks and blocked 620 honest students, so 88 percent of its flags were wrong. At 0.40 it caught 95 and blocked 4,774 students.
 
@@ -145,13 +130,13 @@ Both sets live in the evaluation process, and the threshold table above is the r
 
 ## Pitfalls
 
-- **Relying on the system prompt alone**: A user or a document can talk the model out of it
-- **One classifier threshold chosen on accuracy**: At a low base rate, most flags are honest users
-- **Stacking layers of one kind**: They fail on the same attacks
-- **Trusting model output downstream**: A steered model writes the exploit
-- **Treating retrieved text as instructions**: Anyone who can plant text can attack
-- **Explaining the rule that fired**: It teaches the attacker
-- **No test for false blocks**: Honest students leave and no alert shows it
+- **Relying on the system prompt alone**: a user or a document can talk the model out of it
+- **One classifier threshold chosen on accuracy**: at a low base rate, most flags are honest users
+- **Stacking layers of one kind**: they fail on the same attacks
+- **Trusting model output downstream**: a steered model writes the exploit
+- **Treating retrieved text as instructions**: anyone who can plant text can attack
+- **Explaining the rule that fired**: it teaches the attacker
+- **No test for false blocks**: honest students leave and no alert shows it
 
 ## Key Points
 
