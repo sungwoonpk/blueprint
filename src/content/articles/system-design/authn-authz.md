@@ -16,15 +16,16 @@ An authenticator is something the user knows, has or is. The combinations rank i
 
 Identity proofing, which establishes that a person is who they claim to be, is separate from authentication, which establishes that the person controls the authenticator. A site that lets anyone register with any name has no proofing, and it can still authenticate returning users well.
 
-Passwords remain the first factor for most systems, and the current practice is very different from the old habits. Length beats complexity: a minimum of 15 characters when the password is the sole factor and 8 when it is part of multifactor authentication, and a maximum of at least 64 so that passphrases fit.
+Passwords remain the first factor for most systems, and current practice differs from the old habits:
 
-Don't require a mix of capitals, digits and symbols, and don't force a change on a calendar, but when there is evidence of compromise.
-
-Do check new passwords against lists of breached and common passwords, and explain a rejection. Accept paste and autofill so that password managers work, and don't truncate what the user typed.
+- **Length beats complexity**: a minimum of 15 characters when the password is the sole factor and 8 when it is part of multifactor authentication, and a maximum of at least 64 so that passphrases fit
+- **No composition rules or calendar changes**: don't require a mix of capitals, digits and symbols, and force a change only when there is evidence of compromise
+- **Check new passwords**: compare them with lists of breached and common passwords, and explain a rejection
+- **Respect password managers**: accept paste and autofill, and don't truncate what the user typed
 
 One warning matters for the second factor: passwords, one time codes sent by text and codes typed from an authenticator app are not phishing resistant, since a fake site can collect them. Phishing resistance needs a cryptographic authenticator, such as a security key or a passkey, which signs a challenge for the real site alone.
 
-The sign in page itself leaks information if it isn't careful. Give the same generic answer whether the user is unknown, the password is wrong or the account is locked, such as "Login failed; Invalid user ID or password", and the same for password reset: "If that email address is in our database, we will send you an email." Keep response times equal too, since a missing user that returns faster than a wrong password gives the secret away.
+The sign in page itself leaks information if it isn't careful. Give the same generic answer whether the user is unknown, the password is wrong or the account is locked, such as "Login failed; Invalid user ID or password". Do the same for password reset: "If that email address is in our database, we will send you an email." Keep response times equal too, since a missing user that returns faster than a wrong password gives the secret away.
 
 Rate limits on attempts, covered in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice), slow the guessing, and a mechanism that effectively limits failed attempts is a standard requirement.
 
@@ -53,11 +54,12 @@ These are the times to try the whole space on one core, so an attacker with many
 
 The table shows the relative cost, not a safe limit. A human chosen password sits in a far smaller space than a random one.
 
-The order of preference is short. Argon2id comes first, with at least 19 MiB of memory, 2 iterations and 1 degree of parallelism, or equal options such as 46 MiB with 1 iteration.
+The order of preference is short:
 
-Next is scrypt, with a CPU and memory cost of 2 to the 17th power, a block size of 8 and 1 degree of parallelism.
-
-For older systems, bcrypt works with a work factor of at least 10 and a limit of 72 bytes on the password. And when a standard such as FIPS 140 is required, PBKDF2 with 600,000 iterations of HMAC SHA-256 is the option.
+- **Argon2id** first, with at least 19 MiB of memory, 2 iterations and 1 degree of parallelism, or equal options such as 46 MiB with 1 iteration
+- **scrypt** next, with a CPU and memory cost of 2 to the 17th power, a block size of 8 and 1 degree of parallelism
+- **bcrypt** for older systems, with a work factor of at least 10 and a limit of 72 bytes on the password
+- **PBKDF2** when a standard such as FIPS 140 is required, with 600,000 iterations of HMAC SHA-256
 
 Each password gets a unique random salt, which most libraries generate, so that two users with the same password have different hashes and a precomputed table is useless.
 
@@ -81,13 +83,13 @@ A server side session is easy to end. Tokens that carry their own claims, covere
 
 ## Deciding What You May Do
 
-Authentication says who. Authorization is a separate check, and it has to run on each request. An attacker needs to find one way in, client side checks can't be relied on, and validating permissions correctly on just most requests is insufficient.
+Authentication says who. Authorization is a separate check, and it has to run on each request. An attacker needs only one way in, so client side checks can't be relied on, and validating permissions on most requests is not enough.
 
-Three rules shape a design. The first is least privilege: give each user the minimum needed for the job, and look again after launch for privilege creep, since granting more later is easier than taking it back.
+Three rules shape a design:
 
-The second is deny by default. The application decides to permit or deny on each request, even when no rule matches, and except for public resources the default is no.
-
-The third is to check on the server, in one place, with a global mechanism such as a filter or middleware, so a new endpoint is protected without anyone remembering.
+- **Least privilege**: give each user the minimum needed for the job, and look again after launch for privilege creep, since granting more later is easier than taking it back
+- **Deny by default**: the application decides to permit or deny on each request, even when no rule matches, and except for public resources the default is no
+- **Check on the server, in one place**: use a global mechanism such as a filter or middleware, so a new endpoint is protected without anyone remembering
 
 Models for the rules differ in what they can express:
 
@@ -97,7 +99,7 @@ Models for the rules differ in what they can express:
 | ABAC | Attributes of the user, the object and the setting | Time, device, location, tenant |
 | ReBAC | A relationship between user and object | The owner may edit, others may not |
 
-RBAC identifies permitted actions with roles and not with individual identities. It struggles with decisions about a single object and can suffer role explosion, so ABAC or ReBAC is the better fit for application code, with the caveat that RBAC is simpler to start.
+RBAC identifies permitted actions with roles and not with individual identities. It struggles with decisions about a single object and can suffer role explosion, a new role for every special case, so ABAC or ReBAC is the better fit for application code, with the caveat that RBAC is simpler to start.
 
 ## The Most Common Flaw
 
@@ -125,7 +127,12 @@ The version with the check:
 
 Comparing the session user with an identifier in the request isn't enough in general, and random identifiers help but don't replace the check.
 
-The mitigations are a check in each function that takes an identifier, access rules in one reusable place, tests that fail the build when a check is missing, and logging of refused attempts with an alert on repeats.
+The mitigations are:
+
+- A check in each function that takes an identifier
+- Access rules in one reusable place
+- Tests that fail the build when a check is missing
+- Logging of refused attempts, with an alert on repeats
 
 ## Where the Checks Live
 
@@ -145,12 +152,12 @@ For the textbook app:
 
 ## Pitfalls
 
-- **A fast hash for passwords**: A stolen database is cracked in hours
-- **Different errors for a missing user**: The sign in page becomes a list of accounts
-- **Checks in the browser**: The attacker doesn't use the browser
-- **A check on some endpoints**: The unchecked one is the one that is found
-- **Trusting an identifier from the client**: Any value the client sends can be changed
-- **A long lived session without a server side record**: There is no way to end it
+- **A fast hash for passwords**: a stolen database is cracked in hours
+- **Different errors for a missing user**: the sign in page becomes a list of accounts
+- **Checks in the browser**: the attacker doesn't use the browser
+- **A check on some endpoints**: the unchecked one is the one that is found
+- **Trusting an identifier from the client**: any value the client sends can be changed
+- **A long lived session without a server side record**: there is no way to end it
 
 ## Key Points
 
