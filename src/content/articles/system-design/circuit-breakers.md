@@ -21,11 +21,11 @@ Michael Nygard described the pattern in *Release It!*, named after the switch in
 <figcaption>A successful trial closes the breaker, and a failed trial opens it again for another pause</figcaption>
 </figure>
 
-- **Closed**: Calls pass through, and the breaker counts the failures. When they pass a threshold, it opens
-- **Open**: Calls fail immediately, with an error or a fallback. After a reset timeout, it moves to half open
-- **Half open**: A limited number of trial calls go through. If they succeed, the breaker closes, and if one fails, it opens again and restarts the timer
+- **Closed**: calls pass through, and the breaker counts the failures. When they pass a threshold, it opens
+- **Open**: calls fail immediately, with an error or a fallback. After a reset timeout, it moves to half open
+- **Half open**: a limited number of trial calls go through. If they succeed, the breaker closes, and if one fails, it opens again and restarts the timer
 
-A simple version trips after 5 failures. A more refined rule trips at a 50 percent failure rate, and different thresholds for different errors, such as 10 for timeouts and 3 for connection failures.
+A simple version trips after 5 failures. A more refined rule trips at a 50 percent failure rate, or uses different thresholds for different errors, such as 10 for timeouts and 3 for connection failures.
 
 ## What the Libraries Use
 
@@ -61,7 +61,7 @@ The provider is down for 60 seconds, and a call to it holds a thread for the 1 s
 
 Without the breaker, threads piled up behind the hung calls, and 37 percent of the requests that didn't even need the provider were refused. With it, the app sent 91 percent fewer calls to the provider and kept the unrelated pages up.
 
-The price is in the last two rows: a breaker that is open doesn't know the provider is back until the next trial, so recovery came up to 5 seconds late, and the payment requests in that gap failed fast.
+The price is in the last two rows: a breaker that is open doesn't know the provider is back until the next trial, so recovery came about 5 seconds late, and the payment requests in that gap failed fast.
 
 That trade is the whole design. A short pause recovers sooner and tests the dependency more often, which adds load at the worst time. A long pause is gentle and leaves users with errors after the dependency has healed.
 
@@ -69,10 +69,10 @@ That trade is the whole design. A short pause recovers sooner and tests the depe
 
 The breaker is as good as its definition of failure. Several points need a decision:
 
-- **Which errors count**: Timeouts, connection failures and 5xx responses count, and a 404 or a validation error is the caller's mistake, so it should not open the breaker
-- **Slow calls**: A dependency that answers in 10 seconds is failing for the caller, and Resilience4j can count calls above a duration
-- **Throttling signals**: A response that says "retry in a few minutes", such as HTTP 429 or 503, can open the breaker at once for that time, sometimes called accelerated circuit breaking
-- **Weights**: Some errors can count more than others, as in thresholds of 10 and 3
+- **Which errors count**: timeouts, connection failures and 5xx responses count, and a 404 or a validation error is the caller's mistake, so it should not open the breaker
+- **Slow calls**: a dependency that answers in 10 seconds is failing for the caller, and Resilience4j can count calls above a duration
+- **Throttling signals**: a response that says "retry in a few minutes", such as HTTP 429 or 503, can open the breaker at once for that time, sometimes called accelerated circuit breaking
+- **Weights**: some errors can count more than others, as in thresholds of 10 and 3
 
 Use one breaker for each dependency, or each independent part of it, such as each provider or shard, not one for a whole service. A single breaker across two payment providers stops both when one fails.
 
@@ -86,7 +86,7 @@ The half open check can be a health probe and not a real request, so no user's r
 
 ## At the Edge of the Cluster
 
-Proxies apply the idea to individual servers. Envoy's **outlier detection** ejects a host from the load balancing pool after consecutive failures. Its defaults:
+Proxies apply the idea to individual servers. Envoy's **outlier detection** ejects a host from the load balancing pool after consecutive failures. Its defaults are:
 
 | Setting | Default |
 | --- | --- |
@@ -98,13 +98,13 @@ Proxies apply the idea to individual servers. Envoy's **outlier detection** ejec
 
 The limit of 10 percent is a safety valve: if each host looks bad, the cause is probably shared, and ejecting the whole pool would turn a partial failure into a total one.
 
-Envoy also has settings it calls circuit breakers that are limits on connections, pending requests and retries, covered in [Cascading Failures](/system-design/cascading-failures), which work as protection and not as a state machine.
+Envoy also has settings it calls circuit breakers. They are limits on connections, pending requests and retries, covered in [Cascading Failures](/system-design/cascading-failures), and they work as protection, not as a state machine.
 
 ## The Case Against
 
 Not everyone likes them. Circuit breakers are widely promoted, and they add modal behavior, a system that acts one way when closed and another when open, which is hard to test and can slow recovery.
 
-It prefers a local token bucket for retries, which throttles retries without a state machine. Our simulation's 5.6 seconds of delay is the cost it means.
+AWS's guidance prefers a local token bucket for retries, which throttles retries without a state machine. Our simulation's 5.6 seconds of delay is an example of the slow recovery they warn about.
 
 Another way is **adaptive throttling**. Each client keeps two counts over the last 2 minutes: the requests it attempted and the requests the backend accepted.
 
@@ -124,10 +124,10 @@ The mechanisms fit together:
 
 ## Pitfalls
 
-- **An untested open path**: The fallback runs rarely, so test it, and trip a breaker on purpose in a game day
-- **A herd at the close**: When a breaker closes, the whole waiting backlog arrives at once, so let in a few trial calls, as Resilience4j's 10, and ramp up
-- **Counting your own rejections**: A breaker that counts the calls it rejected as failures can't close
-- **One breaker for everything**: It hides which dependency is the problem
+- **An untested open path**: the fallback runs rarely, so test it, and trip a breaker on purpose in a game day
+- **A herd at the close**: when a breaker closes, the whole waiting backlog arrives at once, so let in a few trial calls, as Resilience4j's 10, and ramp up
+- **Counting your own rejections**: a breaker that counts the calls it rejected as failures can't close
+- **One breaker for everything**: it hides which dependency is the problem
 
 ## Key Points
 
