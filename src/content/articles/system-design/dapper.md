@@ -36,9 +36,13 @@ The system had two requirements: it must run everywhere, and it must run continu
 
 Both requirements point at transparency. If a tracing tool needs each developer to add code, it breaks when one forgets, and it falls apart in an environment where teams ship each week. Dapper solved this by instrumenting a very small number of libraries that most code already used.
 
-When a thread handles a traced request, the trace context, a small bundle of ids, is stored in thread local storage. When the code defers work with a common callback or thread pool library, the library stores the context with the callback and restores it when the callback runs, so the ids follow asynchronous paths.
+Three hooks make this work:
 
-And the RPC library creates spans around each call and sends the trace and span ids from client to server. With those three hooks, a complex system like web search could be traced without any change to the application code.
+- **Threads**: when a thread handles a traced request, the trace context, a small bundle of ids, is stored in thread local storage
+- **Callbacks**: when the code defers work with a common callback or thread pool library, the library stores the context with the callback and restores it when the callback runs, so the ids follow asynchronous paths
+- **RPC**: the RPC library creates spans around each call and sends the trace and span ids from client to server
+
+With those three hooks, a complex system like web search could be traced without any change to the application code.
 
 Where code uses its own communication, tracing breaks until someone propagates the context by hand. At the time of the paper, a few dozen applications of each language needed that, out of thousands.
 
@@ -80,15 +84,6 @@ We did the arithmetic for the textbook app at its peak of 3,000 requests a secon
 | 1 in 1,000 | 10,800 | 675 | 10.5 |
 | 1 in 10,000 | 1,080 | 67.5 | 1.1 |
 | 1 in 100,000 | 108 | 6.8 | 0.1 |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Traces captured an hour for a problem hitting 1 request in 1,000, by sampling rate">
-<div class="hbar peak"><span>Trace Each Request</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">10,800</span></div>
-<div class="hbar"><span>1 in 16</span><span class="track"><span class="fill" style="--w: 6.3%"></span></span><span class="value">675</span></div>
-<div class="hbar"><span>1 in 1,024</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">10.5</span></div>
-</div>
-<figcaption>Traces captured in an hour for a problem that hits 1 request in 1,000, at 3,000 requests a second, by sampling rate</figcaption>
-</figure>
 
 At peak traffic, a problem that touches 1 request in 1,000 still produces about 10 traces an hour at 1 in 1,024, enough to see its shape.
 
@@ -143,13 +138,13 @@ The lesson in the paper is a lesson about adoption. The tool reached everywhere 
 
 ## Pitfalls
 
-- **Tracing added by hand in each service**: One missing hop hides the real problem
-- **Tracing each request at peak**: The overhead is noticeable in latency
-- **A fixed sampling rate for a small service**: It captures almost no traces of a rare problem
-- **Context lost at a queue or a callback**: The trace splits in two
-- **Payloads in spans**: Personal data reaches people who shouldn't see it
-- **Reading averages for the tail**: The slow minority is hidden by the fast majority
-- **Comparing timestamps across machines without bounds**: Clock skew makes a child seem to start before its parent
+- **Tracing added by hand in each service**: one missing hop hides the real problem
+- **Tracing each request at peak**: the overhead is noticeable in latency
+- **A fixed sampling rate for a small service**: it captures almost no traces of a rare problem
+- **Context lost at a queue or a callback**: the trace splits in two
+- **Payloads in spans**: personal data reaches people who shouldn't see it
+- **Reading averages for the tail**: the slow minority is hidden by the fast majority
+- **Comparing timestamps across machines without bounds**: clock skew makes a child seem to start before its parent
 
 ## Key Points
 

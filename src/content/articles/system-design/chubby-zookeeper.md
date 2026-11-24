@@ -14,15 +14,12 @@ Writing a consensus protocol into each system is hard and easy to get wrong, so 
 
 ## Why a Service and Not a Library
 
-Chubby's author considered writing a Paxos library that each system would link in, and chose a lock service instead, for four reasons that still apply.
+Chubby's author considered writing a Paxos library that each system would link in, and chose a lock service instead, for four reasons that still apply:
 
-Developers start with a prototype that has no plan for high availability, and add replication and leader election later.
-
-With a lock service, adding a primary is a few lines: acquire a lock, pass the lock's acquisition count with each write, and have the file server reject a write whose count is older. That is easier than making an existing server take part in a consensus protocol.
-
-Services that elect a primary also need to announce who it is, so the service allows small files, and a lock service that holds them gives clients one fewer system to depend on. Programmers also understand locks, even if they are usually wrong about how locks behave when machines fail independently.
-
-And a service reduces the number of machines a client system needs. Chubby's five replicas need three to be up, and a client system with a single running process can still obtain a lock and make progress safely.
+- **Prototypes grow up**: developers start with a prototype that has no plan for high availability, and add replication and leader election later. With a lock service, adding a primary is a few lines: acquire a lock, pass the lock's acquisition count with each write, and have the file server reject a write whose count is older. That is easier than making an existing server take part in a consensus protocol
+- **Announcing the primary**: services that elect a primary also need to announce who it is, so the service allows small files, and a lock service that holds them gives clients one fewer system to depend on
+- **Familiar tools**: programmers understand locks, even if they are usually wrong about how locks behave when machines fail independently
+- **Fewer machines**: a service reduces the number of machines a client system needs. Chubby's five replicas need three to be up, and a client system with a single running process can still obtain a lock and make progress safely
 
 Chubby chose coarse grained locks, held for hours or days, such as the lock that elects a primary. They put little load on the service, survive its failures, and let a modest number of servers serve many clients.
 
@@ -65,16 +62,6 @@ We computed how often that happens. Say that each client that caches a file is u
 | 1,000 | 63.2% |
 | 10,000 | 99.995% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Chance that a write waits for a lease, by number of clients caching the file">
-<div class="hbar"><span>10 Clients</span><span class="track"><span class="fill" style="--w: 1%"></span></span><span class="value">1.0%</span></div>
-<div class="hbar"><span>100 Clients</span><span class="track"><span class="fill" style="--w: 9.5%"></span></span><span class="value">9.5%</span></div>
-<div class="hbar"><span>1,000 Clients</span><span class="track"><span class="fill" style="--w: 63.2%"></span></span><span class="value">63.2%</span></div>
-<div class="hbar peak"><span>10,000 Clients</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">99.995%</span></div>
-</div>
-<figcaption>Chance that a write waits for a lease when each caching client is unresponsive 0.1 percent of the time</figcaption>
-</figure>
-
 With a thousand clients, most writes wait, and the wait can be as long as the lease, 12 seconds by default. That is acceptable for configuration that changes rarely, which is Chubby's use, and it is the reason that a system with many cachers and frequent writes wants another design.
 
 ## What ZooKeeper Does Differently
@@ -83,11 +70,18 @@ ZooKeeper starts from the opposite instinct: don't block. It leaves locks out of
 
 A slow or faulty client can't hold up a fast one. The service is a kernel, and clients build locks, queues, barriers and elections from it.
 
-Znodes come in kinds. A regular one is created and deleted explicitly. An ephemeral one vanishes when the session that made it ends, whether the client left or died. A sequential flag appends a counter, which doesn't go backwards, to the name.
+Znodes come in kinds:
+
+- **Regular**: created and deleted explicitly
+- **Ephemeral**: vanishes when the session that made it ends, whether the client left or died
+- **Sequential**: a flag that appends a counter, which doesn't go backwards, to the name
 
 Reads can set a **watch**: a one time notification that the data or the children changed. A watch says that something changed and not what, and is deleted once it fires. Updates take an expected version, so a conditional write fails if another client got there first.
 
-The ordering guarantees are two. All writes are linearizable, ordered by a leader through an atomic broadcast protocol called Zab. And each client's requests run in the order it sent them, so a client can send many requests at once without waiting for each answer.
+The ordering guarantees are two:
+
+- **Linearizable writes**: all writes are ordered by a leader through an atomic broadcast protocol called Zab
+- **FIFO order for each client**: each client's requests run in the order it sent them, so a client can send many requests at once without waiting for each answer
 
 Reads are served locally by the server the client is connected to, with no broadcast, which lets read throughput grow with the number of servers, at the price that a read can be slightly old.
 
@@ -153,13 +147,13 @@ And treat the service as a dependency with an availability of its own: Bigtable 
 
 ## Pitfalls
 
-- **Large or fast changing data in the service**: The leader becomes the bottleneck of the fleet
-- **Everyone watching the same node**: A release wakes the whole herd
-- **A lock without a token**: A client with an expired session still writes
-- **A session timeout copied from another system**: Too short causes false deaths, too long delays failover
-- **Reading a possibly stale replica and assuming freshness**: A sync is needed where it matters
-- **Fine grained locks held in the service**: Its load grows with the clients' transaction rate
-- **A single replica for the service**: The coordinator becomes the single point of failure it was meant to remove
+- **Large or fast changing data in the service**: the leader becomes the bottleneck of the fleet
+- **Everyone watching the same node**: a release wakes the whole herd
+- **A lock without a token**: a client with an expired session still writes
+- **A session timeout copied from another system**: too short causes false deaths, too long delays failover
+- **Reading a possibly stale replica and assuming freshness**: a sync is needed where it matters
+- **Fine grained locks held in the service**: its load grows with the clients' transaction rate
+- **A single replica for the service**: the coordinator becomes the single point of failure it was meant to remove
 
 ## Key Points
 
