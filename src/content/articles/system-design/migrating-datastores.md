@@ -31,7 +31,7 @@ The existing rows get into the new store by a **backfill**, a background copy th
 
 Each stage can be backed out until the old store is removed, with one condition. After writes move to the new store alone, the old one goes stale, so the way back needs changes to flow in reverse.
 
-The Azure Architecture Center makes the same point in its database example for the strangler pattern: rollback stays possible while the two stores are in sync, and removing the legacy objects is a deliberate last step.
+The database example of the strangler pattern makes the same point: rollback stays possible while the two stores are in sync, and removing the legacy objects is a deliberate last step.
 
 ## Backfill While the Data Moves
 
@@ -71,9 +71,9 @@ The fix is a version check: each row carries a version or an updated time, and t
 
 Stripe adds practical points:
 
-- **List from a snapshot**: It built the list of ids to copy offline from a snapshot of the data, so the listing didn't load the production database
-- **Parallel copy**: A fleet of multi threaded workers did the copying
-- **Check for gaps**: It ran the listing again afterward to confirm that no id was missing
+- **List from a snapshot**: build the list of ids to copy offline from a snapshot of the data, so the listing doesn't load the production database
+- **Parallel copy**: a fleet of multi threaded workers does the copying
+- **Check for gaps**: run the listing again afterward to confirm that no id was missing
 
 Our addition is that the copier needs a rate limit and a pause switch, since it competes with live traffic, as in [Scaling Writes](/system-design/scaling-writes).
 
@@ -109,12 +109,12 @@ The alternative is to let the old store's change log feed the new store, which i
 
 AWS Database Migration Service has two task types: a full load followed by ongoing change capture, and change capture alone for a target that already holds the data. It reads the source's log through the engine's native mechanism, such as row based binary logs for MySQL and a logical replication slot for PostgreSQL.
 
-It also lists limits worth planning around:
+It has limits worth planning around:
 
-- **No latency promise**: There is no service level for capture latency, and it depends on source load, network and instance size
-- **Log retention**: The source has to keep its change log long enough, and for RDS sources about 24 hours is usually enough
-- **Fixed start point**: The start is set when the task is created, and changing it means a new task
-- **Open transactions**: For Oracle, starting from a point in time can miss transactions that were open then, with a setting to cover them
+- **No latency promise**: there is no service level for capture latency, and it depends on source load, network and instance size
+- **Log retention**: the source has to keep its change log long enough, and for RDS sources about 24 hours is usually enough
+- **Fixed start point**: the start is set when the task is created, and changing it means a new task
+- **Open transactions**: for Oracle, starting from a point in time can miss transactions that were open then, with a setting to cover them
 
 The strangler pattern's database example has the same shape: a bulk load and change capture, then a check for consistency, and then the new store becomes the system of record. A third route avoids the two writes by putting the change in an outbox, as in [The Transactional Outbox](/system-design/transactional-outbox).
 
@@ -141,10 +141,10 @@ The results are compared, mismatches and timings are recorded, and the caller ge
 
 Stripe ran its reads against both tables this way and watched for mismatches before it switched the reads over. Know the limits:
 
-- **Reads**: The tool is meant for code that doesn't change data, so writes need another method
-- **Latency**: The candidate runs in the request, so it adds time to production
-- **Timeouts**: A slow candidate isn't stopped for you, so run it on a small share of traffic
-- **False alarms**: A value that changes between the two runs shows up as a mismatch
+- **Reads**: the tool is meant for code that doesn't change data, so writes need another method
+- **Latency**: the candidate runs in the request, so it adds time to production
+- **Timeouts**: a slow candidate isn't stopped for you, so run it on a small share of traffic
+- **False alarms**: a value that changes between the two runs shows up as a mismatch
 
 How many compared reads are enough? A mismatch that appears in a fraction r of reads is seen at least once, with confidence c, after ln(1 - c) divided by ln(1 - r) reads:
 
@@ -166,10 +166,10 @@ An upgrade is a migration too, and GitHub's move to MySQL 8.0 is a good example 
 
 The steps follow the same logic as the four stages:
 
-- **Replicas first**: Upgrade one replica, watch it offline, then bring it into service, one data center at a time, while enough old replicas stay online to roll back
-- **Topology for rollback**: An upgraded candidate replicated under the old primary, with new version replicas serving traffic and old version replicas kept idle as the way back
-- **Primary last, by failover**: The primary wasn't upgraded in place, an upgraded replica was promoted, and the failover tool was set to exclude old hosts as candidates so a surprise failover couldn't go backward
-- **Clean up late**: Old servers were removed after the cluster was confirmed not to need rollback
+- **Replicas first**: upgrade one replica, watch it offline, then bring it into service, one data center at a time, while enough old replicas stay online to roll back
+- **Topology for rollback**: an upgraded candidate replicated under the old primary, with new version replicas serving traffic and old version replicas kept idle as the way back
+- **Primary last, by failover**: the primary wasn't upgraded in place, an upgraded replica was promoted, and the failover tool was set to exclude old hosts as candidates so a surprise failover couldn't go backward
+- **Clean up late**: old servers were removed after the cluster was confirmed not to need rollback
 
 <figure class="diagram">
 <div class="flow">
@@ -191,10 +191,10 @@ GitHub changed the defaults and adjusted permissions for the window. The lesson 
 Each move should be small, flagged and measured:
 
 - **Ramp by percentage**: Stripe raised its dual writes gradually while watching production metrics, and a flag as in [Feature Flags](/system-design/feature-flags) does the same for reads
-- **Gates between stages**: Move on when mismatches are zero or explained, lag is low, and error rates match the old path
-- **Reverse path**: Before writes switch, have the new store's changes flow back to the old one, so a rollback doesn't lose data
+- **Gates between stages**: move on when mismatches are zero or explained, lag is low, and error rates match the old path
+- **Reverse path**: before writes switch, have the new store's changes flow back to the old one, so a rollback doesn't lose data
 - **Find leftover callers**: Stripe made the accessors of the old data raise hard errors, so forgotten code paths fail loudly in testing
-- **Archive before deleting**: Keep a backup of the old store for a set period, as in [Backups and Disaster Recovery](/system-design/backup-dr)
+- **Archive before deleting**: keep a backup of the old store for a set period, as in [Backups and Disaster Recovery](/system-design/backup-dr)
 
 Watch the migration with the signals of [Logs, Metrics and Traces](/system-design/observability): copy progress, dual write failures, mismatches, replication lag and the latency of both stores. The release practices of [Canary Releases and Other Deployment Strategies](/system-design/deployments) apply to each step.
 
@@ -215,14 +215,14 @@ Schema changes inside one store follow [Schema Migrations Without Downtime](/sys
 
 ## Pitfalls
 
-- **A stop and copy plan**: The window grows with the data, and there is no way back
-- **A backfill without dual writes**: The copy is stale on arrival, 13.89 percent in our test
-- **A blind copy**: An old value from the copier overwrites a newer write
-- **Dual writes without reconciliation**: Cold rows stay wrong for good
-- **Ignoring order**: Close writes reach the stores in different orders, and a hot row suffers most
-- **Skipping the check on reads**: Differences in sorting and rounding show up after the switch
+- **A stop and copy plan**: the window grows with the data, and there is no way back
+- **A backfill without dual writes**: the copy is stale on arrival, 13.89 percent in our test
+- **A blind copy**: an old value from the copier overwrites a newer write
+- **Dual writes without reconciliation**: cold rows stay wrong for good
+- **Ignoring order**: close writes reach the stores in different orders, and a hot row suffers most
+- **Skipping the check on reads**: differences in sorting and rounding show up after the switch
 - **An untested rollback**: GitHub's staging run broke replication in the reverse direction
-- **Deleting the old store early**: A late bug leaves no reference to compare against
+- **Deleting the old store early**: a late bug leaves no reference to compare against
 
 ## Key Points
 
