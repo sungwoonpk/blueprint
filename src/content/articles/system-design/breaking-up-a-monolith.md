@@ -1,18 +1,23 @@
 > **Breaking up a monolith** means moving parts of one deployed application into separate, independently deployed services, step by step, along boundaries chosen from the business, while the system keeps running. It is a means, not a goal: the point is to gain something specific, such as independent releases or independent scaling, at a price that has to be worth paying.
 
-The textbook app is one program. Listings, search, messages, payments and the admin pages share a codebase, a deploy and a database. It has served well for years. Now it hurts in four places. A fix to the message page waits for the same release train as a change to payments.
+The textbook app is one program. Listings, search, messages, payments and the admin pages share a codebase, a deploy and a database. It has served well for years. Now it hurts in four places:
 
-Search needs ten times the memory of the rest of the app, so each server is sized for it. Three teams edit the same files, and an out of memory crash in the photo code takes the checkout down with it.
+- A fix to the message page waits for the same release train as a change to payments
+- Search needs ten times the memory of the rest of the app, so each server is sized for it
+- Three teams edit the same files
+- An out of memory crash in the photo code takes the checkout down with it
 
 A split looks like the cure. Whether it is depends on what hurts, how the pieces connect, and how the move is made. A split done wrongly keeps the coupling and adds the network.
 
 ## First Ask Whether
 
-The experience of the industry is cautious. Most of the successful microservice stories started with a monolith that grew too big and was broken up, and systems built as microservices from scratch have mostly ended in serious trouble. Three reasons explain it.
+The experience of the industry is cautious. Most of the successful microservice stories started with a monolith that grew too big and was broken up, and systems built as microservices from scratch have mostly ended in serious trouble. Three reasons explain it:
 
-Teams don't yet know what users want. A microservice setup carries a productivity cost, sometimes called the microservice premium.
+- **Unknown needs**: teams don't yet know what users want
+- **The premium**: a microservice setup carries a productivity cost, sometimes called the microservice premium
+- **Early boundaries**: boundaries are hard to get right early, and moving code across a service boundary is far harder than across a module boundary
 
-And boundaries are hard to get right early, while moving code across a service boundary is far harder than across a module boundary. The evidence is sparse and the advice tentative, and the view is by no means unanimous.
+The evidence is sparse and the advice tentative, and the view is by no means unanimous.
 
 Here is what a split buys and what it costs:
 
@@ -50,15 +55,11 @@ The table is the reason distribution heads the list of costs: remote calls are s
 
 ## Find the Seams
 
-A **seam** is a place where the code can be separated with little damage. Three sources of boundaries are in common use.
+A **seam** is a place where the code can be separated with little damage. Three sources of boundaries are in common use:
 
-Business capabilities come first: what the business does to create value, such as catalog management, order management and delivery. They give a stable architecture, since capabilities change slowly, autonomous teams, and services that are cohesive and loosely coupled.
-
-Subdomains come from the domain driven design view, with core subdomains that differentiate the business, supporting ones that you could outsource, and generic ones that you should buy.
-
-The unit is the bounded context: a model with one consistent meaning of its words, since a single unified model for a large system isn't feasible or cost effective. A utility company shows why, where the word meter means three different things to three groups.
-
-The third source is evidence from the code. Analyze code churn, which parts change most, and overlay it with the product roadmap, so the first services are the ones that change often. Scaling needs matter too: search with ten times the memory is a candidate by itself.
+- **Business capabilities**: what the business does to create value, such as catalog management, order management and delivery. They give a stable architecture, since capabilities change slowly, autonomous teams, and services that are cohesive and loosely coupled
+- **Subdomains**: from the domain driven design view, with core subdomains that differentiate the business, supporting ones that you could outsource, and generic ones that you should buy. The unit is the bounded context, a model with one consistent meaning of its words, since a single unified model for a large system isn't feasible or cost effective. A utility company shows why, where the word meter means three different things to three groups
+- **Evidence from the code**: analyze code churn, which parts change most, and overlay it with the product roadmap, so the first services are the ones that change often. Scaling needs matter too: search with ten times the memory is a candidate by itself
 
 The cost of a seam shows in the number of calls across it. We built a made up dependency graph of 30 modules in 5 groups of 6, where modules in a group call each other much more than the rest, 1,440 calls between modules for each 100 requests.
 
@@ -82,10 +83,10 @@ A rewrite of the whole system in parallel tends to fail: existing behavior is ha
 
 The pattern is to build new functionality around the old and move behavior across a piece at a time. There are four phases:
 
-1. **Put a facade in front**: A proxy or gateway, such as [API Gateways](/system-design/api-gateways), receives the requests. At first it sends nearly the whole load to the legacy code
-2. **Shift gradually**: Route one capability, then another, to the new service, with a way to switch back
-3. **Retire the legacy**: Remove the old code once no caller depends on it
-4. **Remove the facade**: Clients talk to the new system directly, if that suits
+1. **Put a facade in front**: a proxy or gateway, such as [API Gateways](/system-design/api-gateways), receives the requests. At first it sends nearly the whole load to the legacy code
+2. **Shift gradually**: route one capability, then another, to the new service, with a way to switch back
+3. **Retire the legacy**: remove the old code once no caller depends on it
+4. **Remove the facade**: clients talk to the new system directly, if that suits
 
 <figure class="diagram">
 <div class="flow">
@@ -98,19 +99,25 @@ The pattern is to build new functionality around the old and move behavior acros
 <figcaption>The strangler shape: the facade decides, request by request, which system answers</figcaption>
 </figure>
 
-The problems: shared services and data stores have to be reachable from both systems while they coexist, the facade must keep pace and shouldn't become a bottleneck or a single point of failure, and the pattern doesn't fit when requests can't be intercepted or the system is small.
+The pattern has limits:
 
-Two companion techniques help. **Branch by abstraction** creates a layer that captures how the client code uses the old supplier, moves the clients to it, builds the new supplier behind the same layer, switches over gradually and removes the old one, with the system buildable and releasable throughout.
+- Shared services and data stores have to be reachable from both systems while they coexist
+- The facade must keep pace and shouldn't become a bottleneck or a single point of failure
+- It doesn't fit when requests can't be intercepted or the system is small
 
-An **anti-corruption layer** translates between the models of the old and the new, so the legacy design doesn't leak into the new service. It has costs, added latency and another component to run, so keep it to translation with no business rules.
+Two companion techniques help:
 
-The order of the moves is practical. Start with an edge, a simple capability with few dependencies, such as authentication or a profile facade, to learn to run services before touching the core.
+- **Branch by abstraction**: create a layer that captures how the client code uses the old supplier, move the clients to it, build the new supplier behind the same layer, switch over gradually and remove the old one, with the system buildable and releasable throughout
+- **An anti-corruption layer**: it translates between the models of the old and the new, so the legacy design doesn't leak into the new service. It has costs, added latency and another component to run, so keep it to translation with no business rules
 
-Minimize calls back into the monolith: pick capabilities whose logic doesn't depend on the code still in the monolith, and expose a monolith API through an anti-corruption layer when a call back can't be avoided.
+The order of the moves is practical:
 
-Split the sticky parts early. The web session is the example, broken into domain concepts and not turned into a session service. Release the data too: decoupling the facade alone or the backend alone, and leaving the data coupled, is the anti-pattern.
-
-Go macro, then micro, starting with larger services around a logical concept and avoiding anemic services that wrap one table. And finish each step: decouple the new service, send the consumers to it and retire the old path. The anti-pattern is to use the new service for new consumers and leave the old one in place.
+- **Start with an edge**: a simple capability with few dependencies, such as authentication or a profile facade, to learn to run services before touching the core
+- **Minimize calls back into the monolith**: pick capabilities whose logic doesn't depend on the code still in the monolith, and expose a monolith API through an anti-corruption layer when a call back can't be avoided
+- **Split the sticky parts early**: the web session is the example, broken into domain concepts and not turned into a session service
+- **Release the data too**: decoupling the facade alone or the backend alone, and leaving the data coupled, is the anti-pattern
+- **Go macro, then micro**: start with larger services around a logical concept and avoid anemic services that wrap one table
+- **Finish each step**: decouple the new service, send the consumers to it and retire the old path. The anti-pattern is to use the new service for new consumers and leave the old one in place
 
 ## The Hard Part Is the Data
 
@@ -145,13 +152,13 @@ Teams need to own services end to end, and Conway's law means the organization h
 
 ## Pitfalls
 
-- **A split without a reason**: The costs arrive and the benefit doesn't
-- **Boundaries chosen by technology layers**: Many calls cross each one
-- **A shared database**: The coupling remains, with a network added
-- **A big bang rewrite**: Old behavior is hard to specify, and the project can't ship until it is done
-- **Leaving the old path in place**: Two systems to run
-- **Starting with the core**: The team learns operations on the most important code
-- **No prerequisites**: Slow provisioning, weak monitoring and long deploys multiply the premium
+- **A split without a reason**: the costs arrive and the benefit doesn't
+- **Boundaries chosen by technology layers**: many calls cross each one
+- **A shared database**: the coupling remains, with a network added
+- **A big bang rewrite**: old behavior is hard to specify, and the project can't ship until it is done
+- **Leaving the old path in place**: two systems to run
+- **Starting with the core**: the team learns operations on the most important code
+- **No prerequisites**: slow provisioning, weak monitoring and long deploys multiply the premium
 
 ## Key Points
 
