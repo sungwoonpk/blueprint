@@ -10,17 +10,20 @@ NIST's zero trust architecture, SP 800-207, puts the failed assumption in its se
 
 The same document adds tenets that shape the design:
 
-- **Per session access**: Access to each resource is granted per session, with the least privilege needed, and being allowed to reach one resource doesn't grant access to another
-- **Dynamic policy**: The decision uses the observable state of the client's identity, the application or service, and the requesting asset, and it can include behavior and environment
-- **Strict enforcement**: Authentication and authorization are dynamic and strictly enforced before access is allowed
+- **Per session access**: access to each resource is granted per session, with the least privilege needed, and being allowed to reach one resource doesn't grant access to another
+- **Dynamic policy**: the decision uses the observable state of the client's identity, the application or service, and the requesting asset, and it can include behavior and environment
+- **Strict enforcement**: authentication and authorization are dynamic and strictly enforced before access is allowed
 
-There are two roles. A policy decision point, split into a policy engine and a policy administrator, decides. A policy enforcement point enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays the second role, and sidecar and perimeter proxies are policy enforcement points.
+Two roles carry it out:
+
+- **Policy decision point**: decides, and is split into a policy engine and a policy administrator
+- **Policy enforcement point**: enables, monitors and ends the connection. In a service mesh, the proxy next to each service plays this role
 
 ## What TLS Gives
 
-The TLS 1.3 specification, RFC 8446, lists what its handshake provides: authentication, confidentiality and integrity. It says the server side is authenticated in each handshake and the client side is optionally authenticated.
+TLS 1.3 (RFC 8446) provides authentication, confidentiality and integrity in its handshake. The server side is authenticated in each handshake, and the client side optionally.
 
-Key exchange is by Diffie-Hellman in the common modes, and public key based key exchange now provides forward secrecy, so a stolen key doesn't open old recordings.
+Key exchange uses Diffie-Hellman in the common modes, which gives forward secrecy: a stolen key doesn't open old recordings.
 
 Mutual authentication comes from one optional message. A server that authenticates with a certificate may request one from the client in a CertificateRequest. If it does, the client must send its Certificate, then a CertificateVerify, a signature that gives explicit proof the endpoint possesses the private key, and then the Finished message.
 
@@ -50,21 +53,21 @@ That is CPU alone, without network delay, and it is paid on a new connection, no
 
 An address says where a service runs now. Containers move and addresses are reused, so a name tied to an address names the wrong thing within minutes. SPIFFE, the Secure Production Identity Framework for Everyone, defines a name that follows the workload:
 
-- **SPIFFE ID**: A URI in the form `spiffe://trust domain/workload identifier`, such as `spiffe://acme.com/billing/payments`
-- **Trust domain**: The root of trust for a system, such as an organization or an environment. Keep different environments, like staging and production, in different trust domains
-- **SVID**: A SPIFFE verifiable identity document, which holds one SPIFFE ID and is valid when signed by an authority of that trust domain. It comes as an X.509 certificate or a JWT
-- **Trust bundle**: The root certificates a workload uses to check the other side
+- **SPIFFE ID**: a URI in the form `spiffe://trust domain/workload identifier`, such as `spiffe://acme.com/billing/payments`
+- **Trust domain**: the root of trust for a system, such as an organization or an environment. Keep different environments, like staging and production, in different trust domains
+- **SVID**: a SPIFFE verifiable identity document, which holds one SPIFFE ID and is valid when signed by an authority of that trust domain. It comes as an X.509 certificate or a JWT
+- **Trust bundle**: the root certificates a workload uses to check the other side
 
-The X.509 form is preferred, since a token can be replayed by an attacker who captures it in transit, and keeps the JWT form for cases such as a layer 7 proxy or load balancer between two workloads.
+The X.509 form is preferred, since a token can be replayed by an attacker who captures it in transit. The JWT form is kept for cases such as a layer 7 proxy or load balancer between two workloads.
 
-Kubernetes gives a close analogue: Istio's identity for a workload is the Kubernetes service account, and during the handshake the client side proxy checks that the server certificate's service account is the one expected for the service it called.
+Istio gives a close analogue: a workload's identity is its Kubernetes service account, and during the handshake the client side proxy checks that the server certificate's service account is the one expected for the service it called.
 
 ## Getting Certificates
 
 Issuing a certificate to a service raises a bootstrap question: how does a new process prove who it is before it has any credential? SPIRE, the reference implementation of SPIFFE, answers with attestation in two steps:
 
-1. **Node attestation**: An agent on each machine proves the machine's identity to the SPIRE server, using evidence such as a cloud instance identity document or a Kubernetes service account token
-2. **Workload attestation**: When a process asks the local agent for an identity, the agent asks the operating system or the kubelet about that process and compares what it finds, such as the Unix user or the Kubernetes service account and namespace, with the selectors registered for each identity
+1. **Node attestation**: an agent on each machine proves the machine's identity to the SPIRE server, using evidence such as a cloud instance identity document or a Kubernetes service account token
+2. **Workload attestation**: when a process asks the local agent for an identity, the agent asks the operating system or the kubelet about that process and compares what it finds, such as the Unix user or the Kubernetes service account and namespace, with the selectors registered for each identity
 
 The server signs a certificate for a match, and the agent caches it.
 
@@ -117,12 +120,12 @@ A proxy does the TLS work beside each service, so the application code is unchan
 
 ## Pitfalls
 
-- **IP allow lists as identity**: The address changes and proves no identity
-- **A shared certificate for the whole set of services**: One compromise exposes the whole set, and the logs can't say who called
-- **Long lived certificates without rotation**: A stolen key works for months
-- **mTLS without authorization rules**: Any service can call any other service
-- **0-RTT for writes**: Replayable early data
-- **No expiry monitoring**: An expiry becomes an outage
+- **IP allow lists as identity**: the address changes and proves no identity
+- **A shared certificate for the whole set of services**: one compromise exposes the whole set, and the logs can't say who called
+- **Long lived certificates without rotation**: a stolen key works for months
+- **mTLS without authorization rules**: any service can call any other service
+- **0-RTT for writes**: replayable early data
+- **No expiry monitoring**: an expiry becomes an outage
 
 ## Key Points
 
