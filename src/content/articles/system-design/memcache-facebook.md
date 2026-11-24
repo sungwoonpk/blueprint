@@ -63,14 +63,6 @@ A hot key read 3,000 times a second and invalidated four times a second sent abo
 
 With one token for each 10 second window, the same key sent about 0.1 a second. The real system reported the same effect on the keys most prone to herds: a peak of 17,000 database queries a second without leases, and 1,300 with them.
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Database queries a second for one hot key, with and without a lease">
-<div class="hbar peak"><span>No Lease</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">295</span></div>
-<div class="hbar"><span>With a Lease</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">0.1</span></div>
-</div>
-<figcaption>Average database queries a second for one hot key invalidated four times a second, from our model</figcaption>
-</figure>
-
 The price is waiting or staleness, and the system softens it. When a key is deleted, its old value sits in a short lived side structure, and a get can return the stale value marked as stale.
 
 Applications that can make progress with slightly old data, which most can since a cached value tends to be an older snapshot of the database, don't wait.
@@ -159,13 +151,13 @@ An adaptive allocator moved memory between size classes as workloads changed, an
 
 ## Pitfalls
 
-- **Updating the cache on write**: A repeated or reordered update leaves an old value behind
-- **Filling the cache from a stale read**: A late set undoes a delete
-- **No limit on refills for a hot key**: Each invalidation sends a crowd to the database
-- **Rehashing a dead server's keys**: The next server inherits the load and falls over
-- **One pool for each kind of key mixed together**: High churn keys evict valuable ones
-- **A cold cache with no warmup**: The database takes the first hours of traffic alone
-- **Invalidations broadcast by web servers**: Hard to batch and impossible to replay
+- **Updating the cache on write**: a repeated or reordered update leaves an old value behind
+- **Filling the cache from a stale read**: a late set undoes a delete
+- **No limit on refills for a hot key**: each invalidation sends a crowd to the database
+- **Rehashing a dead server's keys**: the next server inherits the load and falls over
+- **One pool for all kinds of keys**: high churn keys evict valuable ones
+- **A cold cache with no warmup**: the database takes the first hours of traffic alone
+- **Invalidations broadcast by web servers**: hard to batch and impossible to replay
 
 ## Key Points
 
