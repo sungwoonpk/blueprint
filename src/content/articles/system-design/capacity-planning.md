@@ -8,11 +8,11 @@ Capacity planning is how the number comes from somewhere. It is the answer to a 
 
 Capacity planning covers two kinds of demand. **Organic growth** comes from natural adoption of the product, and **inorganic growth** comes from events such as feature launches and marketing campaigns. A plan needs three things:
 
-- **An organic forecast**: Accurate, and reaching further ahead than the time it takes to get new capacity, the lead time
-- **Inorganic demand included**: The launches, campaigns and business events that the trend line doesn't show
-- **Regular load testing**: A test that connects raw capacity, such as servers and disks, to the service capacity users receive
+- **An organic forecast**: accurate, and reaching further ahead than the time it takes to get new capacity, the lead time
+- **Inorganic demand included**: the launches, campaigns and business events that the trend line doesn't show
+- **Regular load testing**: a test that connects raw capacity, such as servers and disks, to the service capacity users receive
 
-Provisioning has to be done quickly and just when it is needed, since capacity is expensive, and it has to be done correctly, or the capacity isn't there when it is needed.
+Capacity is expensive, so provisioning has to happen just when it is needed, and it has to be done correctly, or the capacity isn't there when the demand arrives.
 
 Both sides cost something: too little breaks the service, and too much wastes money, which is the subject of [Balancing Cost and Performance](/system-design/cost-performance).
 
@@ -32,11 +32,9 @@ Work backward from the peak. For the textbook app:
 
 The 600 figure is the measurement that links raw capacity to service capacity. It comes from a load test, as in [Load Testing](/system-design/load-testing), not from the size of the machine.
 
-The question: how many compute resources does a service need to serve a given number of user queries, and some services get that number from load tests and others infer it from past performance.
+The key question is how many compute resources a service needs to serve a given number of user queries. Some services get that number from load tests, and others infer it from past performance.
 
-The N plus 1 and N plus 2 labels come from the same book. Its examples are intents such as meeting demand in each region with N plus 2 redundancy, and it notes that N plus 2 for one service may matter more than N plus 1 for another.
-
-N is the number needed for the load, and the extra servers cover failures, as the chaos experiment did.
+The labels N plus 1 and N plus 2 say how many spare servers to keep. N is the number needed for the load, and the extra servers cover failures, as the chaos experiment did. N plus 2 for one service may matter more than N plus 1 for another, so the choice depends on what an outage costs.
 
 A second tool, from queueing theory, converts concurrency into numbers. Little's law says the average number of requests in the system equals the arrival rate times the time each spends there.
 
@@ -55,7 +53,7 @@ A server that is busy constantly has no room for a burst. Queueing theory says h
 | 95% | 20 times |
 | 99% | 100 times |
 
-With a 10 ms service time, a server at 90 percent utilization answers in 100 ms on average. These multiples come from queueing theory: for random arrivals at one server, the average time in the system is the service time divided by one minus the utilization.
+With a 10 ms service time, a server at 90 percent utilization answers in 100 ms on average.
 
 Real services have many servers and many kinds of waiting, so we simulated the textbook fleet, 6 servers that each finish 600 requests a second, and measured the 99th percentile:
 
@@ -74,7 +72,7 @@ Real services have many servers and many kinds of waiting, so we simulated the t
 <figcaption>The 99th percentile bends upward as utilization nears the limit, from our simulation of 6 servers that each finish 600 requests a second</figcaption>
 </figure>
 
-Two lessons. The curve is nearly flat and then it bends: with one shared queue, the 99th percentile was 9.5 ms at 80 percent and 24.9 ms at 95 percent, a flat stretch with a knee. And the layout of the queues matters.
+Two lessons. First, the curve is nearly flat and then it bends: with one shared queue, the 99th percentile was 9.5 ms at 80 percent and 24.9 ms at 95 percent. Second, the layout of the queues matters.
 
 When each server has a queue of its own and requests are sent at random, a request can wait behind a slow one while another server sits idle, and at 80 percent the 99th percentile was 40.3 ms, four times higher.
 
@@ -89,13 +87,18 @@ For the textbook app, we pick 80 percent from the knee of the curve, so the plan
 | Peak Divided by 480 | 7 | 3,000 divided by 480 is 6.25, rounded up |
 | One Extra for a Failure | 8 | N plus 1 on top of the target utilization |
 
-The earlier number of 6 was the arithmetic at 100 percent utilization with no allowance. Our plan says 8 for the peak, and the rest of the year needs far fewer.
+The earlier 6 servers assumed 100 percent utilization before a failure. Our plan says 8 for the peak, and the rest of the year needs far fewer.
 
 ## Forecasting Demand
 
-A method works. Collect history: utilization, performance data and the shape of the workload, with its peak hours, user load and transaction rates. Pick indicators, such as requests a second and database CPU. Then fit a trend with moving averages, regression or time series methods, and plan before the usage pattern changes.
+A simple method works:
 
-Its examples are simple on purpose. A 10 percent yearly growth is extended forward, and a feature release that adds about 5 percent is planned as 5 percent.
+1. **Collect history**: utilization, performance data and the shape of the workload, with its peak hours, user load and transaction rates
+2. **Pick indicators**: such as requests a second and database CPU
+3. **Fit a trend**: with moving averages, regression or time series methods
+4. **Plan ahead**: act before the usage pattern changes
+
+Examples can be simple on purpose: extend a 10 percent yearly growth forward, and plan a feature release that adds about 5 percent as 5 percent.
 
 A new workload with no history gets market research, expert judgment, a pilot or outside data. Plan for the regular spikes too, such as an 8:00 AM sign in rush, a marketing push, a season and a feature launch.
 
@@ -112,9 +115,13 @@ The campaign is inorganic demand, which no trend line shows, and so it comes fro
 
 ## Buying the Capacity
 
-Capacity has more than one price. EC2 shows three options: On-Demand, paid by the hour or second with no commitment, Savings Plans, up to 72 percent cheaper in exchange for a usage commitment, and Spot, up to 90 percent cheaper, for capacity that can be taken back.
+Capacity has more than one price. Amazon EC2 shows three ways to pay:
 
-The figures are the provider's best case, and the page doesn't say how often each applies.
+- **On-Demand**: paid by the hour or second, with no commitment
+- **Savings Plans**: up to 72 percent cheaper, in exchange for a usage commitment
+- **Spot**: up to 90 percent cheaper, for capacity that can be taken back
+
+These are the provider's best case figures, and real savings depend on usage.
 
 A common split follows from the shape of demand: commit to the steady baseline, rent the peak by the hour, and run interruptible work such as [Batch Processing](/system-design/batch-processing) on the cheapest capacity. The textbook app needs about 2 servers through the year and 8 for 10 peak days:
 
@@ -129,22 +136,22 @@ Both numbers are our arithmetic, in server days, before any discount, and the se
 
 A plan is a prediction, so it needs the same treatment as any other. Load test it before the peak, as in the first table. Compare the forecast with what happened after each peak and correct the method.
 
-Watch the headroom with the dashboards from [Alerting and Dashboards](/system-design/alerting), and alert before the limit is reached, not after. Azure's advice is to change the workload before a known limit becomes a performance problem.
+Watch the headroom with the dashboards from [Alerting and Dashboards](/system-design/alerting), and alert before the limit is reached, not after. Change the workload before a known limit becomes a performance problem.
 
 Other limits fit the same method:
 
-- **The database**: Connections, storage and write rate, which grow differently from web servers
-- **Dependencies**: A payment provider or an email service with its own rate limit
-- **Account quotas**: Cloud limits on instances and addresses, which have to be raised ahead of the peak
-- **People**: The on-call rotation and the team that handles a launch
+- **The database**: connections, storage and write rate, which grow differently from web servers
+- **Dependencies**: a payment provider or an email service with its own rate limit
+- **Account quotas**: cloud limits on instances and addresses, which have to be raised ahead of the peak
+- **People**: the on-call rotation and the team that handles a launch
 
 ## Pitfalls
 
-- **Planning to the average**: The peak is what breaks the service, so plan for it
-- **Counting raw capacity**: A bigger machine is not a known number of requests until a test says so
-- **No allowance for failure**: Capacity that is just enough at full health is short when a server is lost
-- **Forgetting retries**: A slow dependency multiplies the load, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries)
-- **A plan made once**: Growth and code change the numbers, so repeat the plan on a schedule
+- **Planning to the average**: the peak is what breaks the service, so plan for it
+- **Counting raw capacity**: a bigger machine is not a known number of requests until a test says so
+- **No allowance for failure**: capacity that is just enough at full health is short when a server is lost
+- **Forgetting retries**: a slow dependency multiplies the load, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries)
+- **A plan made once**: growth and code change the numbers, so repeat the plan on a schedule
 
 ## Key Points
 
