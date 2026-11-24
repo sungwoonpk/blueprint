@@ -22,9 +22,9 @@ A rule helps at the start: money, stock and anything a person is charged for mus
 
 A single counter that each request increments is a hot key, as in [Handling Hot Spots and Celebrity Users](/system-design/hot-spots). In Firestore, for example, you can't update a single document at an unlimited rate.
 
-Its remedy is the distributed counter: a counter made of shards, each a small document with its own count. A write picks a random shard and increments it, and a read adds up the shards.
+The remedy is the distributed counter: a counter made of shards, each a small document with its own count. A write picks a random shard and increments it, and a read adds up the shards.
 
-The trade: write throughput rises linearly with the number of shards, so a counter with 10 shards handles about 10 times the writes. Too few shards leads to retries and slow writes, and too many makes reads slower and more expensive, since a read loads each shard.
+The trade is clear: write throughput rises linearly with the number of shards, so a counter with 10 shards handles about 10 times the writes. Too few shards leads to retries and slow writes, and too many makes reads slower and more expensive, since a read loads each shard.
 
 A common mitigation is a roll up document, refreshed on a slower schedule, that readers use instead of summing the shards. The counters are the same idea as the aggregation in [Scaling Writes](/system-design/scaling-writes): spread the writes, and pay on the read.
 
@@ -96,11 +96,11 @@ An update adds one to a counter in each row, picked by that row's hash, and a qu
 <figcaption>Count-Min Sketch: a grid with one hash for each row, and the smallest counter as the answer</figcaption>
 </figure>
 
-The sizing follows from a short argument. Each row overcounts a key by at most N divided by the width on average, where N is the stream length, so with a width of e divided by ε a row overcounts by more than ε times N with probability at most 1 over e.
+The sizing follows from a short argument. A row overcounts a key by about N divided by the width on average, where N is the stream length. With a width of e divided by ε, a row overcounts by more than ε times N with probability at most 1 over e.
 
 The depth is the number of independent rows, and all of them overcount that much with probability e to the minus depth, which equals δ when the depth is the natural log of 1 over δ. The estimate is therefore within ε times the stream length with probability 1 minus δ, and counts below that threshold can't be trusted.
 
-Its example, an error of 0.001 and a probability of 0.002, gives a width of 2,000 and a depth of 9.
+Redis sizes it a little differently, with a width of 2 divided by ε and a depth of log base 2 of 1 over δ, so its example of an error of 0.001 and a probability of 0.002 gives a width of 2,000 and a depth of 9.
 
 We ran it over 1 million views of 300,000 listings with skewed popularity, five rows deep:
 
@@ -122,7 +122,7 @@ A trending list needs the few keys with the highest counts. With exact counts, a
 
 For a stream where even exact counts don't fit, the heavy hitters algorithms keep a small table. [Handling Hot Spots and Celebrity Users](/system-design/hot-spots) showed one, Space Saving, finding the true top 10 with 100 counters.
 
-Redis offers a Top-K based on HeavyKeeper, which pairs a table of probabilistic counts, with exponential decay so that a light item loses ground against a heavy one, with a min-heap of the K leaders.
+Redis offers a Top-K based on HeavyKeeper. It pairs a table of probabilistic counts, with exponential decay so that a light item loses ground against a heavy one, and a min-heap of the K leaders.
 
 Trending hashtags and detecting denial of service are typical uses. The width is sized from K times its log and the depth from the log of K. The commands are reserve, add, query and list.
 
@@ -136,7 +136,7 @@ Adding or updating a member, ZADD or ZINCRBY, and finding its position, ZRANK, a
 
 The practice: keep a hash for the details of each member, use one key for each time window with an expiry, and combine windows with a union of sorted sets.
 
-It claims millions of ranked members in roughly 500 MB of memory and sub millisecond operations, claims which come from the page and not from our measurements, and it contrasts them with a relational database where an exact rank needs an ordering across the table.
+Redis's own guide claims millions of ranked members in roughly 500 MB of memory and sub millisecond operations. Those are its claims and not our measurements. The contrast it draws is with a relational database, where an exact rank needs an ordering across the table.
 
 Exact ranks over a huge set are costly in any system, so a compromise is common: exact ranks for the top 100, shown to each viewer, and an approximate rank for the rest, from a histogram of score buckets.
 
@@ -146,9 +146,9 @@ A seller at rank 41,203 of 90,000 doesn't need the exact figure, and the bucket 
 
 The computation can sit in three places:
 
-- **In the request**: Increment a counter or a sketch as the event arrives, cheap for the structures above, and exposed to the hot key problem
-- **In a stream job**: Events go to a log, and a job maintains counters, sketches and top K lists with windows, as in [Stream Processing](/system-design/stream-processing)
-- **In a batch job**: A nightly job computes exact figures from the full event history, as in [Batch Processing](/system-design/batch-processing), and corrects the approximate numbers from the stream
+- **In the request**: increment a counter or a sketch as the event arrives, cheap for the structures above, and exposed to the hot key problem
+- **In a stream job**: events go to a log, and a job maintains counters, sketches and top K lists with windows, as in [Stream Processing](/system-design/stream-processing)
+- **In a batch job**: a nightly job computes exact figures from the full event history, as in [Batch Processing](/system-design/batch-processing), and corrects the approximate numbers from the stream
 
 The combination of a fast approximate stream and a slow exact batch is common, with the batch results replacing the stream's estimates after the fact. Each event needs an identifier so that a retry or a duplicate message doesn't count twice, the idempotency of [Idempotency and Safe Retries](/system-design/idempotency).
 
@@ -165,13 +165,13 @@ The combination of a fast approximate stream and a slow exact batch is common, w
 
 ## Pitfalls
 
-- **One counter row for each listing**: The hot listing sets the ceiling
-- **A set for each unique count**: The hot listing needs megabytes
-- **Using an approximate count for money**: A small error is a wrong charge
-- **Trusting a sketch for rare keys**: The error is the same for each key, so light keys can be wrong by a lot
-- **Counting events twice**: A retry without an identifier adds to the total
-- **Sorting the whole set for a top K**: A heap does it in a fraction of the time
-- **Sketches with different hashes merged**: The result is meaningless
+- **One counter row for each listing**: the hot listing sets the ceiling
+- **A set for each unique count**: the hot listing needs megabytes
+- **Using an approximate count for money**: a small error is a wrong charge
+- **Trusting a sketch for rare keys**: the error is the same for each key, so light keys can be wrong by a lot
+- **Counting events twice**: a retry without an identifier adds to the total
+- **Sorting the whole set for a top K**: a heap does it in a fraction of the time
+- **Sketches with different hashes merged**: the result is meaningless
 
 ## Key Points
 
