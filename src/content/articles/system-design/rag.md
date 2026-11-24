@@ -14,9 +14,10 @@ Its abstract names two open problems for language models alone, providing proven
 
 The reasons carry over to an application:
 
-Fresh data comes first: updating a document updates the answers, with no retraining. The answer can point to the passage it used, so a student or a reviewer can check it.
-
-Retrieval can return just what the asking user may see, which handles permissions. And the prompt holds a few passages and not the whole collection, which keeps its size in check.
+- **Fresh data**: updating a document updates the answers, with no retraining
+- **Provenance**: the answer can point to the passage it used, so a student or a reviewer can check it
+- **Permissions**: retrieval can return just what the asking user may see
+- **A bounded prompt**: the prompt holds a few passages and not the whole collection, which keeps its size in check
 
 The costs are as real. Retrieval can miss the right passage, and then the model answers without it. The model can ignore a passage it was given. And each passage is tokens that you pay for and wait for.
 
@@ -24,7 +25,7 @@ The costs are as real. Retrieval can miss the right passage, and then the model 
 
 One point is easy to skip: if the knowledge base is smaller than about 200,000 tokens, roughly 500 pages, the whole thing fits in the prompt, which is sometimes the simplest solution.
 
-It frames the figure as a rough guide, from 2024, so check the limits of today's models.
+That figure is a rough guide from 2024, so check the limits of today's models.
 
 We worked it out for the textbook app. 200 course pages of 12 sentences at about 18 tokens each make about 43,200 tokens. With the round prices and the prefill estimate from earlier topics, 2 dollars for each million input tokens and 150 trillion operations a second at 14 billion operations a token:
 
@@ -81,7 +82,7 @@ Chunking causes the most common failure. A chunk is cut from a page, and the sen
 
 Take a chunk that says revenue grew by 3 percent over the previous quarter and names neither the company nor the period. Searching for that company's revenue can't find it.
 
-Its remedy is contextual retrieval: before indexing, generate a short note of 50 to 100 tokens for each chunk saying where it comes from, and put it in front of the chunk for both the embeddings and the keyword index.
+Anthropic's remedy is contextual retrieval: before indexing, generate a short note of 50 to 100 tokens for each chunk saying where it comes from, and put it in front of the chunk for both the embeddings and the keyword index.
 
 A published measurement gives the share of failed retrievals, one minus the recall at 20, averaged across their test domains:
 
@@ -111,17 +112,6 @@ A question names the course and the attribute. We split the pages into chunks of
 | 6 | 46% | 100% | 540 |
 | 12, the Whole Page | 100% | 100% | 1,080 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share found for five chunk sizes without titles">
-<div class="hbar peak"><span>1 Sentence</span><span class="track"><span class="fill" style="--w: 2%"></span></span><span class="value">2%</span></div>
-<div class="hbar"><span>2 Sentences</span><span class="track"><span class="fill" style="--w: 10.2%"></span></span><span class="value">10%</span></div>
-<div class="hbar"><span>4 Sentences</span><span class="track"><span class="fill" style="--w: 28%"></span></span><span class="value">28%</span></div>
-<div class="hbar"><span>6 Sentences</span><span class="track"><span class="fill" style="--w: 46%"></span></span><span class="value">46%</span></div>
-<div class="hbar"><span>Whole Page, 12</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-</div>
-<figcaption>Share of questions with the answer chunk in the top 5, plain chunks, from our experiment</figcaption>
-</figure>
-
 Small plain chunks rarely found the answer, since each looked like the same sentence from the other 199 pages. A whole page worked each time, and cost 12 times the tokens of the smallest chunks.
 
 Adding the title let the smallest chunks match, with 100 tokens in the prompt and not 1,080. The corpus is built to have this problem, so the numbers are an extreme case, and the direction matches the reports from Anthropic.
@@ -130,11 +120,12 @@ The practical rules follow. Chunk by structure, such as a section or a policy, s
 
 ## Packing the Prompt
 
-The prompt has to carry the instructions, the passages and the question, and a few practices make it work. Order matters: because of the position effect, put the best passages at the start or end of the context and not the middle, and keep the number modest.
+The prompt has to carry the instructions, the passages and the question, and a few practices make it work:
 
-Mark the sources by giving each passage an id and a title, and ask the model to answer from the passages and to say when they don't contain the answer.
-
-Prefer fewer, better passages: tune the count on your own questions, and let a re-ranker choose, since each passage costs tokens and can distract. And ask for citations, the ids of the passages used, so the answer can be checked.
+- **Order matters**: because of the position effect, put the best passages at the start or end of the context and not the middle, and keep the number modest
+- **Mark the sources**: give each passage an id and a title, and ask the model to answer from the passages and to say when they don't contain the answer
+- **Prefer fewer, better passages**: tune the count on your own questions, and let a re-ranker choose, since each passage costs tokens and can distract
+- **Ask for citations**: the ids of the passages used, so the answer can be checked
 
 Some model APIs have a citations feature for the last. Each document block can enable citations, and the API returns the answer in pieces, each with pointers to the cited text.
 
@@ -154,13 +145,13 @@ And a retrieved page is untrusted text: it is input from outside, and a page can
 
 A wrong answer can come from the search or from the writing, and the repair differs. Measures exist for each side:
 
-Context recall asks how many of the reference claims are found in the retrieved text, which needs a reference answer. Context precision asks whether the relevant chunks are ranked above the irrelevant ones, which depends on the order.
+- **Context recall**: how many of the reference claims are found in the retrieved text, which needs a reference answer
+- **Context precision**: whether the relevant chunks are ranked above the irrelevant ones, which depends on the order
+- **Faithfulness**: the share of the answer's claims that the retrieved context supports, so 1 supported claim out of 2 scores 0.5
+- **Response relevancy**: how closely the answer addresses the question, with no check on whether it is true
+- **Groundedness**: similar to faithfulness, and it joins completeness, utilization, relevance and correctness. A groundedness of 0.9 with a correctness of 0.4 means an answer that follows its sources and is still wrong, which points at the sources
 
-On the writing side, faithfulness is the share of the answer's claims that the retrieved context supports, so 1 supported claim out of 2 scores 0.5. Response relevancy measures how closely the answer addresses the question, with no check on whether it is true.
-
-Groundedness, which is similar to faithfulness, joins completeness, utilization, relevance and correctness. An example is useful: a groundedness of 0.9 with a correctness of 0.4 means an answer that follows its sources and is still wrong, which points at the sources.
-
-Since model output varies, it advises a target range and not a single value. [Evaluation](/system-design/ai-evaluation) covers building the test set.
+Since model output varies, a target range is better than a single value. [Evaluation](/system-design/ai-evaluation) covers building the test set.
 
 | Symptom | Likely Stage | First Fix |
 | --- | --- | --- |
@@ -185,13 +176,13 @@ Since model output varies, it advises a target range and not a single value. [Ev
 
 ## Pitfalls
 
-- **Retrieval for a small collection**: Stuffing is simpler while it fits
-- **Chunks that don't name their subject**: They match the wrong pages, or no page
-- **Judging just the final answer**: The failing stage stays unknown
-- **Too many chunks**: Cost and distraction rise, and the middle gets ignored
-- **Retrieving past the user's permissions**: The model repeats what it was shown
-- **Trusting retrieved text as instructions**: A document can attack the model
-- **A stale index**: The answer is right for a page that no longer exists
+- **Retrieval for a small collection**: stuffing is simpler while it fits
+- **Chunks that don't name their subject**: they match the wrong pages, or no page
+- **Judging just the final answer**: the failing stage stays unknown
+- **Too many chunks**: cost and distraction rise, and the middle gets ignored
+- **Retrieving past the user's permissions**: the model repeats what it was shown
+- **Trusting retrieved text as instructions**: a document can attack the model
+- **A stale index**: the answer is right for a page that no longer exists
 
 ## Key Points
 
