@@ -16,13 +16,13 @@ The same pattern goes by the name deployment stamp, and other names are service 
 
 Three parts make up the design:
 
-- **The cells**: Full copies of the service and its data, each handling a fixed share of the customers
-- **The router**: One shared layer that maps a customer to a cell and sends the request there
-- **The control plane**: Creates cells, places customers in them, and moves customers between cells
+- **The cells**: full copies of the service and its data, each handling a fixed share of the customers
+- **The router**: one shared layer that maps a customer to a cell and sends the request there
+- **The control plane**: creates cells, places customers in them, and moves customers between cells
 
 The router should be the thinnest layer that can do the job, routing and no other work. A cheap mapping such as a hash of the key followed by a remainder works, and the router keeps no business logic, so that it is simple, easy to test and easy to scale.
 
-The whole set of cells shares it, so it can't be split into cells itself, and it has to keep serving the other cells when one is unreachable.
+Every cell depends on the router, so the router can't be one of the cells, and it has to keep serving the other cells when one is unreachable.
 
 <figure class="diagram">
 <div class="flow">
@@ -48,7 +48,7 @@ Each attempt, and up to 3 retries on other servers in the same cell, crashes a s
 | 4 Cells of 3 Servers | 74% |
 | 6 Cells of 2 Servers | 82% |
 
-With one pool, the poison customer kept the servers down. With cells, just the poison customer's cell was lost, and the results sit close to the share that arithmetic gives: with N cells, a failure confined to one cell leaves 1 minus 1 over N of the customers untouched, 75 percent for 4 cells and 83 percent for 6.
+With one pool, the poison customer kept the servers down. With cells, just the poison customer's cell was lost, and the results sit close to the share that arithmetic gives: with N cells, a failure confined to one cell leaves (N minus 1) out of N of the customers untouched, 75 percent for 4 cells and 83 percent for 6.
 
 Put it in numbers: with 10 cells, a failure in one leaves 90 percent of requests unaffected, and with 100 cells, a failure reaches 1 percent.
 
@@ -58,13 +58,13 @@ The customer who sent the poison request still has a bad time, since their own c
 
 Three forces act on the size of a cell:
 
-- **Big enough**: A cell has to hold the largest customer, and be efficient enough to be worth its fixed costs
-- **Small enough**: A cell should be small enough to be tested at its full load, so that its limits are known, and far from the limits of the account or the region
-- **A known maximum**: A cap on the size of a cell, in requests a second, customers or data, turns it into a unit of scale: to grow, add cells and don't grow cells
+- **Big enough**: a cell has to hold the largest customer, and be efficient enough to be worth its fixed costs
+- **Small enough**: a cell should be small enough to be tested at its full load, so that its limits are known, and far from the limits of the account or the region
+- **A known maximum**: a cap on the size of a cell, in requests a second, customers or data, turns it into a unit of scale: to grow, add cells and don't grow cells
 
 Smaller cells reduce the damage of a failure and cost more to operate, with more cells to manage and more idle capacity in each. Larger cells are easier to run and use capacity better, and a failure reaches a larger share of the fleet.
 
-Cells needn't be very large for any service, and the right maximum depends on the service. Don't run a cell near its limit, since a cell needs headroom to absorb a failover.
+The right maximum depends on the service. Don't run a cell near its limit, since a cell needs headroom to absorb a failover.
 
 Cost shows up early. The textbook app needs 6 servers at its peak. If each cell needs at least 2 servers so that one failure doesn't take the cell down, 3 cells use 6 servers, and 6 cells use 12.
 
@@ -108,15 +108,15 @@ For a fleet across three zones it overprovisions by 50 percent, so that each zon
 
 ## Cells at Amazon
 
-Physalia, the Amazon store that keeps the configuration of EBS volumes, is a case in which cells are the central design. Its history begins with an April 2011 outage in which a network configuration change made 13 percent of the volumes in one zone unavailable.
+Physalia, the Amazon store that holds the configuration of its EBS block storage volumes, is a case in which cells are the central design. Its history begins with an April 2011 outage in which a network configuration change made 13 percent of the volumes in one zone unavailable.
 
 Each Physalia cell holds the data of one partition key, runs consensus over seven nodes, and doesn't coordinate with other cells, though each node takes part in many cells.
 
-Dividing into many cells is the main tool for reducing blast radius.
+Many small cells are the main tool for reducing the **blast radius**, the share of customers a failure can reach.
 
-Placement is part of the design too: the control plane gives each node a different mix of cells, so that a poisonous transition that crashes a node loses just the cell that triggered it, and puts a cell near the client it serves.
+Placement is part of the design too. The control plane gives each node a different mix of cells, so a poisonous transition that crashes a node loses just the cell that triggered it. It also puts a cell near the client it serves.
 
-There is a reason the cells stayed separate. It could have let cells share data and coordinate, as in some elastic designs, but the added complexity and the dependencies between shards worked against blast radius, so cells stayed independent and the control plane became its own system.
+Why keep the cells separate? Physalia could have let cells share data and coordinate, as in some elastic designs, but the added complexity and the dependencies between shards worked against blast radius, so cells stayed independent and the control plane became its own system.
 
 ## Shuffle Sharding
 
@@ -126,13 +126,13 @@ With 8 workers and 2 for each customer, there are 28 possible pairs, against 4 f
 
 ## The Costs
 
-Cells are not free, and they aren't right for simple solutions:
+Cells are not free, and they are too much for a simple system:
 
-- **Duplicated capacity**: Each cell carries its own minimum, and the total grows with the number of cells
-- **Operations**: Many copies to deploy, monitor and keep identical, which needs automation, and it helps to run at least two stamps from the start to avoid assumptions of a single copy
-- **A shared router**: One component in front of the cells, so it has to be simpler and more reliable than anything behind it
-- **Cross cell work**: A report across the customers needs data from each cell, and a customer who moves needs a migration
-- **A region is one cell too**: Stamps are not redundant across regions by themselves, so a regional failure takes down the tenants in that region, as covered in [Surviving a Region Outage](/system-design/region-outage)
+- **Duplicated capacity**: each cell carries its own minimum, and the total grows with the number of cells
+- **Operations**: many copies to deploy, monitor and keep identical, which needs automation. It helps to run at least two cells from the start, so no code assumes a single copy
+- **A shared router**: one component in front of the cells, so it has to be simpler and more reliable than anything behind it
+- **Cross cell work**: a report across the customers needs data from each cell, and a customer who moves needs a migration
+- **A region is one cell too**: stamps are not redundant across regions by themselves, so a regional failure takes down the tenants in that region, as covered in [Surviving a Region Outage](/system-design/region-outage)
 
 Chaos experiments, as in [Chaos Engineering](/system-design/chaos-engineering), are the way to check that a cell really contains a failure.
 
