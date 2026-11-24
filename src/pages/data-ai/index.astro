@@ -1,17 +1,6 @@
 ---
-import Base from '../../layouts/Base.astro';
+import RoadmapPage from '../../components/RoadmapPage.astro';
+import { subjectAt } from '../../data/subjects';
 ---
 
-<Base title="Data & AI" search={false}>
-  <h1>Data &amp; AI</h1>
-  <p>Coming soon.</p>
-</Base>
-
-<style>
-  h1 {
-    font-size: clamp(32px, 5.5vw, 40px);
-    line-height: 1.05;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-  }
-</style>
+<RoadmapPage subject={subjectAt('/data-ai')} />
