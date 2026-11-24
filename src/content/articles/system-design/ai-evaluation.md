@@ -12,7 +12,7 @@ This topic covers what to measure, how to build the questions, how to score the 
 
 Begin with success criteria, and make them specific, measurable, achievable and relevant. Concrete examples: an F1 score of at least 0.85 on a held out set of 10,000 posts, or fewer than 0.1 percent of outputs flagged as toxic in 10,000 trials.
 
-It lists common dimensions, and says the list isn't complete: task fidelity, consistency, relevance and coherence, tone and style, privacy preservation, context utilization, latency and price.
+Common dimensions, though the list isn't complete, are task fidelity, consistency, relevance and coherence, tone and style, privacy preservation, context utilization, latency and price.
 
 The point of the exercise is that one number is rarely enough. A change that raises accuracy and doubles the latency is a decision, and the criteria make it visible. For the helper:
 
@@ -28,35 +28,41 @@ The point of the exercise is that one number is rarely enough. A change that rai
 
 ## Build the Test Set
 
-Anthropic's design principles for the questions are short. Be specific to the task, so the set mirrors the real distribution of requests, including the edge cases. Automate the grading where possible. And favor volume over polish, since more questions graded by a machine beat fewer graded by hand. The set has several sources:
+Three design principles guide the questions:
 
-- **Real traffic**: Questions from logs, with personal data removed, which show what students really ask
-- **Written by experts**: Cases that matter and are rare, such as a policy with an exception
-- **Generated**: Build a knowledge graph of the documents and make single hop and multi hop questions, each in a specific and an abstract form, with a reference answer and its source passages
-- **Adversarial**: Attempts to extract another user's data or to make the model ignore its rules
-- **Unanswerable**: Questions the documents don't cover, to test that the helper says so
+- **Specific to the task**: the set mirrors the real distribution of requests, including the edge cases
+- **Automated grading**: use it where possible
+- **Volume over polish**: more questions graded by a machine beat fewer graded by hand
+
+The set has several sources:
+
+- **Real traffic**: questions from logs, with personal data removed, which show what students really ask
+- **Written by experts**: cases that matter and are rare, such as a policy with an exception
+- **Generated**: build a knowledge graph of the documents and make single hop and multi hop questions, each in a specific and an abstract form, with a reference answer and its source passages
+- **Adversarial**: attempts to extract another user's data or to make the model ignore its rules
+- **Unanswerable**: questions the documents don't cover, to test that the helper says so
 
 Keep part of the set aside, and don't tune the prompt on it. Public benchmarks add a separate problem.
 
 A 2023 study found that simple rewrites, such as paraphrasing or translating test items, got past the usual decontamination checks based on matching strings, and that a 13 billion parameter model trained on rephrased test samples could reach performance on par with GPT-4 on them.
 
-It also found 8 to 18 percent of the HumanEval benchmark overlapping with large pretraining sets. A general benchmark like MMLU, which covers 57 subjects, says how capable a model is in general, and your private set says whether it works for you.
+The study also found 8 to 18 percent of the HumanEval benchmark overlapping with large pretraining sets. A general benchmark like MMLU, which covers 57 subjects, says how capable a model is in general, and your private set says whether it works for you.
 
 ## Grade the Answers
 
 The Claude documentation sorts graders by speed and nuance. Code based grading, such as an exact match or a check that a citation is present, is the fastest and most reliable and the least nuanced. A person is the most flexible and slow and costly, so use people for a sample that calibrates the others.
 
-A model as grader is fast and flexible and has to be tested for reliability first. Its tips include a detailed rubric, a constrained output such as a score from 1 to 5, and a different model as the judge than the one that wrote the answer.
+A model as grader is fast and flexible and has to be tested for reliability first. Useful tips are a detailed rubric, a constrained output such as a score from 1 to 5, and a different model as the judge than the one that wrote the answer.
 
 Research on model judges is encouraging and specific about the limits. In the MT-Bench study, strong judges such as GPT-4 reached over 80 percent agreement with human preferences, the level at which humans agree with each other.
 
-It also names the biases: position, verbosity and self-enhancement, and limited reasoning ability. In practice that means swapping the order of the two answers, controlling for length, and checking the judge against labels from a person.
+The study also names the biases: position, verbosity and self-enhancement, and limited reasoning ability. In practice that means swapping the order of the two answers, controlling for length, and checking the judge against labels from a person.
 
 Some checks are better written as tests than as scores. The CheckList paper brought the idea of software testing to language models. A minimum functionality test is a simple case for one behavior, like a unit test.
 
 An invariance test changes the input in a way that shouldn't change the answer, and a directional test changes it in a way that should move the answer in a known direction.
 
-Its abstract reports that practitioners who used it created twice as many tests and found almost three times as many bugs. For the helper, writing a course code as "MATH101" or "math 101" should not change the policy it quotes, and adding "please" shouldn't either.
+The CheckList abstract reports that practitioners who used it created twice as many tests and found almost three times as many bugs. For the helper, writing a course code as "MATH101" or "math 101" should not change the policy it quotes, and adding "please" shouldn't either.
 
 | Grader | Fits | Watch For |
 | --- | --- | --- |
@@ -133,8 +139,8 @@ At 100 questions, B scored below A in 20 percent of runs although it is truly be
 
 Two more points matter.
 
-- **Grouped questions**: When several questions come from the same document, they aren't independent, and standard errors that account for the groups can be over 3 times larger. An example on one reading benchmark was 1.34 points against 0.44 for the naive figure
-- **Repeated sampling**: Asking the same question several times and averaging reduces the noise from the model, and lowering the temperature is not a good way to do it
+- **Grouped questions**: when several questions come from the same document, they aren't independent, and standard errors that account for the groups can be over 3 times larger. An example on one reading benchmark was 1.34 points against 0.44 for the naive figure
+- **Repeated sampling**: asking the same question several times and averaging reduces the noise from the model, and lowering the temperature is not a good way to do it
 
 When the effect you care about is small, plan the set size before building it, with a power formula, and when you can't afford the size, say that differences under the half width are not established.
 
@@ -142,11 +148,11 @@ When the effect you care about is small, plan the set size before building it, w
 
 An evaluation earns its keep by running at each change:
 
-- **A gate**: A change to the prompt, the model, the retrieval settings or a tool runs the set, and the result shows the interval, not a single score
-- **Slices**: Scores by course, by question type and by difficulty, since an average hides a collapse in a group
-- **A regression set**: Each production failure becomes a test case, so it stays fixed
-- **Fresh data**: A weekly sample of real conversations, reviewed by a person, feeds new cases in, and a set that doesn't change goes stale
-- **Judge control**: A fixed judge version and a small human labeled sample to check it, since a new judge model changes the scores
+- **A gate**: a change to the prompt, the model, the retrieval settings or a tool runs the set, and the result shows the interval, not a single score
+- **Slices**: scores by course, by question type and by difficulty, since an average hides a collapse in a group
+- **A regression set**: each production failure becomes a test case, so it stays fixed
+- **Fresh data**: a weekly sample of real conversations, reviewed by a person, feeds new cases in, and a set that doesn't change goes stale
+- **Judge control**: a fixed judge version and a small human labeled sample to check it, since a new judge model changes the scores
 
 [Retrieval-Augmented Generation (RAG)](/system-design/rag) described scoring the retrieval and the generation separately, and the same holds here: record the stage that failed, not just the final score. Online signals, from users and from logs, belong to [Monitoring AI Systems in Production](/system-design/ai-monitoring).
 
@@ -165,13 +171,13 @@ An evaluation earns its keep by running at each change:
 
 ## Pitfalls
 
-- **Judging by a few examples**: Noise decides the verdict
-- **A test set built from the questions used for tuning**: The score is flattering and meaningless
-- **Comparing two separate scores**: It wastes the pairing and misses real gains
-- **Trusting a model judge without a check**: Its biases become the target
-- **One average for the whole set**: A group can fail while the mean looks fine
-- **Public benchmarks as proof of fit**: They may be contaminated, and they aren't your task
-- **A fixed set that stays frozen**: It stops matching what students ask
+- **Judging by a few examples**: noise decides the verdict
+- **A test set built from the questions used for tuning**: the score is flattering and meaningless
+- **Comparing two separate scores**: it wastes the pairing and misses real gains
+- **Trusting a model judge without a check**: its biases become the target
+- **One average for the whole set**: a group can fail while the mean looks fine
+- **Public benchmarks as proof of fit**: they may be contaminated, and they aren't your task
+- **A fixed set that stays frozen**: it stops matching what students ask
 
 ## Key Points
 
