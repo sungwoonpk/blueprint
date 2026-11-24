@@ -74,13 +74,11 @@ That is user space memory in one runtime, without the kernel's socket buffers or
 
 At 6.5 KB, a million connections would need about 6.5 GB for the idle state alone, our arithmetic. The practical limits are the file descriptor limit, which must be raised, and the memory.
 
-The usual design has three parts.
+The usual design has three parts:
 
-A gateway tier holds the connections, authenticates them and forwards messages, and it is sized by the number of connections. Behind it sits a publish and subscribe bus: services publish events by topic or user, and each gateway subscribes for the users it holds. Socket.IO's Redis adapter is one example.
-
-A message for several clients goes to the local ones and is published to a Redis channel that the other servers receive. The adapter stores no keys in Redis, and if the Redis connection drops, messages reach the clients on the same server and no others.
-
-The third part is a routing question. To message one user, find which gateway holds them, or publish to a channel for that user. A table from user to gateway, with a time to live, does it, and a user with several devices has several entries.
+- **A gateway tier**: holds the connections, authenticates them and forwards messages, and is sized by the number of connections
+- **A publish and subscribe bus**: services publish events by topic or user, and each gateway subscribes for the users it holds. Socket.IO's Redis adapter is one example: a message for several clients goes to the local ones and is published to a Redis channel that the other servers receive. The adapter stores no keys in Redis, and if the Redis connection drops, messages reach the clients on the same server and no others
+- **A routing table**: to message one user, find which gateway holds them, or publish to a channel for that user. A table from user to gateway, with a time to live, does it, and a user with several devices has several entries
 
 <figure class="diagram">
 <div class="flow">
@@ -118,16 +116,6 @@ How much history to keep depends on how long clients are away. We simulated clie
 | 5 Minutes | 730 | 12.2% |
 | 15 Minutes | 0 | 0% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Events missed per reconnect for four replay windows">
-<div class="hbar peak"><span>No Replay</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2,780</span></div>
-<div class="hbar"><span>30 Seconds</span><span class="track"><span class="fill" style="--w: 85%"></span></span><span class="value">2,363</span></div>
-<div class="hbar"><span>5 Minutes</span><span class="track"><span class="fill" style="--w: 26.3%"></span></span><span class="value">730</span></div>
-<div class="hbar"><span>15 Minutes</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0</span></div>
-</div>
-<figcaption>Average events missed on each reconnect, by replay window, from our simulation</figcaption>
-</figure>
-
 A window as long as the longest absence removes the gap, at the price of memory for the events of each user. A window of 5 minutes covers most absences and leaves the rest to the state fallback, which is the common compromise.
 
 ## Reconnect Storms
@@ -140,15 +128,6 @@ When a gateway restarts or a network blip drops the connections, the clients rec
 | 3 Seconds Plus Up to 10 s of Jitter | 36 s | 7,439 | 101,251 |
 | Exponential Backoff From 5 s, Full Jitter | 75 s | 13,544 | 120,680 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Attempts in the busiest second for three retry policies">
-<div class="hbar peak"><span>Fixed 3 s, No Jitter</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">50,000</span></div>
-<div class="hbar"><span>3 s Plus 10 s Jitter</span><span class="track"><span class="fill" style="--w: 14.9%"></span></span><span class="value">7,439</span></div>
-<div class="hbar"><span>Backoff, Full Jitter</span><span class="track"><span class="fill" style="--w: 27.1%"></span></span><span class="value">13,544</span></div>
-</div>
-<figcaption>Connection attempts in the busiest second after 50,000 clients drop together, from our simulation</figcaption>
-</figure>
-
 The fixed retry hit the fleet with the full 50,000 clients at once and again at 3 second intervals with the crowd that was refused, and made 650,000 attempts. Jitter spread the same crowd over time and cut the attempts to a sixth.
 
 The exponential policy sent fewer attempts than the fixed one and took longer, since a client that fails several times waits up to a minute. The floor is 25 seconds, the time for 2,000 a second to take 50,000.
@@ -157,15 +136,13 @@ The lessons are to add jitter, to choose the first window from the number of cli
 
 ## Security
 
-A long lived connection has security questions of its own, and most start at the handshake.
+A long lived connection has security questions of its own, and most start at the handshake:
 
-Authenticate on connect, with a token that expires, and decide what happens when it expires during a long session: a message that authenticates again, or a forced reconnect, as in [OAuth and JWT](/system-design/oauth-jwt).
-
-Check the origin as well. A browser sends an `Origin` header on the WebSocket handshake, and the server should refuse origins it doesn't expect, since WebSockets aren't covered by the usual same origin rules for requests.
-
-After that, authorize each channel, because a subscription to a user's messages must be checked against the user, as in [Authentication and Authorization](/system-design/authn-authz). Limit what a client can send, in message size, rate and count of subscriptions, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice).
-
-Finally, trust the bus carefully. Socket.IO's adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network.
+- **Authenticate on connect**: use a token that expires, and decide what happens when it expires during a long session: a message that authenticates again, or a forced reconnect, as in [OAuth and JWT](/system-design/oauth-jwt)
+- **Check the origin**: a browser sends an `Origin` header on the WebSocket handshake, and the server should refuse origins it doesn't expect, since WebSockets aren't covered by the usual same origin rules for requests
+- **Authorize each channel**: a subscription to a user's messages must be checked against the user, as in [Authentication and Authorization](/system-design/authn-authz)
+- **Limit what a client can send**: message size, rate and count of subscriptions, as in [Rate Limiting in Practice](/system-design/rate-limiting-in-practice)
+- **Trust the bus carefully**: Socket.IO's adapter doesn't sign, encrypt or authenticate its Redis messages, which assumes a trusted network
 
 ## Choosing
 
@@ -190,13 +167,13 @@ Finally, trust the bus carefully. Socket.IO's adapter doesn't sign, encrypt or a
 
 ## Pitfalls
 
-- **Polling at a short interval**: Most requests return no data and the cost grows with the audience
-- **Assuming delivery**: A message sent during a disconnect is lost unless the design replays it
-- **A fixed reconnect delay**: The crowd returns at once
-- **No heartbeat**: A dead connection looks alive for a long time
-- **Idle timeouts in the path**: A proxy drops quiet connections after 60 seconds
-- **Forgetting the connection limit**: Six streams per domain over HTTP/1.1
-- **A token without an expiry on a long connection**: A revoked user stays connected
+- **Polling at a short interval**: most requests return no data and the cost grows with the audience
+- **Assuming delivery**: a message sent during a disconnect is lost unless the design replays it
+- **A fixed reconnect delay**: the crowd returns at once
+- **No heartbeat**: a dead connection looks alive for a long time
+- **Idle timeouts in the path**: a proxy drops quiet connections after 60 seconds
+- **Forgetting the connection limit**: six streams per domain over HTTP/1.1
+- **A token without an expiry on a long connection**: a revoked user stays connected
 
 ## Key Points
 
