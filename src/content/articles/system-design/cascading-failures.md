@@ -10,21 +10,22 @@ The first topics of this phase gave the tools to see such an event. This topic i
 
 The causes are few. The most common is server overload. Take a cluster that handles 1,000 requests a second. When a second cluster fails, its load moves over and the first one gets 1,200.
 
-Its frontends run out of resources, and the number of successful requests falls well below 1,000. Within a couple of minutes the overload can spread to other clusters as the load balancer reacts.
+The first cluster's frontends run out of resources, and the number of successful requests falls well below 1,000. Within a couple of minutes the overload can spread to other clusters as the load balancer reacts.
 
-Overload shows up as running out of something.
+Overload shows up as running out of something:
 
-When CPU runs out, requests slow down, more of them are in flight, queues grow, health checks fail and deadlines are missed. When memory runs out, tasks die, or a garbage collection spiral starts, where less CPU leads to more collection and less CPU still. Threads running out show up as errors and failed health checks, and the threads themselves use memory. And when file descriptors run out, connections can't be set up, so health checks fail.
+- **CPU**: requests slow down, more of them are in flight, queues grow, health checks fail and deadlines are missed
+- **Memory**: tasks die, or a garbage collection spiral starts, where less CPU leads to more collection and less CPU still
+- **Threads**: errors and failed health checks follow, and the threads themselves use memory
+- **File descriptors**: connections can't be set up, so health checks fail
 
-Three more mechanisms make it worse.
+Three more mechanisms make it worse:
 
-Retries are the first. A client that retries a failed request sends more load to a server that is already failing.
+- **Retries**: a client that retries a failed request sends more load to a server that is already failing
+- **Load balancing**: a server that fails health checks leaves the pool, and the policy that avoids servers with recent errors pushes their load onto the rest. A server that crashes and restarts is hit with the full load at once
+- **Cold starts**: new tasks are slow to start, with connections to set up and code to warm, and a cold cache sends each request to the expensive path
 
-Load balancing is the second. A server that fails health checks leaves the pool, and the policy that avoids servers with recent errors pushes their load onto the rest. A server that crashes and restarts is hit with the full load at once.
-
-Cold starts are the third. New tasks are slow to start, with connections to set up and code to warm, and a cold cache sends each request to the expensive path.
-
-Here is how hard it is to get out. A service that was healthy at 10,000 requests a second and begins crashing at 11,000 will not recover when the load drops to 9,000.
+Here is how hard it is to get out. A service that was healthy at 10,000 requests a second and begins crashing at 11,000 may not recover when the load drops to 9,000.
 
 If 10 percent of its servers are healthy, the request rate has to fall to about 1,000 a second to stabilize.
 
@@ -40,15 +41,15 @@ Retries compound across layers. With 3 retries at each of 3 layers, each request
 
 ## Metastable Failures
 
-Nathan Bronson and colleagues, in a 2021 paper from engineers at Facebook and universities, gave the pattern a name. In a metastable failure, a trigger pushes the system into a bad state, with goodput, the throughput of useful work, unusably low, and a **sustaining effect**, often work amplification, keeps it there after the trigger is gone.
+Nathan Bronson and colleagues, in a 2021 paper from engineers at Facebook and universities, gave the pattern a name. A metastable failure has a trigger and a sustaining effect. The trigger pushes the system into a bad state, with goodput, the throughput of useful work, unusably low. A **sustaining effect**, often work amplification, keeps it there after the trigger is gone.
 
 Failures that end when the trigger ends, such as a denial of service attack, are not metastable. Leaving the state takes a strong push, such as a reboot or a large cut in load.
 
 Their example is a web application that queries a database. The database answers in under 100 ms below 300 queries a second and is an order of magnitude slower above that. The application makes one query and retries once if there is no answer in 1 second. At 280 queries a second the system is fine.
 
-Then a 10 second outage of the network switch hits. When connectivity returns, the lost requests and their retries arrive together, the database is overloaded, and its latency rises. While latency stays high, each client query is followed by a retry, 560 queries a second, so the database can't recover and no query succeeds.
+Then the network switch fails for 10 seconds. When connectivity returns, the lost requests and their retries arrive together, the database is overloaded, and its latency rises. While latency stays high, each client query is followed by a retry, 560 queries a second, so the database can't recover and no query succeeds.
 
-The system had two states at the same load. Below 150 queries a second it can't be pushed into the trap. Between 150 and 300 it is vulnerable, and a trigger can tip it. The trigger tends to get the blame, and the real root cause is the sustaining effect.
+The system had two states at the same load. Below 150 queries a second, retries at most double the load to 300, so the system can't be trapped. Between 150 and 300 it is vulnerable, and a trigger can tip it. The trigger tends to get the blame, and the real root cause is the sustaining effect.
 
 A follow up study at OSDI 2022 read public incident reports. It examined 22 metastable failures from 11 organizations, and found that at least 4 of 15 major outages at Amazon Web Services in a decade were of this kind.
 
@@ -91,19 +92,19 @@ Load shedding kept the servers at capacity, so they stayed healthy and the cold 
 
 ## Defenses
 
-The defenses, in order of importance.
+The defenses, roughly in order of importance:
 
-The most important exercise is load testing, to find the limits and see how the service fails under overload. Capacity planning comes next: an example has a breaking point of 5,000 requests a second for each cluster and a peak of 19,000, which needs about six clusters for N plus 2, and planning alone is not enough.
+- **Load testing**: find the limits and see how the service fails under overload, the most important exercise of all
+- **Capacity planning**: an example has a breaking point of 5,000 requests a second for each cluster and a peak of 19,000, which needs about six clusters for N plus 2, and planning alone is not enough
+- **Queue management**: keep the queue at 50 percent of the thread pool or less for steady traffic, so that the server rejects early. A queue of 10 times the thread count with 100 ms requests holds a wait of about 1.1 seconds when full
+- **Load shedding**: return an error such as HTTP 503 when more than a set number of requests are in flight, and serve the newest first, or use CoDel, in preference to first in, first out
+- **Graceful degradation**: serve a cheaper answer, such as a cached subset or a simpler ranking, and exercise the degraded path regularly since it is rarely used
+- **Retry discipline**: randomized exponential backoff with jitter, a limit on retries for each request, a server wide retry budget, such as 60 retries a minute per process, and retries at one layer
+- **Deadlines**: propagate the remaining time down the call tree, so that a 30 second deadline with 7 seconds spent leaves 23 for the next call, and drop work whose time has run out
 
-Queue management keeps the queue at 50 percent of the thread pool or less for steady traffic, so that the server rejects early. A queue of 10 times the thread count with 100 ms requests holds a wait of about 1.1 seconds when full. Load shedding returns an error such as HTTP 503 when more than a set number of requests are in flight, and serves the newest first, or uses CoDel, in preference to first in, first out.
+Shedding matters because of **goodput**, the requests handled without error and quickly enough for the client to use. As load rises past capacity, latency rises, and a timeout on the client turns a slow answer into an error, so goodput can fall to zero.
 
-Graceful degradation serves a cheaper answer, such as a cached subset or a simpler ranking, and the degraded path should be exercised regularly since it is rarely used.
-
-Retry discipline means randomized exponential backoff with jitter, a limit on retries for each request, a server wide retry budget, such as 60 retries a minute per process, and retries at one layer. Deadlines propagate the remaining time down the call tree, so that a 30 second deadline with 7 seconds spent leaves 23 for the next call, and work whose time has run out is dropped.
-
-The reason is **goodput**, the requests handled without error and quickly enough for the client to use. As load rises past capacity, latency rises, and a timeout on the client turns a slow answer into an error, so goodput can fall to zero.
-
-Shedding keeps goodput flat by rejecting excess work early. Its advice: load test well past the point where goodput stops growing, serve health checks first, and prefer rejecting work that hasn't started to abandoning work that has.
+Shedding keeps goodput flat by rejecting excess work early. The practical advice is to load test well past the point where goodput stops growing, serve health checks first, and prefer rejecting work that hasn't started to abandoning work that has.
 
 Envoy, a widely used proxy, puts some of these limits in the network layer. It enables circuit breakers by default, with modest limits, one example being 1,024 connections for each cluster, and retry budgets are preferred over static retry limits.
 
@@ -125,11 +126,11 @@ When a cascade has started, adding capacity is not the first move, since new ser
 
 For the textbook app, the team writes down these items and tests them:
 
-- **Capacity with a failure**: The fleet can lose a server and still carry the peak, tested in a load test and not on paper
-- **Shedding in place**: Each service rejects work beyond a fixed number in flight, and keeps health checks fast
-- **Retries limited**: One layer retries, with backoff, jitter and a budget
-- **Cold starts survivable**: A restarted server takes load slowly, with a warm up
-- **A way to cut load**: A switch to pause or reduce a caller, tried in a game day
+- **Capacity with a failure**: the fleet can lose a server and still carry the peak, tested in a load test and not on paper
+- **Shedding in place**: each service rejects work beyond a fixed number in flight, and keeps health checks fast
+- **Retries limited**: one layer retries, with backoff, jitter and a budget
+- **Cold starts survivable**: a restarted server takes load slowly, with a warm up
+- **A way to cut load**: a switch to pause or reduce a caller, tried in a game day
 
 ## Key Points
 
