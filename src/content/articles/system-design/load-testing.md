@@ -19,36 +19,38 @@ There are six kinds, which differ in load shape and in the question they ask:
 | Spike | Very high, for a few minutes | Can it take a sudden surge? |
 | Breakpoint | Rising until it breaks | Where is the upper limit? |
 
-Three pieces of advice. Start with a smoke test, then move to the larger patterns. Keep the shape simple: ramp up, hold a plateau, and ramp down, since a rollercoaster pattern is hard to interpret.
+Three pieces of advice:
 
-And remember that the names are relative: a stress test for one application is an average load test for another. It also says that no single type removes the whole risk.
+- **Start small**: begin with a smoke test, then move to the larger patterns
+- **Keep the shape simple**: ramp up, hold a plateau, and ramp down, since a rollercoaster pattern is hard to interpret
+- **Remember that the names are relative**: a stress test for one application is an average load test for another, and no single type removes the whole risk
 
 The textbook app needs most of them. A load test at the usual daytime rate, a spike test shaped like 9:00 AM on registration day, a breakpoint test to find the limit of one server, and a soak test overnight to find a memory leak.
 
 ## Who Sends the Requests
 
-A load generator can behave in two ways, and the choice changes the results. They are:
+A load generator can behave in two ways, and the choice changes the results:
 
-- **Closed model**: A fixed number of virtual users each send a request, wait for the response, and send the next. The speed of the system sets the rate of the test
-- **Open model**: New requests arrive at a set rate, whether or not earlier ones have finished. The test sets the rate, as real users do
+- **Closed model**: a fixed number of virtual users each send a request, wait for the response, and send the next. The speed of the system sets the rate of the test
+- **Open model**: new requests arrive at a set rate, whether or not earlier ones have finished. The test sets the rate, as real users do
 
 In k6, the constant virtual users executor is a closed model, and the arrival rate executors are the open ones. Gatling has the same split, with separate calls for injecting users at a rate, or keeping a constant number of concurrent users.
 
-Take an endpoint that takes about 6 seconds: one closed virtual user completes about 10 iterations in a minute, while an open test at 1 a second starts 60, with the pool of virtual users growing to keep up.
+Take an endpoint that takes about 6 seconds: one closed virtual user completes about 10 iterations in a minute, while an open test at 1 request a second starts 60, with the pool of virtual users growing to keep up.
 
 Real traffic is open. Students don't wait for one another's requests to finish before they open the app. A closed test has a built in brake: when the service slows down, the virtual users slow down with it, and the test sends less load exactly when the service is struggling.
 
 ## Coordinated Omission
 
-The effect has a name. Gil Tene, who studied it, described the problem as the measuring system inadvertently coordinating with the system being measured, and so it misses sending requests.
+The effect has a name. Gil Tene, who named it, described the problem as the measuring system coordinating with the system being measured without meaning to, so that it skips the requests it should have sent.
 
 A closed loop waits during a stall, so the slow period gets few samples, and the measured percentiles look far better than what real users would see.
 
-The sources give numbers:
+Three published examples show the size of the effect:
 
-- **wrk2**: In its README example, a pause of 1.4 seconds gave a 99th percentile of 6.04 ms uncorrected and 1.27 seconds corrected, about 200 times higher
-- **ScyllaDB**: In a database test, the read 99th percentile was 647 microseconds uncorrected and about 665 milliseconds when measured from the intended time
-- **Red Hat**: A call center analogy, in which testers measured an average of 0.6 minutes while customers experienced 1.9 minutes, since the testers didn't count the wait of callers during a 10 minute outage
+- **wrk2**: in its README example, a pause of 1.4 seconds gave a 99th percentile of 6.04 ms uncorrected and 1.27 seconds corrected, about 200 times higher
+- **ScyllaDB**: in a database test, the read 99th percentile was 647 microseconds uncorrected and about 665 milliseconds when measured from the intended time
+- **Red Hat**: a call center analogy, in which testers measured an average of 0.6 minutes while customers experienced 1.9 minutes, since the testers didn't count the wait of callers during a 10 minute outage
 
 We reproduced the effect with a service that can finish 1,000 requests a second, stalled for 2 seconds at the 30 second mark of a 120 second test:
 
@@ -61,9 +63,9 @@ The closed test saw the stall in 8 requests, the ones in flight, and reported a 
 
 The open test kept sending on schedule, so about 1,600 requests waited behind the stall, and it reported what a user would have felt. The slowest request is almost the same in both, which is why the maximum alone doesn't show the problem.
 
-The fix is in how latency is measured, and the formula is: the latency of a request is the time now minus the time it was meant to be sent, plus the service time.
+The fix is in how latency is measured: count it from the time a request was meant to be sent, not from when it was actually sent.
 
-Use a generator with a constant rate and measure from the intended send time, as wrk2 does, or use the arrival rate executors in k6. Red Hat suggests a quick check: pause the generator for a few seconds, resume, and see whether it sent the number of requests it should have.
+Use a generator with a constant rate and measure from the intended send time, as wrk2 does, or use the arrival rate executors in k6. A quick check: pause the generator for a few seconds, resume, and see whether it sent the number of requests it should have.
 
 ## Finding the Breaking Point
 
@@ -90,15 +92,15 @@ The test can't push past the limit, so it doesn't show the collapse. It measures
 
 A test is a model, and the model has to match the traffic:
 
-- **The mix**: The share of searches, views and purchases, with the same proportions as production
-- **Popular items**: Real traffic hits a few popular books far more than the others, which a uniform random test hides from caches and from [Handling Hot Spots and Celebrity Users](/system-design/hot-spots)
-- **Data volume**: A database with 3 million listings behaves differently from one with 3,000
-- **Caches**: A cold cache and a warm cache give different numbers, so warm up first and test the cold start separately
-- **The dependencies**: Replace the payment provider with a stub that has a realistic delay, and don't call real services that charge money or have their own limits
-- **Connections and think time**: Real users keep connections open, pause and leave, and new clients bring the cost of a new connection
-- **The environment**: The same configuration, instance types and settings as production, since a smaller copy can mislead
+- **The mix**: the share of searches, views and purchases, with the same proportions as production
+- **Popular items**: real traffic hits a few popular books far more than the others, which a uniform random test hides from caches and from [Handling Hot Spots and Celebrity Users](/system-design/hot-spots)
+- **Data volume**: a database with 3 million listings behaves differently from one with 3,000
+- **Caches**: a cold cache and a warm cache give different numbers, so warm up first and test the cold start separately
+- **The dependencies**: replace the payment provider with a stub that has a realistic delay, and don't call real services that charge money or have their own limits
+- **Connections and think time**: real users keep connections open, pause and leave, and new clients bring the cost of a new connection
+- **The environment**: the same configuration, instance types and settings as production, since a smaller copy can mislead
 
-Environments matter too: testing is often said to belong in a hermetic environment, and production usually isn't hermetic. A test environment can't reproduce each detail, which is one reason the experiments in [Chaos Engineering](/system-design/chaos-engineering) also happen in production.
+A test environment can't reproduce every detail of production, which is one reason the experiments in [Chaos Engineering](/system-design/chaos-engineering) also happen in production.
 
 The generator itself can be the weak point. A single machine may run out of CPU or connections before the service does, and then the test measures the generator. Watch its resource use, and spread the load over several machines.
 
@@ -106,12 +108,12 @@ The generator itself can be the weak point. A single machine may run out of CPU 
 
 A routine for the textbook app:
 
-1. **Smoke test**: A few requests, to prove the test and the system work
-2. **Ramp**: Raise the rate in steps of 5 to 10 minutes, long enough to settle
-3. **Plateau**: Hold the target rate, and record latency, errors and resource use
-4. **Push past it**: Keep going to find the breaking point and watch how the system fails
-5. **Recover**: Drop the load and see whether latency returns to normal, as in the metastable failures covered in [Cascading Failures](/system-design/cascading-failures)
-6. **Change one thing, repeat**: A new setting, a bigger instance or a cache, and compare against the first result
+1. **Smoke test**: a few requests, to prove the test and the system work
+2. **Ramp**: raise the rate in steps of 5 to 10 minutes, long enough to settle
+3. **Plateau**: hold the target rate, and record latency, errors and resource use
+4. **Push past it**: keep going to find the breaking point and watch how the system fails
+5. **Recover**: drop the load and see whether latency returns to normal, as in the metastable failures covered in [Cascading Failures](/system-design/cascading-failures)
+6. **Change one thing, repeat**: a new setting, a bigger instance or a cache, and compare against the first result
 
 During each run, read the dashboards from [Logs, Metrics and Traces](/system-design/observability), since the result isn't just the client's numbers. The question is which resource saturates first: CPU, the connection pool, the database, a lock or the network. That resource is what to fix, and it sets the next limit.
 
@@ -121,19 +123,19 @@ Run the load test again after each large change and before each known peak, and 
 
 The numbers connect to the rest of the phase:
 
-- **Capacity**: The rate for each server at the latency goal gives the figure in [Capacity Planning](/system-design/capacity-planning)
-- **Settings**: Timeouts, pool sizes and shedding thresholds from [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Bulkheads](/system-design/bulkheads) should be set from measured latencies and checked in a stress test
-- **Autoscaling**: The trigger and the speed of [Autoscaling](/system-design/autoscaling) are tested by a spike
-- **Cost**: A faster service needs fewer servers, the trade in [Balancing Cost and Performance](/system-design/cost-performance)
+- **Capacity**: the rate for each server at the latency goal gives the figure in [Capacity Planning](/system-design/capacity-planning)
+- **Settings**: timeouts, pool sizes and shedding thresholds from [Timeouts, Retries and Backoff](/system-design/timeouts-retries) and [Bulkheads](/system-design/bulkheads) should be set from measured latencies and checked in a stress test
+- **Autoscaling**: the trigger and the speed of [Autoscaling](/system-design/autoscaling) are tested by a spike
+- **Cost**: a faster service needs fewer servers, the trade in [Balancing Cost and Performance](/system-design/cost-performance)
 
 ## Pitfalls
 
-- **A closed loop for a spike**: It can't send more than the service finishes, and so can't show overload
-- **Averages**: Report percentiles from the intended send time, and the rate of errors
-- **A test that is too short**: Memory leaks and slow queues take hours, and the soak test is for them
-- **A stubbed dependency that is too fast**: The service looks better than it is when each call returns at once
-- **One run**: The results vary, so repeat the run and compare
-- **Testing a copy of the wrong size**: A test on one small instance says little about 6 large ones behind a balancer
+- **A closed loop for a spike**: it can't send more than the service finishes, and so can't show overload
+- **Averages**: report percentiles from the intended send time, and the rate of errors
+- **A test that is too short**: memory leaks and slow queues take hours, and the soak test is for them
+- **A stubbed dependency that is too fast**: the service looks better than it is when each call returns at once
+- **One run**: the results vary, so repeat the run and compare
+- **Testing a copy of the wrong size**: a test on one small instance says little about 6 large ones behind a balancer
 
 ## Key Points
 
