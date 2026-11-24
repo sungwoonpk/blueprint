@@ -53,17 +53,6 @@ That points to the remedy, which is to share the weight reads. The weights are r
 | 32 | 15.4 ms | 2,079 | 65 |
 | 64 | 23.8 ms | 2,692 | 42 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Total tokens per second for five batch sizes">
-<div class="hbar"><span>Batch of 1</span><span class="track"><span class="fill" style="--w: 5.1%"></span></span><span class="value">138</span></div>
-<div class="hbar"><span>Batch of 4</span><span class="track"><span class="fill" style="--w: 18.5%"></span></span><span class="value">497</span></div>
-<div class="hbar"><span>Batch of 16</span><span class="track"><span class="fill" style="--w: 53.1%"></span></span><span class="value">1,429</span></div>
-<div class="hbar"><span>Batch of 32</span><span class="track"><span class="fill" style="--w: 77.2%"></span></span><span class="value">2,079</span></div>
-<div class="hbar peak"><span>Batch of 64</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">2,692</span></div>
-</div>
-<figcaption>Total tokens a second by batch size, from our roofline estimate</figcaption>
-</figure>
-
 A batch of 64 gave 19.5 times the throughput of a batch of 1. Each user paid for it: their speed fell from 138 tokens a second to 42, since each step also reads each user's cache.
 
 Batching trades the speed of one answer for the output of the machine, which is the same trade as [Scaling Writes](/system-design/scaling-writes) described for commits.
@@ -92,14 +81,14 @@ A 13 billion parameter model makes the same point at a larger size: 800 KB for o
 
 The cache has three consequences:
 
-- **It grows with each request**: Each token adds to it, and it stays until the answer ends
-- **It limits the batch**: The throughput of serving is memory bound, and just a few tens of requests fit when the cache is large
-- **It makes long contexts costly**: Memory and the read time at each step grow with the length of the prompt
+- **It grows with each request**: each token adds to it, and it stays until the answer ends
+- **It limits the batch**: the throughput of serving is memory bound, and just a few tens of requests fit when the cache is large
+- **It makes long contexts costly**: memory and the read time at each step grow with the length of the prompt
 
 Several techniques shrink the pieces:
 
-- **Fewer key and value heads**: Multi query attention shares one set of keys and values among the heads, and grouped query attention shares among groups. Llama 2 70B uses the second. In one measured model, multi query attention cut the cache from 15 GB to under 400 MB at 16,000 tokens
-- **Smaller numbers**: A rule of thumb is about 2 GB of memory for each billion parameters in 16 bit form. For a 15.5 billion parameter model, peak memory was about 29 GB at 16 bits, 15.2 GB at 8 bits and 9.54 GB at 4 bits. Inference time is often not reduced, and may rise
+- **Fewer key and value heads**: multi query attention shares one set of keys and values among the heads, and grouped query attention shares among groups. Llama 2 70B uses the second. In one measured model, multi query attention cut the cache from 15 GB to under 400 MB at 16,000 tokens
+- **Smaller numbers**: a rule of thumb is about 2 GB of memory for each billion parameters in 16 bit form. For a 15.5 billion parameter model, peak memory was about 29 GB at 16 bits, 15.2 GB at 8 bits and 9.54 GB at 4 bits. Inference time is often not reduced, and may rise
 - **Attention that moves less data**: FlashAttention computes exact attention in tiles, so less data moves between the GPU's main memory and its fast on chip memory. It ran about 3 times faster for GPT-2 at 1,000 tokens
 
 ## Memory Decides the Batch
@@ -121,9 +110,7 @@ The second design is **PagedAttention**. It borrows from the paging of an operat
 
 A new block is handed out when the last one fills, so the waste of a request is at most part of one block.
 
-vLLM, built on it, gets near zero waste, shares cache blocks within and across requests, and improves throughput by 2 to 4 times over FasterTransformer and Orca at the same level of latency, with the gain larger for longer sequences and more complex decoding.
-
-It reports memory savings of up to 55 percent from sharing in more complex decoding methods.
+vLLM is built on it. It gets near zero waste and shares cache blocks within and across requests, and it improves throughput by 2 to 4 times over FasterTransformer and Orca at the same level of latency, with the gain larger for longer sequences and more complex decoding. It reports memory savings of up to 55 percent from sharing in more complex decoding methods.
 
 <figure class="diagram">
 <div class="flow">
@@ -155,22 +142,17 @@ We simulated the difference. A server has 16 slots and a 10 ms step. Answer leng
 | 6 | Static | 486 | 801 s |
 | 6 | Continuous | 1,264 | 2.3 s |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Tokens per second for static and continuous batching and the slot ceiling">
-<div class="hbar"><span>Slot Ceiling</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">1,600</span></div>
-<div class="hbar"><span>Continuous</span><span class="track"><span class="fill" style="--w: 79%"></span></span><span class="value">1,264</span></div>
-<div class="hbar peak"><span>Static</span><span class="track"><span class="fill" style="--w: 30.4%"></span></span><span class="value">486</span></div>
-</div>
-<figcaption>Tokens a second at 6 arrivals a second, beside the most 16 slots could produce, from our simulation</figcaption>
-</figure>
-
 At 2 arrivals a second the load is light, throughput is equal, and static batching already makes an answer wait six times longer, since a short answer is held for the longest one in its batch.
 
 Past 4 a second the static server is saturated at about 485 tokens a second, 30 percent of the 1,600 its slots could produce, and its queue grew for the whole run, which is where the minutes of latency come from.
 
 The continuous server kept refilling slots, so latency stayed near the time of one answer, and throughput rose with the load.
 
-The same ideas keep appearing in serving engines: chunked prefill, which handles a long prompt in pieces, prefix caching, which reuses the cache of a repeated prompt start, and the option to run prefill and decode on separate machines, which acknowledges that the two phases have different needs.
+The same ideas keep appearing in serving engines:
+
+- **Chunked prefill**: handles a long prompt in pieces
+- **Prefix caching**: reuses the cache of a repeated prompt start
+- **Separate machines for prefill and decode**: acknowledges that the two phases have different needs
 
 ## Fewer Steps Per Answer
 
@@ -206,10 +188,10 @@ The levers differ in what they cut and what they cost:
 
 The two phases give two latencies, plus the wait before either starts:
 
-- **Time to first token**: The queue wait plus prefill, which grows with prompt length and with load, and is what a student feels as the pause before text appears
-- **Time per output token**: The decode step as seen by one user, which grows with batch size and context length, and sets how fast the text streams
-- **Throughput**: Tokens a second summed over the users, which sets how many students one machine serves
-- **Queue length and slot use**: The early sign of saturation, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding)
+- **Time to first token**: the queue wait plus prefill, which grows with prompt length and with load, and is what a student feels as the pause before text appears
+- **Time per output token**: the decode step as seen by one user, which grows with batch size and context length, and sets how fast the text streams
+- **Throughput**: tokens a second summed over the users, which sets how many students one machine serves
+- **Queue length and slot use**: the early sign of saturation, as in [Load Shedding and Graceful Degradation](/system-design/load-shedding)
 
 Set targets for the first two in the way of [SLIs, SLOs and Error Budgets](/system-design/slo), and size the fleet from the third with the arithmetic of [Capacity Planning](/system-design/capacity-planning).
 
@@ -227,13 +209,13 @@ Set targets for the first two in the way of [SLIs, SLOs and Error Budgets](/syst
 
 ## Pitfalls
 
-- **Counting requests, not tokens**: Capacity depends on prompt and answer lengths
-- **Ignoring the cache in sizing**: Weights fit and the cache decides the batch
-- **Reserving the maximum length for each request**: Most of the memory holds no tokens
-- **Static batches for mixed answer lengths**: Short answers wait for long ones
-- **Judging speed by one user**: A busy server streams more slowly for each user
-- **Assuming smaller numbers speed things up**: In some measured cases inference got slower, so measure the speed too
-- **No limit on the answer length**: One long answer holds a slot and cache for a long time
+- **Counting requests, not tokens**: capacity depends on prompt and answer lengths
+- **Ignoring the cache in sizing**: weights fit and the cache decides the batch
+- **Reserving the maximum length for each request**: most of the memory holds no tokens
+- **Static batches for mixed answer lengths**: short answers wait for long ones
+- **Judging speed by one user**: a busy server streams more slowly for each user
+- **Assuming smaller numbers speed things up**: in some measured cases inference got slower, so measure the speed too
+- **No limit on the answer length**: one long answer holds a slot and cache for a long time
 
 ## Key Points
 
