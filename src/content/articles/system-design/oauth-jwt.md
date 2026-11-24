@@ -27,11 +27,11 @@ A **refresh token** is optional, and the authorization server may issue one so t
 
 The flow most apps use is the authorization code grant, in five steps, lettered A to E in the standard's diagram:
 
-1. **The client sends the user to the authorization server**: The request carries `response_type=code`, the `client_id`, a `redirect_uri`, the requested `scope` and a `state` value
-2. **The user signs in and approves**: This happens at the authorization server, so the client doesn't see the password
-3. **The server redirects back with a code**: The `code` is single use, short lived, with a maximum of 10 minutes recommended, and the `state` comes back unchanged
-4. **The client exchanges the code**: A POST to the token endpoint with `grant_type=authorization_code`, the code and the same redirect URI
-5. **The server returns tokens**: An `access_token`, a `token_type`, an `expires_in` and optionally a `refresh_token`
+1. **The client sends the user to the authorization server**: the request carries `response_type=code`, the `client_id`, a `redirect_uri`, the requested `scope` and a `state` value
+2. **The user signs in and approves**: this happens at the authorization server, so the client doesn't see the password
+3. **The server redirects back with a code**: the `code` is single use, short lived, with a maximum of 10 minutes recommended, and the `state` comes back unchanged
+4. **The client exchanges the code**: a POST to the token endpoint with `grant_type=authorization_code`, the code and the same redirect URI
+5. **The server returns tokens**: an `access_token`, a `token_type`, an `expires_in` and optionally a `refresh_token`
 
 The `state` value is a random string that the client creates and checks on return, which protects against a forged request, a cross site request forgery.
 
@@ -76,17 +76,17 @@ Least privilege from [Authentication and Authorization](/system-design/authn-aut
 
 The older grants are discouraged. Clients should not use the implicit grant, which puts the token in the redirect address where it can leak, and the resource owner password credentials grant must not be used, since it hands the password to the client and can't work with a second factor.
 
-It also asks that refresh tokens for public clients be tied to the sender or rotated on each use, and that access tokens be limited to one resource server through the audience. Sender constraining by mutual TLS or by a proof of possession called DPoP keeps a stolen token from working elsewhere.
+The same guidance asks that refresh tokens for public clients be tied to the sender or rotated on each use, and that access tokens be limited to one resource server through the audience. Sender constraining by mutual TLS or by a proof of possession called DPoP keeps a stolen token from working elsewhere.
 
 ## Who Signed In
 
-OAuth says what a client may do. It doesn't say who the user is. OpenID Connect describes that gap in its first section: OAuth alone can't provide information about the authentication of the end user. Connect is an identity layer on top, and its pieces:
+OAuth says what a client may do. It doesn't say who the user is. OpenID Connect names that gap: OAuth alone can't provide information about the authentication of the end user. Connect is an identity layer on top, with three pieces:
 
-- **The `openid` scope**: Asks the server for an identity
-- **The ID token**: A signed JWT that says the user authenticated, which Connect requires to be signed
-- **UserInfo**: An endpoint, protected by the access token, that returns claims about the user
+- **The `openid` scope**: asks the server for an identity
+- **The ID token**: a JWT that says the user authenticated, which Connect requires to be signed
+- **UserInfo**: an endpoint, protected by the access token, that returns claims about the user
 
-An ID token has required claims: `iss`, the issuer, `sub`, a stable identifier for the user at that issuer, `aud`, which must contain the client's own `client_id`, `exp`, `iat` and, when the client sent one, a `nonce` that it must check, tying the token to its own request.
+An ID token has required claims: `iss`, the issuer; `sub`, a stable identifier for the user at that issuer; `aud`, which must contain the client's own `client_id`; `exp` and `iat`; and, when the client sent one, a `nonce` that the client must check, tying the token to its own request.
 
 The audience shows who the token is for: the app that asked, not the API. The ID token's expiry is also unrelated to the lifetime of the user's session.
 
@@ -112,7 +112,7 @@ Here is a real one that our code made, 287 characters long:
  "exp":1794822516,"iat":1794821616,"scope":"listings:write","role":"student"}
 ```
 
-Anyone can decode those two parts, since base64url is an encoding and not encryption. The jwt.io introduction warns not to put secret information in the payload or header unless the token is encrypted. The signature is what protects against changes.
+Anyone can decode those two parts, since base64url is an encoding and not encryption. Don't put secret information in the payload or header unless the token is encrypted. The signature is what protects against changes.
 
 We tested what a check does with edited tokens:
 
@@ -125,11 +125,11 @@ We tested what a check does with edited tokens:
 
 The naive verifier made the classic mistake of trusting the algorithm named in the token's own header, and the attacker simply chose none. RFC 8725, the JWT best current practice, lists the defenses:
 
-- **The verifier picks the algorithm**: Accept a fixed list, and use each key with exactly one algorithm
-- **Validate the issuer and audience**: A token meant for another service has to be refused
-- **Strong keys**: A human chosen password must not be an HMAC key
-- **Explicit typing**: Set and check the type, so a token for one purpose can't be used for another
-- **Distrust header values**: Sanitize `kid`, and don't follow `jku` or `x5u` addresses blindly, to avoid injection and server side request forgery
+- **The verifier picks the algorithm**: accept a fixed list, and use each key with exactly one algorithm
+- **Validate the issuer and audience**: a token meant for another service has to be refused
+- **Strong keys**: a human chosen password must not be an HMAC key
+- **Explicit typing**: set and check the type, so a token for one purpose can't be used for another
+- **Distrust header values**: sanitize `kid`, and don't follow `jku` or `x5u` addresses blindly, to avoid injection and server side request forgery
 
 ## Self Contained or Looked Up
 
@@ -176,13 +176,13 @@ Caching each answer for 30 seconds cuts it to about 400. Short lived JWTs refres
 
 ## Pitfalls
 
-- **Trusting the header**: Letting the token choose its algorithm
-- **A token without an audience check**: A token for one API works on another
-- **Secrets in the payload**: It is readable by anyone who holds the token
-- **Long lived access tokens**: They can't be taken back
-- **A loose redirect address**: The code goes to the attacker
-- **The password grant**: It teaches users to type their password into other apps
-- **An ID token as an API credential**: It says who signed in, and its audience is the app
+- **Trusting the header**: letting the token choose its algorithm
+- **A token without an audience check**: a token for one API works on another
+- **Secrets in the payload**: it is readable by anyone who holds the token
+- **Long lived access tokens**: they can't be taken back
+- **A loose redirect address**: the code goes to the attacker
+- **The password grant**: it teaches users to type their password into other apps
+- **An ID token as an API credential**: it says who signed in, and its audience is the app
 
 ## Key Points
 
