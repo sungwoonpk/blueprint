@@ -14,8 +14,8 @@ A request whose input alone exceeds the window gets an error, and one whose outp
 
 A bigger window doesn't mean the model uses it evenly. This is called **context rot**: accuracy and recall degrade as the token count grows. Two research results measured pieces of it:
 
-- **Lost in the Middle**: Performance is often highest when the relevant information is at the beginning or end of the input, and degrades when it is in the middle, even for models built for long contexts
-- **RULER**: Models that score near perfectly on the simple needle in a haystack test show large drops as the length grows on harder tasks. Of 17 models claiming 32,000 tokens or more, about half kept satisfactory performance at 32,000
+- **Lost in the Middle**: performance is often highest when the relevant information is at the beginning or end of the input, and degrades when it is in the middle, even for models built for long contexts
+- **RULER**: models that score near perfectly on the simple needle in a haystack test show large drops as the length grows on harder tasks. Of 17 models claiming 32,000 tokens or more, about half kept satisfactory performance at 32,000
 
 Both are from 2023 and 2024 models, so newer ones may do better, and the lesson is to test your own task at your own lengths. The usable context is often shorter than the advertised one.
 
@@ -44,16 +44,6 @@ We simulated four policies for the 60 turn conversation. Costs use our round pri
 | Last 10 Turns | 14,160 | $1.58 | $1.45 |
 | Clear Old Tool Results | 25,430 | $1.84 | $0.66 |
 | Compact at 20,000 Tokens | 17,880 | $1.61 | $0.36 |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Dollars for four trimming policies with a cache">
-<div class="hbar peak"><span>Last 10 Turns</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">$1.45</span></div>
-<div class="hbar"><span>Clear Old Tool Results</span><span class="track"><span class="fill" style="--w: 45.5%"></span></span><span class="value">$0.66</span></div>
-<div class="hbar"><span>Keep the Whole History</span><span class="track"><span class="fill" style="--w: 40.7%"></span></span><span class="value">$0.59</span></div>
-<div class="hbar"><span>Compact at 20,000</span><span class="track"><span class="fill" style="--w: 24.8%"></span></span><span class="value">$0.36</span></div>
-</div>
-<figcaption>Input cost of a 60 turn conversation with a prompt cache, by policy, from our simulation</figcaption>
-</figure>
 
 The compaction row includes three summarizing calls, with their output. Four findings follow:
 
@@ -94,9 +84,9 @@ LangGraph's documentation separates two scopes. Short term memory belongs to one
 
 Long term memory is shared across threads and kept as documents in a store, with names and keys, searchable by meaning and by content. It also names three kinds of long term memory:
 
-- **Semantic**: Facts, such as the student's course and budget
-- **Episodic**: Past experiences, often used as examples in a prompt
-- **Procedural**: Instructions, which for an agent mean its system prompt and sometimes a version it has refined
+- **Semantic**: facts, such as the student's course and budget
+- **Episodic**: past experiences, often used as examples in a prompt
+- **Procedural**: instructions, which for an agent mean its system prompt and sometimes a version it has refined
 
 Semantic memory can be one profile that is updated over time, which gives unified context, or a collection of small documents, which tends to give better recall. The collection is the case for [Semantic Search with Embeddings](/system-design/embeddings) and [Vector Databases](/system-design/vector-databases), since the store looks facts up the way a RAG system does.
 
@@ -106,14 +96,15 @@ Anthropic's memory tool is a concrete form. It is client side and file based: th
 
 When the tool is present the API adds an instruction to look in the directory first, and warns the model that its context might be reset at any moment, which is the right mindset for a long task. The developer owns the rest:
 
-- **Path safety**: Check that each path stays inside the memory directory, and reject traversal tricks
-- **Size limits**: Cap file sizes and the text returned from a view
-- **Housekeeping**: Delete stale files
-- **Sensitive data**: Strip it yourself, since the model usually refuses to store it and that isn't a control
+- **Path safety**: check that each path stays inside the memory directory, and reject traversal tricks
+- **Size limits**: cap file sizes and the text returned from a view
+- **Housekeeping**: delete stale files
+- **Sensitive data**: strip it yourself, since the model usually refuses to store it and that isn't a control
 
-LangGraph describes two times to write a memory. In the hot path, the agent writes before it replies, which makes the memory available at once and visible to the user, at a cost of latency and divided attention.
+LangGraph describes two times to write a memory:
 
-In the background, an asynchronous job writes memories, which adds no delay and separates the concern, but timing and frequency need design, such as a delay that restarts on new events, a schedule, or a manual trigger.
+- **In the hot path**: the agent writes before it replies, which makes the memory available at once and visible to the user, at a cost of latency and divided attention
+- **In the background**: an asynchronous job writes memories, which adds no delay and separates the concern, but timing and frequency need design, such as a delay that restarts on new events, a schedule, or a manual trigger
 
 A memory about a person is personal data. It needs the access rules, retention and deletion that [Data Privacy and Compliance](/system-design/privacy) describes, and it needs to be separated by user and tenant, as in [Isolating Tenants in a Shared System](/system-design/multi-tenancy).
 
@@ -140,13 +131,13 @@ Each trim changes the prefix, so trim in larger steps and less often: clear a ba
 
 ## Pitfalls
 
-- **Trusting the advertised window**: Quality can drop well before the limit
-- **A sliding window with a cache**: Each turn misses, and the facts from early turns are lost
-- **Keeping bulky tool results forever**: They are most of the tokens and little of the value
-- **A summary with no guidance**: It keeps what the model thinks matters, not what you need
-- **Trimming a little on each turn**: Each change invalidates the cache
-- **Memory without access rules**: One user's notes reach another
-- **Letting the model write any path**: A traversal bug exposes files
+- **Trusting the advertised window**: quality can drop well before the limit
+- **A sliding window with a cache**: each turn misses, and the facts from early turns are lost
+- **Keeping bulky tool results forever**: they are most of the tokens and little of the value
+- **A summary with no guidance**: it keeps what the model thinks matters, not what you need
+- **Trimming a little on each turn**: each change invalidates the cache
+- **Memory without access rules**: one user's notes reach another
+- **Letting the model write any path**: a traversal bug exposes files
 
 ## Key Points
 
