@@ -60,7 +60,7 @@ Keeping the two workloads on separate replicas, each tuned for its goal, is usua
 
 Kubernetes treats a GPU as a named resource that a vendor's device plugin advertises, such as `nvidia.com/gpu`. A container asks for GPUs in its `limits` section, the request is set equal to the limit by default, and if both are given they must be equal.
 
-The page doesn't describe sharing a GPU between pods, so check the vendor's plugin documentation if you need it. The practical consequence is that capacity comes in whole units, and an idle GPU is expensive.
+Sharing a GPU between pods isn't part of this basic resource, so check the vendor's plugin documentation if you need it. The practical consequence is that capacity comes in whole units, and an idle GPU is expensive.
 
 The other consequence is the start. Before a new replica takes a request, it has to pull the container image, load the weights into GPU memory, and warm up. A cold start has three parts: the model size, the time to download it, and the container's startup time.
 
@@ -78,11 +78,9 @@ We computed the middle step alone, for the 14 GB of weights of a 7B model in 16 
 
 The image pull and the warm up are on top. A new replica from a slow store needs minutes, and larger models take proportionally longer, which is why the next section matters.
 
-The engine also has a rule for when the cache runs out. Preempted requests are recomputed once enough cache is free again, and in the current version the default mode is recompute and not a swap to the host's memory.
+vLLM also has a rule for when the cache runs out. Preempted requests are recomputed once enough cache is free again, and in the current version the default mode is recompute and not a swap to the host's memory. This can hurt end to end performance, and the remedies are more memory for the cache, a lower limit on sequences or on tokens per batch, or more parallelism.
 
-It warns that this can hurt end to end performance, and it lists remedies: more memory for the cache, a lower limit on sequences or on tokens per batch, or more parallelism.
-
-It also says that chunked prefill is on by default whenever possible, and gives the trade for the limit on tokens in a batch: smaller values favor the delay between tokens, larger ones favor the time to first token, with a recommendation above 8,192 for smaller models on large GPUs.
+Chunked prefill is on by default whenever possible. The limit on tokens in a batch sets a trade: smaller values favor the delay between tokens, larger ones favor the time to first token, with a recommendation above 8,192 for smaller models on large GPUs.
 
 ## Scaling the Fleet
 
@@ -131,20 +129,20 @@ Speeding up the start is as valuable as a smarter scaler: keep the weights on fa
 A new model version is a deploy with a twist. A bad build crashes, and a bad model answers fluently and wrongly, so health checks pass. The methods of [Canary Releases and Other Deployment Strategies](/system-design/deployments) and [Feature Flags](/system-design/feature-flags) apply, with extra care:
 
 - **A canary on a share of traffic**: KServe lists canary rollouts as a feature, and a router or a flag can do the same
-- **Quality as a gate**: Compare answers on a fixed set of questions before the rollout, and sample live answers during it, the subject of [Evaluation](/system-design/ai-evaluation)
-- **Shadow traffic**: Send copies of real requests to the new version and compare, without showing users the result, as in the shadow reads of [Migrating Between Datastores Without Downtime](/system-design/migrating-datastores)
-- **Two versions cost two sets of GPUs**: Plan the capacity for the overlap
-- **Keep the old version warm**: A rollback has to be quick, and loading weights isn't
-- **Pin the version**: Record the model, the prompt template and the settings for each answer, so a complaint can be traced
+- **Quality as a gate**: compare answers on a fixed set of questions before the rollout, and sample live answers during it, the subject of [Evaluation](/system-design/ai-evaluation)
+- **Shadow traffic**: send copies of real requests to the new version and compare, without showing users the result, as in the shadow reads of [Migrating Between Datastores Without Downtime](/system-design/migrating-datastores)
+- **Two versions cost two sets of GPUs**: plan the capacity for the overlap
+- **Keep the old version warm**: a rollback has to be quick, and loading weights isn't
+- **Pin the version**: record the model, the prompt template and the settings for each answer, so a complaint can be traced
 
 ## What to Watch
 
 The metrics of [How LLM Inference Works](/system-design/llm-inference) become the dashboard:
 
-- **Time to first token and time between tokens**: The two latencies a student feels, with an alert on the 95th percentile, as in [SLIs, SLOs and Error Budgets](/system-design/slo)
-- **Queue wait and requests waiting**: The first sign of saturation, and the signal for scaling
-- **Cache use and preemptions**: A cache near full with preemptions rising means the batch is too large for the memory
-- **Rejections and errors**: By cause, so overload can be told apart from a bug
+- **Time to first token and time between tokens**: the two latencies a student feels, with an alert on the 95th percentile, as in [SLIs, SLOs and Error Budgets](/system-design/slo)
+- **Queue wait and requests waiting**: the first sign of saturation, and the signal for scaling
+- **Cache use and preemptions**: a cache near full with preemptions rising means the batch is too large for the memory
+- **Rejections and errors**: by cause, so overload can be told apart from a bug
 - **Cost for each answer**: GPU hours divided by tokens served, since the fleet is the main expense, covered further in [Caching and Model Routing](/system-design/llm-cost-latency)
 
 [Monitoring AI Systems in Production](/system-design/ai-monitoring) adds the quality signals that these don't show.
@@ -164,13 +162,13 @@ The metrics of [How LLM Inference Works](/system-design/llm-inference) become th
 
 ## Pitfalls
 
-- **Scaling on processor use**: The limit is GPU memory and queue length
-- **Reacting to a spike after it starts**: A replica that takes minutes arrives too late
-- **One tuning for online and batch work**: Each loses to a compromise
-- **Ignoring load time in the plan**: A slow store turns a scale up into a long wait
-- **Treating a model change as a normal deploy**: Health checks pass while quality falls
-- **No bound on the queue**: Users wait past the point of giving up, and the work is wasted
-- **Forgetting the overlap during a rollout**: Two versions need two sets of GPUs
+- **Scaling on processor use**: the limit is GPU memory and queue length
+- **Reacting to a spike after it starts**: a replica that takes minutes arrives too late
+- **One tuning for online and batch work**: each loses to a compromise
+- **Ignoring load time in the plan**: a slow store turns a scale up into a long wait
+- **Treating a model change as a normal deploy**: health checks pass while quality falls
+- **No bound on the queue**: users wait past the point of giving up, and the work is wasted
+- **Forgetting the overlap during a rollout**: two versions need two sets of GPUs
 
 ## Key Points
 
