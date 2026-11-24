@@ -16,7 +16,7 @@ Riak shows the machinery. Each object carries a **causal context**, which is a v
 
 Riak creates **siblings**, several values for one key, when it can't tell which is the most recent. It names three triggers: concurrent writes, a stale causal context and a missing causal context, as when a client writes without sending the context back.
 
-Couchbase uses a different record. Each document has a revision counter that grows with each update. For timestamp based resolution it keeps a 64 bit value whose top 48 bits are physical time in nanoseconds and bottom 16 bits a logical counter, a hybrid logical clock.
+Couchbase uses a different record. Each document has a revision counter that grows with each update. For timestamp based resolution it keeps a 64 bit value. The top 48 bits are physical time in nanoseconds and the bottom 16 bits are a logical counter, which makes it a hybrid logical clock.
 
 CouchDB keeps a tree of revisions, so conflicting updates become branches, and the leaves are the conflicting versions.
 
@@ -24,23 +24,21 @@ CouchDB keeps a tree of revisions, so conflicting updates become branches, and t
 
 Each strategy gives something up:
 
-| Strategy | What Happens | Gives Up |
-| --- | --- | --- |
-| Last Write Wins | The write with the latest timestamp survives | The other write, without notice |
-| Keep Both | Store the versions and let the reader decide | Simplicity for the reader |
-| Merge by Rule | Combine the versions with application logic | Exactness, for some edits |
-| Three Way Merge | Compare each side to the common ancestor | Automation, when both sides change one part |
-| Convergent Types | Use data types whose merge is built in | Freedom to model data |
-| Avoid | Make conflicting commits impossible | Availability, or latency |
-
-Examples are Cassandra and DynamoDB global tables for the first, Riak siblings, CouchDB and Dropbox for the second, Dynamo's shopping cart for the third, Git for the fourth and Riak Data Types for the fifth.
+| Strategy | What Happens | Gives Up | Seen In |
+| --- | --- | --- | --- |
+| Last Write Wins | The write with the latest timestamp survives | The other write, without notice | Cassandra, DynamoDB global tables |
+| Keep Both | Store the versions and let the reader decide | Simplicity for the reader | Riak siblings, CouchDB, Dropbox |
+| Merge by Rule | Combine the versions with application logic | Exactness, for some edits | Dynamo's shopping cart |
+| Three Way Merge | Compare each side to the common ancestor | Automation, when both sides change one part | Git |
+| Convergent Types | Use data types whose merge is built in | Freedom to model data | Riak Data Types |
+| Avoid | Make conflicting commits impossible | Availability, or latency | Single leader databases, locks |
 
 We tested three of them on the saved list. In 100,000 pairs of concurrent edits, each side made 1 to 3 changes to a list of 10 items: adding a new item, removing one, or editing a note. The pairs had 4.00 changes on average:
 
 | Strategy | Result |
 | --- | --- |
 | Last Write Wins | 2.00 of the 4.00 changes discarded for each pair, 50 percent |
-| Union of the Items | A deleted item came back in 76.3 percent of pairs |
+| Union of the Items, a merge by rule | A deleted item came back in 76.3 percent of pairs |
 | Three Way Merge | 82.6 percent merged cleanly, and 17.4 percent had a real conflict to resolve |
 
 Last write wins loses half the work, by design. A union keeps the additions and brings back removals, since an item that is missing on one side is still present on the other. A three way merge lost no change and asked for help when both sides touched the same item.
@@ -49,17 +47,17 @@ Last write wins loses half the work, by design. A union keeps the additions and 
 
 Last write wins is the easiest rule, and its cost is silent loss. Couchbase documents two policies: sequence numbers, where the higher count wins, and timestamps, where the later one wins. Its examples fit the rule: a hit counter suits the higher count, and a thermometer that keeps overwriting one key suits the latest timestamp.
 
-Last write wins suits data that is immutable or inserted once, caches and sessions, and resolving by plain timestamps is risky for data loss.
+It suits data that is written once, caches and sessions. For anything that people edit, plain timestamps risk silent loss.
 
-Timestamps need clocks, so Couchbase says synchronized clocks are required, typically with NTP, and the hybrid clock reduces the effect of drift and doesn't remove it. Before failing over, it advises waiting for the longer of the replication latency and the clock skew between sites.
+Timestamps need clocks. Couchbase requires synchronized clocks, typically with NTP, and its hybrid clock reduces the effect of drift without removing it. Before a failover it advises waiting for the longer of the replication latency and the clock skew between sites.
 
 ## Keeping Both
 
-When both versions matter, keep them. Riak returns the siblings to the client, which merges them and writes back with the context. The order of preference: use a built in Data Type where possible, and otherwise resolve siblings in the application.
+When both versions matter, keep them. Riak returns the siblings to the client, which merges them and writes back with the context. Prefer a built in Data Type where possible, and otherwise resolve siblings in the application.
 
-Siblings have a risk. Unresolved ones build up, which slows reads, can run a node out of memory and, in extreme cases, a huge object can crash a node on read.
+Siblings have a risk. Unresolved ones build up. They slow reads and can use up a node's memory, and in extreme cases a huge object crashes a node on read.
 
-In Riak, do a read, modify and write each time with the causal context. Dotted version vectors keep the sibling count proportional to the number of concurrent updates and not unbounded, while with plain vector clocks five concurrent clients writing one key can produce duplicate siblings.
+Riak's advice is to do a read, modify, write cycle each time, with the causal context. Dotted version vectors keep the number of siblings in line with the number of concurrent updates, while with plain vector clocks five concurrent clients writing one key can produce duplicate siblings.
 
 Dropbox shows the human version. When two people change a file and sync conflicts, it keeps both: the version saved last appears as a conflicted copy named with the editor, the words conflicted copy and the date.
 
@@ -67,25 +65,25 @@ It does no merging, and its advice is to compare the versions by hand, or to avo
 
 ## Merging by Rule
 
-Dynamo has two kinds of reconciliation. In syntactic reconciliation, a new version subsumes the old and the system chooses. When versions are concurrent, the store returns the leaves with their context, and the client performs semantic reconciliation, collapsing the branches into one.
+Dynamo has two kinds of reconciliation. In syntactic reconciliation, a new version subsumes the old and the system chooses. When versions are concurrent, the store returns all the conflicting versions with their context, and the client performs semantic reconciliation, collapsing them into one.
 
 Its example is the shopping cart, where the collapse is a merge of the carts. The consequence: an add to cart is not lost, and deleted items can resurface.
 
-That is the second row of our test, and it shows the lesson. A merge rule must say what to do with deletions, which a plain union forgets.
+That is the union row of our test, and it shows the lesson. A merge rule must say what to do with deletions, which a plain union forgets.
 
-Tombstones, markers for deleted items, and a rule that a delete beats an update, as in Cosmos DB's default policy, are the usual answers, and each has its own surprises.
+The usual answers are tombstones, which are markers for deleted items, and a rule that a delete beats an update, as in Cosmos DB's default policy. Each has its own surprises.
 
 ## Merging With a Base
 
-Git's three way merge is the most precise tool of its kind. It compares each side to the common ancestor, the merge base. A change on one side, or the same change on both, applies cleanly.
+Git's three way merge is a precise tool. It compares each side to the common ancestor, the merge base. A change on one side, or the same change on both, applies cleanly.
 
-Edits to the same region on both sides are a conflict, and Git marks it in the file, offering the base text as well when configured for it, and waits for a person.
+Edits to the same region on both sides are a conflict. Git marks it in the file, can show the base text as well when configured to, and waits for a person.
 
-This is why the third row of our test lost no change: with a base, "removed on one side, untouched on the other" is a removal and not a difference. The price is that the store has to keep the base, which is the causal context or revision history again.
+This is why the three way merge row of our test lost no change: with a base, "removed on one side, untouched on the other" is a removal and not a difference. The price is that the store has to keep the base, which is the causal context or revision history again.
 
 ## Avoiding Conflicts
 
-The cheapest conflict is one that can't be committed. Firestore's transactions are optimistic: if a document that the transaction read has been changed, the function runs again, which means it may run more than once, and the transaction fails when the client is offline.
+The cheapest conflict is one that can't be committed. Firestore's transactions are optimistic. If a document the transaction read has changed, the function runs again, so it may run more than once, and the transaction fails when the client is offline.
 
 Batched writes with no reads work offline and aren't retried. A conditional write, as in [Distributed Locks and Fencing Tokens](/system-design/distributed-locks), is the same idea in a single statement, and a home region for each record, from the multi leader topic, avoids most conflicts by routing.
 
@@ -101,9 +99,9 @@ The right resolution depends on the field, so write a rule for each:
 | Saved List | Three way merge with removals kept | The user's intent is the change, not the whole list |
 | View Counter | Add the counts | A counter's changes combine |
 
-Last, test the rules with concurrent edits and with deletes, since the conflict that surprises people is the one that no test tried.
-
 The last row is better handled by a data type that merges by design, the subject of [CRDTs](/system-design/crdts).
+
+Last, test the rules with concurrent edits and with deletes, since the conflict that surprises people is the one that no test tried.
 
 ## Key Points
 
