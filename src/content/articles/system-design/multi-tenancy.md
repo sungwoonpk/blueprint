@@ -31,7 +31,7 @@ There are four patterns:
 
 The mixed model is common because tenants differ. A small university on a free tier lives in the shared deployment, and a large one that pays for isolation gets its own.
 
-The costs: the codebase must support both models, and the system must track which tenant is where. Avoid permanent forks of the product for single customers, and use feature flags and tenant configuration instead, as in [Feature Flags](/system-design/feature-flags).
+The mixed model costs more in code: the codebase must support both models, and the system must track which tenant is where. Avoid permanent forks of the product for single customers, and use feature flags and tenant configuration instead, as in [Feature Flags](/system-design/feature-flags).
 
 ## Isolating the Data
 
@@ -59,13 +59,13 @@ CREATE POLICY tenant_isolation ON listing
   USING (tenant_id = current_setting('app.tenant_id')::int);
 ```
 
-A few facts decide how far to trust it. With row security enabled and no policy, the default is deny: no rows are visible and none can be modified.
+A few facts decide how far to trust it:
 
-`USING` decides which existing rows a command sees, and `WITH CHECK` decides which new or changed rows are allowed, and a policy with a `USING` expression alone applies the same test to both. Permissive policies combine with OR and restrictive policies with AND.
-
-Some roles walk around the wall. Superusers and roles with `BYPASSRLS` bypass it in each case, table owners bypass it unless the table is set to `FORCE ROW LEVEL SECURITY`, and referential integrity checks bypass it too. Those integrity checks can also leak information through covert channels, so schemas and policies need care.
-
-The policy runs before the query's own conditions, except for functions marked leakproof. Policies that look at the current row alone are the simplest and perform best, and policies with subqueries on other rows can leak through race conditions.
+- **Default deny**: with row security enabled and no policy, no rows are visible and none can be modified
+- **USING and WITH CHECK**: `USING` decides which existing rows a command sees, and `WITH CHECK` decides which new or changed rows are allowed. A policy with a `USING` expression alone applies the same test to both
+- **Combining policies**: permissive policies combine with OR and restrictive policies with AND
+- **Roles that bypass it**: superusers and roles with `BYPASSRLS` bypass it in each case, table owners bypass it unless the table is set to `FORCE ROW LEVEL SECURITY`, and referential integrity checks bypass it too. Those checks can also leak information through covert channels, so schemas and policies need care
+- **Order of evaluation**: the policy runs before the query's own conditions, except for functions marked leakproof. Policies that look at the current row alone are the simplest and perform best, and policies with subqueries on other rows can leak through race conditions
 
 The examples use `current_user`, and applications that connect through a shared account often set a session variable, as in the snippet, for each request.
 
@@ -102,23 +102,11 @@ Forty nine ask for about 15 each, and one bursts to 600 for a minute, so the dem
 | A Limit of 45 a Second for Each Tenant | 100% | 7.5% |
 | Fair Share, With Unused Capacity Reused | 100% | 44.1% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share served for ordinary tenants and the bursting tenant under three policies">
-<div class="hbar peak"><span>No Limits, Others</span><span class="track"><span class="fill" style="--w: 74.9%"></span></span><span class="value">74.9%</span></div>
-<div class="hbar"><span>No Limits, Burster</span><span class="track"><span class="fill" style="--w: 75.0%"></span></span><span class="value">75.0%</span></div>
-<div class="hbar"><span>Fixed Limit, Others</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-<div class="hbar"><span>Fixed Limit, Burster</span><span class="track"><span class="fill" style="--w: 7.5%"></span></span><span class="value">7.5%</span></div>
-<div class="hbar"><span>Fair Share, Others</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-<div class="hbar"><span>Fair Share, Burster</span><span class="track"><span class="fill" style="--w: 44.1%"></span></span><span class="value">44.1%</span></div>
-</div>
-<figcaption>Share of requests served in the burst, by policy and tenant, from our arithmetic</figcaption>
-</figure>
-
 Without limits, the overload was spread evenly, and each innocent tenant lost a quarter of its requests because of one. A fixed limit, at three times the normal rate, protected the other tenants and gave the burster the least, since the limit holds even when capacity sits idle.
 
 Fair share does better: tenants asking for less than their equal share are served in full, and the rest of the capacity goes to the heavy tenant, which got 44 percent.
 
-The tools are the ones from earlier phases, applied for each tenant. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanics, with the tenant id as the key. The bulkheads of [Bulkheads](/system-design/bulkheads), with their shuffle sharding, give each tenant or tier its own pool, so one tenant can't use up the shared threads.
+The tools are the ones from earlier phases, applied for each tenant. [Rate Limiting in Practice](/system-design/rate-limiting-in-practice) covers the mechanics, with the tenant id as the key. [Bulkheads](/system-design/bulkheads), with their shuffle sharding, give each tenant or tier its own pool, so one tenant can't use up the shared threads.
 
 Fair queuing serves tenants in turn, and a paid tier can go first when capacity is short, as in [Absorbing Traffic Spikes](/system-design/traffic-spikes). A dedicated deployment avoids the problem for the heavy tenant, and a database for each tenant isolates a hot tenant's load when the database is the bottleneck.
 
@@ -149,13 +137,13 @@ Finally, test the walls on a schedule: tests that try to read another tenant's d
 
 ## Pitfalls
 
-- **Relying on each query to filter**: One forgotten condition leaks a tenant's data
-- **A tenant id taken from the request**: A client can name another tenant
-- **A cache key without the tenant**: One tenant sees another's page
-- **No per tenant limits**: The largest tenant sets the quality for the rest
-- **A fork for a single customer**: Each fork multiplies the cost of each change
-- **A shared encryption key for the whole tenant base**: A tenant that needs its own key can't have one
-- **Untested isolation**: The first test of the wall is a breach
+- **Relying on each query to filter**: one forgotten condition leaks a tenant's data
+- **A tenant id taken from the request**: a client can name another tenant
+- **A cache key without the tenant**: one tenant sees another's page
+- **No per tenant limits**: the largest tenant sets the quality for the rest
+- **A fork for a single customer**: each fork multiplies the cost of each change
+- **A shared encryption key for the whole tenant base**: a tenant that needs its own key can't have one
+- **Untested isolation**: the first test of the wall is a breach
 
 ## Key Points
 

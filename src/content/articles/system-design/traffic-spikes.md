@@ -74,15 +74,12 @@ Priorities help, by serving high priority work first. With one pool of consumers
 
 ### A Waiting Room
 
-A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. The design has a few knobs, and each answers a question.
+A waiting room holds visitors outside the application and admits them at a controlled rate, with an honest estimate of the wait. The design has a few knobs, and each answers a question:
 
-How many people may be inside at once? Set the total of active users to about 75 percent of what the origin can serve, so that a burst of admitted users doesn't tip it over.
-
-How fast may new people enter? A rate of new users a minute caps admissions, and it must not exceed the total of active users.
-
-How long does a place last? A session of a few minutes, 5 by default and up to 30, lets a visitor who left come back without queueing again.
-
-Who goes first? First in, first out is the default and rewards those who arrived first. A random draw gives open spots to random visitors, which removes the edge of refreshing early. Two other modes exist: passthrough, which just collects traffic statistics, and reject, where nobody enters and a static page is shown.
+- **How many people may be inside at once**: set the total of active users to about 75 percent of what the origin can serve, so that a burst of admitted users doesn't tip it over
+- **How fast new people may enter**: a rate of new users a minute caps admissions, and it must not exceed the total of active users
+- **How long a place lasts**: a session of a few minutes, 5 by default and up to 30, lets a visitor who left come back without queueing again
+- **Who goes first**: first in, first out is the default and rewards those who arrived first. A random draw gives open spots to random visitors, which removes the edge of refreshing early. Two other modes exist: passthrough, which just collects traffic statistics, and reject, where nobody enters and a static page is shown
 
 The wait estimate for first in, first out is the number of visitors ahead divided by the rate at which users enter the application.
 
@@ -119,16 +116,6 @@ We simulated the textbook spike on the six servers: 8,000 users a second for 30 
 | Refuse Above Half a Second, Up to 3 Retries | 48.4% | 51.6% | Up to 15 s |
 | Waiting Room, Admit at Capacity | 100% | 0% | Median 18.4 s, longest 36.7 s |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share served for four policies">
-<div class="hbar peak"><span>Accept Each, Users Leave</span><span class="track"><span class="fill" style="--w: 13.8%"></span></span><span class="value">13.8%</span></div>
-<div class="hbar"><span>Refuse, No Retry</span><span class="track"><span class="fill" style="--w: 45.5%"></span></span><span class="value">45.5%</span></div>
-<div class="hbar"><span>Refuse, 3 Retries</span><span class="track"><span class="fill" style="--w: 48.4%"></span></span><span class="value">48.4%</span></div>
-<div class="hbar"><span>Waiting Room</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-</div>
-<figcaption>Share of the 240,000 users served during the spike, by policy, from our simulation</figcaption>
-</figure>
-
 Each row teaches something. When each request is accepted, the queue grows to many seconds, users leave before their turn, and the servers work on requests nobody is waiting for. Just 13.8 percent of the spike's users were served, though the servers ran at full speed. This is the goodput collapse from [Load Shedding and Graceful Degradation](/system-design/load-shedding).
 
 Refusing quickly served what capacity allows in those 30 seconds, 45.5 percent, and told the rest at once. Adding retries recovered 3 more points of users and added 14 percent to the load on the app, as in [Timeouts, Retries and Backoff](/system-design/timeouts-retries), and some users spent 15 seconds on it.
@@ -153,13 +140,13 @@ The numbers need an assumption about sessions: if each active session makes abou
 
 ## Pitfalls
 
-- **Counting on autoscaling for a sharp spike**: The new servers arrive after the crowd has left
-- **An unbounded queue**: The backlog becomes the outage, and latency grows without limit
-- **A queue for a synchronous request**: The user waits anyway, and doesn't know why
-- **Retries without backoff**: Refused users come back at once, and the load grows 14 percent in our test
-- **Scaling consumers faster than the database can take**: The queue moves the overload downstream
-- **Refusing without saying when to come back**: A missing Retry-After makes clients guess
-- **No rehearsal**: The first test of the plan is the real event
+- **Counting on autoscaling for a sharp spike**: the new servers arrive after the crowd has left
+- **An unbounded queue**: the backlog becomes the outage, and latency grows without limit
+- **A queue for a synchronous request**: the user waits anyway, and doesn't know why
+- **Retries without backoff**: refused users come back at once, and the load grows 14 percent in our test
+- **Scaling consumers faster than the database can take**: the queue moves the overload downstream
+- **Refusing without saying when to come back**: a missing Retry-After makes clients guess
+- **No rehearsal**: the first test of the plan is the real event
 
 ## Key Points
 

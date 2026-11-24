@@ -8,23 +8,18 @@ A traffic level of 2,700 reads a second on registration day is therefore 2,700 e
 
 ## Why Writes Are Different
 
-- **No shortcut around durability**: A write is acknowledged once it is on disk, and often once a replica has it too, as in [Single Leader Replication](/system-design/replication-one-leader). The commit is the cost
-- **One authority**: With a single leader, the writes pass through one machine, and the machine's disk and log decide the ceiling
-- **Indexes multiply the cost**: Each index on a table is another structure to update on each insert, the other side of the bargain in [Indexes and Query Optimization](/system-design/indexing)
-- **Copies repeat the work**: A replica doesn't reduce the write load, it repeats it, and a replica that can't keep up falls behind, as in [Replication Lag](/system-design/replication-lag)
+Four things make writes harder to scale:
+
+- **No shortcut around durability**: a write is acknowledged once it is on disk, and often once a replica has it too, as in [Single Leader Replication](/system-design/replication-one-leader). The commit is the cost
+- **One authority**: with a single leader, the writes pass through one machine, and the machine's disk and log decide the ceiling
+- **Indexes multiply the cost**: each index on a table is another structure to update on each insert, the other side of the bargain in [Indexes and Query Optimization](/system-design/indexing)
+- **Copies repeat the work**: a replica doesn't reduce the write load, it repeats it, and a replica that can't keep up falls behind, as in [Replication Lag](/system-design/replication-lag)
 
 The ladder, from cheapest to most work, is: make each write cheaper, write less, change the storage engine, and split the data. A fifth step, moving the write off the request path, cuts across the others.
 
 ## Rung 1: Make Each Write Cheaper
 
-The biggest cost in a small write is usually the commit, which has to reach stable storage. Doing it once for each row is the slowest way. We measured inserts into a SQLite file with full durability on a laptop, with a varying number of rows for each commit:
-
-| Rows for Each Commit | Rows Inserted a Second |
-| --- | --- |
-| 1 | 24,460 |
-| 10 | 152,608 |
-| 100 | 604,933 |
-| 1,000 | 1,077,847 |
+The biggest cost in a small write is usually the commit, which has to reach stable storage. Doing it once for each row is the slowest way. We measured inserts into a SQLite file with full durability on a laptop, with a varying number of rows for each commit.
 
 <figure class="chart">
 <div class="hbars" role="img" aria-label="Rows per second for four batch sizes">
@@ -40,21 +35,23 @@ The same rows went in 44 times faster at 1,000 for each commit. The absolute num
 
 A networked database with replication pays more for each commit, which makes the effect larger.
 
-The same advice holds for bulk loads.
+The same advice holds for bulk loads:
 
-Turn off autocommit and commit once at the end, use the COPY command, which is faster than inserts even when they are prepared and batched, create indexes after the load, and raise the log size limit temporarily so that checkpoints don't happen too often.
-
-It also says to run ANALYZE after a bulk load so that the planner has current statistics.
+- Turn off autocommit and commit once at the end
+- Use the COPY command, which is faster than inserts even when they are prepared and batched
+- Create indexes after the load
+- Raise the log size limit temporarily so that checkpoints don't happen too often
+- Run ANALYZE afterward so that the planner has current statistics
 
 For the steady stream of small writes, the same idea is **group commit**: let several transactions share one flush.
 
-PostgreSQL has a setting that delays a commit a few microseconds so other commits can join the flush, and its default is zero, so it is off until you choose to set it. A good start is half the average flush time measured for an 8 KB write.
+PostgreSQL has a setting, `commit_delay`, that delays a commit a few microseconds so other commits can join the flush. Its default is zero, so it is off until you choose to set it. A good start is half the average flush time measured for an 8 KB write.
 
 ## Rung 2: Write Less, or Later
 
 Not each event needs its own row in the database at once. Two techniques:
 
-- **Aggregate before writing**: Each web server counts views in memory and flushes one increment for each listing at intervals of a few seconds. The counts are the same, and the writes shrink
+- **Aggregate before writing**: each web server counts views in memory and flushes one increment for each listing at intervals of a few seconds. The counts are the same, and the writes shrink
 - **Acknowledge before the flush**: PostgreSQL's asynchronous commit returns success before the log is flushed. The trade is clear: the risk is data loss and not data corruption, and the risk window is up to three times the log writer's delay. For view counts, losing the last fraction of a second on a crash is acceptable. For a payment, it isn't
 
 We measured how much aggregation removes for the view counter. 2,700 views a second arrive over 6 servers, spread over 300,000 listings with skewed popularity, and each server flushes one increment for each distinct listing in its window:
@@ -68,9 +65,9 @@ We measured how much aggregation removes for the view counter. 2,700 views a sec
 
 The saving depends on repetition, so with mild skew it is small: when views are spread over many listings, there is little to merge. The second effect is separate and larger.
 
-A flush of the whole window is one commit, and the table above says how much cheaper a batch of rows is than the same rows committed one by one.
+A flush of the whole window is one commit, and the batching test above says how much cheaper a batch of rows is than the same rows committed one by one.
 
-So the aggregate cuts the rows by 40 percent at skew 1.0 and a 5 second window, and the batch cuts the cost of each of those rows by a large factor.
+So the aggregate cuts the rows by about 41 percent at skew 1.0 and a 5 second window, and the batch cuts the cost of each of those rows by a large factor.
 
 The cost of waiting is a loss on a crash, the last window of counts held in memory, and stale numbers for those seconds. If the views are the input to something that matters, they belong in a log that is written first, as in [Message Queues and Pub/Sub](/system-design/message-queues), with the counting done by a consumer.
 
@@ -78,11 +75,11 @@ The cost of waiting is a loss on a crash, the last window of counts held in memo
 
 A traditional B tree database updates pages in place, which means random disk writes. Log structured merge trees, or **LSM trees**, turn the writes into sequential ones. The path in RocksDB and LevelDB:
 
-- **The write path**: A write is appended to a log, a sequentially written file, and inserted into an in memory table. The log makes it durable. The in memory table serves reads
-- **Flush**: When the table is full, it is written out as a sorted file, in the background, and writes continue into a new table. LevelDB's notes say the log becomes a level 0 table at about 4 MB
-- **Compaction**: Sorted files are merged into larger ones in levels, using bulk reads and writes, and each level is about 10 times the size of the one above it
-- **The bill**: In RocksDB leveled compaction has a write amplification that is often larger than 10, since a byte is rewritten as it moves down the levels. Reads can touch a file at each level, and too many level 0 files hurt reads, which is why Bloom filters and compaction exist
-- **The ceiling**: The write throughput of an LSM database directly depends on the speed at which compactions can occur, and when compaction falls behind, writes stall
+- **The write path**: a write is appended to a log, a sequentially written file, and inserted into an in memory table. The log makes it durable. The in memory table serves reads
+- **Flush**: when the table is full, it is written out as a sorted file, in the background, and writes continue into a new table. LevelDB's notes say the log becomes a level 0 table at about 4 MB
+- **Compaction**: sorted files are merged into larger ones in levels, using bulk reads and writes, and each level is about 10 times the size of the one above it
+- **The bill**: in RocksDB leveled compaction has a write amplification that is often larger than 10, since a byte is rewritten as it moves down the levels. Reads can touch a file at each level, and too many level 0 files hurt reads, which is why Bloom filters and compaction exist
+- **The ceiling**: the write throughput of an LSM database directly depends on the speed at which compactions can occur, and when compaction falls behind, writes stall
 
 <figure class="diagram">
 <div class="flow">
@@ -147,13 +144,13 @@ The raw events go to a log for the analytics team. The real writes, 300 a second
 
 ## Pitfalls
 
-- **Counting as a row for each event**: Reads become writes
-- **A commit for each row**: The commit dominates the cost
-- **Sharding by a hot key**: The busiest shard sets the ceiling
-- **More indexes than queries need**: Each one is a tax on each write
-- **Asynchronous commit for money**: A crash can erase acknowledged payments
-- **A queue without a bound**: The backlog becomes the outage
-- **Ignoring compaction**: An LSM store stalls writes when compaction falls behind
+- **Counting as a row for each event**: reads become writes
+- **A commit for each row**: the commit dominates the cost
+- **Sharding by a hot key**: the busiest shard sets the ceiling
+- **More indexes than queries need**: each one is a tax on each write
+- **Asynchronous commit for money**: a crash can erase acknowledged payments
+- **A queue without a bound**: the backlog becomes the outage
+- **Ignoring compaction**: an LSM store stalls writes when compaction falls behind
 
 ## Key Points
 

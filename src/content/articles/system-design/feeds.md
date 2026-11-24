@@ -82,16 +82,6 @@ The hybrid at 10,000 followers treated 38 accounts as pulled, and each user merg
 
 It cut the slowest fan-out to 1.0 second, and raised the lookups from 5 million to 29.6 million. Lower thresholds pushed more of the work to reads: each step lowered the inserts and the worst delay, and raised the lookups.
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Slowest fan-out in seconds for four designs">
-<div class="hbar peak"><span>Push to Followers</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">12.4 s</span></div>
-<div class="hbar"><span>Hybrid, 10,000</span><span class="track"><span class="fill" style="--w: 8.1%"></span></span><span class="value">1.0 s</span></div>
-<div class="hbar"><span>Hybrid, 2,000</span><span class="track"><span class="fill" style="--w: 1.6%"></span></span><span class="value">0.2 s</span></div>
-<div class="hbar"><span>Hybrid, 500</span><span class="track"><span class="fill" style="--w: 0.8%"></span></span><span class="value">0.1 s</span></div>
-</div>
-<figcaption>Slowest fan-out for one day of posts in our simulation, in seconds</figcaption>
-</figure>
-
 The right threshold depends on which is scarce: read capacity, write capacity, or the patience of followers. It is a number to tune from data, and it can differ for each account.
 
 ## Storing a Feed
@@ -132,13 +122,13 @@ Keep ranking out of the storage layer: the timeline holds candidates, and scorin
 
 ## Edge Cases That Bite
 
-A few edge cases bite. A new follow has no old posts in the follower's timeline, so copy the account's last few posts in, or merge them at read time. An unfollow, a block or a deletion is filtered at hydration, which is cheap, and the stored lists are cleaned in the background.
+A few edge cases bite:
 
-A cold timeline, for a user who returns after months, has no stored list, so rebuild it from the graph, and limit concurrent rebuilds so a wave of returning users doesn't become a stampede.
-
-A backlog in a big account's fan-out queue delays the small ones behind it, so use separate queues for big and small accounts, as in [Bulkheads](/system-design/bulkheads).
-
-And new posts that arrive while reading should show a prompt that new items are available and not shift the list under the user, with live delivery from [Pushing Live Updates to Clients](/system-design/push-updates).
+- **A new follow**: it has no old posts in the follower's timeline, so copy the account's last few posts in, or merge them at read time
+- **An unfollow, a block or a deletion**: filter it at hydration, which is cheap, and clean the stored lists in the background
+- **A cold timeline**: a user who returns after months has no stored list, so rebuild it from the graph, and limit concurrent rebuilds so a wave of returning users doesn't become a stampede
+- **A backlog in a big account's fan-out queue**: it delays the small ones behind it, so use separate queues for big and small accounts, as in [Bulkheads](/system-design/bulkheads)
+- **New posts that arrive while reading**: show a prompt that new items are available and don't shift the list under the user, with live delivery from [Pushing Live Updates to Clients](/system-design/push-updates)
 
 ## A Plan for the Textbook App
 
@@ -155,13 +145,13 @@ And new posts that arrive while reading should show a prompt that new items are 
 
 ## Pitfalls
 
-- **Computing the feed on each read at scale**: The cost grows with the follows of each user
-- **Pushing for each account**: One large account delays the small ones behind it
-- **Storing posts in each timeline**: Edits and deletes have to be copied to millions of lists
-- **Offset paging**: Slow for deep pages, and it repeats items as new ones arrive
-- **No cap on a timeline**: Memory grows without bound for users who don't read
-- **Strong consistency for a feed**: A cost with no matching benefit
-- **Ranking in the read path with no fallback**: A slow model makes the whole page slow
+- **Computing the feed on each read at scale**: the cost grows with the follows of each user
+- **Pushing for each account**: one large account delays the small ones behind it
+- **Storing posts in each timeline**: edits and deletes have to be copied to millions of lists
+- **Offset paging**: slow for deep pages, and it repeats items as new ones arrive
+- **No cap on a timeline**: memory grows without bound for users who don't read
+- **Strong consistency for a feed**: a cost with no matching benefit
+- **Ranking in the read path with no fallback**: a slow model makes the whole page slow
 
 ## Key Points
 

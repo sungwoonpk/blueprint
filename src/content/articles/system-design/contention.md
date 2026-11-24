@@ -79,15 +79,15 @@ When conflicts are common or the rule spans rows, take a lock first. In PostgreS
 
 There are four row lock modes, from the strongest, `FOR UPDATE`, through `FOR NO KEY UPDATE` and `FOR SHARE` to the weakest, `FOR KEY SHARE`. Row locks block writers and other lockers of the same row, and plain reads pass through.
 
-The lock serialized our test, and the run took 0.40 seconds, five times longer than the atomic update, since each buyer had to wait for the one before. That is the price: correctness through a queue. Locks bring their own hazards.
+The lock serialized our test, and the run took 0.40 seconds, five times longer than the atomic update, since each buyer had to wait for the one before. That is the price: correctness through a queue. Locks bring their own hazards:
 
-The first is the deadlock. Two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The cure is to acquire locks on multiple objects in a consistent order, and to retry aborted transactions.
+- **Deadlock**: two transactions that lock rows in opposite order wait for each other forever, and PostgreSQL aborts one. The cure is to acquire locks on multiple objects in a consistent order, and to retry aborted transactions
+- **A long hold**: a lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it, so don't keep transactions open during user input
 
-The second is the long hold. A lock held while waiting for a user, or for a call to a payment provider, blocks the transactions behind it, so don't keep transactions open during user input.
+Two options help in special cases:
 
-Two options help in special cases. `SKIP LOCKED` skips rows that are locked, which suits several workers taking jobs from one table, at the cost of an inconsistent view of the data.
-
-Advisory locks lock an application defined key, such as a seller's id, either at session level, held until released and surviving a rollback, or at transaction level, released at the end. A lock function in a query with `LIMIT` may run on more rows than the limit suggests.
+- **`SKIP LOCKED`**: skips rows that are locked, which suits several workers taking jobs from one table, at the cost of an inconsistent view of the data
+- **Advisory locks**: lock an application defined key, such as a seller's id, either at session level, held until released and surviving a rollback, or at transaction level, released at the end. A lock function in a query with `LIMIT` may run on more rows than the limit suggests
 
 ## Locks Across Machines
 
@@ -163,13 +163,13 @@ A single row is updated by one transaction at a time, so a hot row is a throughp
 
 ## Pitfalls
 
-- **Read, then write**: The check and the change must be one step
-- **Retrying a single statement**: Under strict isolation, the whole transaction repeats
-- **A lock held during a payment call**: The transactions behind it wait for the provider
-- **Locks in different orders**: A deadlock, and an aborted transaction
-- **A distributed lock for correctness, without a token**: A paused client writes after its lease ends
-- **Optimistic checks under heavy contention**: Most attempts fail and the work is wasted
-- **No hold expiry**: An abandoned checkout keeps a copy forever
+- **Read, then write**: the check and the change must be one step
+- **Retrying a single statement**: under strict isolation, the whole transaction repeats
+- **A lock held during a payment call**: the transactions behind it wait for the provider
+- **Locks in different orders**: a deadlock, and an aborted transaction
+- **A distributed lock for correctness, without a token**: a paused client writes after its lease ends
+- **Optimistic checks under heavy contention**: most attempts fail and the work is wasted
+- **No hold expiry**: an abandoned checkout keeps a copy forever
 
 ## Key Points
 

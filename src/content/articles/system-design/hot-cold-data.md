@@ -20,16 +20,6 @@ A larger alpha means a faster cooling. The shape and the values are our assumpti
 
 Of the stored listings, 97 percent are older than 30 days, 92 percent are older than 90 and 67 percent are older than a year. Even with slow cooling, the oldest two thirds of the data get under half of the reads, and with fast cooling they get 16 percent.
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of data over a year old compared with its share of reads">
-<div class="hbar peak"><span>Share of Stored Data</span><span class="track"><span class="fill" style="--w: 67%"></span></span><span class="value">67%</span></div>
-<div class="hbar"><span>Reads, Slow Cooling</span><span class="track"><span class="fill" style="--w: 44.6%"></span></span><span class="value">44.6%</span></div>
-<div class="hbar"><span>Reads, Moderate</span><span class="track"><span class="fill" style="--w: 28.8%"></span></span><span class="value">28.8%</span></div>
-<div class="hbar"><span>Reads, Fast Cooling</span><span class="track"><span class="fill" style="--w: 15.8%"></span></span><span class="value">15.8%</span></div>
-</div>
-<figcaption>Share of the stored data that is over a year old, beside the share of reads it gets, from our model</figcaption>
-</figure>
-
 The skew is what tiering uses, and it is also the reason to measure first: the real curve for the app has to come from the access logs, since the share of reads going to old data decides what follows.
 
 ## Decide by Arithmetic
@@ -42,25 +32,14 @@ The key quantity is the **read ratio**: the gigabytes read in a month for each g
 
 With these prices, the infrequent class beats standard storage when the ratio is below about 1.05, since the saving of 1.05 cents is matched by the fee on that much reading. The archive class beats standard below about 0.63. Above those ratios, tiering makes the bill larger.
 
-We applied this to the photo store in four age groups, with each group choosing its cheapest class. The result depends on how much of the traffic reaches the origin, so we ran two cases. A group's read ratio is the gigabytes read from it in a month divided by the gigabytes it stores:
+We applied this to the photo store in four age groups, with each group choosing its cheapest class. A group's read ratio is the gigabytes read from it in a month divided by the gigabytes it stores. The result depends on how much of the traffic reaches the origin, so we ran two cases: 15.6 million photo reads a month reaching the origin, and 1.56 million, which is what remains when a CDN absorbs 90 percent of them.
 
-With 15.6 million photo reads reaching the origin each month:
-
-| Age Group | Read Ratio | Cheapest Class |
-| --- | --- | --- |
-| 0 to 30 Days | 36.6 | Standard |
-| 30 to 90 Days | 18.2 | Standard |
-| 90 to 365 Days | 6.8 | Standard |
-| 1 to 3 Years | 2.2 | Standard |
-
-With 1.56 million:
-
-| Age Group | Read Ratio | Cheapest Class |
-| --- | --- | --- |
-| 0 to 30 Days | 3.7 | Standard |
-| 30 to 90 Days | 1.8 | Standard |
-| 90 to 365 Days | 0.68 | Infrequent |
-| 1 to 3 Years | 0.22 | Archive |
+| Age Group | Ratio at 15.6 Million Reads | Cheapest Class | Ratio at 1.56 Million Reads | Cheapest Class |
+| --- | --- | --- | --- | --- |
+| 0 to 30 Days | 36.6 | Standard | 3.7 | Standard |
+| 30 to 90 Days | 18.2 | Standard | 1.8 | Standard |
+| 90 to 365 Days | 6.8 | Standard | 0.68 | Infrequent |
+| 1 to 3 Years | 2.2 | Standard | 0.22 | Archive |
 
 With 15.6 million reads reaching the origin each month, no group of data was cold enough, and tiering saved no money: even the oldest photos were read 2.2 times each month for their size.
 
@@ -68,9 +47,9 @@ With a CDN absorbing 90 percent of those origin reads, the two oldest groups bec
 
 Two lessons come out of it. A CDN, covered in [Content Delivery Networks (CDNs)](/system-design/cdn), reduces the reads of old data and so makes tiering pay. And scale decides whether the work is worth doing: 25 dollars a month doesn't justify an engineer, and 24,600 dollars does. Run the arithmetic before the project.
 
-The same idea is older than the cloud. The five minute rule, from Jim Gray and Franco Putzolu in the 1980s, asks whether to keep a page in memory or on disk, and its formula for the interval at which keeping a page in memory pays off is the pages per megabyte of memory divided by the accesses per second per disk, times the price of a disk drive divided by the price per megabyte of memory.
+The same idea is older than the cloud. The five minute rule, from Jim Gray and Franco Putzolu in the 1980s, asks whether to keep a page in memory or on disk. Keeping it in memory pays off when the page is used again within an interval that depends on the price of memory against the price of a disk's access rate.
 
-Its original answer, which gives it the name, was to keep in memory the pages used again within about five minutes. A review ten years later, in 1997, found the rule still held for random pages of 8 KB, and the interval moves as prices change.
+Their answer, which gives the rule its name, was to keep in memory the pages used again within about five minutes. A review ten years later, in 1997, found the rule still held for random pages of 8 KB, and the interval moves as prices change.
 
 The method is what lasts: compare the cost of holding the data in the faster tier with the cost of fetching it on access.
 
@@ -85,9 +64,9 @@ Availability falls from 99.99 percent for standard to 99.9 percent for infrequen
 The charges have conditions that catch people:
 
 - **Minimum storage duration**: 30 days for the infrequent classes, 90 days for the archive classes with flexible or instant retrieval, and 180 days for Deep Archive, with a pro rated charge for deleting or moving an object earlier
-- **Minimum billable size**: Objects under 128 KB are billed as 128 KB in the infrequent and instant archive classes, so many tiny objects cost more there than in standard storage
-- **Retrieval fees**: A per gigabyte charge on reads, which the arithmetic above depends on
-- **Metadata overhead**: The archive classes add 40 KB per object for their bookkeeping
+- **Minimum billable size**: objects under 128 KB are billed as 128 KB in the infrequent and instant archive classes, so many tiny objects cost more there than in standard storage
+- **Retrieval fees**: a per gigabyte charge on reads, which the arithmetic above depends on
+- **Metadata overhead**: the archive classes add 40 KB per object for their bookkeeping
 
 A **lifecycle rule** moves data on a schedule. It has transition actions, which move objects to another class, and expiration actions, which delete them, and it applies to existing objects as well as new ones.
 
@@ -95,15 +74,15 @@ There are no data retrieval charges for lifecycle transitions, though there are 
 
 For data whose pattern isn't known, Intelligent-Tiering decides for you. Objects move to an infrequent tier after 30 days without access and to an instant archive tier after 90, with optional deeper archive tiers that need a restore call.
 
-It has no retrieval fees, charges a small monthly monitoring fee, and doesn't monitor objects under 128 KB. It trades a fee for not having to measure, which is a good deal when the access pattern is unpredictable and a poor one for objects whose pattern is known.
+Intelligent-Tiering has no retrieval fees, charges a small monthly monitoring fee, and doesn't monitor objects under 128 KB. It trades a fee for not having to measure, which is a good deal when the access pattern is unpredictable and a poor one for objects whose pattern is known.
 
 ### Databases: Partitions and Tablespaces
 
 A database table that grows with time is a candidate for partitioning by date. PostgreSQL's declarative partitioning splits a table into ranges, such as a month for each partition, and queries that filter on the date touch the matching partitions and no others, which the planner decides by pruning. The tiering benefits are concrete:
 
-- **Dropping old data is cheap**: Dropping a partition, or detaching it, is far faster than a bulk delete, and avoids the vacuum overhead of a bulk delete. A detached partition remains a standalone table that can be archived first
-- **Old partitions on cheap storage**: A partition can be placed in a tablespace on slower disks, and migrating seldom used data to cheaper and slower media is a typical use
-- **Attaching safely**: Adding a prepared table as a partition needs a matching check constraint beforehand so that the attach doesn't scan under a heavy lock
+- **Dropping old data is cheap**: dropping a partition, or detaching it, is far faster than a bulk delete, and avoids the vacuum overhead of a bulk delete. A detached partition remains a standalone table that can be archived first
+- **Old partitions on cheap storage**: a partition can be placed in a tablespace on slower disks, and migrating seldom used data to cheaper and slower media is a typical use
+- **Attaching safely**: adding a prepared table as a partition needs a matching check constraint beforehand so that the attach doesn't scan under a heavy lock
 
 ClickHouse puts the same idea in a rule. A time to live expression can delete rows, aggregate them, or move them to another volume, for instance hot for the first 2 years, warm to 4 years, and cold after.
 
@@ -132,13 +111,13 @@ The hot set sits in a cache or on a CDN, the warm set in the database, and the c
 
 Tiering shapes the design of the data:
 
-- **Separate hot attributes from cold blobs**: The listing row, a few kilobytes, stays in the database. The photos and the long message history live in object storage with pointers
-- **Keep the index hot**: A search needs the metadata of old listings without waking the archive, so keep the small searchable part where it is cheap to read
-- **Mark the state**: A listing records that it is archived, and the app knows what to show: a placeholder, a request to restore, or a delay
-- **Make the slow path honest**: A restore of minutes or hours needs a user interface for waiting, as in [Running Long Jobs and Workflows](/system-design/long-jobs)
-- **Pack small objects**: Under the 128 KB minimum, many small files should be combined into larger archives before they move
-- **Deletion must reach the cold tier**: A request for erasure covers archives too, as in [Data Privacy and Compliance](/system-design/privacy)
-- **Keep watching the ratio**: Data that was cold can warm up, such as a famous old textbook edition
+- **Separate hot attributes from cold blobs**: the listing row, a few kilobytes, stays in the database. The photos and the long message history live in object storage with pointers
+- **Keep the index hot**: a search needs the metadata of old listings without waking the archive, so keep the small searchable part where it is cheap to read
+- **Mark the state**: a listing records that it is archived, and the app knows what to show: a placeholder, a request to restore, or a delay
+- **Make the slow path honest**: a restore of minutes or hours needs a user interface for waiting, as in [Running Long Jobs and Workflows](/system-design/long-jobs)
+- **Pack small objects**: under the 128 KB minimum, many small files should be combined into larger archives before they move
+- **Deletion must reach the cold tier**: a request for erasure covers archives too, as in [Data Privacy and Compliance](/system-design/privacy)
+- **Keep watching the ratio**: data that was cold can warm up, such as a famous old textbook edition
 
 ## A Plan for the Textbook App
 
@@ -156,13 +135,13 @@ The savings are small at this size, so the first priority is the partitioned eve
 
 ## Pitfalls
 
-- **Tiering by age without measuring reads**: Old data isn't automatically cold
-- **Ignoring retrieval fees**: A busy archive costs more than standard storage
-- **Tiny objects in cold classes**: The minimum billable size multiplies the bill
-- **Moving data before the minimum duration ends**: An early deletion fee applies
-- **No user experience for a slow restore**: A page that hangs for minutes
-- **Deleting rows when a partition drop would do**: Hours of vacuum for no gain
-- **Forgetting the cold copies**: Erasure and retention rules apply there too
+- **Tiering by age without measuring reads**: old data isn't automatically cold
+- **Ignoring retrieval fees**: a busy archive costs more than standard storage
+- **Tiny objects in cold classes**: the minimum billable size multiplies the bill
+- **Moving data before the minimum duration ends**: an early deletion fee applies
+- **No user experience for a slow restore**: a page that hangs for minutes
+- **Deleting rows when a partition drop would do**: hours of vacuum for no gain
+- **Forgetting the cold copies**: erasure and retention rules apply there too
 
 ## Key Points
 

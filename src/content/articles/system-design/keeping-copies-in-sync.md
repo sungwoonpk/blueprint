@@ -22,13 +22,11 @@ The last row is the useful one. The people who made a change are the ones who mo
 
 ## The Dual Write Trap
 
-The first design most teams write is a dual write: update the database, then update the index and the cache in the same piece of code. It looks fine and fails in three ways.
+The first design most teams write is a dual write: update the database, then update the index and the cache in the same piece of code. It looks fine and fails in three ways:
 
-A crash in between is the first. The process dies after the database commit and before the index call, so the index is wrong, nobody is told, and it stays wrong until that listing changes again.
-
-Reordering is the second: two updates to one listing are sent to the index from different servers, and the older one arrives last, so the index ends with the old value.
-
-The third is a hidden failure. A timeout calling the index is caught and logged, and the user sees success.
+- **A crash in between**: the process dies after the database commit and before the index call, so the index is wrong, nobody is told, and it stays wrong until that listing changes again
+- **Reordering**: two updates to one listing are sent to the index from different servers, and the older one arrives last, so the index ends with the old value
+- **A hidden failure**: a timeout calling the index is caught and logged, and the user sees success
 
 There is no way to make a database and a search engine commit together without a protocol like the ones in [Two-Phase Commit](/system-design/two-phase-commit) and [Sagas](/system-design/sagas), and most indexes and caches can't take part. So don't try. Make the database the sole system written by the request, and let the other copies follow from its record of changes.
 
@@ -73,11 +71,9 @@ Just 4 percent of the deletes issued result in an actual invalidation, which is 
 
 A log delivers each change at least once, and sometimes out of order across partitions or retries, so the consumer has to make applying a change safe.
 
-Carry a version: each change has a number that grows with each update of the listing, such as the row version or the log position. Apply a newer one alone: if the stored version is at least as high as the incoming one, ignore the message, so a repeated or late message has no effect.
-
-Treat deletes as versioned events. A delete is a change with a version, remembered for a while, or a late old update can bring a deleted listing back.
-
-And use the engine's help: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. The variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care.
+- **Carry a version**: each change has a number that grows with each update of the listing, such as the row version or the log position. Apply a newer one alone: if the stored version is at least as high as the incoming one, ignore the message, so a repeated or late message has no effect
+- **Treat deletes as versioned events**: a delete is a change with a version, remembered for a while, or a late old update can bring a deleted listing back
+- **Use the engine's help**: Elasticsearch has an explicit version number for concurrency control and an internal versioning that starts at 1 and increments with each update, and its external version type is for supplying your own. The variant that accepts an equal version is for special cases, can lose data if used wrongly, and needs care
 
 We simulated the three designs on 20,000 listings with 3 updates each. The assumptions are our own: 0.1 percent of updates lose their publish to a crash, 2 percent of the messages arrive out of order, and 1 percent are delivered twice. After the run we compared the index with the database:
 
@@ -86,15 +82,6 @@ We simulated the three designs on 20,000 listings with 3 updates each. The assum
 | Dual Write, Last Arrival Wins | 0.08% |
 | Outbox, Apply Whatever Arrives | 0.10% |
 | Outbox, Apply Newer Versions Alone | 0% |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of listings that differ for three designs">
-<div class="hbar"><span>Dual Write</span><span class="track"><span class="fill" style="--w: 80%"></span></span><span class="value">0.08%</span></div>
-<div class="hbar peak"><span>Outbox, Any Arrival</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">0.10%</span></div>
-<div class="hbar"><span>Outbox With Versions</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0%</span></div>
-</div>
-<figcaption>Listings where the index differs from the database after the run, from our simulation</figcaption>
-</figure>
 
 The wrong share is small in each of the first two, and it matters at scale: 0.08 percent of 3 million listings is about 2,400 listings with the wrong price in search, and no error to tell anyone.
 
@@ -114,7 +101,7 @@ A time to live stays as a backstop, so a missed invalidation heals itself within
 
 ## Search Indexes Have a Floor
 
-A search index doesn't show a change at once. Elasticsearch makes documents searchable within about 1 second, since it refreshes its segments at 1 second intervals by default, and it refreshes this way for indices that received a search in the last 30 seconds.
+A search index doesn't show a change at once. Elasticsearch makes documents searchable within about 1 second, since it refreshes its segments at 1 second intervals by default, for indices that received a search in the last 30 seconds.
 
 A refresh can be requested explicitly, or an index request can wait for the next refresh with `refresh=wait_for`, which is the tool for a flow where a user must find what they just saved. It costs latency, so use it where it matters and not for each write.
 
@@ -124,13 +111,12 @@ The usual remedy is to build a new index in the background from the source, then
 
 ## Repair What the Pipeline Misses
 
-Even a good pipeline drifts: a bug, a bad deploy, a dropped message past the retention of the broker. A second line of defense checks the copies against the source on a schedule.
+Even a good pipeline drifts: a bug, a bad deploy, a dropped message past the retention of the broker. A second line of defense checks the copies against the source on a schedule:
 
-Compare counts and checksums by range: the number of rows and a checksum for each range of ids, looking closer at the ranges that differ, the idea of the trees in [Repairing Replicas with Hinted Handoff and Merkle Trees](/system-design/repairing-replicas).
-
-Sample at random too, reading each hour a sample of listings from the source and the copy and graphing the share that differs.
-
-Keep a rebuild script that rebuilds a copy from the source, and run it in a test regularly so that it works on the day it is needed. And put metrics on the pipeline: the age of the oldest change not yet applied, the number of messages waiting, and the mismatch rate from the sample.
+- **Compare counts and checksums by range**: the number of rows and a checksum for each range of ids, looking closer at the ranges that differ, the idea of the trees in [Repairing Replicas with Hinted Handoff and Merkle Trees](/system-design/repairing-replicas)
+- **Sample at random**: read a sample of listings each hour from the source and the copy, and graph the share that differs
+- **Keep a rebuild script**: it rebuilds a copy from the source, and a regular test run makes sure it works on the day it is needed
+- **Put metrics on the pipeline**: the age of the oldest change not yet applied, the number of messages waiting, and the mismatch rate from the sample
 
 The mismatch rate is the number that says whether the system is healthy. A rising rate means a bug is leaking changes, and a spike after a deploy points at the deploy.
 
@@ -146,13 +132,13 @@ The mismatch rate is the number that says whether the system is healthy. A risin
 
 ## Pitfalls
 
-- **A dual write in the request path**: A crash or a timeout leaves a silent difference
-- **Updates that carry no version**: An old message overwrites a new value
-- **Forgetting deletes**: A late update resurrects a deleted listing
-- **No time to live on a cache**: A missed invalidation lasts forever
-- **No drift metric**: The first alert is a customer
-- **A rebuild nobody has run**: It fails on the day it is needed
-- **A queue without a bound on lag**: The copy falls days behind and nobody notices
+- **A dual write in the request path**: a crash or a timeout leaves a silent difference
+- **Updates that carry no version**: an old message overwrites a new value
+- **Forgetting deletes**: a late update resurrects a deleted listing
+- **No time to live on a cache**: a missed invalidation lasts forever
+- **No drift metric**: the first alert is a customer
+- **A rebuild nobody has run**: it fails on the day it is needed
+- **A queue without a bound on lag**: the copy falls days behind and nobody notices
 
 ## Key Points
 
