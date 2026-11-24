@@ -1,6 +1,6 @@
 # 8. The Data & AI roadmap
 
-**Decision:** The Data & AI subject has 12 phases and 233 topics, written for a computer science student in the later years of a degree or an engineer early in a career. It runs in one line, from data to models: working with data (statistics, experiments, data platforms), then machine learning, deep learning and language models, then how to run them in practice and how to do it responsibly, then specialized problems and the landmark papers.
+**Decision:** The Data & AI subject has 13 phases and 246 topics, written for a computer science student in the later years of a degree or an engineer early in a career. It runs in one line, from data to models: working with data (statistics, experiments, data platforms), then machine learning, deep learning and language models, then how to run them in practice and how to do it responsibly, then classical AI (search, logic, planning, probabilistic reasoning), specialized problems and the landmark papers.
 
 **Why:** The reader has programmed, and has had discrete math, probability and linear algebra, but has little practice with data or models. The subject has to start from that reader and end where a first job begins: choosing a model, trusting the data, shipping it and being accountable for it.
 
@@ -10,6 +10,7 @@
 
 - Every machine learning course opens with supervised learning and the train, validation and test split, then linear models and gradient descent, then generalization (overfitting, bias and variance, regularization), then classic models, and only then neural networks. We follow that, and put evaluation and features beside generalization because they are what a practitioner uses it for.
 - Courses taught now no longer stop at neural networks. CS229, CMU 10-601, MIT 6.390 and CS230 each add transformers, language models and responsible AI. Deep learning therefore ends with transformers and generative models, and language models get their own phase.
+- Classical AI (search, constraint satisfaction, logic, planning, Bayesian networks and hidden Markov models) is still part of the curriculum documents (the AI knowledge area of CS2023 lists search and knowledge representation) and of CMU 10-601, but no longer the way into the field. It gets its own short phase, after the modern material, because it needs probability and Bayesian inference, and because search and planning lead into reinforcement learning.
 - Production courses and books (CS329S, Designing Machine Learning Systems, Google's MLOps guide) agree on the arc: requirements, data, modeling, deployment, monitoring, continual learning, then the human side. That is the Machine Learning in Practice phase.
 
 **Ordering choices worth recording:**
@@ -18,6 +19,7 @@
 - Math is its own short phase, not scattered through the others. The reader has met it in courses, so each topic is a refresher aimed at what machine learning needs next (the chain rule for backpropagation, cross-entropy for losses, the SVD for PCA).
 - Classic models stay, in their own phase. Trees and boosting still win on tabular data, and k-means and PCA are used everywhere. They also teach the vocabulary that deep learning reuses.
 - Reinforcement learning is a group in Specialized Problems, next to recommendation and forecasting, since it is the main subject that the other phases do not lead into. Its use in aligning language models is covered in the language models phase.
+- Within a phase, a tool comes after what it needs: feature scaling before regularization (both depend on it), embeddings before sequence models, language model prompting after pretraining and adaptation, bandits before Markov decision processes.
 - Landmark Papers come last, as System Design's Classic Systems do, ordered by theme and each tied to the chapters it illustrates. They are deep dives that use everything before them.
 
 **Boundaries with the other subjects:**
@@ -26,6 +28,13 @@
 - **System Design, phases 3 and 4** already teach warehouses, columnar storage, star schemas, ETL and ELT, batch and stream processing, change data capture, job schedulers, workflow engines and probabilistic structures. The Data Platforms and Pipelines phase links to them and teaches only what they leave out: lakes and lakehouses, table formats, transformations as code, slowly changing dimensions, lineage, data quality, contracts and governance.
 - **Algorithms** has dynamic programming and graph algorithms. The Reinforcement Learning group uses value iteration and Q-learning, which build on them, and links back.
 
-**Costs:** At 233 topics this is the largest subject on the site, and the Landmark Papers and Specialized Problems phases are the easiest to postpone, since no other phase depends on them. Several early topics (the Math phase, parts of Foundations) are refreshers that some readers will skip. Years for the older landmark papers (the Perceptron, backpropagation, LSTM) were not confirmed from a primary page; each is verified when its article is written.
+**Second pass (an audit of order, gaps and overlap):**
+
+- Order: features moved before generalization; data leakage moved to evaluation; embeddings moved ahead of sequence models; the language model groups reordered (adapting, then using, then reasoning); the margin and probabilistic classifier groups split so generative models come before naive Bayes; bandits moved before MDPs; the landmark language model papers sorted by first release date.
+- Gaps filled: classical AI (a new phase of 8), a short history of AI, Jacobians, joint distributions and independence, the multivariate Gaussian, floating point, entity resolution, tests for comparing groups, nonlinear features, linear classifiers, expressiveness of networks, AutoML, harms of generative models, human oversight, copyright and provenance.
+- Overlap removed: batch and online prediction, monitoring models and testing models in production (System Design's Model Serving, Monitoring AI Systems and deployment strategies already cover them); the evaluation judges topic (System Design's Evaluation covers model judges and contamination); prompt injection (Guardrails covers it); pipelines as graphs (Workflow Engines, Job Schedulers and Batch Processing); privacy and retention in data governance (Data Privacy and Compliance). One "simple rule beats a model" topic merged into problem framing, and the choice between trees and neural networks moved to Practice, where both are known.
+- Intended repetition: a Landmark Papers topic retells the story and experiments of a paper whose idea has its own chapter earlier. The chapter teaches the idea; the paper topic shows how it was shown to work.
+
+**Costs:** At 246 topics this is the largest subject on the site, and the Landmark Papers and Specialized Problems phases are the easiest to postpone, since no other phase depends on them. Several early topics (the Math phase, parts of Foundations) are refreshers that some readers will skip. Years for the older landmark papers (the Perceptron, backpropagation, LSTM) were not confirmed from a primary page; each is verified when its article is written.
 
 **Alternatives:** Split into two subjects, Data and AI (a cleaner line, but the reader of a first data job needs both, and the middle, ML in practice, would belong to neither); drop Math and send the reader to a textbook (shorter, but the site promises that each topic needs only what came before); fold Landmark Papers into the phases they illustrate (fewer topics, but a phase of papers read in order is how most people meet the field).

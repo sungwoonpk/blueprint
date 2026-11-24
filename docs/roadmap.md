@@ -49,20 +49,21 @@ The order follows what a learner needs next. Correctness, complexity and recursi
 
 The reader is a computer science student in the later years of a degree, or an engineer early in a career, who has programmed and met probability and linear algebra in courses but has little practice with data or models. See [decision 0008](decisions/0008-data-and-ai-roadmap.md).
 
-1. **Foundations**: what data science, machine learning and AI are, how learning differs from writing rules, the kinds of learning and data, and the lifecycle that the rest of the subject follows.
-2. **Math for Machine Learning**: refreshers aimed at what comes next: vectors and matrices, the SVD, gradients and the chain rule, probability, and information theory (entropy, cross-entropy, KL divergence).
+1. **Foundations**: what data science, machine learning and AI are, a short history, how learning differs from writing rules, the kinds of learning and data, and the lifecycle that the rest of the subject follows.
+2. **Math for Machine Learning**: refreshers aimed at what comes next: vectors and matrices, the SVD, gradients, Jacobians and the chain rule, probability (including the multivariate Gaussian), information theory (entropy, cross-entropy, KL divergence) and numerical stability.
 3. **Working with Data**: kinds of data, cleaning, exploring, statistical inference, and experiments and causal reasoning.
-4. **Data Platforms and Pipelines**: the data engineering lifecycle, lakes and lakehouses, table formats, transformations as code, lineage, data quality, contracts and governance. It links to System Design for warehouses, batch and stream processing.
-5. **Machine Learning Fundamentals**: learning from data, linear models and gradient descent, generalization, evaluation, and features.
-6. **Classic Machine Learning Models**: trees, ensembles and boosting, margins and probabilities, and unsupervised learning.
-7. **Deep Learning**: neural networks and how they are trained, convolutional networks, sequence models and attention, transformers, representations and generative models.
-8. **Language Models and Generative AI**: text as data, pretraining and scaling, adapting models (fine-tuning, human feedback, LoRA), using models (prompting, reasoning, decoding, multimodal) and evaluating them.
-9. **Machine Learning in Practice**: framing and baselines, training data, experiments, shipping models, and keeping them healthy (drift, monitoring, retraining, technical debt).
-10. **Responsible AI**: interpretability, fairness, privacy, security and safety, and accountability (documentation, risk management, regulation, energy).
-11. **Specialized Problems**: recommendation, time series, reinforcement learning and learning on graphs.
-12. **Landmark Papers**: the papers that introduced the ideas of phases 5 to 10, grouped by theme and tied back to the chapters they illustrate.
+4. **Data Platforms and Pipelines**: the data engineering lifecycle, lakes and lakehouses, table formats, layers and transformations as code, lineage, data quality, contracts and governance. It links to System Design for warehouses, batch and stream processing, and privacy.
+5. **Machine Learning Fundamentals**: learning from data, linear models and gradient descent, features, generalization, and evaluation.
+6. **Classic Machine Learning Models**: trees, ensembles, probabilistic classifiers, margins and unsupervised learning.
+7. **Deep Learning**: neural networks and how they are trained, convolutional networks, embeddings and sequence models, attention and transformers, representations and generative models.
+8. **Language Models and Generative AI**: text as data, pretraining and scaling, adapting models (fine-tuning, human feedback, LoRA), using them (prompting, decoding, reasoning, multimodal) and how they are benchmarked. Serving, retrieval and agents are in System Design.
+9. **Machine Learning in Practice**: framing and baselines, training data, experiments, shipping models, and keeping them healthy (drift, retraining, technical debt).
+10. **Responsible AI**: interpretability, fairness and harms, privacy, security and safety, and accountability (documentation, oversight, copyright, risk management, regulation, energy).
+11. **Classical AI**: search, constraint satisfaction, logic and planning, and probabilistic reasoning with Bayesian networks and hidden Markov models.
+12. **Specialized Problems**: recommendation, time series, reinforcement learning and learning on graphs.
+13. **Landmark Papers**: the papers that introduced the ideas of phases 5 to 10, grouped by theme and tied back to the chapters they illustrate.
 
-The order follows the same rule as the other subjects: each topic needs only what came before. Data comes before models (the statistics and experiment ideas are used again when comparing models), and the math sits just before the first topic that uses it. Machine learning fundamentals come before classic models, which come before deep learning, which ends in transformers, the base of the language models phase. Practice and responsibility come once there are models to run and be accountable for, and the papers last, as deep dives that use everything before them.
+The order follows the same rule as the other subjects: each topic needs only what came before. Data comes before models (the statistics and experiment ideas are used again when comparing models), and the math sits just before the first topic that uses it. Machine learning fundamentals come before classic models, which come before deep learning, which ends in transformers, the base of the language models phase. Practice and responsibility come once there are models to run and be accountable for. Classical AI follows, since it needs probability and leads into reinforcement learning, and the papers come last, as deep dives that use everything before them.
 
 ## Why this order
 
