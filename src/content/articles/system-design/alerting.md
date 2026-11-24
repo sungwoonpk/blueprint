@@ -10,11 +10,11 @@ This topic is about telling the two apart, and then about the dashboards that a 
 
 The test: an alert should be urgent and actionable, and a page that someone answers by running the same script each time is a sign that the response should be automated or the cause fixed. Three rules say it:
 
-- **Alert on symptoms**: Page on what users feel, such as high latency and errors, high in the stack, and use dashboards to find the cause
-- **Have as few alerts as possible**: Each one should relate to real user pain, with room for small blips
-- **Page where a human has something to do**: For latency, page at one point in the stack, and for errors, page on those that users see
+- **Alert on symptoms**: page on what users feel, such as high latency and errors, high in the stack, and use dashboards to find the cause
+- **Have as few alerts as possible**: each one should relate to real user pain, with room for small blips
+- **Page where a human has something to do**: for latency, page at one point in the stack, and for errors, page on those that users see
 
-It adds guidance by kind of system. A batch job should page when it hasn't succeeded recently enough to cause a visible problem, with a threshold of at least two full runs: a job that runs at 4 hour intervals and takes 1 hour gets a 10 hour threshold.
+Guidance differs by kind of system. A batch job should page when it hasn't succeeded recently enough to cause a visible problem, with a threshold of at least two full runs: a job that runs at 4 hour intervals and takes 1 hour gets a 10 hour threshold.
 
 A system near capacity should alert, since it needs a human to prevent a later outage. And the alerting system itself needs watching, with a test of the whole path, not only of each part.
 
@@ -42,15 +42,15 @@ Alert rules improve in steps, from naive to recommended, and the key measure is 
 | 10 | 1% | 3 days |
 | 1,000 | 100% | 43 minutes |
 
-The share of the budget consumed by the time an alert fires is the burn rate times the window divided by the period: 36 times 1 hour over 720 hours is 5 percent.
+The share of the budget consumed by the time an alert fires is the burn rate times the window divided by the period. A burn rate of 36 for 1 hour of a 720 hour period uses 5 percent.
 
 The first rule, to alert when the error rate over 10 minutes reaches the SLO's allowed rate of 0.1 percent, has fast detection and poor precision.
 
-Such a rate for 10 minutes uses 0.02 percent of the monthly budget, so the rule could fire 144 times a day while the service meets its SLO. A longer window improves precision, and then a full outage takes about two minutes to detect, and the alert keeps firing for 36 hours after recovery.
+Such a rate for 10 minutes uses 0.02 percent of the monthly budget, so the rule could fire 144 times a day while the service meets its SLO. A longer window improves precision. With a 36 hour window, a full outage takes about two minutes to detect, and the alert keeps firing for 36 hours after recovery.
 
-A required duration of an hour makes the full outage wait an hour, the same as a 0.2 percent problem.
+Requiring the condition to hold for an hour is another try, but then a full outage waits an hour before paging, the same wait as for a 0.2 percent problem.
 
-The recommended design is **multiwindow, multi burn rate**. Each alert needs two conditions at once: the budget burned over a long window and the error rate over a short one, about one twelfth as long, which shows that the problem is still going.
+The recommended design is **multiwindow, multi burn rate**. Each alert needs two conditions at once: a high burn rate over a long window, and a high burn rate over a short one about one twelfth as long, which shows that the problem is still going.
 
 The short window is what lets the alert reset about 5 minutes after errors stop. The table for a 99.9 percent SLO:
 
@@ -85,7 +85,7 @@ Here are the four rules against them:
 
 The naive rule caught each incident, and 126 of its 131 alerts, 96 percent, were noise from blips. The single window rule was quiet and missed the two slow ones.
 
-The multiwindow pages caught the four incidents that needed fast action, after 0, 8, 42 and 208 minutes, and the ticket rules caught the 2 day leak after about 25 hours, an incident that no page rule should wake anyone for.
+The multiwindow pages caught four incidents, after 0, 8, 42 and 208 minutes. The ticket rules caught the 2 day leak after about 25 hours, an incident that nobody should be woken for.
 
 Incident 2 used 2.3 percent of the budget and was caught by the page rule and not by the ticket rule, which fits its size.
 
@@ -97,7 +97,7 @@ Burn rates assume enough requests for the error rate to be meaningful.
 
 Take a service with 10 requests an hour: one failure is a 10 percent hourly error rate, a burn rate of 1,000 for a 99.9 percent SLO, and it pages at once, though a 99.9 percent SLO over 30 days allows about 7 failures.
 
-The options it lists are to generate synthetic traffic, to combine related services into one group, to change the product so that a single failure matters less, with retries and fallbacks, or to lower the target or lengthen the window.
+The options are to generate synthetic traffic, to combine related services into one group, to change the product so that a single failure matters less, with retries and fallbacks, or to lower the target or lengthen the window.
 
 At the other end, a 99.999 percent target is spent by a full outage in 26 seconds, shorter than typical metric collection intervals, and only design, such as canarying a change to 1 percent of users, can defend such a target.
 
@@ -105,12 +105,12 @@ At the other end, a 99.999 percent target is spent by a full outage in 26 second
 
 An alerting system should send fewer messages than events. Prometheus's Alertmanager has four tools:
 
-- **Grouping**: Similar alerts become one notification. Hundreds of instances failing to reach a database send one page, listing the instances
-- **Inhibition**: An alert is muted while another is firing, so a cluster unreachable alert hides the others for that cluster
-- **Silences**: A time limited mute with matchers, made in the interface, for planned work
-- **Routing**: A tree of rules sends each alert to the right receiver, such as a pager for the urgent and a ticket queue for the rest
+- **Grouping**: similar alerts become one notification. Hundreds of instances failing to reach a database send one page, listing the instances
+- **Inhibition**: an alert is muted while another is firing, so a cluster unreachable alert hides the others for that cluster
+- **Silences**: a time limited mute with matchers, made in the interface, for planned work
+- **Routing**: a tree of rules sends each alert to the right receiver, such as a pager for the urgent and a ticket queue for the rest
 
-Run several Alertmanagers and point Prometheus at the whole set of them, since silences and notification state are replicated between peers, and a limit per alert name stops a flood.
+Run several Alertmanagers and point Prometheus at all of them. Silences and notification state are replicated between peers, and a limit per alert name stops a flood.
 
 ## The Person Who Answers
 
@@ -120,20 +120,27 @@ Paging should be flat over time with a median of 0 pages a day, and a component 
 
 Here is why this matters. Stress impairs deliberate reasoning and leads to shortcuts and confirmation bias, and low priority alerts that fire each hour make the on-call engineer less attentive to serious ones.
 
-The fixes are measurable goals, such as under 2 pages a shift, pages that match SLO threatening symptoms, grouping so that alerts and incidents are one to one and, in extreme cases, giving the pager back to the developers.
+The fixes are measurable:
+
+- Fewer than 2 pages a shift
+- Pages that match symptoms that threaten the SLO
+- Grouping, so that alerts and incidents are one to one
+- In extreme cases, giving the pager back to the developers
 
 ## Dashboards
 
 A dashboard is where the person goes next. Two methods fit different layers:
 
-- **RED, for services**: Rate, errors and duration for each service, from Tom Wilkie. It is a proxy for user happiness, and gives each team the same view, so engineers can be on call for code they didn't write
-- **USE, for machines**: Brendan Gregg's method checks utilization, saturation and errors for each resource, such as CPUs, memory, network and disks. He notes that 100 percent utilization usually marks a bottleneck, that more than about 70 percent can already hide bursts, that any saturation, meaning queued work, can be a problem, and that the method finds many server problems with little effort
+- **RED, for services**: rate, errors and duration for each service, a method from Tom Wilkie. It is a proxy for user happiness, and it gives each team the same view, so engineers can be on call for code they didn't write
+- **USE, for machines**: Brendan Gregg's method checks utilization, saturation and errors for each resource, such as CPUs, memory, network and disks, and it finds many server problems with little effort
+
+For reading USE, 100 percent utilization usually marks a bottleneck, more than about 70 percent can already hide bursts, and any saturation, meaning queued work, can be a problem.
 
 The four golden signals are RED plus saturation. Build alerts from RED dashboards, since alerts should be on symptoms, and use USE for the causes.
 
-It also gives a maturity model. At the low level, anyone can edit dashboards, copies spread, and no definition is under version control. In the middle, template variables replace per node dashboards, each service has a row in data flow order, and the definitions are in version control.
+Dashboards also mature in stages. At the low level, anyone can edit dashboards, copies spread, and no definition is under version control. In the middle, template variables replace per node dashboards, each service has a row in data flow order, and the definitions are in version control.
 
-At the high level, dashboards are generated, reviewed to cut sprawl, and not edited in the browser. Its advice for a single dashboard is to answer one question, normalize axes, use consistent colors, and avoid copying dashboards, since a copy misses later fixes.
+At the high level, dashboards are generated, reviewed to cut sprawl, and not edited in the browser. A single dashboard should answer one question, normalize its axes and use consistent colors. Avoid copying dashboards, since a copy misses later fixes.
 
 For the textbook app, the main dashboard has one row for each service in the order of a request: web, listings, wallet, queue.
 

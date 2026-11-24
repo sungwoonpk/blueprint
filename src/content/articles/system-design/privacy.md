@@ -12,7 +12,7 @@ The laws set rules for both, and the rules turn into design requirements. The be
 
 Three regimes matter for an app with students in several places, and each has its own text. The GDPR, the European Union's General Data Protection Regulation, covers the personal data of people in the Union. The CCPA, California's Consumer Privacy Act, has its own rights and enforcement and applies to businesses above thresholds.
 
-The third is South Korea's Personal Information Protection Act, enforced by the Personal Information Protection Commission, which publishes its fines. We couldn't retrieve the statute text, so this topic doesn't describe it. Check the local law for the users you serve.
+The third is South Korea's Personal Information Protection Act, enforced by the Personal Information Protection Commission, which publishes its fines. This topic doesn't cover its text, so check the local law for the users you serve.
 
 The GDPR's definitions set the vocabulary. **Personal data** is any information relating to an identified or identifiable natural person, directly or indirectly, such as a name, an identification number, location data or an online identifier. **Processing** is any operation on personal data, and storing it counts.
 
@@ -71,7 +71,7 @@ The two main regimes compare like this:
 
 CCPA adds rights to opt out of the sale or sharing of data, to correct, and to limit the use of sensitive data, and a business that sells data must offer a link and honor a global privacy signal.
 
-It has a private right of action for certain data breaches alone, up to $750 for each incident after a 30 day notice. The GDPR also allows a business to ask for more information when it doubts a requester's identity, which a service should do before it exports an account's data to someone.
+It allows private lawsuits only for certain data breaches, up to $750 for each incident after a 30 day notice. Under the GDPR a business may ask for more information when it doubts a requester's identity, and a service should do so before it exports an account's data to someone.
 
 An access request needs a job that gathers data from each store in the map into one file. A portability request needs the same job with a stable format, such as JSON. Both need a tracked deadline, since the clock is a month, and a request queue with an owner.
 
@@ -90,7 +90,11 @@ Erasure touches each store, and each deletes differently:
 
 Backups are the awkward case: a snapshot can't be edited without breaking it.
 
-The practical options are to let the copy expire within a short retention, to keep a log of erasure requests and replay it after any restore so deleted people don't return, and to encrypt each user's data under its own key, so that deleting the key makes the copies unreadable.
+The practical options are:
+
+- **Let the copy expire** within a short retention
+- **Keep a log of erasure requests** and replay it after any restore, so deleted people don't return
+- **Encrypt each user's data under its own key**, so that deleting the key makes the copies unreadable
 
 The last idea builds on the keys of [Encrypting Data at Rest](/system-design/encryption-at-rest) and [Secrets and Key Management](/system-design/secrets). Whether a regulator accepts it for a given case is a legal question, and it has to be settled with legal advice.
 
@@ -128,9 +132,12 @@ Article 33 sets the clock for breaches. The controller notifies the supervisory 
 
 A processor tells the controller without undue delay. The notice describes the nature of the breach, a contact point, the likely consequences and the measures taken, and the controller documents each breach so the authority can check.
 
-For engineers, the 72 hours begin at awareness, and the team can meet them with some preparation. Detection comes first: alerts on odd access, as in [Alerting and Dashboards](/system-design/alerting), and logs that say who read what.
+For engineers, the 72 hours begin at awareness, and the team can meet them with preparation:
 
-A data map says whose data was exposed. A runbook says who decides that something is a reportable breach, and who writes the notice. And processor contracts put duties on vendors to tell the team quickly.
+- **Detection**: alerts on odd access, as in [Alerting and Dashboards](/system-design/alerting), and logs that say who read what
+- **A data map**: it says whose data was exposed
+- **A runbook**: it says who decides that something is a reportable breach, and who writes the notice
+- **Processor contracts**: they put duties on vendors to tell the team quickly
 
 ## The Size of the Stakes
 
@@ -138,7 +145,7 @@ GDPR fines come in two tiers. The lower tier, for obligations such as security a
 
 The higher tier, for the basic principles, the rights of data subjects and transfers abroad, is up to 20 million euros or 4 percent. Article 25, on data protection by design and by default, sits in the lower tier.
 
-Fines aren't the sole cost: a breach is a failure of trust with the students, and the incident process of [Incidents and Postmortems](/system-design/postmortems) applies.
+Fines aren't the only cost: a breach is a failure of trust with the students, and the incident process of [Incidents and Postmortems](/system-design/postmortems) applies.
 
 ## A Plan for the Textbook App
 
@@ -153,12 +160,12 @@ Fines aren't the sole cost: a breach is a failure of trust with the students, an
 
 ## Pitfalls
 
-- **Names removed, so anonymous**: A combination of attributes still points to a person
-- **Deleting from the primary database alone**: The search index, warehouse and logs still hold the data
-- **Unlimited retention**: Old data raises the cost of each breach
-- **Logs with personal data**: They outlive the code that wrote them
-- **No identity check on an export**: The data goes to the wrong person
-- **A runbook nobody has read**: The 72 hours pass while the team debates who decides
+- **Names removed, so anonymous**: a combination of attributes still points to a person
+- **Deleting from the primary database alone**: the search index, warehouse and logs still hold the data
+- **Unlimited retention**: old data raises the cost of each breach
+- **Logs with personal data**: they outlive the code that wrote them
+- **No identity check on an export**: the data goes to the wrong person
+- **A runbook nobody has read**: the 72 hours pass while the team debates who decides
 
 ## Key Points
 

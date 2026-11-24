@@ -65,7 +65,7 @@ Notice how often an answer in one row is wrong for the next. A partner with a sc
 <figcaption>A common combination: friendly styles at the edge, gRPC inside</figcaption>
 </figure>
 
-The edge part is often an [API Gateway](/system-design/api-gateways). Each extra style adds tools and skills the team has to maintain, so use more than one only when the callers differ, as they do here.
+The edge part is often handled by an API gateway, from [API Gateways](/system-design/api-gateways). Each extra style adds tools and skills the team has to maintain, so use more than one only when the callers differ, as they do here.
 
 ## Don't Choose on Speed Alone
 

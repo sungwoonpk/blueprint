@@ -8,11 +8,11 @@ The remedy is old and plain: give the payment calls their own pool, a small one.
 
 ## The Idea
 
-The pattern partitions an application's elements into pools, so that a failure in one doesn't cascade to the rest, and it is related to cell-based architecture.
+The pattern partitions an application's elements into pools, so that a failure in one doesn't cascade to the rest, and it is related to cell based architecture.
 
-The partition can follow the consumer, by load and availability needs, or the dependency, with one connection pool for each downstream service. Its examples are a pool for each downstream service, one service instance for each client, and separate queues for asynchronous services.
+The partition can follow the consumer, by load and availability needs, or the dependency, with one connection pool for each downstream service. Examples are a pool for each downstream service, one service instance for each client, and separate queues for asynchronous services.
 
-It lists three benefits: isolation from cascading failures, preserved partial functionality, and different levels of service for different consumers. It also says to combine bulkheads with retries, circuit breakers and throttling for more sophisticated handling, since each covers something the others don't.
+The pattern gives three benefits: isolation from cascading failures, preserved partial functionality, and different levels of service for different consumers. It works best combined with retries, circuit breakers and throttling, since each covers something the others don't.
 
 ## How Much a Pool Saves
 
@@ -44,7 +44,7 @@ Netflix's Hystrix used a thread pool for each dependency. Most of the Netflix AP
 
 The overhead was measured at 60 requests a second on one instance: none at the median, 3 ms at the 90th percentile and 9 ms at the 99th.
 
-It also notes that a call that can't be interrupted keeps running after a timeout and can still saturate the pool, so clients need their own connect and read timeouts.
+A call that can't be interrupted keeps running after a timeout and can still saturate the pool, so clients need their own connect and read timeouts.
 
 Semaphore isolation limits the number of concurrent callers and can't time out or walk away. A fast in memory call can do well over 5,000 requests a second with a semaphore of 1 or 2.
 
@@ -60,29 +60,29 @@ A pool of 20 is 8 times that, enough for a surge and small enough that a hang ca
 
 For database connections the advice is to go smaller than instinct says. The HikariCP wiki describes an Oracle performance demonstration in which cutting a pool from 2,048 connections to 96 lowered response times from about 100 ms to about 2 ms, with no other change.
 
-The starting formula from the PostgreSQL project is connections equal to twice the core count plus the effective number of disk spindles, and HikariCP's default maximum is 10.
+A starting formula from the PostgreSQL project is twice the core count plus the effective number of disk spindles, and HikariCP's default maximum is 10.
 
-Its axiom is to keep the pool small and let the application threads wait for it. The waiting needs a limit of its own, and HikariCP's connection timeout defaults to 30 seconds, much longer than a user waits.
+The rule of thumb is to keep the pool small and let application threads wait for a connection. That waiting needs its own limit, and HikariCP's connection timeout defaults to 30 seconds, much longer than a user waits.
 
 ## Isolation at Other Levels
 
 The same idea works wherever resources are shared:
 
-- **Connection pools**: One for each downstream database or service, not one for the whole application
-- **Queues**: A separate queue for each kind of work, so a backlog of one doesn't delay another, as in [Message Queues and Pub/Sub](/system-design/message-queues)
-- **Instances**: A service instance for each large customer
-- **Quotas for each customer**: One approach is to set a limit for each customer from negotiated agreements, so one team's heavy use can't exhaust the capacity of the others
+- **Connection pools**: one for each downstream database or service, not one for the whole application
+- **Queues**: a separate queue for each kind of work, so a backlog of one doesn't delay another, as in [Message Queues and Pub/Sub](/system-design/message-queues)
+- **Instances**: a service instance for each large customer
+- **Quotas for each customer**: a limit for each customer from negotiated agreements, so one team's heavy use can't exhaust the capacity of the others
 - **The platform**: Kubernetes limits a container's CPU and memory
 
 The platform level has its own details. Kubernetes enforces limits through Linux cgroups. A container that goes over its CPU limit is throttled, and one that exceeds its memory limit is likely to be killed, which shows as `OOMKilled` with exit code 137.
 
 A ResourceQuota caps the total for a namespace, and requests that would exceed it are rejected with an HTTP 403.
 
-Priority classes let important pods preempt less important ones when the cluster is full, and its default policy lets a pending pod evict lower priority pods. These limits don't isolate network or disk traffic, and they don't limit concurrency inside the application, so they complement the pools in the code.
+Priority classes let important pods (a pod is a group of containers scheduled together) preempt less important ones when the cluster is full, and by default a pending pod can evict lower priority pods. These limits don't isolate network or disk traffic, and they don't limit concurrency inside the application, so they complement the pools in the code.
 
 The noisy neighbor problem is the symptom in multitenant systems: one tenant's heavy use degrades the others.
 
-It suggests tracking use for each tenant, then limiting it, with quotas, throttling and rate limits, restricting expensive operations such as a cap on the records a query returns, moving non urgent work to off peak jobs, and moving heavy tenants to separate capacity.
+Common fixes are to track use for each tenant and then limit it, with quotas, throttling and rate limits; to restrict expensive operations, such as a cap on the records a query returns; to move non urgent work to off peak jobs; and to move heavy tenants to separate capacity.
 
 ## Shuffle Sharding
 
@@ -90,7 +90,7 @@ A bulkhead protects one kind of work from another. **Shuffle sharding** protects
 
 With 8 workers and 2 for each customer, there are 28 possible pairs, so a customer who sends a poisonous request, or a flood, hurts at most 1 of the 28 groups.
 
-With 4 plain shards of 2 workers, a bad customer takes out 25 percent of the others. We simulated 2,000 customers, with one of them bringing down its two workers:
+With 4 plain shards of 2 workers, a bad customer takes out the 25 percent of customers who share its shard. We simulated 2,000 customers, with one of them bringing down its two workers:
 
 | Placement | Customers With Both Workers Down | Customers With One Worker Down |
 | --- | --- | --- |
@@ -107,9 +107,9 @@ The next topic, [Cellular Architecture](/system-design/cells), takes the idea to
 
 Isolation isn't free:
 
-- **Idle capacity**: Separate pools can't share each other's spare threads, so some stay idle while another pool is full
-- **Sizing and upkeep**: Each pool is a number to choose and keep right as traffic changes
-- **More to configure and watch**: A pool for each dependency needs a metric and an alert, as in [Alerting and Dashboards](/system-design/alerting)
+- **Idle capacity**: separate pools can't share each other's spare threads, so some stay idle while another pool is full
+- **Sizing and upkeep**: each pool is a number to choose and keep right as traffic changes
+- **More to configure and watch**: a pool for each dependency needs a metric and an alert, as in [Alerting and Dashboards](/system-design/alerting)
 
 For the textbook app, three pools are enough: payments, search and everything else, with a rejected call counted as a metric and a circuit breaker on the payment calls so that, once the pool has done its job, the breaker stops the calls altogether.
 

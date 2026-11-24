@@ -4,7 +4,7 @@ On 19 October 2025, one of the largest cloud regions had a bad night and a long 
 
 The textbook app doesn't run in that region, but the story is a useful test for any design.
 
-It doesn't ask whether a machine can fail, or a zone, which [Cellular Architecture](/system-design/cells) and the multi zone designs of this phase handle. It asks what happens when something that the zones in a region rely on stops working.
+The story doesn't ask whether a machine can fail, or a zone, which [Cellular Architecture](/system-design/cells) and the multi zone designs of this phase handle. It asks what happens when something that all the zones in a region rely on stops working.
 
 ## What Happened, Step by Step
 
@@ -20,11 +20,11 @@ The whole event ran about 14.5 hours, from 11:48 PM to 2:20 PM. The root cause w
 
 It began with two pieces of automation racing each other. A delayed one applied an old plan over a newer one, and a cleanup step then deleted the old plan, which removed the addresses of the regional endpoint. That state blocked later automated updates, so an operator had to correct it by hand.
 
-The first knock on came through EC2. The system that manages the physical servers depended on DynamoDB for its state checks, so leases timed out, and when the database came back, the work of establishing them again congested the system, a state of congestive collapse.
+The first follow on failure came through EC2. The system that manages the physical servers depended on DynamoDB for its state checks, so leases timed out, and when the database came back, the work of establishing them again congested the system, a state of congestive collapse.
 
 Nobody had a procedure for that recovery, and engineers throttled incoming work and restarted hosts by hand.
 
-The second knock on came through the load balancers. New instances were added to health checks before their network state had spread, so the checks flapped between pass and fail, and the health check system's automatic failover removed capacity from the load balancers.
+The second follow on failure came through the load balancers. New instances were added to health checks before their network state had spread, so the checks flapped between pass and fail, and the health check system's automatic failover removed capacity from the load balancers.
 
 AWS disabled the automatic failover at 9:36 AM, and the connection errors cleared. The long tail followed: Lambda, STS, the support center and other services each had a window of impairment, some into the next day.
 
@@ -38,7 +38,7 @@ A service across three zones that overprovisions by 50 percent runs each zone at
 
 That design has a limit. If the zones share a dependency, such as the regional DNS in the event above or a regional control plane, the zones fail together. A region boundary protects against that class of fault, and it costs a second set of the whole stack. The capacity arithmetic is the first bill.
 
-If each region must carry the whole load when another is lost, and we plan to keep any region at 80 percent or less in use, then the normal load per region has to be lower:
+If the survivors must carry the whole load when one region is lost, and we keep any region at 80 percent or less, the normal load per region has to be lower:
 
 | Regions | Highest Normal Utilization | Extra Load on Each Survivor |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ If each region must carry the whole load when another is lost, and we plan to ke
 
 These figures are our arithmetic from the 80 percent planning number in [Capacity Planning](/system-design/capacity-planning). Two regions leave the most idle capacity, and more regions waste less and cost more to operate.
 
-A pair of regions from one provider doesn't make your resources more resilient by itself, and the provider's own failover between paired regions shouldn't be your main disaster recovery plan. A provider decides to fail over after repeated failed recovery attempts, in catastrophic cases, which is later than most businesses can wait.
+A pair of regions from one provider doesn't make your resources more resilient by itself, and the provider's own failover between paired regions shouldn't be your main disaster recovery plan. A provider fails over paired regions only in catastrophic cases and after repeated failed recovery attempts, which is later than most businesses can wait.
 
 ## Choosing a Strategy
 
@@ -78,7 +78,7 @@ The time to move nearly the whole set of clients is the detection time plus the 
 
 Our model also assumes that clients honor the TTL. Clients that hold an answer longer lengthen the tail, and the model doesn't include them.
 
-The AWS event shows the risk from the other side. A health check system that degraded triggered automatic failover, which pulled capacity from the load balancers and made the impact worse, and AWS's response was to limit how much capacity a single load balancer can remove that way.
+The AWS event shows the risk from the other side. A health check system that degraded triggered automatic failover, which pulled capacity from the load balancers and made the impact worse. AWS's response was to limit how much capacity a single load balancer can remove that way.
 
 A failover rule needs a brake, so that a wrong decision can't remove too much, and it needs a clear answer to who may override it.
 
@@ -86,9 +86,9 @@ A failover rule needs a brake, so that a wrong decision can't remove too much, a
 
 Moving traffic is the easy part. The data has to be somewhere useful when the traffic arrives, and the three ways to place it are the usual trade of [The CAP Theorem](/system-design/cap) and [PACELC](/system-design/pacelc) in concrete form.
 
-A single leader copied across regions is the simplest. Promoting the follower in the surviving region loses whatever hadn't replicated yet, the lag from [Replication Lag](/system-design/replication-lag), and it risks two leaders if the old one comes back.
-
-Multiple leaders let each region accept writes and settle conflicts later, as in [Replication with Multiple Leaders](/system-design/replication-many-leaders) and [Detecting and Resolving Conflicts](/system-design/conflicts), a good fit for data that merges and a poor one for balances. Consensus across regions loses no data, and each write pays the delay between regions, from [Consensus and Leader Election](/system-design/consensus-leader-election).
+- **A single leader copied across regions**: the simplest. Promoting the follower in the surviving region loses whatever hadn't replicated yet, the lag from [Replication Lag](/system-design/replication-lag), and it risks two leaders if the old one comes back
+- **Multiple leaders**: each region accepts writes and settles conflicts later, as in [Replication with Multiple Leaders](/system-design/replication-many-leaders) and [Detecting and Resolving Conflicts](/system-design/conflicts), a good fit for data that merges and a poor one for balances
+- **Consensus across regions**: loses no data, and each write pays the delay between regions, from [Consensus and Leader Election](/system-design/consensus-leader-election)
 
 In the AWS event, DynamoDB's global table replicas in other regions kept working while the replication lag grew. That shows the pattern: the data was available elsewhere and slightly behind.
 
@@ -113,7 +113,11 @@ A plan that has not been run won't work the first time. The routine that makes i
 
 Slack built a way to drain a zone in steps as small as 1 percent, with a goal of 5 minutes, because a routine action is one that works under stress.
 
-Plan the return too. Failback is a second migration with its own data reconciliation. Check that the surviving region has the headroom of the table above and that its quotas are raised. And write down the decision rule: who declares a regional disaster, on what evidence, and by what time.
+Plan the return too:
+
+- **Failback**: it is a second migration with its own data reconciliation
+- **Headroom**: check that the surviving region has the headroom of the table above and that its quotas are raised
+- **The decision rule**: write down who declares a regional disaster, on what evidence, and by what time
 
 ## For the Textbook App
 
@@ -128,12 +132,12 @@ Plan the return too. Failback is a second migration with its own data reconcilia
 
 ## Pitfalls
 
-- **Zones counted as regions**: A shared regional dependency fails the zones together
-- **A standby with no capacity**: Traffic arrives and the standby falls over
-- **A failover that needs a launch**: The launch path can be the broken part
-- **A hair trigger**: A false alarm moves the whole service
-- **Forgetting the tools**: The dashboard, the login and the pipeline sit in the failed region
-- **No failback plan**: The service stays on the standby for weeks
+- **Zones counted as regions**: a shared regional dependency fails the zones together
+- **A standby with no capacity**: traffic arrives and the standby falls over
+- **A failover that needs a launch**: the launch path can be the broken part
+- **A hair trigger**: a false alarm moves the whole service
+- **Forgetting the tools**: the dashboard, the login and the pipeline sit in the failed region
+- **No failback plan**: the service stays on the standby for weeks
 
 ## Key Points
 

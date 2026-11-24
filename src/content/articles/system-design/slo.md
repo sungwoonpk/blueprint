@@ -35,15 +35,19 @@ An SLI should reflect what users feel. Typical ones by kind of service:
 
 An SLI has a simple form: good events divided by total events, a percentage from 0 to 100. It separates the **specification**, the outcome that matters, such as the ratio of home page requests that load in under 100 ms, from the **implementation**, the way it is measured.
 
-Three ways to measure a web service are server logs, which miss requests that don't reach the backend, probes that run a browser from outside, which catch network failures, and client instrumentation.
+A web service can be measured three ways:
 
-Client instrumentation is the closest to the user and costs the most engineering effort. The advice is to start with the cheapest accurate measure.
+- **Server logs**: cheap, but they miss requests that never reach the backend
+- **Outside probes**: a browser run from outside catches network failures
+- **Client instrumentation**: closest to the user, and the most engineering effort
+
+Start with the cheapest accurate measure.
 
 For the textbook app, three SLIs cover the purchase path:
 
-- **Availability**: The share of purchase requests that don't return a server error
-- **Latency**: The share of listing page requests served in under 400 ms
-- **Freshness**: The share of new listings that appear in search within 60 seconds
+- **Availability**: the share of purchase requests that don't return a server error
+- **Latency**: the share of listing page requests served in under 400 ms
+- **Freshness**: the share of new listings that appear in search within 60 seconds
 
 Use percentiles and not averages for latency, since an average hides the tail: a median near 50 ms can sit beside 5 percent of requests that are about 20 times slower. State it as several grades at once, such as 90 percent under 100 ms and 99 percent under 400 ms.
 
@@ -51,9 +55,7 @@ Use percentiles and not averages for latency, since an average hides the tail: a
 
 How high? 100 percent is the wrong goal. Past a point, each extra nine costs far more, it slows feature work, and users can't tell the difference: someone on a phone with 99 percent reliability can't see 99.99 percent in the service.
 
-The cost of each increment can be about 100 times the previous one.
-
-It also notes that background errors on the internet run roughly 0.01 to 1 percent, so a service far more reliable than that is invisible to users.
+The cost of each added nine can be about 100 times the one before. Background errors on the internet already run roughly 0.01 to 1 percent, so a service far more reliable than that is invisible to users.
 
 Each nine is an order of magnitude less failure. Over a 28 day window, as we calculated:
 
@@ -65,16 +67,16 @@ Each nine is an order of magnitude less failure. Over a 28 day window, as we cal
 | 99.99% | 4.0 minutes |
 | 99.999% | 24 seconds |
 
-The Azure reliability guidance has the same table for a month, 43.2 minutes at 99.9 percent. A 99.999 percent target leaves 24 seconds, which is shorter than the 30 second leader key lifetime that Patroni uses by default in [Single Leader Replication](/system-design/replication-one-leader), so it needs a design that survives failures with no one acting.
+A 30 day month gives 43.2 minutes at 99.9 percent. A 99.999 percent target leaves 24 seconds, which is shorter than the 30 second leader key lifetime that Patroni uses by default in [Single Leader Replication](/system-design/replication-one-leader), so it needs a design that survives failures with no one acting.
 
-Dependencies lower what a service can promise. As the first topic of the previous phase showed, 10 services in a chain at 99.9 percent give 99.0 percent together.
+Dependencies lower what a service can promise. As [Availability and the Nines](/system-design/availability) showed, 10 services in a chain at 99.9 percent give about 99.0 percent together.
 
 The rule for a chain is the product of the components' values, and for redundant copies availability is 1 minus the product of the chances that each copy fails.
 
 Two pieces of advice apply when choosing.
 
-- **Start from the user**: Don't pick a target from what is easy to measure, or from the current performance, which can lock in a level that takes heroics to keep
-- **Keep it small**: Have as few SLOs as possible, avoid absolute promises such as perfect availability, and start loose and tighten later, since loosening a promise is harder
+- **Start from the user**: don't pick a target from what is easy to measure, or from the current performance, which can lock in a level that takes heroics to keep
+- **Keep it small**: have as few SLOs as possible, avoid absolute promises such as perfect availability, and start loose and tighten later, since loosening a promise is harder
 
 A worked example is a mobile game with four weeks of data: 3,663,253 requests, of which 97.123 percent succeeded, with a 90th percentile of 432 ms and a 99th of 891 ms.
 
@@ -88,22 +90,22 @@ The textbook app serves 3,000 requests a second, which is 7.26 billion requests 
 
 The SRE workbook's smaller example makes it concrete: 99.9 percent over 3 million requests in four weeks leaves 3,000 errors, and an outage that causes 1,500 of them uses 50 percent of the budget.
 
-The use: an error budget is an SLO for meeting other SLOs, and as long as budget remains, releases continue.
+The budget works like an SLO for the team's own risk taking: as long as budget remains, releases continue.
 
 The budget changes the argument between teams. Without it, product wants features and operations wants stability, and each side is arguing from taste. With it, the question is how much budget is left.
 
-The system polices itself: when the budget runs low, the product team itself slows releases, since it would pay for the failures.
+The system polices itself: when the budget runs low, the product team slows its own releases, because it would pay for the failures.
 
 ## A Policy for When the Budget Runs Out
 
 A budget needs a rule to mean anything. Take a game service whose policy covers backend and client releases, with these terms:
 
-- **Within budget**: Releases proceed under the normal release process
-- **Out of budget**: The team halts changes and releases except for top priority fixes and security fixes, until the service is back within its SLO
-- **Reliability work is required**: If a code bug or a procedural error caused the overrun, if a postmortem shows a hard dependency can be made soft, or if some errors weren't counted
-- **Feature work may go on**: If the cause was a company wide network problem, another team's service that froze its own releases, or users outside scope such as load tests
-- **Postmortem trigger**: A single incident that uses more than 20 percent of the four week budget needs a postmortem, with at least one top priority action item for the root cause
-- **Escalation**: Disagreements over the budget math or the required actions go to the CTO
+- **Within budget**: releases proceed under the normal release process
+- **Out of budget**: the team halts changes and releases except for top priority fixes and security fixes, until the service is back within its SLO
+- **Reliability work is required**: if a code bug or a procedural error caused the overrun, if a postmortem shows a hard dependency can be made soft, or if some errors weren't counted
+- **Feature work may go on**: if the cause was a company wide network problem, another team's service that froze its own releases, or users outside scope such as load tests
+- **Postmortem trigger**: a single incident that uses more than 20 percent of the four week budget needs a postmortem, with at least one top priority action item for the root cause
+- **Escalation**: disagreements over the budget math or the required actions go to the CTO
 
 The policy also states its purpose: it isn't a punishment, it is a way to focus on reliability when the data says so. Changes cause about 70 percent of outages, which is why release speed is what the budget governs.
 
@@ -119,7 +121,7 @@ One note about aggregation: a rate averaged over a day can hide a bad minute, so
 
 ## Don't Overachieve
 
-An SLO is a ceiling as well as a floor. A cautionary example is Chubby, Google's lock service, which was so reliable that other services began to assume it would not fail, and built hard dependencies on it.
+An SLO is a ceiling as well as a floor. A cautionary example is Chubby, Google's lock service from [Chubby and ZooKeeper](/system-design/chubby-zookeeper), which was so reliable that other services began to assume it would not fail, and built hard dependencies on it.
 
 To avoid it, the Chubby team keeps it near its SLO, and if a quarter passes with no real failure that takes availability below target, they cause a controlled outage so that unreasonable dependencies show up while they can be fixed.
 

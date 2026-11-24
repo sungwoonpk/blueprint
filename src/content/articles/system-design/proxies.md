@@ -158,7 +158,7 @@ Settings can disagree, because timeouts and size limits at each layer must fit t
 
 ## Where This Leads
 
-Many named parts in this phase are reverse proxies with a particular specialty. A [load balancer](/system-design/load-balancers) is one whose main job is spreading requests. An [API gateway](/system-design/api-gateways) adds login checks, rate limits and routing for APIs, and a [service mesh](/system-design/service-mesh) puts a small proxy beside every service. The next topic takes the first of these, [Load Balancers](/system-design/load-balancers).
+Many named parts in this phase are reverse proxies with a particular specialty. A load balancer is one whose main job is spreading requests. An API gateway adds login checks, rate limits and routing for APIs, and a service mesh puts a small proxy beside every service. The next topic takes the first of these, [Load Balancers](/system-design/load-balancers), and the other two come later in [API Gateways](/system-design/api-gateways) and [Service Meshes and Sidecars](/system-design/service-mesh).
 
 ## Key Points
 

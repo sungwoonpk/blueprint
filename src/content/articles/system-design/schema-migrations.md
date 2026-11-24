@@ -27,9 +27,12 @@ For the price column, it takes six steps, each its own release:
 
 Large companies follow the same shape. Stripe's online migrations used four steps: write to the old and new stores, move the reads to the new one, move the writes to the new one alone, and remove the old data.
 
-It moved hundreds of millions of subscription objects while the services stayed up, and the arithmetic shows why a plan like this is needed: at one second per object, copying 100 million objects one by one would take over three years.
+The migration moved hundreds of millions of subscription objects while the services stayed up, and the arithmetic shows why a plan like this is needed: at one second per object, copying 100 million objects one by one would take over three years.
 
-Two details are worth copying. For step 4, run both reads and raise an error when they disagree, as a library like Scientist does, and switch after the results match. And keep each code change small, a few hundred lines at once, since the old structure may be used in thousands of places.
+Two details are worth copying:
+
+- **Compare reads**: in step 4, run both reads and raise an error when they disagree, as a library like Scientist does, and switch after the results match
+- **Keep each change small**: a few hundred lines at once, since the old structure may be used in thousands of places
 
 The steps don't have to be separate releases when the traffic is low, but each must be compatible with the one before it. A flag can control step 4, so the read switches without a deploy, as in [Feature Flags](/system-design/feature-flags).
 
@@ -41,7 +44,13 @@ That mode alone blocks a plain read, so while it is held, the table can't be rea
 
 The real danger comes from the queue, not the lock itself. In MySQL a pending exclusive metadata lock requested by an online DDL operation blocks subsequent transactions on the table.
 
-Picture three sessions. One read the table inside a transaction and stays open. A second runs an ALTER and waits. A third runs a simple SELECT and waits too, behind the ALTER. PostgreSQL's conflict rules lead to the same shape.
+Picture three sessions:
+
+- A first session read the table inside a transaction and stays open
+- A second runs an ALTER and waits for the first
+- A third runs a simple SELECT and waits too, behind the ALTER
+
+PostgreSQL's conflict rules lead to the same shape.
 
 An ALTER that needs 0.1 seconds can therefore hold up the traffic for as long as the oldest open transaction. Suppose a 60 second report holds a read lock and the ALTER arrives at 10 seconds.
 
@@ -98,32 +107,33 @@ Step 3 touches each row, and one statement that updates 3 million rows holds its
 
 The total stayed the same, and the longest lock shrank in proportion to the batch. A production database does far more work for each row, with indexes, a write ahead log and replicas, so the real numbers are much larger, and the ratio is what carries over.
 
-A good backfill job has five habits. It is keyed: it walks the primary key in ranges, so each batch is an index lookup and not a scan from the start. It is resumable: it records where it stopped, so a failure or a pause loses no work.
+A good backfill job has five habits:
 
-It is safe to repeat, so a batch that runs twice gives the same result, as in [Idempotency and Safe Retries](/system-design/idempotency).
-
-It is throttled: it pauses between batches and slows down when the replicas fall behind, since a fast backfill creates the [Replication Lag](/system-design/replication-lag) that users then read stale data through. And it is checked: a final count of rows that still need conversion should be zero before step 4.
+- **Keyed**: it walks the primary key in ranges, so each batch is an index lookup and not a scan from the start
+- **Resumable**: it records where it stopped, so a failure or a pause loses no work
+- **Safe to repeat**: a batch that runs twice gives the same result, as in [Idempotency and Safe Retries](/system-design/idempotency)
+- **Throttled**: it pauses between batches and slows down when the replicas fall behind, since a fast backfill creates the [Replication Lag](/system-design/replication-lag) that users then read stale data through
+- **Checked**: a final count of rows that still need conversion should be zero before step 4
 
 Even finding the rows can be the costliest part on a live database, and Stripe ran that work offline over snapshots. The same idea applies at a smaller scale: scan from a replica when possible.
 
 ## Making It Routine
 
-A few practices keep migrations from being an event. Keep migrations as code: versioned files in the repository, reviewed like any change, and run by the pipeline.
+A few practices keep migrations from being an event:
 
-Keep them separate from the app deploy, so the expand step ships before the code that needs it, and the contract step ships well after the code stopped using the column.
-
-Test on realistic data, on a copy of production size, since a change that takes seconds on a test table can take hours on the real one. And contract with care.
-
-Dropping a column can't be undone from the application, so confirm that no code reads it, take a backup as in [Backups and Disaster Recovery](/system-design/backup-dr), and wait one or two release cycles.
+- **Keep migrations as code**: versioned files in the repository, reviewed like any change, and run by the pipeline
+- **Keep them separate from the app deploy**: the expand step ships before the code that needs it, and the contract step ships well after the code stopped using the column
+- **Test on realistic data**: use a copy of production size, since a change that takes seconds on a test table can take hours on the real one
+- **Contract with care**: dropping a column can't be undone from the application, so confirm that no code reads it, take a backup as in [Backups and Disaster Recovery](/system-design/backup-dr), and wait one or two release cycles
 
 ## Pitfalls
 
-- **A rename**: It looks like one step and breaks the old servers during the rollout
-- **An open transaction**: A forgotten session blocks an ALTER, and the queue behind it takes down the table
-- **No lock timeout**: A migration that waits forever
-- **A backfill in one statement**: Long locks, a flood of replication traffic, and a long rollback if it fails
-- **Contracting early**: The old version, or a rollback, still needs the column
-- **Skipping the check**: Switching reads without comparing the old and new values hides a bug in the conversion
+- **A rename**: it looks like one step and breaks the old servers during the rollout
+- **An open transaction**: a forgotten session blocks an ALTER, and the queue behind it takes down the table
+- **No lock timeout**: a migration that waits forever
+- **A backfill in one statement**: long locks, a flood of replication traffic, and a long rollback if it fails
+- **Contracting early**: the old version, or a rollback, still needs the column
+- **Skipping the check**: switching reads without comparing the old and new values hides a bug in the conversion
 
 ## Key Points
 

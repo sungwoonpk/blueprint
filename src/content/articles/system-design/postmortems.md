@@ -8,9 +8,11 @@ Nobody knows what the others did, and when search recovers, nobody can say which
 
 ## Deciding That It Is an Incident
 
-Declare early, and don't start the framework hours into a problem. Three criteria help, and any one is enough. A second team is needed, because the problem can't be fixed by one group alone.
+Declare early, and don't start the framework hours into a problem. Three criteria help, and any one is enough:
 
-Customers can see it, because the outage is visible to them. Or it is unsolved after an hour, because an hour of concentrated analysis hasn't found the answer.
+- **A second team is needed**: the problem can't be fixed by one group alone
+- **Customers can see it**: the outage is visible to them
+- **It is unsolved after an hour**: an hour of concentrated analysis hasn't found the answer
 
 A scale helps. Severity levels run from SEV-1, a critical issue that warrants public notice and contact with executives, to SEV-5, a cosmetic problem. Anything above SEV-3 counts as a major incident and starts the full response.
 
@@ -47,13 +49,15 @@ The separation is recursive: when one person's load is too high, they ask for st
 
 ## Running It
 
-A few habits make a response steadier. Give it a central place, a war room or a chat channel, where the conversation is logged for the postmortem, since bots can record the traffic.
+A few habits make a response steadier:
 
-Keep a live state document. It can be messy but must be functional, editable by several people at once, with the most important facts at the top. Make handoffs explicit: the outgoing commander says "you are now the incident commander", and doesn't leave until the new one acknowledges.
+- **A central place**: a war room or a chat channel, where the conversation is logged for the postmortem, since bots can record the traffic
+- **A live state document**: it can be messy but must be functional, editable by several people at once, with the most important facts at the top
+- **Explicit handoffs**: the outgoing commander says "you are now the incident commander", and doesn't leave until the new one acknowledges
+- **A rhythm of updates**: the internal liaison updates executives at roughly 30 minute intervals, and the customer liaison posts at set times
+- **Mitigation first**: roll back a release, switch off a feature with a flag from [Feature Flags](/system-design/feature-flags), shed load, or move traffic, and find the root cause once users are safe
 
-Keep a rhythm of updates, with the internal liaison updating executives at roughly 30 minute intervals and the customer liaison posting at set times.
-
-And mitigate first. Roll back a release, switch off a feature with a flag from [Feature Flags](/system-design/feature-flags), shed load, or move traffic, and find the root cause once users are safe. Assume the worst about severity during the incident, and don't debate the level while the system is down.
+Assume the worst about severity during the incident, and don't debate the level while the system is down.
 
 ## A Long Night: GitHub, October 2018
 
@@ -76,13 +80,20 @@ A 43 second fault led to 87,060 seconds of impact, about 2,025 times longer. The
 
 Afterward, a backlog of more than five million webhook events and 80,000 site builds had to drain, and about 200,000 webhook payloads past an internal time limit were dropped, so the limit was raised.
 
-No user data was lost, after a manual reconciliation of the unreplicated writes. One busy cluster had 954 of them.
+GitHub reported no loss of user data after a manual reconciliation of the unreplicated writes. One busy cluster had 954 of them.
 
 Two choices stand out. The team stated its priority early: data integrity over site usability and time to recovery. That's a decision a commander can make at minute 27 and a communicator can explain.
 
 And the team admitted that its public estimate of two hours missed variables, since catch up followed a decaying curve and not a straight line. A promise of a time is a risk, so estimates should say what they rest on.
 
-The changes that followed are a model of follow up work: configure the failover tool not to promote primaries across regional boundaries, build a richer status page that shows components, continue the work toward redundancy across multiple data centers, and add fault injection and chaos tooling, as in [Chaos Engineering](/system-design/chaos-engineering). The mechanics tie to [Replication Lag](/system-design/replication-lag) and [Backups and Disaster Recovery](/system-design/backup-dr).
+The changes that followed are a model of follow up work:
+
+- Configure the failover tool not to promote primaries across regional boundaries
+- Build a richer status page that shows components
+- Continue the work toward redundancy across multiple data centers
+- Add fault injection and chaos tooling, as in [Chaos Engineering](/system-design/chaos-engineering)
+
+The mechanics tie to [Replication Lag](/system-design/replication-lag) and [Backups and Disaster Recovery](/system-design/backup-dr).
 
 ## Writing the Postmortem
 
@@ -116,9 +127,9 @@ Blamelessness is a tenet of the culture. A blameless postmortem names the contri
 
 You can't fix people, but you can fix systems and processes. The practical reason is that blame teaches people to hide incidents, and hidden incidents can't be learned from.
 
-Blameless doesn't mean avoiding the truth about what to improve. Compare two action items: to rewrite the backend, and to cut the cost of the next on call engineer's night. The first judges people, and the second describes the system.
+Blameless doesn't mean avoiding the truth about what to improve. Compare two action items: "rewrite the backend", and "measure what the backend costs each on call night, then decide". The first is a verdict, and the second can be checked.
 
-It also means looking past one root cause. The October 2025 AWS event in [Surviving a Region Outage](/system-design/region-outage) had a race in DNS automation, a deletion step, a dependency of a server fleet on the database, a recovery that had no procedure, and a health check system whose automatic action removed capacity.
+Blameless also means looking past one root cause. The October 2025 AWS event in [Surviving a Region Outage](/system-design/region-outage) had a race in DNS automation, a deletion step, a dependency of a server fleet on the database, a recovery that had no procedure, and a health check system whose automatic action removed capacity.
 
 A single root cause would have missed four of the five lessons.
 
@@ -128,7 +139,7 @@ What makes a postmortem count is action. To users, a postmortem without subseque
 
 The postmortem is the start of the learning, and the follow up decides whether it happens. Track the action items: each has an owner and a ticket, and an owner reports on them at a regular review. Look for repeats, since the same cause twice means the actions were too weak or too slow.
 
-Share the postmortem widely, with the widest audience that benefits and no end user identifying data. Practice with role playing, where on call engineers respond to a simulated page, and with game days like those of [Chaos Engineering](/system-design/chaos-engineering). And reward the work: recognize people who write good postmortems and run good responses, with senior leaders taking part.
+Share the postmortem with everyone who can learn from it, without end user data. Practice with role playing, where on call engineers respond to a simulated page, and with game days like those of [Chaos Engineering](/system-design/chaos-engineering). And reward the work: recognize people who write good postmortems and run good responses, with senior leaders taking part.
 
 The measurements come from the timeline: time to detect, to assemble a response, to mitigate and to resolve. In GitHub's case the first two were 2 and 19 minutes, and the long part was the restore. Each number points at a different investment, in alerting, in on call, in rollback or in backups.
 
@@ -145,13 +156,13 @@ The measurements come from the timeline: time to detect, to assemble a response,
 
 ## Pitfalls
 
-- **Many people fixing at once**: Changes collide and nobody knows what worked
-- **Declaring late**: The framework starts after the hour of confusion
-- **A commander who debugs**: The incident has no one in charge
-- **Promising a time to recovery**: The estimate misses variables and is wrong in public
-- **Blame**: Incidents start to be hidden
-- **A postmortem without owners**: The action items are wishes
-- **One root cause**: The other contributing factors return
+- **Many people fixing at once**: changes collide and nobody knows what worked
+- **Declaring late**: the framework starts after the hour of confusion
+- **A commander who debugs**: the incident has no one in charge
+- **Promising a time to recovery**: the estimate misses variables and is wrong in public
+- **Blame**: incidents start to be hidden
+- **A postmortem without owners**: the action items are wishes
+- **One root cause**: the other contributing factors return
 
 ## Key Points
 

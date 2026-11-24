@@ -1,10 +1,8 @@
 > A **feature flag**, also called a feature toggle, is a switch in the code that turns a behavior on or off while the program runs, without a new deploy. The switch can depend on who is asking, so a feature can reach staff first, then 1 percent of students, then the whole student body.
 
-[Canary Releases and Other Deployment Strategies](/system-design/deployments) shrank the share of users who meet a bad release. A flag takes a step further: it separates two things that look like one. **Deploying** puts code on servers.
+[Canary Releases and Other Deployment Strategies](/system-design/deployments) shrank the share of users who meet a bad release. A flag takes a step further: it separates two things that look like one. **Deploying** puts code on servers, and **releasing** lets users see its behavior. With a flag, the code can arrive on Thursday, switched off, and the release can happen on Monday, to a few users, and be undone in seconds if it goes wrong.
 
-**Releasing** lets users see its behavior. With a flag, the code can arrive on Thursday, switched off, and the release can happen on Monday, to a few users, and be undone in seconds if it goes wrong.
-
-Keep feature launches apart from binary releases through flags or an experiment framework. The textbook app uses it for a new search ranking, for a new checkout page, and for a switch that turns off the recommendations when the servers are overloaded.
+The textbook app uses flags for a new search ranking, for a new checkout page, and for a switch that turns off the recommendations when the servers are overloaded.
 
 ## Four Kinds of Flags
 
@@ -17,22 +15,22 @@ Flags sort by purpose, and the purpose decides how long a flag lives and how it 
 | Ops | Control operating behavior, such as a kill switch | Short, with a few long lived |
 | Permission | Different experience for premium, beta or staff users | Years |
 
-- **Release flags**: Mostly static, since a given build either has the feature on or off. They shouldn't stay much beyond a week or two, though a product led flag may stay longer
-- **Experiment flags**: Highly dynamic. Each user is put in a cohort and stays there, and the decision is made on each request
-- **Ops flags**: They need to change quickly, since needing a new release to flip an ops flag is unlikely to make an operations person happy. A few long lived ones act as kill switches or manual circuit breakers
-- **Permission flags**: Very dynamic, decided on each request and kept for years
+- **Release flags**: mostly static, since a given build either has the feature on or off. They shouldn't stay much beyond a week or two, though a product led flag may stay longer
+- **Experiment flags**: highly dynamic. Each user is put in a cohort and stays there, and the decision is made on each request
+- **Ops flags**: need to change quickly, since needing a new release to flip one would frustrate the people running the system. A few long lived ones act as kill switches or manual circuit breakers
+- **Permission flags**: very dynamic, decided on each request and kept for years
 
 The same flag can change kind over its life, from a release flag to an experiment to an ops switch, and its owner and its home change with it.
 
 ## The Parts
 
-Hodgson splits a flag into three parts. The **toggle point** is the place in the code where the decision is used. The **toggle router** is the logic that makes the decision.
+A flag has three parts. The **toggle point** is the place in the code where the decision is used. The **toggle router** is the logic that makes the decision.
 
 The **toggle configuration** is the data the router reads. Keeping the three apart is the main design advice: a toggle point that holds its own decision logic spreads that logic through the code.
 
 Two techniques keep the code clean. In inversion of decision, a component receives its decisions through its configuration when it is built, so it has no knowledge of flags and can be tested by passing a setting.
 
-And for a feature with several toggle points, or one that will live long, he recommends a strategy, a swappable behavior, instead of conditionals scattered through the code. A simple if and else is fine for a small, short lived flag.
+And for a feature with several toggle points, or one that will live long, use a strategy, a swappable behavior, instead of conditionals scattered through the code. A simple if and else is fine for a small, short lived flag.
 
 OpenFeature, a vendor neutral standard for flag evaluation, shows the shape from the caller's side:
 
@@ -46,9 +44,9 @@ const useNewRanking = await client.getBooleanValue(
 );
 ```
 
-- **The default value**: Required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case. Give the default some thought: the safe default is the old behavior
-- **The evaluation context**: Facts about the request, such as the user and the region, that the flag system uses to target. The targeting key should uniquely identify the subject
-- **The provider**: The translation layer between the evaluation API and the flag system in use, so the application code doesn't depend on a vendor
+- **The default value**: required on each call. If evaluation fails, the default comes back, so the program gets a usable answer in each case. Give the default some thought: the safe default is the old behavior
+- **The evaluation context**: facts about the request, such as the user and the region, that the flag system uses to target. The targeting key should uniquely identify the subject
+- **The provider**: the translation layer between the evaluation API and the flag system in use, so the application code doesn't depend on a vendor
 
 When something goes wrong, the OpenFeature standard defines reasons and error codes, such as the flag not being found, a type mismatch or a provider that isn't ready, and the detailed form reports why the default was returned. A flag that can't be read means the default behavior, not a crash.
 
@@ -70,11 +68,11 @@ The first rows show the hash splits users close to the target. The next shows th
 
 The last two rows show why the flag name belongs in the hash. With the same hash for two flags, the same 10 percent of users get both, and an experiment on one is polluted by the other. Salted by the flag, the overlap is the expected 1 percent.
 
-Flagsmith adds a practical limit: a staged rollout needs an identified user. A visitor without an identity can't be bucketed, so a flag for anonymous traffic needs a different key, such as a stable cookie.
+A practical limit: a staged rollout needs an identified user. A visitor without an identity can't be bucketed, so a flag for anonymous traffic needs a different key, such as a stable cookie.
 
 ## Where the Configuration Lives
 
-Hodgson lists the places, from slow and safe to fast and flexible:
+Where the configuration lives ranges from slow and safe to fast and flexible:
 
 | Home | Change Needs |
 | --- | --- |
@@ -84,7 +82,7 @@ Hodgson lists the places, from slow and safe to fast and flexible:
 | Database With an Admin Screen | A click, and care for consistency |
 | Distributed Store Such as etcd or Consul | A write, and the nodes are told |
 
-He prefers static configuration, kept in source control, whenever the flag's nature allows it, since the configuration then moves through the same pipeline and review as code. Flags that need to change at runtime, such as ops switches, need a faster home, and with a database, keeping the whole fleet consistent is a challenge.
+Prefer static configuration, kept in source control, whenever the flag's nature allows it, since the configuration then moves through the same pipeline and review as code. Flags that need to change at runtime, such as ops switches, need a faster home, and with a database, keeping the whole fleet consistent is a challenge.
 
 A flag system is a dependency, and it fails like one. Evaluate flags from a local copy with a refresh, not by a network call for each request, and keep the last known values if the service is down.
 
@@ -100,7 +98,7 @@ The switch has to be ready before it is needed. Decide who may flip it, test tha
 
 ## The Cost of Flags
 
-Hodgson treats flags as inventory with a carrying cost. Each flag adds conditional logic and a testing burden, since the code has to be tested with the flag in both states.
+Treat flags as inventory with a carrying cost. Each flag adds conditional logic and a testing burden, since the code has to be tested with the flag in both states.
 
 The states multiply, as our arithmetic shows:
 
@@ -110,14 +108,14 @@ The states multiply, as our arithmetic shows:
 | 10 | 1,024 |
 | 20 | 1,048,576 |
 
-The answer is that most flags don't interact, so a team doesn't test each combination. It tests the configuration expected in production, and the fallback, and some teams add one with each flag on. That works if a convention holds, with the old behavior as off and the new behavior as on.
+In practice most flags don't interact, so a team doesn't test each combination. It tests the configuration expected in production and the fallback, and some teams add one run with every flag on. That works if a convention holds: the old behavior is off and the new behavior is on.
 
 The cure for the cost is removal:
 
-- **A removal task**: Added to the backlog when the flag is created
-- **An expiry date**: In the flag's metadata, so the flag has an owner and a deadline
-- **A time bomb**: A test that fails, or an application that refuses to start, after the expiry
-- **A cap**: A limit on the number of flags, so adding one means removing one
+- **A removal task**: added to the backlog when the flag is created
+- **An expiry date**: in the flag's metadata, so the flag has an owner and a deadline
+- **A time bomb**: a test that fails, or an application that refuses to start, after the expiry
+- **A cap**: a limit on the number of flags, so adding one means removing one
 
 Expose the current flag state through an endpoint, so that operators and tests can see what a running server believes.
 
@@ -125,9 +123,9 @@ Expose the current flag state through an endpoint, so that operators and tests c
 
 The SEC's order on Knight Capital shows what a flag left in the code can do.
 
-On 1 August 2012, the firm's order router SMARS, processing 212 small retail orders, sent millions of orders into the market over 45 minutes and got over 4 million executions in 154 stocks, for more than 397 million shares. Knight lost over 460 million dollars.
+On 1 August 2012, Knight's order router, called SMARS, received 212 small retail orders and sent millions of orders into the market over 45 minutes. They produced over 4 million executions in 154 stocks, for more than 397 million shares. Knight lost over 460 million dollars.
 
-The order gives the chain. An old function called Power Peg had been unused since 2003, yet remained callable on the production servers. In 2005, Knight moved a part of its code and didn't retest Power Peg.
+The SEC's order lays out the chain of events. An old function called Power Peg had been unused since 2003, yet remained callable on the production servers. In 2005, Knight moved a part of its code and didn't retest Power Peg.
 
 In July 2012, new code for an exchange program reused a flag that used to activate Power Peg, with the plan to delete the old code.
 
@@ -152,12 +150,12 @@ Each flag has an owner, a default of the old behavior, and an expiry date, excep
 
 ## Pitfalls
 
-- **Reusing a flag**: A name that meant one thing now means another, with old code still behind it
-- **Flags that outlive their purpose**: A hundred flags and no one who knows what they do
-- **A risky default**: A default that turns the new behavior on when the flag service is down
-- **A flag service in the request path without a fallback**: The switch becomes a point of failure
-- **Testing a single state**: The off state is the one that runs when something fails
-- **Mixing deploy and schema**: A flag can hide behavior and cannot hide an incompatible schema, which is the subject of [Schema Migrations Without Downtime](/system-design/schema-migrations)
+- **Reusing a flag**: a name that meant one thing now means another, with old code still behind it
+- **Flags that outlive their purpose**: a hundred flags and no one who knows what they do
+- **A risky default**: a default that turns the new behavior on when the flag service is down
+- **A flag service in the request path without a fallback**: the switch becomes a point of failure
+- **Testing a single state**: the off state is the one that runs when something fails
+- **Mixing deploy and schema**: a flag can hide behavior and cannot hide an incompatible schema, which is the subject of [Schema Migrations Without Downtime](/system-design/schema-migrations)
 
 ## Key Points
 

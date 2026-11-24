@@ -6,7 +6,7 @@ A system of that size can't be debugged by logging into machines one at a time. 
 
 ## Three Signals, Three Questions
 
-The OpenTelemetry project describes the three signals this way. Each answers a different kind of question, and each has a cost:
+The three signals answer different kinds of questions, and each has a cost:
 
 | Signal | What It Is | Answers | Weak At |
 | --- | --- | --- | --- |
@@ -14,36 +14,36 @@ The OpenTelemetry project describes the three signals this way. Each answers a d
 | Traces | The spans of one request across services | Where in the path the time went | Volume, so they are sampled |
 | Logs | Timestamped records of events | Why, in detail | Searching and cost at scale |
 
-A good investigation uses them in that order. A metric raises the alarm, a trace points at the slow step, and logs explain what happened there. Monitoring should answer both what is broken, the symptom, and why, the cause, and most effort should go to symptoms.
+A good investigation uses them in that order. A metric raises the alarm, a trace points at the slow step, and logs explain what happened there. Monitoring has to say both what is broken, the symptom, and why, the cause. Alert on symptoms first, because users feel those.
 
 ## Metrics
 
 Metrics are cheap, because a counter takes a few nanoseconds to increment, and they are the base for dashboards and alerts. Prometheus, the most widely used open source system, defines four types:
 
-- **Counter**: A value that goes up, such as requests served, and resets when the process restarts
-- **Gauge**: A value that goes up and down, such as concurrent requests or queue length
-- **Histogram**: Counts of observations in buckets, plus a sum, which lets the server compute quantiles later
-- **Summary**: Quantiles computed in the client over a sliding window
+- **Counter**: a value that goes up, such as requests served, and resets when the process restarts
+- **Gauge**: a value that goes up and down, such as concurrent requests or queue length
+- **Histogram**: counts of observations in buckets, plus a sum, which lets the server compute quantiles later
+- **Summary**: quantiles computed in the client over a sliding window
 
-Its naming advice is practical: use base units such as seconds and bytes, end counters with `_total`, put the unit in the name, as in `http_request_duration_seconds`, and use labels for what distinguishes a series, such as the route or the status code.
+Its naming advice is practical. Use base units such as seconds and bytes, and put the unit in the name, as in `http_request_duration_seconds`. End counters with `_total`. Use labels for what distinguishes a series, such as the route or the status code.
 
 ### Cardinality
 
-Each combination of label values is a separate time series. Try to keep the cardinality of a metric below 10, rethink any that exceeds 100, and don't use labels for values such as user ids.
+Each combination of label values is a separate time series, and the number of distinct values a label can take is its **cardinality**. Prometheus advises keeping the cardinality of most metrics below 10, rethinking any that would exceed 100, and avoiding labels for values such as user IDs.
 
 We counted the series for one counter in the textbook app, with 20 routes, 5 status codes and 6 servers:
 
-| Labels Added | Series |
+| Labels | Series |
 | --- | --- |
 | Route, Status and Server | 600 |
-| Plus User ID, 2,000 Users | 1,200,000 |
-| Plus Listing ID, 3 Million Listings | 1,800,000,000 |
+| Those Plus User ID, 2,000 Users | 1,200,000 |
+| Those Plus Listing ID Instead, 3 Million Listings | 1,800,000,000 |
 
 OpenTelemetry's SDK guards against this with a default limit of 2,000 attribute combinations for each metric stream, and folds the overflow into a single point. High cardinality belongs in logs and traces, which are built to carry it.
 
 ### Averages Hide the Tail
 
-A warning: a mean of 100 ms at 1,000 requests a second can hide 1 percent of requests that take about 5 seconds. We built a distribution like that. Of 1 million requests, 99 percent were around 40 ms, and 1 percent took 3 to 8 seconds:
+A mean of 100 ms at 1,000 requests a second can hide 1 percent of requests that take about 5 seconds. We built a distribution like that. Of 1 million requests, 99 percent were around 40 ms, and 1 percent took 3 to 8 seconds:
 
 | Measure | Value |
 | --- | --- |
@@ -53,20 +53,20 @@ A warning: a mean of 100 ms at 1,000 requests a second can hide 1 percent of req
 | 99th Percentile | 3,010 ms |
 | 99.9th Percentile | 7,484 ms |
 
-The mean looks acceptable, and one request in a hundred waits 3 seconds. Fan out makes it worse, as in the tail latency numbers from the distributed systems phase: a page that makes 10 calls hits a slow one 9.6 percent of the time, and a page with 100 calls hits one 63.5 percent of the time.
+The mean looks acceptable, and one request in a hundred waits 3 seconds. Fan out makes it worse, as in [Latency and Throughput](/system-design/latency-throughput): a page that makes 10 calls hits a slow one 9.6 percent of the time, and a page with 100 calls hits one 63.5 percent of the time.
 
 So record histograms. Bucket boundaries that grow by a factor of about 3 work well, such as 0 to 10 ms, 10 to 30, 30 to 100 and 100 to 300. A quantile estimated from buckets is as precise as the bucket is narrow.
 
-With those buckets, our median came out as 55 ms against a true 40 ms, the 99th percentile as 3,011 against 3,010, and the 99.9th as 9,301 against 7,484. Prometheus adds that averaging precomputed quantiles across instances is statistically meaningless, and quantiles should be computed from summed buckets.
+With those buckets, our median came out as 55 ms against a true 40 ms, the 99th percentile as 3,011 against 3,010, and the 99.9th as 9,301 against 7,484. Averaging quantiles that each instance computed is statistically meaningless. Add up the buckets across instances first, and compute the quantile from the sum.
 
 ### The Four Golden Signals
 
 If you have room to watch four things, these are the four:
 
-- **Latency**: The time to serve a request, with successful and failed requests measured apart, since a fast error can hide a slow problem
-- **Traffic**: The demand on the system, such as requests a second
-- **Errors**: Explicit ones such as HTTP 500, implicit ones such as a wrong answer with a 200, and policy ones such as a response slower than the budget
-- **Saturation**: How full the most constrained resource is, where a rising 99th percentile latency is an early sign
+- **Latency**: the time to serve a request, with successful and failed requests measured apart, since a fast error can hide a slow problem
+- **Traffic**: the demand on the system, such as requests a second
+- **Errors**: explicit ones such as HTTP 500, implicit ones such as a wrong answer with a 200, and policy ones such as a response slower than the budget
+- **Saturation**: how full the most constrained resource is, where a rising 99th percentile latency is an early sign
 
 ## Logs
 
@@ -87,19 +87,21 @@ The entry carries the input parameters, who called, counters, timers, and the la
 }
 ```
 
-Several habits are worth copying. Record the request early, before validation or throttling can reject it, and sanitize the input, since a 1 MB string in a field can break a log pipeline.
+Several habits are worth copying:
 
-Time successful responses separately, because fast rejections skew a general latency number. Keep debug output in separate files from request entries, and keep logs on their own disk partition so a full disk doesn't take down the service.
+- **Record early**: log the request before validation or throttling can reject it, and sanitize the input, since a 1 MB string in a field can break a log pipeline
+- **Time successes separately**: fast rejections skew a general latency number
+- **Keep debug output apart**: use separate files from request entries, and put logs on their own disk partition so a full disk doesn't take down the service
 
-Cost is the catch. Logging each request is usually worth the expense, and DynamoDB does it at over 20 million requests a second of internal traffic. For services with more traffic than that budget, sample, such as writing one entry in N and recording how many were skipped, or keeping errors and slow requests first.
+Cost is the catch. Logging each request is usually worth the expense, and DynamoDB does it even at over 20 million requests a second of internal traffic. If logging every request costs too much, sample: write one entry in N and record how many were skipped, or keep errors and slow requests first.
 
-Good practice agrees: several verbosity levels that can be raised at runtime, sampling such as 1 operation in 1,000 for high volume, and a unique request id passed across calls so that entries from different components can be joined.
+Other good habits are several verbosity levels that can be raised at runtime, sampling such as 1 operation in 1,000 for high volume, and a unique request ID passed across calls so that entries from different components can be joined.
 
 The backend matters too. Grafana Loki turns each combination of labels into a stream, with a default limit of 15 index labels, and warns against putting timestamps, trace ids or order ids in labels. Those go in the log body or in structured metadata.
 
 ## Traces
 
-A trace follows one request. Google's Dapper paper, from 2010, introduced the model now used everywhere: a trace is a tree of **spans**, each a unit of work with a name, a span id, a parent id, start and end times, and optional annotations.
+A trace follows one request. Google's Dapper paper, from 2010, introduced the model that most tracing systems still use: a trace is a tree of **spans**, each a unit of work with a name, a span id, a parent id, start and end times, and optional annotations.
 
 A span without a parent is the root, and the spans of a trace share one trace id. OpenTelemetry's spans add attributes, events, links to causally related spans, a kind such as client or server, and a status.
 
@@ -153,13 +155,13 @@ Tracing each request costs time and storage, so traces are sampled. Dapper measu
 | 1 in 16 | 2.12% |
 | 1 in 1,024 | within the measurement error, minus 0.20% |
 
-Google's first production setup sampled about 1 trace in 1,024, and for busy services even rates near 0.01 percent don't hinder most analyses, since a notable pattern that appears once will appear thousands of times.
+Google's first production setup sampled about 1 trace in 1,024. For busy services even rates near 0.01 percent still support most analyses, since a notable pattern that appears once will appear thousands of times.
 
-Services with dozens of requests a second can trace each one. They moved to adaptive sampling that targets a number of traces a second, and Jaeger offers the same, along with a probabilistic default of 0.001 and a rate limiting sampler.
+Services with dozens of requests a second can trace each one. Dapper later moved to adaptive sampling, which targets a number of traces a second and not a fixed fraction. Jaeger offers the same idea, along with a probabilistic sampler (default 0.001) and a rate limiting sampler.
 
-OpenTelemetry names the two approaches. **Head sampling** decides when the request starts, which is cheap, and can't know whether the request will fail.
+Two approaches exist. **Head sampling** decides when the request starts, which is cheap, and can't know whether the request will fail.
 
-**Tail sampling** decides after most spans have arrived, so it can keep errors and slow requests, at the cost of holding spans in memory and a harder system to run. It suggests combining them, and considering sampling at 1,000 traces a second or more, with a rate of 1 percent or lower common.
+**Tail sampling** decides after most spans have arrived, so it can keep errors and slow requests, at the cost of holding spans in memory and a harder system to run. They are often combined. Sampling matters most once a system produces about 1,000 traces a second or more, where rates of 1 percent or lower are common.
 
 We compared them on 1 million requests with 0.2 percent errors and 1 percent slow requests:
 

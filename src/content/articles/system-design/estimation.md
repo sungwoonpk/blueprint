@@ -89,7 +89,7 @@ Photos: 30,000 x 0.9 MB = 27 GB a day      (about 10 TB a year)
 Three copies for safety: 10 TB x 3 = 30 TB a year
 ```
 
-The photos outweigh the text by close to a thousand times. That one fact decides a lot: the photos shouldn't sit in the main database, they belong in cheap file storage with a [CDN](/system-design/cdn) in front, and the database stays small and fast.
+The photos outweigh the text by close to a thousand times. That one fact decides a lot: the photos shouldn't sit in the main database, they belong in cheap file storage with a CDN in front ([Content Delivery Networks (CDNs)](/system-design/cdn)), and the database stays small and fast.
 
 The factor of three is a common choice, since [Redundancy and Failover](/system-design/redundancy-failover) keeps several copies so one failed disk doesn't lose the data. Add room for indexes and for growth, and you get a figure to plan against, not an exact bill.
 

@@ -56,7 +56,7 @@ Envoy's design shows how the signal becomes an action. Each monitor reports a pr
 
 In its examples, stopping new requests with an immediate 503 begins at 95 percent of heap, and a CPU based version ramps from 80 to 95 percent. Other actions shorten idle timeouts or close idle connections to free resources before the last resort.
 
-Set connection limits high at the load balancer and let each server decide, using local information, when to refuse. A limit on connections must stay below the number of listener threads and file descriptors, so that the server can still answer its health checks.
+Set connection limits high at the load balancer and let each server decide, using local information, when to refuse. Keep any connection limit below the number of listener threads and file descriptors, so the server can still answer its health checks.
 
 ## Which Requests to Refuse
 
@@ -71,9 +71,9 @@ Give each request a criticality, which travels with the request through each ser
 | Sheddable Plus | Partial unavailability is expected, the default for batch jobs |
 | Sheddable | Frequent partial and occasional full unavailability is expected |
 
-An overloaded task starts by rejecting the lower levels, and it rejects a level just after the ones below it are already being rejected. Four levels are enough to model nearly any service.
+An overloaded task rejects the lowest level first, and starts rejecting a level only when every level below it is already being rejected. Four levels are enough to model nearly any service.
 
-It adds a point that is easy to miss: criticality is separate from latency. A suggestion as you type is sheddable, and it is also very sensitive to delay.
+One point is easy to miss: criticality is separate from sensitivity to delay. A suggestion as you type is sheddable, and it is also very sensitive to delay.
 
 Ordering matters in other ways too. The load balancer's health check ping comes first, because a server that misses pings is taken out of rotation and the fleet shrinks in the middle of the overload.
 
@@ -96,11 +96,12 @@ The limits add up to more than the machine has, which is deliberate, since the c
 
 A refusal is a message to the caller, and there are two standard ones.
 
-A 503 Service Unavailable means the server can't handle the request now because of a temporary overload or maintenance, and it may send a `Retry-After` header to suggest how long to wait. A server isn't obliged to use the status when it is overloaded. A 429 Too Many Requests means the user sent too many requests in a given time, and it may include `Retry-After`. It describes a limit on one client, so it fits a quota more than an overload of the whole server.
+- **503 Service Unavailable**: the server can't handle the request now because of a temporary overload or maintenance, and it may send a `Retry-After` header to suggest how long to wait. A server isn't obliged to use this status when it is overloaded
+- **429 Too Many Requests**: the user sent too many requests in a given time, and the response may include `Retry-After`. It describes a limit on one client, so it fits a quota more than an overload of the whole server
 
 A fast, clear error does two things. Clients that follow [Timeouts, Retries and Backoff](/system-design/timeouts-retries) wait and retry with jitter, within their budget. And the refusal costs the server little.
 
-A refusal still takes CPU, and for a service where rejecting is nearly as expensive as serving, as in a lookup in memory, shedding alone can fail to protect the backend, so the refusal has to happen early and cheaply.
+A refusal still takes CPU. Where rejecting is nearly as expensive as serving, as in a lookup in memory, shedding alone can fail to protect the backend, so the refusal has to happen early and cheaply.
 
 A refused request tells a client to slow down when the client listens. If each client retries at once, shedding turns into a retry storm, as described in [Cascading Failures](/system-design/cascading-failures), which is why the retry budget and the adaptive throttling of [Circuit Breakers](/system-design/circuit-breakers) matter on the client side.
 
@@ -108,17 +109,17 @@ A refused request tells a client to slow down when the client listens. If each c
 
 If a queue is kept, its order matters. The first in, first out order serves the oldest request first, and under overload the oldest request is the one whose client is the most likely to have left.
 
-Switch to last in, first out, or to a scheme like CoDel that drops requests which have waited too long. Take a search request that sat 10 seconds in the queue after the user refreshed the page.
+Consider a search request that sat 10 seconds in the queue after the user refreshed the page. Serving it is wasted work. Switching to last in, first out, or to a scheme like CoDel that drops requests which have waited too long, avoids that.
 
 That works with a condition: HTTP/2 allows last in, first out handling, and HTTP/1.1 pipelining doesn't.
 
-In our simulation, a last in, first out queue with a 1 second age check kept goodput at 1,000 from 1,250 requests a second up to 3,000. The requests that had waited too long stayed in the queue, and nobody was served late.
+In our simulation, a last in, first out queue with a 1 second age check kept goodput at 1,000 from 1,250 requests a second up to 3,000. The requests that had waited too long were dropped, and nobody was served late.
 
 ## Graceful Degradation
 
 Shedding refuses work. **Graceful degradation** takes load shedding one step further by reducing the work for each request.
 
-Examples are searching a smaller part of the index, such as the copy kept in memory, using a cheaper ranking method, and answering from a local copy that may be stale in place of the canonical store.
+Examples are searching a smaller part of the index, such as the copy kept in memory, using a cheaper ranking method, and answering from a local copy that may be stale instead of from the main store.
 
 Each degraded path has to be designed before the incident, since it is a second implementation of the feature. Some for the textbook app:
 
@@ -135,15 +136,16 @@ The same applies to the dependencies of a request. If the recommendation service
 
 ## When Shedding Goes Wrong
 
-Several things can go wrong.
+Shedding is a sharp tool, and several things can go wrong:
 
-Shedding is a sharp tool. Watch for false positives: aim for no refusals while there is spare capacity, and treat a regular small rate of refusals as a sign that the limits are tuned wrongly or the load is uneven. It can clash with autoscaling, since shedding that starts at a CPU level near the target of the scaling policy can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling).
-
-Headroom gets lost. A fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails. Metrics mislead: a fast error pulls the median latency down, so count refusals in their own metric.
-
-Untested paths are the usual trap. The code path you don't use is the one that often doesn't work, so run a few servers near overload regularly, which also shows whether the limits are right. And watch for feedback loops: complex rules can start degraded mode when it isn't needed, so keep them simple, and build a quick way to turn them off or tune them.
-
-Dropping a request can cost as much as holding it, in which case slow the refusal to match the latency of the successes. Also watch it: log the client and the operation of each refusal, and alert on a high volume.
+- **False positives**: aim for no refusals while there is spare capacity, and treat a regular small rate of refusals as a sign that the limits are tuned wrongly or the load is uneven
+- **A clash with autoscaling**: shedding that starts at a CPU level near the target of the scaling policy can stop the fleet from growing, as discussed in [Autoscaling](/system-design/autoscaling)
+- **Lost headroom**: a fleet that sheds can run much closer to refusing than its CPU suggests, and may have no room left when a zone fails
+- **Misleading metrics**: a fast error pulls the median latency down, so count refusals in their own metric
+- **Untested paths**: the code path you don't use is the one that often doesn't work, so run a few servers near overload regularly, which also shows whether the limits are right
+- **Feedback loops**: complex rules can start degraded mode when it isn't needed, so keep them simple, and build a quick way to turn them off or tune them
+- **Costly refusals**: if dropping a request costs as much as holding it, slow the refusal to match the latency of the successes
+- **Blind spots**: log the client and the operation of each refusal, and alert on a high volume
 
 Shedding triggers shouldn't fire often. When many servers are shedding, the lesson isn't in the shedding, it is in the capacity, and [Capacity Planning](/system-design/capacity-planning) is where that is decided.
 

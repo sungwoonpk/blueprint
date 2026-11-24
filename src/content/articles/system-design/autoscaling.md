@@ -8,7 +8,7 @@ It looks like a simple loop: measure the load, compare it with a target, add or 
 
 The common design, in AWS and Kubernetes alike, is **target tracking**. It works like a thermostat: you pick a metric and a target, such as an average CPU utilization of 50 percent, and the service adds capacity above the target and removes it below. AWS creates and manages the alarms itself.
 
-Kubernetes' Horizontal Pod Autoscaler states the rule as a formula: the desired number of replicas is the current number times the ratio of the current metric to the desired one, rounded up. Its example is a current value of 200 against a desired 100, which doubles the replicas.
+Kubernetes' Horizontal Pod Autoscaler states the rule as a formula: the desired number of replicas is the current number times the ratio of the current metric to the desired one, rounded up. For example, a current value of 200 against a desired 100 doubles the replicas.
 
 With 4 servers at 90 percent CPU and a target of 60 percent, the desired count is 4 times 0.9 divided by 0.6, which is 6.
 
@@ -16,7 +16,7 @@ Two details keep the loop calm. Kubernetes uses a tolerance of 10 percent, so a 
 
 A metric has to move in proportion to the number of instances. Average CPU does, because more servers share the same load. A total request count doesn't, since adding servers doesn't change how many requests arrive.
 
-Scaling out and scaling in are treated differently on purpose. AWS scales in more gradually than it scales out, to protect availability. Kubernetes defaults let a scale out add the larger of 4 pods or 100 percent of the current count at 15 second intervals, and hold scale in back for a window of 300 seconds.
+Scaling out and scaling in are treated differently on purpose. AWS scales in more gradually than it scales out, to protect availability. Kubernetes defaults let a scale out add the larger of 4 pods or 100 percent of the current count at 15 second intervals. They hold scale in back for a window of 300 seconds.
 
 ## The Delay
 
@@ -31,9 +31,9 @@ A scaler reacts to a number that is already old. Between the demand and the new 
 
 Warm up is a period during which a new instance is left out of the group's metrics, and during it scale in is blocked.
 
-It isn't enabled by default, and the AWS page on a default warm up suggests starting around 300 seconds and tuning from there. Kubernetes has similar settings: pods that aren't ready are treated as still starting, and CPU samples are ignored for a period that defaults to 5 minutes.
+In AWS it isn't enabled by default, and the guidance on default warm up suggests starting around 300 seconds and tuning from there. Kubernetes has similar settings: pods that aren't ready are treated as still starting, and CPU samples are ignored for a period that defaults to 5 minutes.
 
-The total is the part that matters. In our simulation of registration day, we assumed 150 seconds from the decision to a server taking traffic, which is our assumption, and a metric that is a one minute average.
+The total is the part that matters. In our simulation of registration day we assumed 150 seconds from the decision to a server taking traffic, and a metric that is a one minute average. Both are our assumptions.
 
 ## Registration Day
 
@@ -60,18 +60,18 @@ It lost no requests and cost 10.8 server hours, which is 5.2 fewer than the fixe
 
 When the pattern is known, don't wait for the metric:
 
-- **Scheduled scaling**: An action sets the desired capacity at a time, once or on a recurring cron schedule. AWS uses UTC by default, allows named time zones that follow daylight saving, and an action can run up to two minutes late. Schedules and dynamic policies can work together, with the dynamic policy acting inside the limits the schedule sets
-- **Predictive scaling**: AWS needs at least 24 hours of history, looks at up to 14 days, produces an hourly forecast for the next 48 hours and refreshes it at 6 hour intervals. It suggests running first in a mode that just forecasts, to judge the forecast, and in the scaling mode it adds capacity for expected rises but doesn't remove it, so dynamic policies still handle scale in
+- **Scheduled scaling**: an action sets the desired capacity at a time, once or on a recurring cron schedule. AWS uses UTC by default, allows named time zones that follow daylight saving, and an action can run up to two minutes late. Schedules and dynamic policies can work together, with the dynamic policy acting inside the limits the schedule sets
+- **Predictive scaling**: AWS needs at least 24 hours of history, looks at up to 14 days, produces an hourly forecast for the next 48 hours and refreshes it at 6 hour intervals. Run it first in a mode that only forecasts, to judge the forecast. In the scaling mode it adds capacity for expected rises but doesn't remove it, so dynamic policies still handle scale in
 
 A forecast suits a pattern that repeats, such as the daily rhythm of students. A one time event, like the first morning of a semester, is better served by a schedule that someone with knowledge of the calendar sets, which is the point of the inorganic demand in [Capacity Planning](/system-design/capacity-planning).
 
 ## Why It Flaps
 
-A metric that is noisy and a scaler that answers each wiggle produces **flapping**, the Kubernetes name for replicas that change again and again, adding and removing servers within minutes. Each change costs a launch and a warm up.
+A noisy metric and a scaler that answers each wiggle produce **flapping**, a term Kubernetes uses for replicas that change again and again, adding and removing servers within minutes. Each change costs a launch and a warm up.
 
 We simulated a noisy load with a 6 minute wave over 2 hours, deciding at 15 second intervals. With no protection, the scaler made 252 changes. With a 5 minute stabilization window, in which it scales in to no lower than the highest recommendation of the window, it made 21.
 
-The window works as approximately a rolling maximum, and it exists so that the autoscaler doesn't remove pods just to create the same number again a few moments later. The tolerance does a similar job at the small scale.
+The window acts roughly like a rolling maximum, and it exists so that the autoscaler doesn't remove pods just to create the same number again a few moments later. The tolerance does a similar job at the small scale.
 
 In AWS the equivalents are the gradual scale in and the cooldown, which defaults to 300 seconds and applies to simple scaling policies, since target tracking can scale out without waiting for it.
 
@@ -81,7 +81,7 @@ For background workers, CPU is the wrong signal: a worker with an empty queue an
 
 A good signal for queue based scaling is backlog per instance, the visible messages divided by the instances in service, and the target comes from the acceptable latency divided by the average processing time of a message.
 
-Its worked example has 10 instances, 1,500 messages, 0.1 seconds to process a message and 10 seconds as the longest acceptable wait. The acceptable backlog for each instance is 10 divided by 0.1, which is 100, and the current backlog is 150, so the group grows to 15.
+AWS's worked example has 10 instances, 1,500 messages, 0.1 seconds to process a message and 10 seconds as the longest acceptable wait. The acceptable backlog for each instance is 10 divided by 0.1, which is 100, and the current backlog is 150, so the group grows to 15.
 
 For the textbook app, the workers that resize photos from the [Task Queues](/system-design/task-queues) topic scale this way: 3 photos for each listing, and a few seconds of delay is fine.
 
@@ -91,11 +91,11 @@ Its documented defaults check the source at 30 second intervals, wait 300 second
 
 ## What Autoscaling Doesn't Solve
 
-- **Speed**: A spike faster than the boot time gets there before the capacity does, and that is the job of [Load Shedding and Graceful Degradation](/system-design/load-shedding) while the new servers start
-- **State**: A database or a cache isn't scaled by adding stateless servers, and more web servers can overload it with connections, as in [Bulkheads](/system-design/bulkheads)
-- **Dependencies**: A payment provider with a rate limit stays at its limit, however many servers call it
-- **Cost**: A bug or an attack can drive the count up, so set a maximum, and alert when the group stays near it
-- **Shutdown**: A server removed in a scale in has requests and jobs in flight, so drain them first, and AWS offers scale in protection for instances busy with a job
+- **Speed**: a spike faster than the boot time gets there before the capacity does, and that is the job of [Load Shedding and Graceful Degradation](/system-design/load-shedding) while the new servers start
+- **State**: a database or a cache isn't scaled by adding stateless servers, and more web servers can overload it with connections, as in [Bulkheads](/system-design/bulkheads)
+- **Dependencies**: a payment provider with a rate limit stays at its limit, however many servers call it
+- **Cost**: a bug or an attack can drive the count up, so set a maximum, and alert when the group stays near it
+- **Shutdown**: a server removed in a scale in has requests and jobs in flight, so drain them first, and AWS offers scale in protection for instances busy with a job
 
 ## Settings for the Textbook App
 
