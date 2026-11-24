@@ -16,7 +16,7 @@ Unlike the mean, variance is not linear. Var(aX + b) = a² Var(X), and for a sum
 
 The **covariance** is Cov(X, Y) = E[(X − E[X])(Y − E[Y])]. It is positive when the two tend to be above their means together, negative when one is high as the other is low, and its size depends on the units. The **correlation** divides by both standard deviations, giving a number between −1 and 1: r = Cov(X, Y) / (σₓ σᵧ).
 
-From the same 200,000 sales, the list price and the sold price had a covariance of 843.2 and a correlation of 0.752: expensive books sell for more. The identity for sums held exactly. The variance of list price plus sold price was 4,090.9, equal to the two variances plus twice the covariance, and far from 2,404.5, the two variances alone. Ignoring the covariance would have understated the spread by almost half.
+From the same 200,000 sales, the list price and the sold price had a covariance of 843.2 and a correlation of 0.752: expensive books sell for more. The identity for sums held exactly. The variance of list price plus sold price was 4,090.9, equal to the two variances plus twice the covariance, and far from 2,404.5, the two variances alone. Ignoring the covariance would have understated the variance by 41 percent.
 
 For many variables the covariances form the **covariance matrix**, symmetric, with the variances on its diagonal. It is the matrix of [Eigenvalues and Eigenvectors](/data-ai/eigen) and the parameter of [The Multivariate Gaussian](/data-ai/multivariate-gaussian). Correlation measures only a straight line relationship: a variable can depend strongly on another and have a correlation of zero, as with a U shaped relationship.
 
