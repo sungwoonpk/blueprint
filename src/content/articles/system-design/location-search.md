@@ -63,25 +63,13 @@ We then ran 60 random queries for each radius and compared what the index found 
 | 3 km, Length 5 | 55.0% | 100% | 33,599 |
 | 3 km, Length 6 | 3.6% | 28.2% | 3,484 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of results found for four setups at a 1 km radius">
-<div class="hbar"><span>Length 5, 9 Cells</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-<div class="hbar"><span>Length 6, 9 Cells</span><span class="track"><span class="fill" style="--w: 93.6%"></span></span><span class="value">93.6%</span></div>
-<div class="hbar peak"><span>Length 6, 1 Cell</span><span class="track"><span class="fill" style="--w: 19.4%"></span></span><span class="value">19.4%</span></div>
-<div class="hbar"><span>Length 7, 9 Cells</span><span class="track"><span class="fill" style="--w: 5.7%"></span></span><span class="value">5.7%</span></div>
-</div>
-<figcaption>Share of the true results found for a 1 km radius, by geohash length and cells read, from our experiment</figcaption>
-</figure>
-
 The two middle columns are the share of the true results that came back, and the last is the number of listings examined for each query when nine cells are read. The true answer held 2,287 listings for 1 km and 12,377 for 3 km.
 
-Read the table from the bottom up and three lessons appear. First, one cell isn't enough.
+Three lessons come out of the table:
 
-A user near the edge of a cell has neighbors in the next one, so at length 6 and a 1 km radius the lookup found 19.4 percent of the results. Second, the cells must be at least as big as the radius.
-
-At length 6 a cell is 0.61 by 0.97 km, so the block of nine covers about 0.6 km around the user at best, and the 1 km search missed 6.4 percent.
-
-At length 5 the block covers more than the circle, and the answer was complete. Third, a cell that is too coarse examines a lot. Length 5 found each true result, and it looked at 33,599 listings to return 2,287, about 15 times more than needed.
+- **One cell isn't enough**: a user near the edge of a cell has neighbors in the next one, so at length 6 and a 1 km radius the lookup found 19.4 percent of the results
+- **Cells must be at least as big as the radius**: at length 6 a cell is 0.61 by 0.97 km, so the block of nine covers about 0.6 km around the user at best, and the 1 km search missed 6.4 percent. At length 5 the block covers more than the circle, and the answer was complete
+- **A cell that is too coarse examines a lot**: length 5 found each true result, and it looked at 33,599 listings to return 2,287, about 15 times more than needed
 
 Even so, the exact check is cheap next to the scan. A 1 km query on a full scan took 68 ms in Python on one core, and the index with 9 cells at length 6 took 1.2 ms, though at that length it missed some results.
 
@@ -100,9 +88,9 @@ Latitudes beyond about 85.05 degrees can't be indexed, distances use a spherical
 Relational databases use a tree instead. PostGIS builds spatial indexes on PostgreSQL's GiST framework, as an R tree: each node holds the bounding box of its children, a query descends into the boxes that overlap, and the leaves hold the geometries. A few points matter in practice:
 
 - **Index creation**: `CREATE INDEX ... USING GIST (location)` on a geometry or geography column
-- **Bounding boxes**: The index stores boxes, so it finds candidates quickly and an exact test follows. Huge polygons are a problem, since their boxes cover so much that the index returns them for most queries
-- **Nearest neighbors**: The distance operator, `<->`, used in `ORDER BY ... LIMIT`, lets the index return the closest items in order with no cutoff radius. It kicks in when one of the geometries is a constant, and a hybrid pattern works well: take the nearest 100 by the index, then sort those exactly and keep 10
-- **Approximate then exact**: The distance from a GiST index may be approximate, such as the distance to a bounding box, so the executor recomputes the exact distance and reorders
+- **Bounding boxes**: the index stores boxes, so it finds candidates quickly and an exact test follows. Huge polygons are a problem, since their boxes cover so much that the index returns them for most queries
+- **Nearest neighbors**: the distance operator, `<->`, used in `ORDER BY ... LIMIT`, lets the index return the closest items in order with no cutoff radius. It kicks in when one of the geometries is a constant, and a hybrid pattern works well: take the nearest 100 by the index, then sort those exactly and keep 10
+- **Approximate then exact**: the distance from a GiST index may be approximate, such as the distance to a bounding box, so the executor recomputes the exact distance and reorders
 
 For the textbook app, a query for listings within 2 km of a point, sorted by distance, is a spatial index lookup in PostGIS, or a few ring cells with the exact filter. At this size either returns in milliseconds.
 
@@ -135,13 +123,13 @@ A map that shows counts of listings for each cell at several zoom levels uses th
 
 ## Pitfalls
 
-- **A B tree on latitude and longitude**: It narrows one dimension and scans the other
-- **Reading one cell**: A user at the edge misses the neighbors
-- **Cells smaller than the radius**: The ring doesn't cover the circle
-- **Skipping the exact distance check**: The cell is a filter, not the answer
-- **Forgetting the dateline and the poles**: Prefixes mislead at the edges
-- **A uniform grid over a skewed city**: Some cells hold thousands, others hold zero
-- **Exact coordinates shown to any viewer**: A privacy risk for sellers
+- **A B tree on latitude and longitude**: it narrows one dimension and scans the other
+- **Reading one cell**: a user at the edge misses the neighbors
+- **Cells smaller than the radius**: the ring doesn't cover the circle
+- **Skipping the exact distance check**: the cell is a filter, not the answer
+- **Forgetting the dateline and the poles**: prefixes mislead at the edges
+- **A uniform grid over a skewed city**: some cells hold thousands, others hold zero
+- **Exact coordinates shown to any viewer**: a privacy risk for sellers
 
 ## Key Points
 
