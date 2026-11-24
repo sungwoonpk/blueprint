@@ -4,7 +4,9 @@ A model with a distribution in it, a Poisson for daily sales or a Gaussian for n
 
 ## The Likelihood
 
-Given data x₁, …, xₙ and a model with a parameter θ, the **likelihood** L(θ) is the probability of the observed data as a function of θ, and for independent observations it is a product: L(θ) = ∏ p(xᵢ | θ). The **maximum likelihood estimate** is the θ that makes L largest. Products of many small numbers underflow, so we maximize the **log-likelihood**, a sum, which has the same maximizer, the trick of [Floating Point and Numerical Stability](/data-ai/floating-point).
+Given data x₁, …, xₙ and a model with a parameter θ, the **likelihood** L(θ) is the probability of the observed data as a function of θ, and for independent observations it is a product: L(θ) = ∏ p(xᵢ | θ). The **maximum likelihood estimate** is the θ that makes L largest.
+
+Products of many small numbers underflow, so we maximize the **log-likelihood**, a sum, which has the same maximizer, the trick of [Floating Point and Numerical Stability](/data-ai/floating-point).
 
 The likelihood is not the probability of the parameter. It varies the parameter with the data fixed, and it need not add to 1 over θ. That reversal is what [Bayesian Inference](/data-ai/bayesian-inference) addresses.
 

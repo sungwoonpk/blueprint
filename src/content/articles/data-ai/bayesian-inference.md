@@ -19,11 +19,15 @@ We used two priors. A **flat** prior, Beta(1, 1), says every rate from 0 to 1 is
 | 30 of 100 | 0.300 | 0.304, 0.219 to 0.397 | 0.250, 0.193 to 0.313 |
 | 300 of 1,000 | 0.300 | 0.300, 0.272 to 0.329 | 0.291, 0.265 to 0.318 |
 
-Four things show. With 0 of 5, the maximum likelihood estimate is 0, an impossible sale rate, and the Bayesian posteriors give sensible nonzero ranges. With flat priors the posterior follows the data and is wide when data is scarce, from 0.109 to 0.609 at n = 10. The skeptical prior pulls estimates toward 20 percent: after 30 of 100 it says 0.250 and the data alone says 0.300. And as data grows, the two posteriors converge: at 1,000 they are 0.300 and 0.291, with similar intervals. Enough data overrules a reasonable prior.
+Four things show. With 0 of 5, the maximum likelihood estimate is 0, an impossible sale rate, and the Bayesian posteriors give sensible nonzero ranges.
+
+With flat priors the posterior follows the data and is wide when data is scarce, from 0.109 to 0.609 at n = 10. The skeptical prior pulls estimates toward 20 percent: after 30 of 100 it says 0.250 and the data alone says 0.300. And as data grows, the two posteriors converge: at 1,000 they are 0.300 and 0.291, with similar intervals. Enough data overrules a reasonable prior.
 
 ## Credible Intervals
 
-A 95 percent **credible interval** is a range that contains the parameter with posterior probability 95 percent, given the model and the prior. Unlike the confidence interval of [Estimation and Confidence Intervals](/data-ai/confidence-intervals), it can be read as "there is a 95 percent chance the rate is in this range". That is a statement about belief, and it is as good as the prior and the model. For large samples with weak priors, credible and confidence intervals are numerically close.
+A 95 percent **credible interval** is a range that contains the parameter with posterior probability 95 percent, given the model and the prior.
+
+Unlike the confidence interval of [Estimation and Confidence Intervals](/data-ai/confidence-intervals), it can be read as "there is a 95 percent chance the rate is in this range". That is a statement about belief, and it is as good as the prior and the model. For large samples with weak priors, credible and confidence intervals are numerically close.
 
 ## Choosing a Prior
 
