@@ -16,7 +16,7 @@ The MTEB benchmark, which covers 8 task types, 58 datasets and 112 languages for
 
 ## From Words to Vectors
 
-The idea of representing words as vectors learned from text goes back to word2vec in 2013, which computed such vectors from very large data sets, 1.6 billion words in under a day. The same idea was extended to whole sentences.
+The idea of representing words as vectors learned from text became popular with word2vec in 2013, which computed such vectors from very large data sets, 1.6 billion words in under a day. The same idea was extended to whole sentences.
 
 Sentence-BERT, in 2019, showed why that mattered for search. A model that reads two sentences together needs a pass for each pair, so finding the most similar pair among 10,000 sentences takes about 50 million inference computations, which takes about 65 hours.
 
@@ -39,14 +39,14 @@ The pattern for search follows. Embed each document once, ahead of time, and sto
 
 The comparison is usually **cosine similarity**: the dot product of the two vectors divided by the product of their lengths, which is the cosine of the angle between them. It ranges from -1 for opposite directions to 1 for the same direction, and it ignores length.
 
-When the vectors are normalized to length 1, the dot product equals the cosine. Voyage AI's documentation, which Anthropic points to for embeddings, says its vectors are normalized, that the dot product is the quicker way to compute the same thing, and that cosine similarity and Euclidean distance give identical rankings.
+When the vectors are normalized to length 1, the dot product equals the cosine. For example, Voyage AI's vectors are normalized, so the dot product is the quicker way to compute the same thing, and cosine similarity and Euclidean distance give identical rankings.
 
 Some details are worth knowing before building:
 
 - **Size**: Voyage models default to 1,024 numbers for each text, with 256, 512 and 2,048 as options on some models
-- **Queries and documents differ**: A short question and a long passage don't look alike, so the client marks each text as a query or a document, which is called asymmetric search
-- **Limits on length**: Models read a limited number of tokens, which is 32,000 for most Voyage models, so a long text needs splitting
-- **One model, one space**: Vectors from different models aren't comparable, so changing the model means embedding the whole collection again
+- **Queries and documents differ**: a short question and a long passage don't look alike, so the client marks each text as a query or a document, which is called asymmetric search
+- **Limits on length**: models read a limited number of tokens, which is 32,000 for most Voyage models, so a long text needs splitting
+- **One model, one space**: vectors from different models aren't comparable, so changing the model means embedding the whole collection again
 
 ## Seeing the Gap in an Experiment
 
@@ -61,15 +61,6 @@ A listing carries one name, 70 percent of the time the common one, seven related
 | A Rare Name Alone | 28% | 87% | 57% |
 | A Rare Name and a Related Word | 100% | 100% | 100% |
 | Three Related Words | 100% | 100% | 100% |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of top ten on the right topic for three retrieval methods">
-<div class="hbar peak"><span>Keywords</span><span class="track"><span class="fill" style="--w: 28.2%"></span></span><span class="value">28%</span></div>
-<div class="hbar"><span>Both, Fused</span><span class="track"><span class="fill" style="--w: 57%"></span></span><span class="value">57%</span></div>
-<div class="hbar"><span>Vectors</span><span class="track"><span class="fill" style="--w: 87.3%"></span></span><span class="value">87%</span></div>
-</div>
-<figcaption>Share of the top 10 on the right topic for a query with a rare name alone, from our experiment</figcaption>
-</figure>
 
 The first row is the vocabulary mismatch. The query used a name that few listings carry, so the keyword search found just those few, and the other listings on the topic used a different name.
 
@@ -151,7 +142,7 @@ A model produces one vector for a text, and a long text blurs into an average. A
 
 Fixed size chunking is the most common and simple approach, and a good place to start. Then test smaller chunks of 128 or 256 tokens, which capture finer meaning, against larger ones of 512 or 1,024, which keep more context.
 
-Its test for a good chunk is a human one: if the text makes sense without the text around it, it will make sense to the model. After a hit, fetching the neighboring chunks restores context.
+A good test for a chunk is a human one: if the text makes sense without the text around it, it will make sense to the model. After a hit, fetching the neighboring chunks restores context.
 
 For listings, the text is short, so a listing is often a single chunk. For the long documents of the next topics, such as course pages and syllabi, [Retrieval-Augmented Generation (RAG)](/system-design/rag) builds on this.
 
@@ -170,13 +161,13 @@ For listings, the text is short, so a listing is often a single chunk. For the l
 
 ## Pitfalls
 
-- **Replacing keywords with vectors**: Exact names, codes and ISBNs match better by words
-- **Skipping the evaluation**: No model wins on each task, as MTEB found
-- **Mixing vectors from two models**: The distances carry no meaning
-- **A single vector for a long document**: The meaning blurs
-- **Scanning each vector for each query**: Memory bandwidth sets a ceiling on the rate
-- **Fusing a weak ranker with a strong one at equal weight**: The result lands in between
-- **Forgetting that the query costs a model call**: It adds delay before the search begins
+- **Replacing keywords with vectors**: exact names, codes and ISBNs match better by words
+- **Skipping the evaluation**: no model wins on each task, as MTEB found
+- **Mixing vectors from two models**: the distances carry no meaning
+- **A single vector for a long document**: the meaning blurs
+- **Scanning each vector for each query**: memory bandwidth sets a ceiling on the rate
+- **Fusing a weak ranker with a strong one at equal weight**: the result lands in between
+- **Forgetting that the query costs a model call**: it adds delay before the search begins
 
 ## Key Points
 

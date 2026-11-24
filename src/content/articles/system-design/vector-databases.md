@@ -62,7 +62,7 @@ Probing 2 lists found 98.7 percent of the true neighbors with 4.5 percent of the
 
 A sizing rule for pgvector: a number of lists equal to the rows divided by 1,000 up to a million rows, and the square root of the rows beyond that, with the probes near the square root of the lists.
 
-Its default is 1 probe, which our table shows is the least accurate setting. Two operational facts: the index is trained, so it should be built after the table holds data, and the FAISS guidance asks for training sets of 30 to 256 times the number of lists.
+pgvector's default is 1 probe, which our table shows is the least accurate setting. Two operational facts: the index is trained, so it should be built after the table holds data, and the FAISS guidance asks for training sets of 30 to 256 times the number of lists.
 
 ### Neighbor Graphs
 
@@ -80,20 +80,16 @@ We built a simpler graph with a single layer, 12 links for each new vector, and 
 | 80 | 0.843 | 4.2% |
 | 160 | 0.938 | 5.2% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of a scan for three ways of searching">
-<div class="hbar peak"><span>Exact Scan</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">100%</span></div>
-<div class="hbar"><span>Graph, 0.938 Recall</span><span class="track"><span class="fill" style="--w: 5.2%"></span></span><span class="value">5.2%</span></div>
-<div class="hbar"><span>Lists, 0.987 Recall</span><span class="track"><span class="fill" style="--w: 4.5%"></span></span><span class="value">4.5%</span></div>
-</div>
-<figcaption>Comparisons for each query at similar recall, as a share of a scan of 10,000 vectors, from our tests</figcaption>
-</figure>
-
 Both families got above 93 percent recall for around 5 percent of a scan. Two cautions come with these tables. The graph is simpler than the real thing, with no layers and no neighbor selection rule, so a production HNSW does better than our rows.
 
 And clustered data favors lists. Don't read the tables as a ranking of the families. They show that each has a knob that trades work for recall, and that you have to pick the setting from measured recall.
 
-The practical differences are these. HNSW suits a lot of memory or a small dataset, needs no training, and stores for each vector the vector plus 8 times M bytes for the links, and some libraries don't support removing vectors. pgvector's defaults are 16 links, a build candidate list of 64 and a search list of 40, and HNSW has a better speed and recall tradeoff than IVFFlat, with slower builds and more memory. Both can be tuned by the same logic as our tables.
+The practical differences are these:
+
+- **HNSW**: suits a lot of memory or a small dataset, needs no training, and stores for each vector the vector plus 8 times M bytes for the links. Some libraries don't support removing vectors
+- **pgvector's defaults**: 16 links, a build candidate list of 64 and a search list of 40. HNSW has a better speed and recall tradeoff than IVFFlat, with slower builds and more memory
+
+Both can be tuned by the same logic as our tables.
 
 ## Memory Is the Vectors
 
@@ -137,7 +133,7 @@ Filtering during the walk returned the full 10 rows in each case, at a cost that
 
 That points to a planner: estimate how many rows match, scan the matches when there are few, and walk the graph when there are many. For selective filters, a B-tree index on the filter column gives exact search, partial indexes cover a few values, and partitioning covers many.
 
-Since version 0.8.0 it has iterative scans that keep going until enough rows pass the filter, bounded by a maximum number of scanned tuples, default 20,000.
+Since version 0.8.0 pgvector has iterative scans that keep going until enough rows pass the filter, bounded by a maximum number of scanned tuples, default 20,000.
 
 Qdrant builds payload indexes to speed up filtering, best created before ingesting data, and its planner falls back to a scan when few points match.
 
@@ -162,10 +158,10 @@ An index is a derived copy of the data, and it has the problems of any other:
 
 - **Updates and deletes**: FAISS says HNSW doesn't support removing vectors, and pgvector warns that vacuuming an HNSW index can be slow, so reindex first. Plan for tombstones and periodic rebuilds
 - **Builds**: pgvector says an HNSW build is much faster when the graph fits in `maintenance_work_mem`, and recommends concurrent builds in production
-- **Freshness**: A new listing has to be embedded and added, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
-- **A new model**: Vectors from two models don't mix, so build the new index beside the old and switch, as in [Migrating Between Datastores Without Downtime](/system-design/migrating-datastores)
-- **Recall in production**: Compare the index against an exact scan on a sample of queries, which pgvector shows how to do by disabling the index scan for one query, and graph the recall like any other metric
-- **Different results after indexing**: Results change after an approximate index is added, so tests that expect exact order break
+- **Freshness**: a new listing has to be embedded and added, through the change log of [Keeping Caches, Indexes and Copies in Sync](/system-design/keeping-copies-in-sync)
+- **A new model**: vectors from two models don't mix, so build the new index beside the old and switch, as in [Migrating Between Datastores Without Downtime](/system-design/migrating-datastores)
+- **Recall in production**: compare the index against an exact scan on a sample of queries, which pgvector shows how to do by disabling the index scan for one query, and graph the recall like any other metric
+- **Different results after indexing**: results change after an approximate index is added, so tests that expect exact order break
 
 ## Choosing
 
@@ -197,13 +193,13 @@ A separate service also adds a network hop and a second copy to keep in sync, so
 
 ## Pitfalls
 
-- **An approximate index from the start**: A scan is simpler and exact while the data is small
-- **The default search setting**: One probe or a small list costs recall, so measure it
-- **Filtering after the search**: A selective filter returns few or no rows
-- **Ignoring memory for the vectors**: They are most of the index
-- **No measurement of recall**: The index can drift from the truth without an error
-- **Mixing vectors from two models**: The neighbors become meaningless
-- **Deleting rows without a plan**: Graphs handle removal poorly
+- **An approximate index from the start**: a scan is simpler and exact while the data is small
+- **The default search setting**: one probe or a small list costs recall, so measure it
+- **Filtering after the search**: a selective filter returns few or no rows
+- **Ignoring memory for the vectors**: they are most of the index
+- **No measurement of recall**: the index can drift from the truth without an error
+- **Mixing vectors from two models**: the neighbors become meaningless
+- **Deleting rows without a plan**: graphs handle removal poorly
 
 ## Key Points
 

@@ -14,7 +14,7 @@ A failed test is one or the other. Missing knowledge is an in context problem, w
 
 A step comes before any of them, with two prerequisites: a clear definition of the success criteria for the use case, and some way to test against those criteria empirically.
 
-It adds that not each success criterion or failing test is best solved by prompt engineering, and that you can sometimes improve latency and cost more easily by choosing a different model.
+The same guide adds that not every success criterion or failing test is best solved by prompt engineering, and that you can sometimes improve latency and cost more easily by choosing a different model.
 
 | Symptom | What Is Missing | First Lever |
 | --- | --- | --- |
@@ -44,9 +44,9 @@ Prompt changes cost minutes and no training. Prompt engineering is typically the
 
 The prompt has three parts to work on:
 
-- **Instructions**: State the task, the audience, the length and the format, and say what to do when the answer isn't known
-- **Examples**: Show two or five inputs with the output you want, which moves the model toward a format faster than a description does
-- **The model**: A larger model follows a hard instruction more reliably, and a smaller one costs less, as in [Caching and Model Routing](/system-design/llm-cost-latency)
+- **Instructions**: state the task, the audience, the length and the format, and say what to do when the answer isn't known
+- **Examples**: show two or five inputs with the output you want, which moves the model toward a format faster than a description does
+- **The model**: a larger model follows a hard instruction more reliably, and a smaller one costs less, as in [Caching and Model Routing](/system-design/llm-cost-latency)
 
 The limit is the token cost. Each instruction and example is paid for on each request, and a prompt that grows to thousands of tokens is the cue to look at caching and, later, at fine-tuning.
 
@@ -85,15 +85,6 @@ The helper's prompt has a 3,000 token prefix of instructions and examples, a 200
 | Long Prompt | $0.0074 | $7.40 |
 | Long Prompt With Cache | $0.0020 | $2.00 |
 | Fine-Tuned Small Model | $0.00035 | $0.35 |
-
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Dollars per thousand requests for three options">
-<div class="hbar peak"><span>Long Prompt</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">$7.40</span></div>
-<div class="hbar"><span>Long Prompt, Cached</span><span class="track"><span class="fill" style="--w: 27%"></span></span><span class="value">$2.00</span></div>
-<div class="hbar"><span>Fine-Tuned Small Model</span><span class="track"><span class="fill" style="--w: 4.7%"></span></span><span class="value">$0.35</span></div>
-</div>
-<figcaption>Cost for 1,000 requests of the helper, from our round prices and the assumed price of a small tuned model</figcaption>
-</figure>
 
 Fine-tuning has a fixed cost. We assumed 1,000 labeled examples at 2 minutes each, which is 33 hours, at $30 an hour, and about $15 of training for 1.5 million tokens at $10 for each million. That is about $1,015. It repays against the uncached prompt after 144,000 requests, which is 1,600 a day over 90 days.
 
@@ -137,13 +128,13 @@ When you combine them, build the training examples in the shape the live prompt 
 
 ## Pitfalls
 
-- **Starting with fine-tuning**: A prompt change could have fixed it in an hour
-- **Training facts into the weights**: They go stale and are hard to correct
-- **No evaluation set**: A change can't be shown to help
-- **Retrieval for a behavior problem**: Added context can lower the score
-- **Counting the training run alone**: Labeling and re-evaluation are most of the cost
-- **Examples unlike production inputs**: The tuned model works on the sample and not on traffic
-- **Ignoring caching in the break-even**: It shrinks the saving from a shorter prompt
+- **Starting with fine-tuning**: a prompt change could have fixed it in an hour
+- **Training facts into the weights**: they go stale and are hard to correct
+- **No evaluation set**: a change can't be shown to help
+- **Retrieval for a behavior problem**: added context can lower the score
+- **Counting the training run alone**: labeling and re-evaluation are most of the cost
+- **Examples unlike production inputs**: the tuned model works on the sample and not on traffic
+- **Ignoring caching in the break-even**: it shrinks the saving from a shorter prompt
 
 ## Key Points
 
