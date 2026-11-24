@@ -8,7 +8,7 @@ An AI system needs the signals of [Logs, Metrics and Traces](/system-design/obse
 
 Four golden signals apply here, with some additions: latency, traffic, errors and saturation. The old warnings carry over as well. Errors include the implicit kind, wrong content returned with a 200, and the kind defined by policy, such as a response over a time limit.
 
-Averages hide the tail: its example is a service averaging 100 ms at 1,000 requests a second where 1 percent of the requests still take about 5 seconds. In our simulation of [How LLM Inference Works](/system-design/llm-inference), the continuous batching server had a mean latency of 2.1 seconds and a 95th percentile of 6.3.
+Averages hide the tail: a service can average 100 ms at 1,000 requests a second while 1 percent of the requests still take about 5 seconds. In our simulation of [How LLM Inference Works](/system-design/llm-inference), the continuous batching server had a mean latency of 2.1 seconds and a 95th percentile of 6.3.
 
 | Signal | What to Track | Why |
 | --- | --- | --- |
@@ -33,12 +33,12 @@ Names for these signals are being standardized in OpenTelemetry's conventions fo
 
 A single answer is the product of several steps: the prompt version, the model, the passages retrieved, the tool calls, the guardrail decisions and the output. When a student reports a wrong answer, you need the whole record. Record for each request:
 
-- **Versions**: The prompt template, the model and its version, and the index version
-- **Retrieval**: The ids and scores of the passages, as in [Retrieval-Augmented Generation (RAG)](/system-design/rag)
-- **Tool calls**: Each call, its arguments, its latency and its result or error, as in [Agents and Tool Use](/system-design/agents)
-- **Tokens and cost**: Input, output and cached tokens for each step
-- **Guardrails**: Which checks ran, their scores and their decisions, as in [Guardrails](/system-design/guardrails)
-- **The text**: Input and output, with personal data handled according to [Data Privacy and Compliance](/system-design/privacy), and retention set on purpose
+- **Versions**: the prompt template, the model and its version, and the index version
+- **Retrieval**: the ids and scores of the passages, as in [Retrieval-Augmented Generation (RAG)](/system-design/rag)
+- **Tool calls**: each call, its arguments, its latency and its result or error, as in [Agents and Tool Use](/system-design/agents)
+- **Tokens and cost**: input, output and cached tokens for each step
+- **Guardrails**: which checks ran, their scores and their decisions, as in [Guardrails](/system-design/guardrails)
+- **The text**: input and output, with personal data handled according to [Data Privacy and Compliance](/system-design/privacy), and retention set on purpose
 
 With these records, a bad answer can be replayed, traced to the passage or the tool result that caused it, and added to the test set.
 
@@ -46,9 +46,9 @@ With these records, a bad answer can be replayed, traced to the passage or the t
 
 The world the system sees changes, and the system may not. **Data drift** is a change in the distribution of the inputs a model receives in production.
 
-It lists ways to measure it: summary statistics, statistical tests such as Kolmogorov-Smirnov for numbers and chi-square for categories, distance measures such as the Wasserstein distance, Jensen-Shannon divergence and the population stability index, and simple rules, such as an alert when a new category appears.
+Ways to measure it include summary statistics, statistical tests such as Kolmogorov-Smirnov for numbers and chi-square for categories, distance measures such as the Wasserstein distance, Jensen-Shannon divergence and the population stability index, and simple rules, such as an alert when a new category appears.
 
-It notes that on large data sets tests become over sensitive, so distance measures are preferred. For text, it points to embeddings and descriptors, and a practical start is to sort each request into a topic and watch the mix.
+On large data sets, tests become over sensitive, so distance measures are preferred. For text, embeddings and descriptors help, and a practical start is to sort each request into a topic and watch the mix.
 
 Drift measures have a noise floor that depends on volume. We simulated 20 topics with a skewed baseline mix and computed the population stability index for each day's traffic against the baseline, with no real drift:
 
@@ -83,19 +83,22 @@ The system behind an API can change without a change in your code. Chen, Zaharia
 
 On one test of telling prime from composite numbers, GPT-4 went from 84 percent in March to 51 percent in June. It became less willing to answer sensitive questions, did better on multi step questions, and made more formatting mistakes in generated code, which is why continuous monitoring matters.
 
-Three habits follow. Pin the version: call a dated model, not an alias that moves, and record it in the trace. Plan for retirement: providers publish end of life dates for model versions, so a model switch belongs on a calendar.
+Three habits follow:
 
-And test before switching. Run the evaluation set against a new version, then send a share of traffic to it as a canary, with the practices of [Canary Releases and Other Deployment Strategies](/system-design/deployments) and [Feature Flags](/system-design/feature-flags).
+- **Pin the version**: call a dated model, not an alias that moves, and record it in the trace
+- **Plan for retirement**: providers publish end of life dates for model versions, so a model switch belongs on a calendar
+- **Test before switching**: run the evaluation set against a new version, then send a share of traffic to it as a canary, with the practices of [Canary Releases and Other Deployment Strategies](/system-design/deployments) and [Feature Flags](/system-design/feature-flags)
 
 Watch the formatting failures in particular. A change that moves a model from valid JSON to almost valid JSON breaks the code behind it with no sign in the quality metrics.
 
 ## Measure Quality on Live Traffic
 
-Quality needs its own measurement, since no error code reports a wrong answer. Several signals help.
+Quality needs its own measurement, since no error code reports a wrong answer. Several signals help:
 
-Sampled grading is the backbone: take a random sample of real conversations each day and grade them with a model judge and, for a smaller subset, with a person, using the graders of [Evaluation](/system-design/ai-evaluation). User feedback adds thumbs, reports and edits, which are sparse and biased toward the unhappy.
-
-Behavior speaks too: rephrasing the same question, abandoning the chat, or asking for a person. And checks on grounding give the share of answers whose claims the retrieved text supports.
+- **Sampled grading**: the backbone. Take a random sample of real conversations each day and grade them with a model judge and, for a smaller subset, with a person, using the graders of [Evaluation](/system-design/ai-evaluation)
+- **User feedback**: thumbs, reports and edits, which are sparse and biased toward the unhappy
+- **Behavior**: rephrasing the same question, abandoning the chat, or asking for a person
+- **Grounding checks**: the share of answers whose claims the retrieved text supports
 
 Turn it into an objective, as in [SLIs, SLOs and Error Budgets](/system-design/slo): the share of sampled answers graded good stays at or above 90 percent over 7 days, and alerts follow the rules of [Alerting and Dashboards](/system-design/alerting).
 
@@ -124,13 +127,13 @@ Give dashboards to different readers: operations looks at latency and saturation
 
 ## Pitfalls
 
-- **Trusting a green dashboard**: A wrong answer returns 200
-- **Averages for latency**: The tail is what students notice
-- **A drift threshold borrowed from elsewhere**: The noise floor depends on volume
-- **Alerting on a daily check at a loose bar**: Chance crosses it about once a month
-- **An alias that points to a moving model**: The behavior changes with no deploy
-- **No record of versions**: A complaint can't be traced to the change
-- **Monitoring with no path to the test set**: The same failure comes back
+- **Trusting a green dashboard**: a wrong answer returns 200
+- **Averages for latency**: the tail is what students notice
+- **A drift threshold borrowed from elsewhere**: the noise floor depends on volume
+- **Alerting on a daily check at a loose bar**: chance crosses it about once a month
+- **An alias that points to a moving model**: the behavior changes with no deploy
+- **No record of versions**: a complaint can't be traced to the change
+- **Monitoring with no path to the test set**: the same failure comes back
 
 ## Key Points
 
