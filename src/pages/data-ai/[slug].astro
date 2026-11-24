@@ -1,0 +1,16 @@
+---
+import TopicPage from '../../components/TopicPage.astro';
+import { subjectAt } from '../../data/subjects';
+
+export function getStaticPaths() {
+  const { topics } = subjectAt('/data-ai');
+  return topics.map((topic, i) => ({
+    params: { slug: topic.slug },
+    props: { topic, prev: topics[i - 1], next: topics[i + 1] },
+  }));
+}
+
+const { topic, prev, next } = Astro.props;
+---
+
+<TopicPage subject={subjectAt('/data-ai')} topic={topic} prev={prev} next={next} />

@@ -1,0 +1,31 @@
+# 8. The Data & AI roadmap
+
+**Decision:** The Data & AI subject has 12 phases and 233 topics, written for a computer science student in the later years of a degree or an engineer early in a career. It runs in one line, from data to models: working with data (statistics, experiments, data platforms), then machine learning, deep learning and language models, then how to run them in practice and how to do it responsibly, then specialized problems and the landmark papers.
+
+**Why:** The reader has programmed, and has had discrete math, probability and linear algebra, but has little practice with data or models. The subject has to start from that reader and end where a first job begins: choosing a model, trusting the data, shipping it and being accountable for it.
+
+**How it was checked:** we read the lecture and chapter order of the main university courses (Stanford CS229, CS230, CS231n, CS224N, CS336, CS324, CS329S; Berkeley CS 189; CMU 10-601; MIT 6.390), open textbooks and courses (Dive into Deep Learning, Mathematics for Machine Learning, An Introduction to Statistical Learning, OpenIntro Statistics, Forecasting: Principles and Practice, Fairness and Machine Learning, Interpretable Machine Learning, the Deep Learning book, fast.ai, Google's Machine Learning Crash Course, the Hugging Face LLM course, Karpathy's Zero to Hero), two books on production systems (Fundamentals of Data Engineering and Designing Machine Learning Systems), and primary documents (the NIST AI Risk Management Framework, the EU AI Act summary, the CIDR lakehouse paper, Google's MLOps guide and Rules of Machine Learning, Hidden Technical Debt in Machine Learning Systems, The ML Test Score, Model Cards, Datasheets for Datasets). The ACM data science and CS2023 reports were checked from search summaries only, because the publisher refused automated downloads. No source's structure was copied. Where they disagree, the order follows our own rule: each topic builds on what came before it.
+
+**What the sources agree on:**
+
+- Every machine learning course opens with supervised learning and the train, validation and test split, then linear models and gradient descent, then generalization (overfitting, bias and variance, regularization), then classic models, and only then neural networks. We follow that, and put evaluation and features beside generalization because they are what a practitioner uses it for.
+- Courses taught now no longer stop at neural networks. CS229, CMU 10-601, MIT 6.390 and CS230 each add transformers, language models and responsible AI. Deep learning therefore ends with transformers and generative models, and language models get their own phase.
+- Production courses and books (CS329S, Designing Machine Learning Systems, Google's MLOps guide) agree on the arc: requirements, data, modeling, deployment, monitoring, continual learning, then the human side. That is the Machine Learning in Practice phase.
+
+**Ordering choices worth recording:**
+
+- Data before models. Statistics and data platforms come first, because a model is only as good as its data, and because the experiment and inference ideas (sampling, hypothesis tests, power) are used again when comparing models.
+- Math is its own short phase, not scattered through the others. The reader has met it in courses, so each topic is a refresher aimed at what machine learning needs next (the chain rule for backpropagation, cross-entropy for losses, the SVD for PCA).
+- Classic models stay, in their own phase. Trees and boosting still win on tabular data, and k-means and PCA are used everywhere. They also teach the vocabulary that deep learning reuses.
+- Reinforcement learning is a group in Specialized Problems, next to recommendation and forecasting, since it is the main subject that the other phases do not lead into. Its use in aligning language models is covered in the language models phase.
+- Landmark Papers come last, as System Design's Classic Systems do, ordered by theme and each tied to the chapters it illustrates. They are deep dives that use everything before them.
+
+**Boundaries with the other subjects:**
+
+- **System Design, phase 8 (AI Systems)** covers building and running applications on top of models: serving, caching and routing, semantic search, vector databases, retrieval-augmented generation, context windows and agents, evaluation and guardrails of an application, and monitoring it in production. Data & AI covers how models are made and why they behave as they do. Where both touch a topic (embeddings, evaluation, monitoring, prompt injection), Data & AI teaches the idea and links to the system design topic for the engineering. Retrieval-augmented generation and agents have no topic here; they live in System Design.
+- **System Design, phases 3 and 4** already teach warehouses, columnar storage, star schemas, ETL and ELT, batch and stream processing, change data capture, job schedulers, workflow engines and probabilistic structures. The Data Platforms and Pipelines phase links to them and teaches only what they leave out: lakes and lakehouses, table formats, transformations as code, slowly changing dimensions, lineage, data quality, contracts and governance.
+- **Algorithms** has dynamic programming and graph algorithms. The Reinforcement Learning group uses value iteration and Q-learning, which build on them, and links back.
+
+**Costs:** At 233 topics this is the largest subject on the site, and the Landmark Papers and Specialized Problems phases are the easiest to postpone, since no other phase depends on them. Several early topics (the Math phase, parts of Foundations) are refreshers that some readers will skip. Years for the older landmark papers (the Perceptron, backpropagation, LSTM) were not confirmed from a primary page; each is verified when its article is written.
+
+**Alternatives:** Split into two subjects, Data and AI (a cleaner line, but the reader of a first data job needs both, and the middle, ML in practice, would belong to neither); drop Math and send the reader to a textbook (shorter, but the site promises that each topic needs only what came before); fold Landmark Papers into the phases they illustrate (fewer topics, but a phase of papers read in order is how most people meet the field).

@@ -1,6 +1,7 @@
 import { numberTopics, type NumberedTopic, type Phase } from '../lib/roadmap';
 import { phases as systemDesign } from './system-design';
 import { phases as algorithms } from './algorithms';
+import { phases as dataAi } from './data-ai';
 
 // Every subject on the site, in the order the header menu and the home page's
 // moons list them.
@@ -22,7 +23,7 @@ const subject = (name: string, path: string, phases: Phase[]): Subject => ({
 export const subjects: Subject[] = [
   subject('System Design', '/system-design', systemDesign),
   subject('Algorithms', '/algorithms', algorithms),
-  subject('Data & AI', '/data-ai', []),
+  subject('Data & AI', '/data-ai', dataAi),
 ];
 
 export const subjectAt = (path: string): Subject => subjects.find((s) => s.path === path)!;
