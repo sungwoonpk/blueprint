@@ -8,9 +8,9 @@ Both questions are about a price. This topic is about how to find it, and how to
 
 ## A Low Cost Isn't the Goal
 
-The Azure Well-Architected guidance on cost makes a point that sets the tone: a cost optimized workload isn't necessarily a low cost workload. Its advice is to spend just what is needed to reach the highest return, and not to design beyond planned growth, since that lowers the return.
+A cost optimized workload isn't necessarily a low cost workload. The aim is to spend just what is needed to reach the highest return, and not to design beyond planned growth, since that lowers the return.
 
-The aim, in similar terms: a workload that uses its resources fully, reaches the outcome at the lowest price and meets its functional requirements. The words that matter are the last ones. The requirements come first, and the cost is minimized under them.
+In other words, the workload uses its resources fully, reaches the outcome at the lowest price and meets its functional requirements. The words that matter are the last ones. The requirements come first, and the cost is minimized under them.
 
 That means the targets have to be written down before the arithmetic starts. [SLIs, SLOs and Error Budgets](/system-design/slo) gives the targets, and this topic prices them.
 
@@ -48,7 +48,7 @@ Reliability has a steep price. An incremental improvement may cost 100 times mor
 | 99.99% | About 52.6 minutes |
 | 99.999% | About 5.3 minutes |
 
-The values for the other rows are our arithmetic from the year's 8,760 hours.
+The rows are our arithmetic on the year's 8,760 hours.
 
 A rule decides it. Take a service with revenue of 1 million dollars and propose to move from 99.9 to 99.99 percent, an improvement of 0.09 percent. The value is 1 million times 0.0009, or 900 dollars, so the improvement is worth doing if it costs less than that, and not otherwise.
 
@@ -56,9 +56,9 @@ For the textbook app, if we assume revenue of 200,000 dollars a year, the same n
 
 Users also set a ceiling. A user on a 99 percent reliable phone can't tell 99.99 from 99.999 percent service.
 
-Its examples of paying for less are instructive too: a throughput oriented Bigtable cluster can cost as little as 10 to 50 percent of a low latency one, and ads that may be hundreds of milliseconds slower can be served from fewer locations, at lower cost.
+Paying for less can be right too: a throughput oriented Bigtable cluster can cost as little as 10 to 50 percent of a low latency one, and ads that may be hundreds of milliseconds slower can be served from fewer locations, at lower cost.
 
-Redundancy follows the same logic. The options for disaster recovery come in order of price: a hot, active-active setup is the most expensive and recovers fastest, a cold one keeps just backups and images, and one that redeploys from code costs little while idle and takes the longest to recover. [Backups and Disaster Recovery](/system-design/backup-dr) covers the choice with recovery times attached.
+Redundancy follows the same logic. Disaster recovery options come in order of price. A hot, active-active setup is the most expensive and recovers fastest. A cold one keeps just backups and images. One that redeploys from code costs little while idle and takes the longest to recover. [Backups and Disaster Recovery](/system-design/backup-dr) covers the choice with recovery times attached.
 
 ## Spending to Save
 
@@ -71,9 +71,9 @@ Some spending lowers the bill. A cache is the usual case, since it takes reads a
 | 80% | 600 | 1 |
 | 95% | 150 | 1 |
 
-These are our arithmetic, and they leave out the spare server each tier would need for a failure. The cache itself costs a server or more, so the saving is the difference.
+These figures are our arithmetic, and they leave out the spare server each tier would need for a failure. The cache itself costs a server or more, so the saving is the difference.
 
-The point holds beyond caching: a queue that flattens a peak, a [Caching Patterns for Reads and Writes](/system-design/caching-patterns) design that avoids a hot query and an index that avoids a scan each spend a little to save a lot.
+The point holds beyond caching: a queue that flattens a peak, a design from [Caching Patterns for Reads and Writes](/system-design/caching-patterns) that avoids a hot query, and an index that avoids a scan each spend a little to save a lot.
 
 ## Usage and Rate
 
@@ -81,10 +81,10 @@ The work splits in two. **Usage optimization** means using fewer resources to ge
 
 The usage levers match this phase's topics:
 
-- **Right sizing**: Watch CPU, memory and storage, find low or uneven use, and shrink what is over allocated
+- **Right sizing**: watch CPU, memory and storage, find low or uneven use, and shrink what is over allocated
 - **Scaling to demand**: [Autoscaling](/system-design/autoscaling) removes the capacity that the peak needed once it has passed
-- **Waste**: Decommission unused resources and delete data that is no longer needed
-- **Environments**: Non production environments can use fewer and smaller instances, and be created on demand, though they should still resemble production for the tests that matter
+- **Waste**: decommission unused resources and delete data that is no longer needed
+- **Environments**: non production environments can use fewer and smaller instances, and be created on demand, though they should still resemble production for the tests that matter
 
 The rate levers are commitments for the steady baseline and cheaper interruptible capacity for work that can be stopped, as in the purchase options of [Capacity Planning](/system-design/capacity-planning).
 
@@ -96,9 +96,9 @@ For the textbook app, suppose the monthly bill is 1,800 dollars and the app serv
 
 A rising figure over time means cost is growing faster than the use it supports, and a falling one after an optimization is the proof that it worked. Both numbers are our assumptions.
 
-Two supports make the figure useful. Allocation, using accounts and tags, shows which team and which feature a cost belongs to, which the framework ties to its principle that each team takes ownership of their technology use. And alerts on anomalies against a trend catch a runaway scaling group early.
+Two supports make the figure useful. Allocation, using accounts and tags, shows which team and which feature a cost belongs to, which fits the FinOps principle that each team owns its technology use. And alerts on anomalies against a trend catch a runaway scaling group early.
 
-The framework's three phases form a loop: inform, to see the cost and its allocation, optimize, to choose the changes, and operate, to carry them out and keep watching. Its principles stress that teams collaborate, that business value drives technology decisions, and that cost data is timely and accurate.
+The framework's three phases form a loop: inform, to see the cost and its allocation, optimize, to choose the changes, and operate, to carry them out and keep watching. The principles stress that teams collaborate, that business value drives technology decisions, and that cost data is timely and accurate.
 
 ## Deciding
 
@@ -116,12 +116,12 @@ Then pick the point where the next step costs more than it returns, and revisit 
 
 ## Pitfalls
 
-- **Cutting below the requirement**: Saving money by dropping the spare server, a saving the first outage can erase
-- **Over buying a nine**: Reliability that users can't see and the revenue doesn't repay
-- **Optimizing the rate first**: A three year commitment for capacity that waste hasn't been removed from
-- **A bill without allocation**: A total that no team feels responsible for
-- **Forgetting the people**: Engineering time to run a complex design is a cost too, which Azure's cost checklist includes
-- **Measuring once**: Prices and traffic move, so the plan needs a review on a schedule
+- **Cutting below the requirement**: saving money by dropping the spare server, a saving the first outage can erase
+- **Over buying a nine**: reliability that users can't see and the revenue doesn't repay
+- **Optimizing the rate first**: a three year commitment for capacity that waste hasn't been removed from
+- **A bill without allocation**: a total that no team feels responsible for
+- **Forgetting the people**: engineering time to run a complex design is a cost too
+- **Measuring once**: prices and traffic move, so the plan needs a review on a schedule
 
 ## Key Points
 
