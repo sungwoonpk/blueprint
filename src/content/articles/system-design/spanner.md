@@ -99,16 +99,6 @@ The first commits in 9 ms of Paxos work, which is close to the published figure,
 | 50 ms | 40.5% | 0% | 100 ms |
 | 100 ms | 45.2% | 0% | 200 ms |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of transactions ordered wrongly without commit wait, by clock uncertainty">
-<div class="hbar"><span>Epsilon 4 ms</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0%</span></div>
-<div class="hbar"><span>Epsilon 10 ms</span><span class="track"><span class="fill" style="--w: 27.6%"></span></span><span class="value">12.5%</span></div>
-<div class="hbar"><span>Epsilon 50 ms</span><span class="track"><span class="fill" style="--w: 89.5%"></span></span><span class="value">40.5%</span></div>
-<div class="hbar peak"><span>Epsilon 100 ms</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">45.2%</span></div>
-</div>
-<figcaption>Share of back to back transactions ordered wrongly with plain clocks, by clock uncertainty, from our simulation</figcaption>
-</figure>
-
 Three things come out of the table. With a small epsilon, the Paxos round is already longer than the wait, so the guarantee is free.
 
 With clocks as loose as an ordinary time service gives, tens of milliseconds, nearly half of back to back transactions were ordered wrongly without the wait, and the wait would cost 100 to 200 ms per write.
@@ -154,13 +144,13 @@ The third is that multi group transactions are slower, as our table shows. And t
 
 ## Pitfalls
 
-- **Timestamps from plain local clocks**: A fast clock stamps a later commit with an earlier time
-- **A hot directory**: One group's leader takes the whole load
-- **Transactions that span many groups**: Each extra group makes the slowest one the speed
-- **Loose clocks without commit wait**: Back to back transactions are ordered wrongly
-- **Strong consistency for the whole data set**: The wait and the extra round are paid where they don't matter
-- **A lease that is too long**: A dead leader takes the lease time to replace
-- **Reading from the leader for a report**: A snapshot read on a nearby replica is cheaper
+- **Timestamps from plain local clocks**: a fast clock stamps a later commit with an earlier time
+- **A hot directory**: one group's leader takes the whole load
+- **Transactions that span many groups**: each extra group makes the slowest one the speed
+- **Loose clocks without commit wait**: back to back transactions are ordered wrongly
+- **Strong consistency for the whole data set**: the wait and the extra round are paid where they don't matter
+- **A lease that is too long**: a dead leader takes the lease time to replace
+- **Reading from the leader for a report**: a snapshot read on a nearby replica is cheaper
 
 ## Key Points
 

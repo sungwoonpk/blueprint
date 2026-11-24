@@ -28,7 +28,12 @@ reduce(book, counts):
 
 Between the two, the system groups the pairs by key. That grouping is the step called the shuffle, and nobody writes it.
 
-The same two function shape covers a surprising range: a distributed grep, where the map emits a line if it matches and the reduce copies it; the reverse of a link graph, where the map emits a target and its source; an inverted index, where the map emits a word and a document and the reduce lists the documents; and a sort, where the map emits a key and the record and the system's ordering does the rest.
+The same two function shape covers a surprising range:
+
+- **Distributed grep**: the map emits a line if it matches, and the reduce copies it
+- **The reverse of a link graph**: the map emits a target and its source
+- **An inverted index**: the map emits a word and a document, and the reduce lists the documents
+- **A sort**: the map emits a key and the record, and the system's ordering does the rest
 
 The restriction is the gift. A map handles one record at a time and can't see another, and a reduce sees one key at a time.
 
@@ -110,15 +115,6 @@ We simulated it. 20,000 tasks of about a minute each on 200 workers, with 2 perc
 | 2%, 10 Times Slower | 6,832 s | 6,333 s | Near 0% |
 | 2%, 100 Times Slower | 11,466 s | 6,435 s | 4.1% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Job time without and with backup tasks when 2 percent of workers are 100 times slower">
-<div class="hbar peak"><span>No Backups</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">11,466 s</span></div>
-<div class="hbar"><span>With Backups</span><span class="track"><span class="fill" style="--w: 56.1%"></span></span><span class="value">6,435 s</span></div>
-<div class="hbar"><span>No Slow Workers</span><span class="track"><span class="fill" style="--w: 54%"></span></span><span class="value">6,186 s</span></div>
-</div>
-<figcaption>Job time when 2 percent of workers are 100 times slower, from our simulation</figcaption>
-</figure>
-
 Four slow machines out of 200 almost doubled the job without backups, and the backups brought it back within 4 percent of the healthy time for 4 percent more work. The original measurement told a similar story: a sort took 44 percent longer with backups switched off.
 
 The design shows a general rule for any tail: spend a little extra work to hedge the slowest few at the end, the same instinct as the hedged requests of [Timeouts, Retries and Backoff](/system-design/timeouts-retries).
@@ -162,13 +158,13 @@ Those limits are what the next systems answered. [Spark](/system-design/spark) k
 
 ## Pitfalls
 
-- **A map that isn't deterministic**: Two executions of one task disagree, and the output is not the output of any single run
-- **A few huge tasks**: A late failure repeats a large share of the work
-- **No backup for the tail**: A few slow machines set the job time
-- **A reducer key that is much more common than the others**: One reduce task takes most of the data
-- **Side effects outside the output files**: A rerun repeats them
-- **A job for a small data set**: The startup and the shuffle cost more than the work
-- **Chaining many jobs for an iterative algorithm**: Each step writes to disk and reads again
+- **A map that isn't deterministic**: two executions of one task disagree, and the output is not the output of any single run
+- **A few huge tasks**: a late failure repeats a large share of the work
+- **No backup for the tail**: a few slow machines set the job time
+- **A reducer key that is much more common than the others**: one reduce task takes most of the data
+- **Side effects outside the output files**: a rerun repeats them
+- **A job for a small data set**: the startup and the shuffle cost more than the work
+- **Chaining many jobs for an iterative algorithm**: each step writes to disk and reads again
 
 ## Key Points
 

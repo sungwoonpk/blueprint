@@ -14,7 +14,7 @@ The file system was designed together with the applications, which allowed the i
 
 HDFS, the open source descendant, rests on the same ideas. Hardware failure is the norm and not the exception. Applications need a write once, read many access model.
 
-Streaming throughput matters more than latency, and files run from gigabytes to terabytes. It adds a principle that shaped what came next: moving the computation to the data is cheaper than moving the data to the computation.
+Streaming throughput matters more than latency, and files run from gigabytes to terabytes. HDFS adds a principle that shaped what came next: moving the computation to the data is cheaper than moving the data to the computation.
 
 The consequences are choices that would be wrong for a laptop's file system: very large blocks, a single point that knows where each block is, and copies as the answer to failure.
 
@@ -48,9 +48,13 @@ The master keeps its metadata in memory, which makes it quick and lets it scan i
 
 Changes to the namespace are recorded in an operation log on the master's disk and on remote machines, and the master takes checkpoints so that recovery replays a short log. HDFS uses the same pair under the names FsImage and EditLog.
 
-The big chunk is the key choice, for three reasons. A client needs fewer trips to the master, since reads and writes within one chunk need one lookup. It can keep a connection to a chunkserver open over a long time.
+The big chunk is the key choice, for three reasons:
 
-And the metadata stays small enough for memory. The price is hot spots: a small file is one chunk, and many clients reading it hit the same three servers. This happened in GFS when an executable was written to it and hundreds of machines started it at once.
+- **Fewer trips to the master**: reads and writes within one chunk need one lookup
+- **Long connections**: a client can keep a connection to a chunkserver open over a long time
+- **Small metadata**: it stays small enough for memory
+
+The price is hot spots: a small file is one chunk, and many clients reading it hit the same three servers. This happened in GFS when an executable was written to it and hundreds of machines started it at once.
 
 Small files cost far more than their size, since each file takes at least one chunk entry. We computed it with the paper's 64 bytes for the textbook app's photos, 9 million of them at 300 KB, about 2.7 TB:
 
@@ -88,7 +92,7 @@ HDFS took the simpler route in its first design, a single writer for each file h
 
 Placement decides what a failure costs. HDFS's default for three replicas puts the first on the writer's node, or a random node in its rack, the second on a node in a different rack, and the third on another node in that same remote rack.
 
-The design page's reasoning is that a rack failure is far less likely than a node failure, and the policy cuts the network traffic between racks for writes, at the price of storing a block in two racks and not three. GFS spreads replicas across racks too, and prefers chunkservers with less disk used.
+The reasoning is that a rack failure is far less likely than a node failure, and the policy cuts the network traffic between racks for writes, at the price of storing a block in two racks and not three. GFS spreads replicas across racks too, and prefers chunkservers with less disk used.
 
 Failures are found by heartbeats. HDFS defaults to an interval of three seconds and declares a DataNode out of service after ten minutes without one, a deliberately long delay that avoids a storm of copying after a brief outage.
 
@@ -150,10 +154,10 @@ With the default policy, called RS-6-3-1024k, each stripe has 6 data blocks and 
 
 For 1 PB of data, that is 3 PB with replicas and 1.5 PB with the 6 and 3 code, a saving of 1.5 PB. The costs are real:
 
-- **CPU**: Encoding and decoding take work on clients and DataNodes
-- **Network**: A striped file is spread over racks, so most reads and writes cross racks, and network bisection bandwidth becomes very important. Rebuilding one lost block reads several of the others, at least 6 for this code by our arithmetic, where a replica copy reads one
-- **Machines**: The 6 and 3 policy needs at least 9 DataNodes, and at least 3 racks to survive a rack, ideally more
-- **Features**: Append, truncate and the flush calls aren't supported on erasure coded files, and changing a file's policy means rewriting it
+- **CPU**: encoding and decoding take work on clients and DataNodes
+- **Network**: a striped file is spread over racks, so most reads and writes cross racks, and network bisection bandwidth becomes very important. Rebuilding one lost block reads several of the others, at least 6 for this code by our arithmetic, where a replica copy reads one
+- **Machines**: the 6 and 3 policy needs at least 9 DataNodes, and at least 3 racks to survive a rack, ideally more
+- **Features**: append, truncate and the flush calls aren't supported on erasure coded files, and changing a file's policy means rewriting it
 
 So the choice follows the heat of the data, as in [Tiering Hot and Cold Data](/system-design/hot-cold-data): replicate data that is read and written often, and erasure code the cold data that is written once.
 
@@ -171,12 +175,12 @@ So the choice follows the heat of the data, as in [Tiering Hot and Cold Data](/s
 
 ## Pitfalls
 
-- **Millions of small files**: The master's memory limits the count long before the disks fill
-- **Instant re-replication after a blip**: A short outage starts a storm of copying
-- **Unthrottled repair**: Rebuilding crowds out the clients
-- **Slow recovery with random placement**: Overlapping failures lose data
-- **A single master with no standby**: A restart stops the cluster
-- **Erasure coding for hot, small, or appended files**: The features and the network cost don't fit
+- **Millions of small files**: the master's memory limits the count long before the disks fill
+- **Instant re-replication after a blip**: a short outage starts a storm of copying
+- **Unthrottled repair**: rebuilding crowds out the clients
+- **Slow recovery with random placement**: overlapping failures lose data
+- **A single master with no standby**: a restart stops the cluster
+- **Erasure coding for hot, small, or appended files**: the features and the network cost don't fit
 
 ## Key Points
 

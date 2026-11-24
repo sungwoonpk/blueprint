@@ -157,16 +157,6 @@ Our 11.5 seconds for Φ of 5 is consistent with the 15 seconds reported for a re
 | Fixed Timeout of 20 s | 0% | 0.68% |
 | Accrual, Φ of 5 | 0% | 0.003% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="False suspicions on a slow network for four detectors">
-<div class="hbar peak"><span>Fixed 5 s</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">28.4%</span></div>
-<div class="hbar"><span>Fixed 10 s</span><span class="track"><span class="fill" style="--w: 28.5%"></span></span><span class="value">8.1%</span></div>
-<div class="hbar"><span>Fixed 20 s</span><span class="track"><span class="fill" style="--w: 2.4%"></span></span><span class="value">0.68%</span></div>
-<div class="hbar"><span>Accrual, Φ of 5</span><span class="track"><span class="fill" style="--w: 0.1%"></span></span><span class="value">0.003%</span></div>
-</div>
-<figcaption>Share of heartbeat gaps that ended in a false suspicion when the network slows 4 times, from our simulation</figcaption>
-</figure>
-
 The fixed timeouts were tuned for the fast network and broke on the slow one, and the 20 second timeout that survives is slow to notice a real failure.
 
 The accrual detector scaled its patience with the observed gap, so it kept its false alarm rate low, and its detection time grew to 46 seconds on the slow network, which is the honest price of not crying wolf. The broader subject is in [Failure Detection and Gossip](/system-design/failure-detection).
@@ -185,13 +175,13 @@ The accrual detector scaled its patience with the observed gap, so it kept its f
 
 ## Pitfalls
 
-- **Modeling the tables like a relational schema**: Each new query then needs a scan of the whole cluster
-- **A cart stored as one value**: Last writer wins drops concurrent adds
-- **QUORUM across far apart data centers**: Each request pays the ocean crossing
-- **Skipping repair**: Hints expire after 3 hours, and tombstones expire after 10 days
-- **Reading at ONE and expecting fresh data**: It doesn't overlap a write and doesn't repair
-- **A fixed failure timeout on a network that changes**: False alarms in busy hours, or slow detection
-- **Counting on clocks for ordering**: A fast clock wins against a later write
+- **Modeling the tables like a relational schema**: each new query then needs a scan of the whole cluster
+- **A cart stored as one value**: last writer wins drops concurrent adds
+- **QUORUM across far apart data centers**: each request pays the ocean crossing
+- **Skipping repair**: hints expire after 3 hours, and tombstones expire after 10 days
+- **Reading at ONE and expecting fresh data**: it doesn't overlap a write and doesn't repair
+- **A fixed failure timeout on a network that changes**: false alarms in busy hours, or slow detection
+- **Counting on clocks for ordering**: a fast clock wins against a later write
 
 ## Key Points
 

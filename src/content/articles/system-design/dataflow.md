@@ -30,11 +30,11 @@ If windows are cut by arrival time, 6.87 percent of the views land in a differen
 
 ## Windows
 
-To compute anything over an unbounded input, the data has to be cut into finite pieces. That is **windowing**. Three shapes cover most needs.
+To compute anything over an unbounded input, the data has to be cut into finite pieces. That is **windowing**. Three shapes cover most needs:
 
-Fixed windows, also called tumbling windows, have a set size, such as each minute, and don't overlap. Sliding windows have a size and a period, such as ten minutes long and starting each minute, so they overlap and each event belongs to several.
-
-Session windows group the activity of one user, separated by a gap of quiet, such as 30 minutes with no events.
+- **Fixed windows**: also called tumbling windows, they have a set size, such as each minute, and don't overlap
+- **Sliding windows**: they have a size and a period, such as ten minutes long and starting each minute, so they overlap and each event belongs to several
+- **Session windows**: they group the activity of one user, separated by a gap of quiet, such as 30 minutes with no events
 
 Sessions are the instructive case, because their boundaries come from the data. They belong to one key, so each user has windows of their own, and two windows merge when a late event bridges the gap between them.
 
@@ -60,26 +60,18 @@ We tested the trade on the same stream, with the watermark set to the newest eve
 | 120 s | 1.57% | 120 s |
 | 600 s | 0% | 600 s |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Share of events missed by the single on time result for five watermark delays">
-<div class="hbar peak"><span>Delay 0 s</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">6.35%</span></div>
-<div class="hbar"><span>Delay 5 s</span><span class="track"><span class="fill" style="--w: 43.9%"></span></span><span class="value">2.79%</span></div>
-<div class="hbar"><span>Delay 30 s</span><span class="track"><span class="fill" style="--w: 30.6%"></span></span><span class="value">1.94%</span></div>
-<div class="hbar"><span>Delay 120 s</span><span class="track"><span class="fill" style="--w: 24.7%"></span></span><span class="value">1.57%</span></div>
-<div class="hbar"><span>Delay 600 s</span><span class="track"><span class="fill" style="--w: 0%"></span></span><span class="value">0%</span></div>
-</div>
-<figcaption>Share of events missed by one on time result, by watermark delay, from our simulation</figcaption>
-</figure>
-
 The curve is the lesson. The first few seconds of waiting remove more than half of the missed events, because most delays are small, and after that each extra minute buys little, until the delay covers the slowest phone in the data, ten minutes, at which point no event is missed and each result is ten minutes late.
 
 There is no setting that gives both a fast answer and a complete one.
 
 ## Four Questions, and a Way Out
 
-The model's answer to that trade is to stop asking for one result. A pipeline is described by four questions. What results are computed: the sum, the count, the sessions.
+The model's answer to that trade is to stop asking for one result. A pipeline is described by four questions:
 
-Where in event time they are computed: the windowing. When in processing time they are materialized: the triggers. And how earlier results relate to later refinements: the accumulation mode.
+- **What**: the results that are computed, such as the sum, the count or the sessions
+- **Where**: in event time, the results are computed per window
+- **When**: in processing time, the results are materialized, which the triggers decide
+- **How**: earlier results relate to later refinements, which the accumulation mode decides
 
 A **trigger** sets when a window emits, and a window can emit more than once.
 
@@ -119,13 +111,13 @@ Event time itself depends on clocks that disagree, so timestamps are assigned at
 
 ## Pitfalls
 
-- **Grouping by arrival time**: An outage shifts a whole minute of events into the next one
-- **A watermark treated as a promise**: Late data arrives behind it
-- **A single result with no late firings**: Events behind the watermark are dropped
-- **A very long watermark delay**: Each result waits for the slowest phone
-- **Late firings with no retraction**: A downstream sum counts a refined value twice
-- **Two codebases for batch and stream**: The answers drift apart
-- **Clocks that are not checked at the source**: Event times are wrong before the pipeline sees them
+- **Grouping by arrival time**: an outage shifts a whole minute of events into the next one
+- **A watermark treated as a promise**: late data arrives behind it
+- **A single result with no late firings**: events behind the watermark are dropped
+- **A very long watermark delay**: each result waits for the slowest phone
+- **Late firings with no retraction**: a downstream sum counts a refined value twice
+- **Two codebases for batch and stream**: the answers drift apart
+- **Clocks that are not checked at the source**: event times are wrong before the pipeline sees them
 
 ## Key Points
 

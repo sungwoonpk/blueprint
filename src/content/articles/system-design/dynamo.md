@@ -37,16 +37,6 @@ We measured how much tokens help in a ring of 30 nodes. The score is the mean lo
 | 100 | 0.83 | 3,000 |
 | 300 | 0.89 | 9,000 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Balance score for four token settings in a ring of 30 nodes">
-<div class="hbar peak"><span>1 Token</span><span class="track"><span class="fill" style="--w: 27%"></span></span><span class="value">0.27</span></div>
-<div class="hbar"><span>10 Tokens</span><span class="track"><span class="fill" style="--w: 56%"></span></span><span class="value">0.56</span></div>
-<div class="hbar"><span>300 Tokens</span><span class="track"><span class="fill" style="--w: 89%"></span></span><span class="value">0.89</span></div>
-<div class="hbar"><span>Equal Partitions</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">1.00</span></div>
-</div>
-<figcaption>Balance score of a ring of 30 nodes, 1.0 being perfect, by token scheme, from our simulation</figcaption>
-</figure>
-
 One token gave a busiest node carrying nearly four times the mean. Even 300 tokens left the busiest node about 12 percent above the mean. The cost is bookkeeping: each node tracks the tokens of the others, so the table grows with the number of tokens.
 
 Amazon found a better scheme after running the first one in production. In the first scheme, the position of tokens decides both how data is cut and where it lives, so adding a node changes the cuts.
@@ -184,13 +174,13 @@ The ideas travel, even when the product doesn't. Cassandra, which comes next, ke
 
 ## Pitfalls
 
-- **R plus W at most N, with a belief in fresh reads**: A read can miss the newest write
-- **Last writer wins on data that should merge**: Overlapping writes silently drop work
-- **A sloppy quorum treated as a strict one**: A hinted copy is outside the group a read checks
-- **A union merge for data with deletes**: Removed items come back
-- **One random token for each node**: The busiest node carries several times the mean
-- **A full membership table at large scale**: The gossip load grows with the cluster
-- **Treating durability and availability as the same dial**: A bigger W protects the write and refuses more of them
+- **R plus W at most N, with a belief in fresh reads**: a read can miss the newest write
+- **Last writer wins on data that should merge**: overlapping writes silently drop work
+- **A sloppy quorum treated as a strict one**: a hinted copy is outside the group a read checks
+- **A union merge for data with deletes**: removed items come back
+- **One random token for each node**: the busiest node carries several times the mean
+- **A full membership table at large scale**: the gossip load grows with the cluster
+- **Treating durability and availability as the same dial**: a bigger W protects the write and refuses more of them
 
 ## Key Points
 

@@ -59,16 +59,6 @@ We tested this on a model of our own. 1,500 tasks with varied cores and memory, 
 | Best Fit, Tightest First | 363 | 10.0% |
 | Balanced Remainders | 358 | 8.7% |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Machines needed by four placement rules">
-<div class="hbar peak"><span>Spread</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">388</span></div>
-<div class="hbar"><span>Best Fit</span><span class="track"><span class="fill" style="--w: 93.5%"></span></span><span class="value">363</span></div>
-<div class="hbar"><span>First Fit</span><span class="track"><span class="fill" style="--w: 93.1%"></span></span><span class="value">361</span></div>
-<div class="hbar"><span>Balanced</span><span class="track"><span class="fill" style="--w: 92.3%"></span></span><span class="value">358</span></div>
-</div>
-<figcaption>Machines needed to place 1,500 tasks, from our simulation, by placement rule</figcaption>
-</figure>
-
 Spreading cost 30 machines, about 8 percent, more than the balanced rule, because of the stranded resources it leaves.
 
 The differences among the other three were small, and the published result is in the same range: the hybrid packs about 3 to 5 percent better than best fit on real workloads. At the size of a cell, a few percent is hundreds of machines.
@@ -152,14 +142,14 @@ And the master as the core of the system, with a small set of state machines beh
 
 ## Pitfalls
 
-- **A machine list for each service**: Each pool is sized for its own peak and idle the rest of the time
-- **Sizes from a short menu**: Requests are rounded up and the fleet grows by half
-- **Spreading as the sole placement rule**: Free cores and free memory end up on different machines
-- **Preemption without a warning**: A task can't save its state
-- **Priorities that can preempt one another at the same level**: A chain of kills spreads through the cell
-- **Batch work that can't be killed**: It can't share machines with services
-- **Reclaiming without a way to take it back**: A spike in a service has nowhere to go
-- **A control plane that stops the work when it fails**: The agents should keep running their tasks
+- **A machine list for each service**: each pool is sized for its own peak and idle the rest of the time
+- **Sizes from a short menu**: requests are rounded up and the fleet grows by half
+- **Spreading as the sole placement rule**: free cores and free memory end up on different machines
+- **Preemption without a warning**: a task can't save its state
+- **Priorities that can preempt one another at the same level**: a chain of kills spreads through the cell
+- **Batch work that can't be killed**: it can't share machines with services
+- **Reclaiming without a way to take it back**: a spike in a service has nowhere to go
+- **A control plane that stops the work when it fails**: the agents should keep running their tasks
 
 ## Key Points
 

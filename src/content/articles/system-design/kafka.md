@@ -87,16 +87,6 @@ We measured the trade. A partition took 2,000 writes a second, followers took an
 | 20 ms | 40.0 | 0 |
 | 100 ms | 172.9 | 0 |
 
-<figure class="chart">
-<div class="hbars" role="img" aria-label="Acknowledged writes lost in a leader crash for four copy delays with acks 1">
-<div class="hbar"><span>1 ms Delay</span><span class="track"><span class="fill" style="--w: 1.1%"></span></span><span class="value">1.9</span></div>
-<div class="hbar"><span>5 ms Delay</span><span class="track"><span class="fill" style="--w: 5.7%"></span></span><span class="value">9.9</span></div>
-<div class="hbar"><span>20 ms Delay</span><span class="track"><span class="fill" style="--w: 23.1%"></span></span><span class="value">40.0</span></div>
-<div class="hbar peak"><span>100 ms Delay</span><span class="track"><span class="fill" style="--w: 100%"></span></span><span class="value">172.9</span></div>
-</div>
-<figcaption>Acknowledged writes lost in a leader crash with acks 1, by follower copy delay, from our simulation, where the strictest setting lost zero</figcaption>
-</figure>
-
 With `acks=1`, the writes in flight to the followers at the moment of the crash are lost, and the count grows with the copy delay, since the leader answers before the copy. With `acks=-1`, a write is acknowledged when each in sync replica has it, so the new leader, taken from that set, has each acknowledged write.
 
 That safety costs latency and availability. In our model, with an average copy time of 5 ms, `acks=1` completed at the 0.5 ms leader append, and `acks=-1` had a median of 6.7 ms and a 99th percentile of 26.9 ms, since it waits for the slower of two followers.
@@ -152,14 +142,14 @@ The new consumer can read the compacted log from the start and rebuild the curre
 
 ## Pitfalls
 
-- **A low partition count**: The group can't use more consumers than partitions
-- **Expecting order across partitions**: Order holds within one partition
-- **acks=1 for data that matters**: A leader crash loses acknowledged writes
-- **A floor of 1 on the in sync set**: An acknowledged write can be on one machine
-- **Unclean leader election on**: A lagging replica becomes leader and drops records
-- **Saving the offset before processing**: A crash loses the work
-- **A key with heavy skew**: One partition takes most of the load
-- **Treating exactly once as a feature of a whole system**: It covers the path inside Kafka
+- **A low partition count**: the group can't use more consumers than partitions
+- **Expecting order across partitions**: order holds within one partition
+- **acks=1 for data that matters**: a leader crash loses acknowledged writes
+- **A floor of 1 on the in sync set**: an acknowledged write can be on one machine
+- **Unclean leader election on**: a lagging replica becomes leader and drops records
+- **Saving the offset before processing**: a crash loses the work
+- **A key with heavy skew**: one partition takes most of the load
+- **Treating exactly once as a feature of a whole system**: it covers the path inside Kafka
 
 ## Key Points
 
